@@ -1,10 +1,6 @@
-import AcmeLogo from "@/app/ui/acme-logo";
-import LoginForm from "@/app/ui/login-form";
-import { Suspense } from "react";
-
 export default function Page() {
-  const blurredBackground =
-    "bg-gradient-to-b from-blue-500 to-blue-700 blur-sm";
+  // const blurredBackground =
+  //   "bg-gradient-to-b from-blue-500 to-blue-700 blur-sm";
   const focusedBackground = `items-center  justify-center relative size-32 rounded-lg bg-gradient-to-b from-blue-500 to-blue-700 hover:shadow-lg`;
   const goldBackground =
     "absolute bg-gradient-to-b from-yellow-200 to-yellow-300";

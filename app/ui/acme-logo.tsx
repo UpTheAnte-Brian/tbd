@@ -1,4 +1,4 @@
-import { lusitana, domine } from "@/app/ui/fonts";
+import { domine } from "@/app/ui/fonts";
 
 export default function AcmeLogo() {
   return (
