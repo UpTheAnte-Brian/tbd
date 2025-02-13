@@ -1,10 +1,8 @@
-import { domine } from "@/app/ui/fonts";
+// import { domine } from "@/app/ui/fonts";
 
 export default function AcmeLogo() {
   return (
-    <div
-      className={`${domine.className} flex flex-row items-center leading-none text-slate-100`}
-    >
+    <div className="flex flex-row items-center leading-none text-slate-100">
       {/* <Image
         src={logo}
         className="size-12 object-scale-down"
