@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const NavBar = () => {
+const Footer = () => {
   return (
     <nav className="flex justify-between flex-wrap p-3">
       <ul className="flex">
@@ -31,4 +31,4 @@ const NavBar = () => {
   );
 };
 
-export default NavBar;
+export default Footer;
