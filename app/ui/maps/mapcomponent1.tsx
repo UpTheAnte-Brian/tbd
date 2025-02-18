@@ -1,10 +1,8 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { GoogleMap, LoadScript, KmlLayer } from "@react-google-maps/api";
+import { GoogleMap, KmlLayer } from "@react-google-maps/api";
 import { useLoadScript } from "@react-google-maps/api";
-
-const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 const containerStyle = {
   display: "flex",
@@ -21,9 +19,8 @@ function MapComponent() {
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     libraries: ["places"],
   });
-
-  if (!isLoaded) return <div>Loading...</div>;
   const [map, setMap] = useState(null);
+  console.log("MapComponent", map);
 
   const onLoad = useCallback(function callback(mapInstance: any) {
     setMap(mapInstance);
@@ -32,6 +29,8 @@ function MapComponent() {
   const onUnmount = useCallback(function callback() {
     setMap(null);
   }, []);
+
+  if (!isLoaded) return <div>Loading...</div>;
 
   return (
     <GoogleMap
