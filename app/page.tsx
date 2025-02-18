@@ -1,23 +1,21 @@
-import AcmeLogo from "@/app/ui/acme-logo";
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import Image from "next/image";
 import SignIn from "./ui/sign-in";
+import MapComponent from "./ui/maps/map3";
 
 export default function Page() {
   return (
     <>
-      <div className="flex h-20 items-center rounded-lg outline bg-blue-400 p-4">
-        <AcmeLogo />
-      </div>
-      <div className="mt-4 flex grow flex-col gap-4 md:flex-row rounded-lg outline">
+      <div className="flex grow flex-col gap-4 md:flex-row rounded-lg outline">
         <div className="flex flex-col justify-center gap-6 px-6 py-10 md:w-2/5 md:px-20 rounded-lg outline">
           <p className={`text-xl text-gray-800 md:text-3xl md:leading-normal`}>
-            <strong>Welcome to Acme.</strong> This is the example for the{" "}
-            <a href="https://nextjs.org/learn/" className="text-blue-500">
-              Next.js Learn Course
+            <strong>Site in Development</strong> <br />
+            This is a prototype for{" "}
+            <a href="https://uptheante.org/" className="text-blue-500">
+              UpTheAnte.org
             </a>
-            , brought to you by Vercel.
+            , brought to you by Ante Up Nation.
           </p>
           <Link
             href="/login"
@@ -28,23 +26,7 @@ export default function Page() {
           <SignIn />
         </div>
         <div className="flex items-center justify-center p-6 md:w-3/5 md:px-28 md:py-12 rounded-lg outline">
-          {/* Add Hero Images Here */}
-
-          <Image
-            src="/hero-desktop.png"
-            width={1000}
-            height={760}
-            priority
-            className="hidden md:block"
-            alt="Screenshots of the dashboard project showing desktop version"
-          />
-          <Image
-            src="/hero-mobile.png"
-            width={560}
-            height={620}
-            className="block md:hidden"
-            alt="Screenshots of the dashboard project showing mobile version"
-          />
+          <MapComponent />
         </div>
       </div>
     </>
