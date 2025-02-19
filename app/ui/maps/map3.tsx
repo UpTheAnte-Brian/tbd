@@ -17,10 +17,10 @@ const center = {
 };
 
 function MapComponent() {
-  const [map, setMap] = useState(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
   console.log("MapComponent", map);
 
-  const onLoad = useCallback(function callback(mapInstance: any) {
+  const onLoad = useCallback(function callback(mapInstance: google.maps.Map) {
     setMap(mapInstance);
   }, []);
 
