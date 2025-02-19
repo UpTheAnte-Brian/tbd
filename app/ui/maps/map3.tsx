@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { GoogleMap, KmlLayer } from "@react-google-maps/api";
-import { useLoadScript } from "@react-google-maps/api";
+import { GoogleMap, KmlLayer, useLoadScript } from "@react-google-maps/api";
 
 const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
 const containerStyle = {
-  display: "flex",
+  width: "100%",
   height: "80vh",
 };
 
@@ -27,8 +26,9 @@ function MapComponent() {
   const onUnmount = useCallback(function callback() {
     setMap(null);
   }, []);
+
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: apiKey, // Replace with your actual API key
+    googleMapsApiKey: apiKey,
   });
 
   if (loadError) {
