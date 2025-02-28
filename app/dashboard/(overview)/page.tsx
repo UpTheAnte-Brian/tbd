@@ -7,6 +7,7 @@ import {
   RevenueChartSkeleton,
   CardsSkeleton,
 } from "@/app/ui/skeletons";
+import MapComponent from "../../ui/maps/map3";
 
 export default async function Page() {
   return (
@@ -23,6 +24,7 @@ export default async function Page() {
         <Suspense fallback={<LatestInvoicesSkeleton />}>
           <LatestInvoices />
         </Suspense>
+        <MapComponent />
       </div>
     </>
   );

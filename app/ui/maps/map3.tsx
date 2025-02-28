@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
-import { GoogleMap, KmlLayer, useLoadScript } from "@react-google-maps/api";
-
+import React, { useState, useCallback, useMemo, useRef } from "react";
+import { GoogleMap, KmlLayer } from "@react-google-maps/api";
+import useGoogleMaps from "../../lib/map-context";
+type MapOptions = google.maps.MapOptions;
+type LatLngLiteral = google.maps.LatLngLiteral;
 const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
 const containerStyle = {
@@ -10,12 +12,11 @@ const containerStyle = {
   height: "80vh",
 };
 
-const center = {
-  lat: 44.745,
-  lng: -93.523,
-};
-
 function MapComponent() {
+  // const { isLoaded, loadError } = useGoogleMaps(apiKey);
+
+  // if (loadError) return "Error loading maps";
+  // if (!isLoaded) return "Loading Maps";
   const [map, setMap] = useState<google.maps.Map | null>(null);
   console.log("MapComponent", map);
 
@@ -27,23 +28,32 @@ function MapComponent() {
     setMap(null);
   }, []);
 
-  const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: apiKey,
-  });
+  // const mapRef = useRef<GoogleMap>(null);
 
-  if (loadError) {
-    return <div>Error loading maps</div>;
-  }
+  const center = useMemo<LatLngLiteral>(
+    () => ({
+      lat: 44.745,
+      lng: -93.523,
+    }),
+    []
+  );
 
-  if (!isLoaded) {
-    return <div>Loading Maps</div>;
-  }
+  const options = useMemo<MapOptions>(
+    () => ({
+      disableDefaultUI: false,
+      zoomControl: true,
+      clickableIcons: false,
+      mapId: "74d818485994559a",
+    }),
+    []
+  );
 
   return (
     <GoogleMap
       mapContainerStyle={containerStyle}
       center={center}
       zoom={9}
+      options={options}
       onLoad={onLoad}
       onUnmount={onUnmount}
     >

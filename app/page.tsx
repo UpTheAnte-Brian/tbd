@@ -1,7 +1,17 @@
+"use client";
 import SignIn from "./ui/sign-in";
 import MapComponent from "./ui/maps/map3";
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+
+const libraries = String(["places", "geometry"]);
+// MapComponent.js
+import useGoogleMaps from "./lib/map-context";
 
 export default function Page() {
+  const { isLoaded, loadError } = useGoogleMaps(GOOGLE_MAPS_API_KEY);
+
+  if (loadError) return "Error loading maps";
+  if (!isLoaded) return "Loading Maps";
   return (
     <>
       <div className="flex grow flex-col gap-4 md:flex-row rounded-lg outline">
