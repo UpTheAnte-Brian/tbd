@@ -7,7 +7,8 @@ import { StyledEngineProvider } from "@mui/material";
 // This sets the title on your browser tab.
 export const metadata = {
   title: "Home",
-  description: "Ante Up Nation",
+  // description: "Ante Up Nation",
+  description: "React Skills developkment",
 };
 
 export default function RootLayout({
