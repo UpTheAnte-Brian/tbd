@@ -1,5 +1,5 @@
-import "@/app/ui/global.css";
-import { inter } from "@/app/ui/fonts";
+import "./ui/global.css";
+import { inter } from "./ui/fonts";
 import NavBar from "./ui/dashboard/nav-bar";
 import Footer from "./ui/dashboard/footer";
 // import { StyledEngineProvider } from "@mui/material";
