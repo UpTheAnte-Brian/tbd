@@ -14,9 +14,9 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   // Assume a "Cookie:nextjs=fast" header to be present on the incoming request
   // Getting cookies from the request using the `RequestCookies` API
-  let cookie = request.cookies.get("nextjs");
+  // let cookie = request.cookies.get("nextjs");
   // console.log('cookie: ', cookie) // => { name: 'nextjs', value: 'fast', Path: '/' }
-  const allCookies = request.cookies.getAll();
+  // const allCookies = request.cookies.getAll();
   // console.log('allCookies: ',allCookies) // => [{ name: 'nextjs', value: 'fast' }]
 
   request.cookies.has("nextjs"); // => true
@@ -31,7 +31,7 @@ export function middleware(request: NextRequest) {
     value: "fast",
     path: "/",
   });
-  cookie = response.cookies.get("vercel");
+  // cookie = response.cookies.get("vercel");
   // console.log('last cookie: ', cookie) // => { name: 'vercel', value: 'fast', Path: '/' }
   // The outgoing response will have a `Set-Cookie:vercel=fast;path=/` header.
 

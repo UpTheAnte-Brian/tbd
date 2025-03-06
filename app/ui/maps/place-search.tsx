@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as React from "react";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
@@ -12,21 +13,22 @@ import parse from "autosuggest-highlight/parse";
 // But prefer to use throttle in practice
 // import throttle from 'lodash/throttle';
 import { debounce } from "@mui/material/utils";
+import Stack from "@mui/material/Stack";
 
 // This key was created specifically for the demo in mui.com.
 // You need to create a new one for your application.
-const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+// const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
 const useEnhancedEffect =
   typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
 
-function loadScript(src: string, position: HTMLElement) {
-  const script = document.createElement("script");
-  script.setAttribute("async", "");
-  script.src = src;
-  position.appendChild(script);
-  return script;
-}
+// function loadScript(src: string, position: HTMLElement) {
+//   const script = document.createElement("script");
+//   script.setAttribute("async", "");
+//   script.src = src;
+//   position.appendChild(script);
+//   return script;
+// }
 
 interface MainTextMatchedSubstrings {
   offset: number;
@@ -47,11 +49,11 @@ function CustomPaper(props: PaperProps) {
 
   return (
     <Paper {...props}>
-      {props.children}
       {/* Legal requirment https://developers.google.com/maps/documentation/javascript/policies#logo */}
       <Box
         sx={(staticTheme) => ({
-          display: "flex",
+          display: "flex-grow",
+          background: "red",
           justifyContent: "flex-end",
           p: 1,
           pt: "1px",
@@ -60,6 +62,7 @@ function CustomPaper(props: PaperProps) {
           }),
         })}
       >
+        {props.children}
         <img
           src={
             theme.palette.mode === "dark"
@@ -77,7 +80,10 @@ function CustomPaper(props: PaperProps) {
 
 const fetch = debounce(
   async (
-    request: { input: string; sessionToken: any },
+    request: {
+      input: string;
+      sessionToken: google.maps.places.AutocompleteSessionToken;
+    },
     callback: (results?: readonly PlaceType[]) => void
   ) => {
     try {
@@ -118,10 +124,14 @@ const fetch = debounce(
   400
 );
 
-const emptyOptions = [] as any;
+const emptyOptions = [] as PlaceType[];
 let sessionToken: any;
 
-export default function PlaceSearch({ setPoint }: { setPoint: any }) {
+export default function PlaceSearch({
+  setPoint,
+}: {
+  setPoint: (description: string | undefined) => void;
+}) {
   const [value, setValue] = React.useState<PlaceType | null>(null);
   const [inputValue, setInputValue] = React.useState("");
   const [options, setOptions] =
@@ -203,7 +213,12 @@ export default function PlaceSearch({ setPoint }: { setPoint: any }) {
         setInputValue(newInputValue);
       }}
       renderInput={(params) => (
-        <TextField {...params} label="Add a location" fullWidth />
+        <TextField
+          sx={{ color: "red" }}
+          {...params}
+          label="Add a location"
+          fullWidth
+        />
       )}
       renderOption={(props, option) => {
         const { key, ...optionProps } = props;
@@ -220,10 +235,10 @@ export default function PlaceSearch({ setPoint }: { setPoint: any }) {
         return (
           <li key={key} {...optionProps}>
             <Grid2 container sx={{ alignItems: "center" }}>
-              <Grid2 sx={{ display: "flex", width: 14 }}>
+              <Grid2 sx={{ display: "flex", width: 44 }}>
                 <LocationOnIcon sx={{ color: "text.secondary" }} />
               </Grid2>
-              <Grid2
+              <Stack
                 sx={{ width: "calc(100% - 44px)", wordWrap: "break-word" }}
               >
                 {parts.map((part, index) => (
@@ -244,7 +259,7 @@ export default function PlaceSearch({ setPoint }: { setPoint: any }) {
                     {option.structured_formatting.secondary_text}
                   </Typography>
                 ) : null}
-              </Grid2>
+              </Stack>
             </Grid2>
           </li>
         );

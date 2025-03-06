@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useCallback, useMemo, useRef } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { GoogleMap, KmlLayer } from "@react-google-maps/api";
-import useGoogleMaps from "../../lib/map-context";
+// import useGoogleMaps from "../../lib/map-context";
 type MapOptions = google.maps.MapOptions;
 type LatLngLiteral = google.maps.LatLngLiteral;
-const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+// const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
 const containerStyle = {
   width: "100%",

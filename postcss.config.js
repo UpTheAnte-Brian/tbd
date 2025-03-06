@@ -11,12 +11,10 @@
 
 // export default config;
 
-module.exports = {
-    plugins: {
-      tailwindcss: {},
-      autoprefixer: {},
-    },
-  };
+export const plugins = {
+  tailwindcss: {},
+  autoprefixer: {},
+};
 
 // import autoprefixer from 'autoprefixer';
 // import tailwindcss from 'tailwindcss';

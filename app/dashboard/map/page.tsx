@@ -6,7 +6,7 @@ import React from "react";
 
 type LatLngLiteral = google.maps.LatLngLiteral;
 type MapOptions = google.maps.MapOptions;
-const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+// const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
 // function loadScript(src: string, position: HTMLElement) {
 //   const script = document.createElement("script");
@@ -49,16 +49,7 @@ export default function MapPage() {
 
   return (
     <div className="flex flex-col md:flex-row min-h-full">
-      <div className="w-1/5 md:w-100vh">
-        <h1>Search</h1>
-        <Places
-          setPoint={(position) => {
-            setPoint(position);
-            mapRef.current?.panTo(position);
-          }}
-        />
-      </div>
-      <div className="w-4/5 md:w-100vh">
+      <div className="w-full">
         <GoogleMap
           zoom={10}
           center={center}
@@ -75,6 +66,15 @@ export default function MapPage() {
             }}
           />
           {point && <Marker position={point} />}
+          <div className="absolute overflow-auto p-4 bg-black bg-opacity-80 text-white top-14 left-2.5 w-64">
+            <h1>Search</h1>
+            <Places
+              setPoint={(position) => {
+                setPoint(position);
+                mapRef.current?.panTo(position);
+              }}
+            />
+          </div>
         </GoogleMap>
       </div>
     </div>
