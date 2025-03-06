@@ -19,7 +19,7 @@ export default function AcmeLogo() {
         <path d="M4.462 19.462c.42-.419.753-.89 1-1.395.453.214.902.435 1.347.662a6.742 6.742 0 0 1-1.286 1.794.75.75 0 0 1-1.06-1.06Z" />
       </svg>
 
-      <p className="text-[24px] hidden md:block">&nbsp;Ante Up Nation</p>
+      <p className="text-[24px] hidden md:block">&nbsp;TBD</p>
     </div>
   );
 }
