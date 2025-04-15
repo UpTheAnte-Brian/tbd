@@ -1,19 +1,19 @@
-// "use client";
+"use client";
 import Link from "next/link";
 import AcmeLogo from "../acme-logo";
-// import { useState } from "react";
-// import SideNav from "./sidenav";
+import { useState } from "react";
+import SideNav from "./sidenav";
 
 const NavBar = () => {
-  // const [isHovering, setIsHovering] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   return (
     <nav className="flex justify-between flex-wrap text-slate-100 bg-blue-600 p-1">
       <div className="flex flex-row items-center leading-none text-slate-100">
         <Link
           href="/dashboard"
           className="p-2"
-          // onMouseEnter={() => setIsHovering(true)}
-          // onMouseLeave={() => setIsHovering(false)}
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -27,12 +27,12 @@ const NavBar = () => {
               clipRule="evenodd"
             />
           </svg>
-          {/* {isHovering && (
-            <div className="absolute">
-              <SideNav />
-            </div>
-          )} */}
         </Link>
+        {isHovering && (
+          <div className="absolute bg-blue-600 mt-12 ">
+            <SideNav />
+          </div>
+        )}
       </div>
       <div className="flex">
         <Link
