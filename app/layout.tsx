@@ -1,6 +1,6 @@
 "use server";
 
-import "@/app/ui/global.css";
+import "@/app/ui/style.css";
 import { inter } from "./ui/fonts";
 import Footer from "./ui/dashboard/footer";
 import { StyledEngineProvider } from "@mui/material";
