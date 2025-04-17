@@ -19,6 +19,9 @@ body {
   .flex-center-between {
     @apply flex items-center justify-between;
   }
+  .flex-center-center {
+    @apply flex items-center justify-center;
+  }
 }
 
 

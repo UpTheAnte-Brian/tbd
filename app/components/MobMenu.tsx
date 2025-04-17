@@ -1,11 +1,15 @@
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu as MenuObj } from "../lib/definitions";
+import dynamicIconImports from "lucide-react/dynamicIconImports";
+// import Link from "next/link";
+type IconName = keyof typeof dynamicIconImports;
+import DynamicIcon from "./DynamicIcon";
 
-export default function MobMenu({ Menus }) {
+export default function MobMenu({ Menus }: { Menus: MenuObj[] }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [clicked, setClicked] = useState(null);
+  const [clicked, setClicked] = useState<number | null>(null);
   const toggleDrawer = () => {
     setIsOpen(!isOpen);
     setClicked(null);
@@ -25,7 +29,7 @@ export default function MobMenu({ Menus }) {
   return (
     <div>
       <button className="lg:hidden z-[999] relative" onClick={toggleDrawer}>
-        {isOpen ? <X /> : <Menu />}
+        {isOpen ? <DynamicIcon name={"x"} /> : <DynamicIcon name={"menu"} />}
       </button>
 
       <motion.div
@@ -45,7 +49,8 @@ export default function MobMenu({ Menus }) {
                 >
                   {name}
                   {hasSubMenu && (
-                    <ChevronDown
+                    <DynamicIcon
+                      name={"chevron-down"}
                       className={`ml-auto ${isClicked && "rotate-180"} `}
                     />
                   )}
@@ -57,12 +62,15 @@ export default function MobMenu({ Menus }) {
                     variants={subMenuDrawer}
                     className="ml-5"
                   >
-                    {subMenu.map(({ name, icon: Icon }) => (
+                    {subMenu.map(({ name, icon }) => (
                       <li
                         key={name}
                         className="p-2 flex-center hover:bg-white/5 rounded-md gap-x-2 cursor-pointer"
                       >
-                        <Icon size={17} />
+                        <DynamicIcon
+                          name={icon as IconName}
+                          className="size-17"
+                        />
                         {name}
                       </li>
                     ))}

@@ -1,5 +1,4 @@
 "use client";
-import SignIn from "./ui/sign-in";
 import MapComponent from "./ui/maps/map3";
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
@@ -16,7 +15,7 @@ export default function Page() {
     <>
       <div className="flex grow flex-col gap-4 md:flex-row">
         <div className="flex flex-col justify-center gap-6 px-6 py-10 md:w-2/5 md:px-20 rounded-lg outline">
-          <p className={`text-xl text-gray-800 md:text-3xl md:leading-normal`}>
+          <p className={`text-xl text-gray-100 md:text-3xl md:leading-normal`}>
             <strong>Site in Development</strong> <br />
             This is a prototype.
             {/* <a href="https://uptheante.org/" className="text-blue-500">
@@ -30,7 +29,7 @@ export default function Page() {
           >
             <span>Log in</span> <ArrowRightIcon className="w-5 md:w-6" />
           </Link> */}
-          <SignIn />
+          {/* <SignIn /> */}
         </div>
         <div className="flex items-center justify-center p-1 md:w-3/5 md:p-3 rounded-lg outline">
           <MapComponent />
