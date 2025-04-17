@@ -18,7 +18,7 @@ function MapComponent() {
   // if (loadError) return "Error loading maps";
   // if (!isLoaded) return "Loading Maps";
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  console.log("MapComponent", map);
+  // console.log("MapComponent", map);
 
   const onLoad = useCallback(function callback(mapInstance: google.maps.Map) {
     setMap(mapInstance);
