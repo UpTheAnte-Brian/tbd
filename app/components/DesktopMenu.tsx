@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { Menu } from "../lib/definitions";
 import DynamicIcon from "./DynamicIcon";
@@ -51,7 +50,10 @@ export default function DesktopMenu({ menu }: { menu: string }) {
       <span className="flex-center gap-1 hover:bg-white/5 cursor-pointer px-3 py-1 rounded-xl">
         {menuObj.name}
         {hasSubMenu && (
-          <ChevronDown className="mt-[0.6px] group-hover/link:rotate-180 duration-200" />
+          <DynamicIcon
+            name="chevron-down"
+            className="mt-[0.6px] group-hover/link:rotate-180 duration-200"
+          />
         )}
       </span>
       {hasSubMenu && (
