@@ -9,8 +9,8 @@ import { Menu } from "./lib/definitions";
 import DesktopMenu from "./components/DesktopMenu";
 import MobMenu from "./components/MobMenu";
 import AUNLogo from "./components/AUNLogo";
-import Providers from "./components/providers";
 import SignInButton from "./components/SignInButton";
+import Providers from "./components/Providers";
 
 // This sets the title on your browser tab.
 // export const metadata = {

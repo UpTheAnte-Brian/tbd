@@ -8,12 +8,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@auth/supabase-adapter": "^1.8.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@heroicons/react": "^2.2.0",
     "@mui/icons-material": "^6.4.11",
     "@mui/material": "^6.4.11",
     "@react-google-maps/api": "^2.20.6",
+    "@supabase/supabase-js": "^2.49.4",
     "@tailwindcss/forms": "^0.5.10",
     "@vercel/postgres": "^0.10.0",
     "autoprefixer": "^10.4.21",
