@@ -10,7 +10,7 @@ import DesktopMenu from "./components/DesktopMenu";
 import MobMenu from "./components/MobMenu";
 import AUNLogo from "./components/AUNLogo";
 import SignInButton from "./components/SignInButton";
-import Providers from "./components/Providers";
+import { createClient } from "@/utils/supabase/server";
 
 // This sets the title on your browser tab.
 // export const metadata = {
@@ -26,6 +26,8 @@ export default async function RootLayout({
 }) {
   // console.log("Menus", Menus);
   const testMenus = await Menus();
+  const supabase = await createClient();
+  const { data: session } = await supabase.auth.getUser();
   // console.log("testMenus", testMenus);
   return (
     <html lang="en">
@@ -43,35 +45,51 @@ export default async function RootLayout({
       <body
         className={`${inter.className} antialiased flex flex-col min-h-100vh p-1`}
       >
+        <script
+          src="https://accounts.google.com/gsi/client"
+          async
+          defer
+        ></script>
+        .
         <StyledEngineProvider injectFirst>
-          <Providers>
-            <main className="relative">
-              <header className="h-16 text-[15px] fixed inset-0 flex-center bg-[#18181A] z-[999]">
-                <nav className=" px-3.5 flex-center-between w-full max-w-7xl mx-auto">
-                  <AUNLogo />
+          <main className="relative">
+            <header className="h-16 text-[15px] fixed inset-0 flex-center bg-[#18181A] z-[999]">
+              <nav className=" px-2 flex-center-between w-full max-w-7xl mx-auto">
+                <AUNLogo />
 
-                  <ul className="gap-x-1 lg:flex-center hidden">
-                    {testMenus.map((menu: Menu) => (
-                      <DesktopMenu
-                        menu={JSON.stringify(menu)}
-                        key={menu.name}
-                      />
-                    ))}
-                  </ul>
-                  <div className="flex-center gap-x-5">
-                    <SignInButton />
-                    <div className="lg:hidden">
-                      <MobMenu Menus={testMenus} />
+                <ul className="gap-x-1 lg:flex-center hidden">
+                  {testMenus.map((menu: Menu) => (
+                    <DesktopMenu menu={JSON.stringify(menu)} key={menu.name} />
+                  ))}
+                </ul>
+                <div className="flex-center gap-x-5">
+                  {session.user && (
+                    <div className="flex gap-4 ml-auto">
+                      <p className="text-sky-600">
+                        {session.user
+                          ? `${session.user.email}`
+                          : "Not logged in"}
+                      </p>
+
+                      <form action="/auth/signout" method="post">
+                        <button className="button block" type="submit">
+                          Sign out
+                        </button>
+                      </form>
                     </div>
+                  )}
+                  {!session.user && <SignInButton />}
+                  <div className="lg:hidden">
+                    <MobMenu Menus={testMenus} />
                   </div>
-                </nav>
-              </header>
-              <div className="min-h-75svh mt-16">{children}</div>
-              <div className="outline rounded-lg inset-0 min-h-10svh">
-                <Footer />
-              </div>
-            </main>
-          </Providers>
+                </div>
+              </nav>
+            </header>
+            <div className="min-h-75svh mt-8">{children}</div>
+            <div className="outline rounded-lg inset-0 min-h-10svh">
+              <Footer />
+            </div>
+          </main>
         </StyledEngineProvider>
       </body>
     </html>

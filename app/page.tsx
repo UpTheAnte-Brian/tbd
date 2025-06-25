@@ -13,7 +13,7 @@ export default function Page() {
   if (!isLoaded) return "Loading Maps";
   return (
     <>
-      <div className="flex grow flex-col gap-4 md:flex-row">
+      <div className="flex grow pt-8 flex-col gap-4 md:flex-row">
         <div className="flex flex-col justify-center gap-6 px-6 py-10 md:w-2/5 md:px-20 rounded-lg ">
           <p className={`text-xl text-gray-100 md:text-3xl md:leading-normal`}>
             <strong>Site in Development</strong> <br />

@@ -1,24 +1,48 @@
 "use client";
-import { signIn, signOut, useSession } from "next-auth/react";
+// import { createClient } from "@/utils/supabase/client";
+import Link from "next/link";
+import { Button } from "../ui/button";
 
-const SigninButton = () => {
-  const { data: session } = useSession();
+import { usePathname } from "next/navigation";
 
-  if (session && session.user) {
-    return (
-      <div className="flex gap-4 ml-auto">
-        <p className="text-sky-600">{session.user.name}</p>
-        <button onClick={() => signOut()} className="text-red-600">
-          Sign Out
-        </button>
-      </div>
-    );
-  }
+export function SigninButton() {
+  const pathname = usePathname();
+
+  // if (session && session.user) {
+  //   return (
+  //     <div className="flex gap-4 ml-auto">
+  //       <p className="text-sky-600">
+  //         {session.user
+  //           ? `Logged in as ${session.user.email}`
+  //           : "Not logged in"}
+  //       </p>
+
+  //       <form action="/auth/signout" method="post">
+  //         <button className="button block" type="submit">
+  //           Sign out
+  //         </button>
+  //       </form>
+  //     </div>
+  //   );
+  // }
   return (
-    <button onClick={() => signIn()} className="text-green-600 ml-auto">
-      Sign In
-    </button>
+    <>
+      <div>
+        {pathname !== "/login" && (
+          <Link href={"/login"}>
+            <Button type="submit">Login</Button>
+          </Link>
+        )}
+      </div>
+      <div>
+        {pathname !== "/signup" && (
+          <Link href={"/signup"}>
+            <Button type="submit">Sign Up</Button>
+          </Link>
+        )}
+      </div>
+    </>
   );
-};
+}
 
 export default SigninButton;
