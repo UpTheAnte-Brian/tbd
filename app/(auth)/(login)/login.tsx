@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 import { signInWithLoginCode, signInWithMagicLink } from "./actions";
 import { useActionState, useState } from "react";
 import { ActionState } from "@/app/lib/auth/middleware";
-import config from "../../../config";
+// import config from "../../../config";
 import { createClient } from "@/utils/supabase/client";
 import AUNLogo from "@/app/components/AUNLogo";
 import { Button } from "../components/button";
@@ -17,20 +17,16 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
   const priceId = searchParams.get("priceId");
-  const loginCode = searchParams.get("loginCode");
+  // const loginCode = searchParams.get("loginCode");
 
   const handleGoogleSignIn = () => {
-    const redirectTo = `${config.domainName}/auth/callback`;
+    const redirectTo = `${process.env.NEXT_PUBLIC_HOST}/callback`;
     setLoading(true);
     const supabase = createClient();
     supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${redirectTo}?priceId=${encodeURIComponent(
-          priceId || ""
-        )}&loginCode=${encodeURIComponent(
-          loginCode || ""
-        )}&redirect=${encodeURIComponent("/test")}`,
+        redirectTo: redirectTo,
       },
     });
     setLoading(false);

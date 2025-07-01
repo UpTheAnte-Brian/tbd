@@ -172,17 +172,12 @@ export const signInWithMagicLink = validatedAction(
   }),
   async (data) => {
     const supabase = await createClient();
-    const { email, priceId } = data;
-    const redirectTo = `${config.domainName}/api/auth/callback`;
+    const { email } = data;
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${redirectTo}?priceId=${
-          encodeURIComponent(
-            priceId || "",
-          )
-        }&redirect=${encodeURIComponent("/test")}`,
+        emailRedirectTo: process.env.NEXT_PUBLIC_HOST,
       },
     });
     if (error) {
