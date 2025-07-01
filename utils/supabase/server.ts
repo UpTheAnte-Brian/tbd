@@ -26,6 +26,12 @@ export async function createClient() {
                     }
                 },
             },
+            // This keeps users logged in forever, or until they logout.
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: true,
+            },
         },
     );
 }

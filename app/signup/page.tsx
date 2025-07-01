@@ -1,12 +1,12 @@
 // import GoogleSignInButton from "../components/ui/GoogleSignInButton";
-import { login, signup, loginWithOAuth } from "../login/actions";
+import { signup, signInWithOtp, loginWithOAuth } from "../login/actions";
 
 export default function SignupPage() {
   return (
-    <div className="flex bg-red-400 border-1">
-      <form className="mx-auto flex justify-center py-12 ">
-        <div className="flex w-72 p-6 h-dvh flex-col justify-center border rounded-lg border-gray-700">
-          <button onClick={loginWithOAuth}>Sign In with Google</button>
+    <div className="mx-auto ">
+      <form className="flex-center-center py-8 ">
+        <div className="flex p-6 flex-col justify-center border rounded-lg border-gray-700">
+          <button onClick={loginWithOAuth}>Sign Up with Google</button>
           {/* <GoogleSignInButton></GoogleSignInButton> */}
           <hr></hr>
           <p className="flex justify-center items-center py-8">
@@ -14,9 +14,9 @@ export default function SignupPage() {
           </p>
           <label htmlFor="email">Email:</label>
           <input id="email" name="email" type="email" required />
-          <label htmlFor="password">Password:</label>
-          <input id="password" name="password" type="password" required />
-          <button formAction={login}>Log in</button>
+          {/* <label htmlFor="password">Password:</label>
+          <input id="password" name="password" type="password" required /> */}
+          <button formAction={signInWithOtp}>Log in</button>
           <button formAction={signup}>Sign up</button>
         </div>
       </form>

@@ -27,7 +27,7 @@ export default function MobMenu({ Menus }: { Menus: MenuObj[] }) {
   };
 
   return (
-    <div>
+    <div className="flex items-center">
       <button className="lg:hidden z-[999] relative" onClick={toggleDrawer}>
         {isOpen ? <DynamicIcon name={"x"} /> : <DynamicIcon name={"menu"} />}
       </button>

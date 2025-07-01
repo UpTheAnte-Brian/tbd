@@ -28,19 +28,19 @@ export function SigninButton() {
   return (
     <>
       <div>
-        {pathname !== "/login" && (
-          <Link href={"/login"}>
-            <Button type="submit">Login</Button>
+        {pathname !== "/sign-in" && (
+          <Link href={"/sign-in"}>
+            <Button type="submit">Sign In</Button>
           </Link>
         )}
       </div>
-      <div>
-        {pathname !== "/signup" && (
-          <Link href={"/signup"}>
+      {/* <div>
+        {pathname === "/sign-in" && (
+          <Link href={"/sign-up"}>
             <Button type="submit">Sign Up</Button>
           </Link>
         )}
-      </div>
+      </div> */}
     </>
   );
 }

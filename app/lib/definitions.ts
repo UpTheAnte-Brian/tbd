@@ -92,6 +92,7 @@ export interface subMenu {
   desc?: string;
   icon: string;
   path: string;
+  method: string;
 }
 export interface Menu {
   name: string;

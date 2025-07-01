@@ -6,9 +6,9 @@ import Logo from "../../public/logo.webp";
 export default function AUNLogo() {
   return (
     <>
-      <Link className="flex justify-center gap-x-1 z-[999] relative" href={"/"}>
-        <Image src={Logo} alt="Logo" className="size-8" />
-        <h3 className="text-lg font-semibold">Ante Up Nation</h3>
+      <Link className="flex-center-center gap-x-1 relative" href={"/"}>
+        <Image src={Logo} alt="Logo" className="size-4 md:size-8" />
+        <h3 className="text-lg font-semibold md:text-md">Ante Up Nation</h3>
       </Link>
     </>
   );

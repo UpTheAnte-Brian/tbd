@@ -5,7 +5,7 @@ export default function LoginPage() {
   return (
     <>
       <form className="mx-auto flex justify-center bg-slate-500 border-gray-100">
-        <div className="flex w-72 h-screen flex-col gap-1 ">
+        <div className="flex w-72 flex-col gap-1 ">
           <div className="text-2xl font-bold py-12">Ante Up Nation Login</div>
           <input
             id="email"

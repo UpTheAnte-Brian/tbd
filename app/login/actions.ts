@@ -27,6 +27,30 @@ export async function login(formData: FormData) {
     redirect("/account");
 }
 
+export async function signInWithOtp(formData: FormData) {
+    const supabase = await createClient();
+
+    // type-casting here for convenience
+    // in practice, you should validate your inputs
+    const data = {
+        email: formData.get("email") as string,
+        options: {
+            // set this to false if you do not want the user to be automatically signed up
+            shouldCreateUser: true,
+        },
+    };
+
+    const {
+        data: { session },
+        error,
+    } = await supabase.auth.signInWithOtp(data);
+    console.log("session: ", session);
+    if (error) {
+        console.log("error: ", error);
+        redirect("/error");
+    }
+}
+
 export async function loginWithOAuth() {
     const supabase = await createClient();
     const host = process.env.NEXT_PUBLIC_HOST;

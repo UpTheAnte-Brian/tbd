@@ -11,6 +11,7 @@ import MobMenu from "./components/MobMenu";
 import AUNLogo from "./components/AUNLogo";
 import SignInButton from "./components/SignInButton";
 import { createClient } from "@/utils/supabase/server";
+import { Button } from "./ui/button";
 
 // This sets the title on your browser tab.
 // export const metadata = {
@@ -54,7 +55,7 @@ export default async function RootLayout({
         <StyledEngineProvider injectFirst>
           <main className="relative">
             <header className="h-16 text-[15px] fixed inset-0 flex-center bg-[#18181A] z-[999]">
-              <nav className=" px-2 flex-center-between w-full max-w-7xl mx-auto">
+              <nav className=" px-3 flex-center-between w-full max-w-7xl mx-auto">
                 <AUNLogo />
 
                 <ul className="gap-x-1 lg:flex-center hidden">
@@ -62,19 +63,17 @@ export default async function RootLayout({
                     <DesktopMenu menu={JSON.stringify(menu)} key={menu.name} />
                   ))}
                 </ul>
-                <div className="flex-center gap-x-5">
+                <div className="flex-center-center gap-x-2">
                   {session.user && (
-                    <div className="flex gap-4 ml-auto">
+                    <div className="grid grid-cols-2 gap-3">
                       <p className="text-sky-600">
-                        {session.user
-                          ? `${session.user.email}`
+                        {session.user && session.user.email
+                          ? `${session.user.email.split("@")[0]}`
                           : "Not logged in"}
                       </p>
 
-                      <form action="/auth/signout" method="post">
-                        <button className="button block" type="submit">
-                          Sign out
-                        </button>
+                      <form action="/signout" method="post">
+                        <Button type="submit">Sign Out</Button>
                       </form>
                     </div>
                   )}
@@ -86,7 +85,7 @@ export default async function RootLayout({
               </nav>
             </header>
             <div className="min-h-75svh mt-8">{children}</div>
-            <div className="outline rounded-lg inset-0 min-h-10svh">
+            <div className="inset-0 min-h-10svh bg-[#18181A]">
               <Footer />
             </div>
           </main>
