@@ -10,7 +10,7 @@ import { ActionState } from "@/app/lib/auth/middleware";
 import config from "../../../config";
 import { createClient } from "@/utils/supabase/client";
 import AUNLogo from "@/app/components/AUNLogo";
-import { Button } from "@/app/components/ui/button";
+import { Button } from "../../components/ui/button";
 
 export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
   const [loading, setLoading] = useState(false);
