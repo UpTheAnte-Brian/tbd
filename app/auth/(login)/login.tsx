@@ -18,9 +18,9 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
   const redirect = searchParams.get("redirect");
   const priceId = searchParams.get("priceId");
   // const loginCode = searchParams.get("loginCode");
-
+  console.log("redirect uri: ", redirect);
   const handleGoogleSignIn = () => {
-    const redirectTo = `${process.env.NEXT_PUBLIC_HOST}/callback`;
+    const redirectTo = `${process.env.NEXT_PUBLIC_HOST}/auth/callback`;
     setLoading(true);
     const supabase = createClient();
     supabase.auth.signInWithOAuth({
@@ -181,7 +181,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
               ? "New to our platform? "
               : "Already have an account? "}
             <Link
-              href={`${mode === "signin" ? "/sign-up" : "/sign-in"}${
+              href={`${mode === "signin" ? "/auth/sign-up" : "/auth/sign-in"}${
                 redirect ? `?redirect=${redirect}` : ""
               }${priceId ? `&priceId=${priceId}` : ""}`}
               className="font-medium text-blue-600 hover:text-blue-500"

@@ -28,8 +28,8 @@ export function SigninButton() {
   return (
     <>
       <div>
-        {pathname !== "/sign-in" && (
-          <Link href={"/sign-in"}>
+        {pathname !== "/auth/sign-in" && (
+          <Link href={"/auth/sign-in"}>
             <Button type="submit">Sign In</Button>
           </Link>
         )}
