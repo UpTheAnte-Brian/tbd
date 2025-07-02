@@ -72,7 +72,7 @@ export default async function RootLayout({
                           : "Not logged in"}
                       </p>
 
-                      <form action="/signout" method="post">
+                      <form action="/auth/signout" method="post">
                         <Button type="submit">Sign Out</Button>
                       </form>
                     </div>

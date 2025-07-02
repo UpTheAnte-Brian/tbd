@@ -216,19 +216,15 @@ export const signInWithGoogle = async (
   event: React.FormEvent<HTMLFormElement>,
 ) => {
   event.preventDefault();
-  const formData = new FormData(event.currentTarget);
+
   const supabase = await createClient();
-  const priceId = formData.get("priceId") as string;
+
   try {
-    const redirectTo = `${config.domainName}/api/auth/callback`;
+    const redirectTo = `${config.domainName}/auth/callback`;
     const { error: signInError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${redirectTo}?priceId=${
-          encodeURIComponent(
-            priceId || "",
-          )
-        }&redirect=/test`,
+        redirectTo: `${redirectTo}?redirect=/test`,
       },
     });
     if (signInError) {
@@ -245,5 +241,5 @@ export const signInWithGoogle = async (
 export const signOut = async () => {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/sign-in");
+  redirect("/auth/sign-in");
 };

@@ -17,10 +17,10 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
   const priceId = searchParams.get("priceId");
-  // const loginCode = searchParams.get("loginCode");
-  console.log("redirect uri: ", redirect);
+  const host = process.env.NEXT_PUBLIC_HOST;
+  console.log("redirect uri and host: ", redirect, host);
   const handleGoogleSignIn = () => {
-    const redirectTo = `${process.env.NEXT_PUBLIC_HOST}/auth/callback`;
+    const redirectTo = `${host}/auth/callback`;
     setLoading(true);
     const supabase = createClient();
     supabase.auth.signInWithOAuth({
