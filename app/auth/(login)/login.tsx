@@ -14,6 +14,7 @@ import { Button } from "../components/button";
 
 export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
   const [loading, setLoading] = useState(false);
+  const [firstName, setFirstName] = useState(""); // Initialize with an empty string
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
   const priceId = searchParams.get("priceId");
@@ -75,6 +76,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                   type="email"
                   placeholder="name@example.com"
                   required
+                  defaultValue={firstName}
                   className="px-4 h-12 bg-white rounded-lg border-gray-200 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500"
                 />
                 <Input
@@ -104,6 +106,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                   type="email"
                   placeholder="name@example.com"
                   required
+                  onChange={(e) => setFirstName(e.target.value)}
                   className="px-4 h-12 bg-white rounded-lg border-gray-200 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500"
                 />
                 <input type="hidden" name="priceId" value={priceId || ""} />
