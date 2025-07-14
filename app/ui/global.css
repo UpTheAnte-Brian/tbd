@@ -390,7 +390,7 @@ button.primary,
 .form-widget {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 5px;
 }
 
 .form-widget > .button {
