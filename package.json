@@ -6,7 +6,8 @@
     "dev": "npm run tailwind && next dev --turbopack",
     "start": "next start",
     "lint": "next lint",
-    "tailwind": "npx tailwindcss -i ./app/ui/global.css -o ./app/ui/style.css"
+    "tailwind": "npx tailwindcss -i ./app/ui/global.css -o ./app/ui/style.css",
+    "importDistricts": "SUPABASE_URL=https://ficwwbcophgsttirthxd.supabase.co SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpY3d3YmNvcGhnc3R0aXJ0aHhkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDkyNzI0NSwiZXhwIjoyMDYwNTAzMjQ1fQ.21udV2f73FqqpqU-sUQXrj6S18Zz9MQYEz2NSwkGjs8 node --loader ts-node/esm scripts/import-sd-mn.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -20,6 +21,7 @@
     "@supabase/supabase-js": "^2.50.2",
     "@tailwindcss/forms": "^0.5.10",
     "@tanstack/react-query": "^5.81.5",
+    "@turf/centroid": "^7.2.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@vercel/postgres": "^0.10.0",
     "autoprefixer": "^10.4.21",
@@ -27,15 +29,16 @@
     "bcrypt": "^5.1.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "fast-xml-parser": "^5.2.5",
     "framer-motion": "^12.22.0",
     "jsonwebtoken": "^9.0.2",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.487.0",
     "next": "latest",
     "nodemailer": "^7.0.4",
     "react": "latest",
     "react-dom": "latest",
     "tailwind-merge": "^3.3.1",
-    "typescript": "^5.8.3",
     "use-debounce": "^10.0.5",
     "use-places-autocomplete": "^4.0.1",
     "zod": "^3.25.67"
@@ -44,8 +47,9 @@
     "@eslint/js": "^9.30.0",
     "@types/autosuggest-highlight": "^3.2.3",
     "@types/bcrypt": "^5.0.2",
+    "@types/geojson": "^7946.0.16",
     "@types/google.maps": "^3.58.1",
-    "@types/node": "22.10.7",
+    "@types/node": "^22.10.7",
     "@types/nodemailer": "^6.4.17",
     "@types/postcss-js": "^4.0.4",
     "@types/react": "19.0.7",
@@ -55,6 +59,8 @@
     "postcss": "~8.1.14",
     "supabase": "^2.30.4",
     "tailwindcss": "3.4.17",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
     "typescript-eslint": "^8.35.1"
   }
 }

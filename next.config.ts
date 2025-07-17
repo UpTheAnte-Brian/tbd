@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   compiler: {
     styledComponents: true,
   },
+  typescript: {
+    tsconfigPath: "./tsconfig.next.json",
+  },
 };
 
 export default nextConfig;

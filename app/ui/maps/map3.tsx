@@ -1,71 +1,181 @@
-"use client";
+import { GoogleMap, LoadScript } from "@react-google-maps/api";
+import { useEffect, useRef, useState } from "react";
+import type { FeatureCollection, Feature, Geometry } from "geojson";
+import centroid from "@turf/centroid";
 
-import React, { useState, useCallback, useMemo } from "react";
-import { GoogleMap, KmlLayer } from "@react-google-maps/api";
-// import useGoogleMaps from "../../lib/map-context";
-type MapOptions = google.maps.MapOptions;
-type LatLngLiteral = google.maps.LatLngLiteral;
-// const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+interface DistrictProperties {
+  sdorgid: string;
+  name?: string;
+  SDORGNAME?: string;
+  SHORTNAME?: string;
+}
+
+interface Row {
+  id: string;
+  label: string;
+  lat: number;
+  lng: number;
+}
 
 const containerStyle = {
   width: "100%",
-  height: "80vh",
+  height: "100vh",
+  display: "flex",
 };
 
-function MapComponent() {
-  // const { isLoaded, loadError } = useGoogleMaps(apiKey);
+const mapContainerStyle = {
+  flex: 1,
+};
 
-  // if (loadError) return "Error loading maps";
-  // if (!isLoaded) return "Loading Maps";
-  const [, setMap] = useState<google.maps.Map | null>(null);
-  // console.log("MapComponent", map);
+const asideStyle = {
+  width: "400px",
+  overflowY: "scroll" as const,
+  backgroundColor: "black",
+  color: "white",
+  padding: "1rem",
+};
 
-  const onLoad = useCallback(function callback(mapInstance: google.maps.Map) {
-    setMap(mapInstance);
-  }, []);
+export default function MapWithDistricts() {
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const [rows, setRows] = useState<Row[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const onUnmount = useCallback(function callback() {
-    setMap(null);
-  }, []);
+  const onLoad = (map: google.maps.Map) => {
+    mapRef.current = map;
 
-  // const mapRef = useRef<GoogleMap>(null);
+    fetch("/api/districts")
+      .then((res) => res.json())
+      .then((geojson: FeatureCollection<Geometry, DistrictProperties>) => {
+        map.data.addGeoJson(geojson);
+        map.data.setStyle((feature) => {
+          const isSelected = feature.getProperty("sdorgid") === selectedId;
+          return {
+            fillColor: isSelected ? "yellow" : "blue",
+            strokeWeight: 1,
+            fillOpacity: isSelected ? 0.6 : 0.3,
+          };
+        });
+        map.data.addListener("click", (event) => {
+          const clickedFeature = event.feature;
+          const clickedId = clickedFeature.getProperty("sdorgid");
+          setSelectedId(clickedId);
 
-  const center = useMemo<LatLngLiteral>(
-    () => ({
-      lat: 44.745,
-      lng: -93.523,
-    }),
-    []
-  );
+          // Convert to GeoJSON before passing to Turf
+          clickedFeature.toGeoJson((geoJsonFeature) => {
+            if (mapRef.current) {
+              fitBoundsToFeature(mapRef.current, geoJsonFeature);
+            }
+          });
+        });
+        const validRows: Row[] = geojson.features
+          .map((f) => {
+            const c = centroid(f as Feature<Geometry, DistrictProperties>);
+            if (!c || !c.geometry || !c.geometry.coordinates) return null;
+            const [lng, lat] = c.geometry.coordinates;
 
-  const options = useMemo<MapOptions>(
-    () => ({
-      disableDefaultUI: false,
-      zoomControl: true,
-      clickableIcons: false,
-      mapId: "74d818485994559a",
-    }),
-    []
-  );
+            return {
+              id: f.properties.sdorgid,
+              label:
+                f.properties.SHORTNAME ||
+                f.properties.name ||
+                f.properties.sdorgid,
+              lat,
+              lng,
+            };
+          })
+          .filter(Boolean) as Row[];
+        console.log("validRows: ", validRows);
+        setRows(validRows);
+
+        const bounds = new google.maps.LatLngBounds();
+        validRows.forEach((r) => {
+          if (!isNaN(r.lat) && !isNaN(r.lng)) {
+            bounds.extend({ lat: r.lat, lng: r.lng });
+          }
+        });
+
+        console.log("Bounds:", bounds.toJSON());
+        if (!bounds.isEmpty()) {
+          map.fitBounds(bounds);
+        } else {
+          console.log("fallback center");
+          map.setCenter({ lat: 45, lng: -93 }); // fallback center
+          map.setZoom(6);
+        }
+      });
+  };
+
+  useEffect(() => {
+    if (mapRef.current) {
+      mapRef.current.data.setStyle((feature) => {
+        const isSelected = feature.getProperty("sdorgid") === selectedId;
+        return {
+          fillColor: isSelected ? "yellow" : "blue",
+          strokeWeight: 1,
+          fillOpacity: isSelected ? 0.6 : 0.3,
+        };
+      });
+    }
+  }, [selectedId]);
 
   return (
-    <GoogleMap
-      mapContainerStyle={containerStyle}
-      center={center}
-      zoom={9}
-      options={options}
-      onLoad={onLoad}
-      onUnmount={onUnmount}
-    >
-      <KmlLayer
-        url="https://www.google.com/maps/d/u/0/kml?mid=1FKYPSCOodzmWDszKJYHUrSL0jKpeVMc&lid=i9NuWw-UIno"
-        options={{
-          suppressInfoWindows: false,
-          preserveViewport: true,
-        }}
-      />
-    </GoogleMap>
+    <div style={containerStyle}>
+      <LoadScript
+        googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
+      >
+        <GoogleMap
+          mapContainerStyle={mapContainerStyle}
+          onLoad={onLoad}
+          options={{ mapTypeId: "roadmap" }}
+        />
+      </LoadScript>
+
+      <aside style={asideStyle}>
+        <h2>Districts</h2>
+        <ul>
+          {rows.map((r) => (
+            <li
+              key={r.id}
+              onClick={() => {
+                setSelectedId(r.id);
+                if (mapRef.current) {
+                  // fitBoundsToFeature(mapRef.current, geoJsonFeature);
+                  mapRef.current.panTo({ lat: r.lat, lng: r.lng });
+                  mapRef.current.setZoom(10); // optional: zoom in
+                }
+              }}
+              style={{
+                cursor: "pointer",
+                fontWeight: r.id === selectedId ? "bold" : "normal",
+                backgroundColor: r.id === selectedId ? "#333" : "transparent",
+              }}
+            >
+              {r.label}
+            </li>
+          ))}
+        </ul>
+      </aside>
+    </div>
   );
 }
 
-export default React.memo(MapComponent);
+function fitBoundsToFeature(
+  map: google.maps.Map,
+  geojsonFeature: Feature<Geometry, DistrictProperties>
+) {
+  const bounds = new google.maps.LatLngBounds();
+
+  const geom = geojsonFeature.geometry;
+  if (geom.type === "Polygon") {
+    geom.coordinates[0].forEach(([lng, lat]) => bounds.extend({ lat, lng }));
+  } else if (geom.type === "MultiPolygon") {
+    geom.coordinates.forEach((polygon) => {
+      polygon[0].forEach(([lng, lat]) => bounds.extend({ lat, lng }));
+    });
+  } else {
+    console.warn("Unsupported geometry type:", geom.type);
+    return;
+  }
+
+  map.fitBounds(bounds, 40); // 40px padding
+}
