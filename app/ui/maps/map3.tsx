@@ -1,3 +1,5 @@
+"use client";
+
 import { GoogleMap, LoadScript } from "@react-google-maps/api";
 import { useEffect, useRef, useState } from "react";
 import type { FeatureCollection, Feature, Geometry } from "geojson";
@@ -55,15 +57,18 @@ export default function MapWithDistricts() {
             fillOpacity: isSelected ? 0.6 : 0.3,
           };
         });
-        map.data.addListener("click", (event) => {
+        map.data.addListener("click", (event: google.maps.Data.MouseEvent) => {
           const clickedFeature = event.feature;
-          const clickedId = clickedFeature.getProperty("sdorgid");
+          const clickedId = clickedFeature.getProperty("sdorgid") as string;
           setSelectedId(clickedId);
 
           // Convert to GeoJSON before passing to Turf
           clickedFeature.toGeoJson((geoJsonFeature) => {
             if (mapRef.current) {
-              fitBoundsToFeature(mapRef.current, geoJsonFeature);
+              fitBoundsToFeature(
+                mapRef.current,
+                geoJsonFeature as Feature<Geometry, DistrictProperties>
+              );
             }
           });
         });
