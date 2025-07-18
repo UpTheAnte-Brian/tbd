@@ -177,8 +177,6 @@ export default function MapWithDistricts() {
                   if (feature) {
                     const bounds = getBoundsFromGeoJSON(feature);
                     mapRef.current.fitBounds(bounds);
-                    mapRef.current.panTo({ lat: r.lat, lng: r.lng });
-                    mapRef.current.setZoom(10); // optional: zoom in
                   }
                 }
               }}
