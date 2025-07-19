@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FeatureCollection, Feature, Geometry } from "geojson";
 import centroid from "@turf/centroid";
 import { getBoundsFromGeoJSON } from "../../lib/getBoundsFromGeoJSON";
+import { DistrictsPanel, panToMinnesota } from "../districts/district";
 
 interface DistrictProperties {
   sdorgid: string;
@@ -12,24 +13,7 @@ interface DistrictProperties {
   SHORTNAME?: string;
 }
 
-interface Row {
-  id: string;
-  label: string;
-  lat: number;
-  lng: number;
-}
-
-const mapContainerStyle = {
-  flex: 1,
-};
-
-const asideStyle = {
-  width: "400px",
-  overflowY: "scroll" as const,
-  backgroundColor: "black",
-  color: "white",
-  padding: "1rem",
-};
+const mapContainerStyle = { flex: 1 };
 const containerStyle = {
   width: "100%",
   height: "100vh",
@@ -37,9 +21,26 @@ const containerStyle = {
   position: "relative" as const,
 };
 
+// ✅ Helper: pan/zoom to a feature (GeoJSON or google.maps.Data.Feature)
+function panToFeature(
+  feature: Feature<Geometry, DistrictProperties> | google.maps.Data.Feature,
+  map: google.maps.Map
+) {
+  if ("getGeometry" in feature) {
+    feature.toGeoJson((geoJsonFeature) => {
+      const bounds = getBoundsFromGeoJSON(
+        geoJsonFeature as Feature<Geometry, DistrictProperties>
+      );
+      map.fitBounds(bounds);
+    });
+  } else {
+    const bounds = getBoundsFromGeoJSON(feature);
+    map.fitBounds(bounds);
+  }
+}
+
 export default function MapWithDistricts() {
   const mapRef = useRef<google.maps.Map | null>(null);
-  const [rows, setRows] = useState<Row[]>([]);
   const [features, setFeatures] = useState<
     Feature<Geometry, DistrictProperties>[]
   >([]);
@@ -47,6 +48,48 @@ export default function MapWithDistricts() {
   const [hoveredFeatureProps, setHoveredFeatureProps] =
     useState<DistrictProperties | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [labelMarkers, setLabelMarkers] = useState<google.maps.Marker[]>([]);
+
+  const updateLabelMarkers = (
+    map: google.maps.Map,
+    features: Feature<Geometry, DistrictProperties>[],
+    zoom: number
+  ) => {
+    labelMarkers.forEach((m) => m.setMap(null));
+    const zoomThreshold = 9;
+    if (zoom < zoomThreshold) {
+      setLabelMarkers([]);
+      return;
+    }
+
+    const newMarkers: google.maps.Marker[] = features
+      .map((feature) => {
+        const center = centroid(feature).geometry;
+        if (center.type !== "Point") return null;
+        const [lng, lat] = center.coordinates;
+        return new google.maps.Marker({
+          position: { lat, lng },
+          map,
+          label: {
+            text:
+              feature.properties.SHORTNAME ??
+              feature.properties.name ??
+              feature.properties.sdorgid,
+            fontSize: "14px",
+            color: "black",
+            fontWeight: "bold",
+          },
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 0,
+          },
+          zIndex: 1000,
+        });
+      })
+      .filter((m): m is google.maps.Marker => m !== null);
+
+    setLabelMarkers(newMarkers);
+  };
 
   const onLoad = (map: google.maps.Map) => {
     mapRef.current = map;
@@ -57,27 +100,6 @@ export default function MapWithDistricts() {
         map.data.addGeoJson(geojson);
         setFeatures(geojson.features);
 
-        const validRows: Row[] = geojson.features.map((f) => {
-          const c = centroid(f);
-          const [lng, lat] = c.geometry.coordinates;
-
-          return {
-            id: f.properties.sdorgid,
-            label:
-              f.properties.SHORTNAME ||
-              f.properties.name ||
-              f.properties.sdorgid,
-            lat,
-            lng,
-          };
-        });
-
-        setRows(validRows);
-
-        const bounds = new google.maps.LatLngBounds();
-        validRows.forEach((r) => bounds.extend({ lat: r.lat, lng: r.lng }));
-        if (!bounds.isEmpty()) map.fitBounds(bounds);
-
         map.data.setStyle((feature) => {
           const id = feature.getProperty("sdorgid");
           const isSelected = id === selectedId;
@@ -85,59 +107,71 @@ export default function MapWithDistricts() {
 
           return {
             fillColor: isSelected
-              ? "#FFEB3B" // selected yellow
+              ? "#FFEB3B"
               : isHovered
-              ? "#FFF176" // lighter yellow on hover
-              : "#2196F3", // default blue
+              ? "#FFF176"
+              : "#2196F3",
             fillOpacity: 0.5,
             strokeColor: isSelected || isHovered ? "#FBC02D" : "#1976D2",
             strokeWeight: 2,
           };
         });
-        map.data.addListener(
-          "mouseover",
-          (event: google.maps.Data.MouseEvent) => {
-            const id = event.feature.getProperty("sdorgid") as string;
-            setHoveredId(id);
-            setHoveredFeatureProps({
-              sdorgid: event.feature.getProperty("sdorgid") as string,
-              name: event.feature.getProperty("name") as string | undefined,
-              SDORGNAME: event.feature.getProperty("SDORGNAME") as
-                | string
-                | undefined,
-              SHORTNAME: event.feature.getProperty("SHORTNAME") as
-                | string
-                | undefined,
-            });
-          }
-        );
+
+        // ✅ Wait for tiles to load before adding zoom listener
+        google.maps.event.addListenerOnce(map, "tilesloaded", () => {
+          google.maps.event.addListener(map, "zoom_changed", () => {
+            const zoom = map.getZoom() ?? 0;
+            updateLabelMarkers(map, geojson.features, zoom);
+          });
+
+          // Also call once initially
+          const zoom = map.getZoom() ?? 0;
+          updateLabelMarkers(map, geojson.features, zoom);
+        });
+
+        const bounds = new google.maps.LatLngBounds();
+        geojson.features.forEach((feature) => {
+          const c = centroid(feature);
+          const [lng, lat] = c.geometry.coordinates;
+          bounds.extend({ lat, lng });
+        });
+        if (!bounds.isEmpty()) map.fitBounds(bounds);
+
+        map.data.addListener("mouseover", (event) => {
+          const id = event.feature.getProperty("sdorgid") as string;
+          setHoveredId(id);
+          setHoveredFeatureProps({
+            sdorgid: id,
+            name: event.feature.getProperty("name"),
+            SDORGNAME: event.feature.getProperty("SDORGNAME"),
+            SHORTNAME: event.feature.getProperty("SHORTNAME"),
+          });
+        });
 
         map.data.addListener("mouseout", () => {
           setHoveredId(null);
           setHoveredFeatureProps(null);
         });
 
-        map.data.addListener("click", (event: google.maps.Data.MouseEvent) => {
+        map.data.addListener("click", (event) => {
           const clickedFeature = event.feature;
           const clickedId = clickedFeature.getProperty("sdorgid") as string;
           setSelectedId(clickedId);
-
-          clickedFeature.toGeoJson((geoJsonFeature) => {
-            if (mapRef.current) {
-              const bounds = getBoundsFromGeoJSON(
-                geoJsonFeature as Feature<Geometry, DistrictProperties>
-              );
-              map.fitBounds(bounds);
-            }
-          });
+          if (mapRef.current) panToFeature(clickedFeature, mapRef.current);
         });
       });
   };
 
   useEffect(() => {
-    if (!mapRef.current || !features.length) return;
+    const map = mapRef.current;
+    if (!map || !features.length) return;
 
-    mapRef.current.data.setStyle((feature) => {
+    const selectedFeature = features.find(
+      (f) => f.properties?.sdorgid === selectedId
+    );
+    if (selectedFeature) panToFeature(selectedFeature, map);
+
+    map.data.setStyle((feature) => {
       const id = feature.getProperty("sdorgid");
       const isSelected = id === selectedId;
       const isHovered = id === hoveredId;
@@ -162,35 +196,20 @@ export default function MapWithDistricts() {
           options={{ mapTypeId: "roadmap" }}
         />
       </LoadScript>
-      <aside style={asideStyle}>
-        <div className="font-bold bg-gray-500">Districts</div>
-        <ul>
-          {rows.map((r) => (
-            <li
-              key={r.id}
-              onClick={() => {
-                setSelectedId(r.id);
-                if (mapRef.current) {
-                  const feature = features.find(
-                    (f) => f.properties.sdorgid === r.id
-                  );
-                  if (feature) {
-                    const bounds = getBoundsFromGeoJSON(feature);
-                    mapRef.current.fitBounds(bounds);
-                  }
-                }
-              }}
-              style={{
-                cursor: "pointer",
-                fontWeight: r.id === selectedId ? "bold" : "normal",
-                backgroundColor: r.id === selectedId ? "#333" : "transparent",
-              }}
-            >
-              {r.label}
-            </li>
-          ))}
-        </ul>
-      </aside>
+
+      <DistrictsPanel
+        selectedId={selectedId}
+        setSelectedId={setSelectedId}
+        districts={features}
+        mapRef={mapRef}
+        panToMinnesota={() => {
+          if (mapRef.current) {
+            panToMinnesota(mapRef.current);
+            setLabelMarkers([]);
+          }
+        }}
+      />
+
       {hoveredFeatureProps && (
         <div className="absolute top-14 left-3 bg-black/80 text-white rounded-lg px-4 py-2 pointer-events-none z-50 shadow-lg transition-all duration-150 opacity-100">
           <div className="font-semibold">
@@ -202,38 +221,3 @@ export default function MapWithDistricts() {
     </div>
   );
 }
-
-// const addLabelsToMap = (
-//   features: Feature<Geometry, DistrictProperties>[],
-//   selectedId?: string
-// ) => {
-//   labelMarkers.forEach((m) => m.setMap(null));
-// const map = mapRef.current;
-//   if (!map) return;
-//   const newMarkers: google.maps.Marker[] = features
-//     .map((f) => {
-//       const center = centroid(f).geometry;
-//       if (center.type !== "Point") return null;
-
-//       const [lng, lat] = center.coordinates;
-
-//       return new google.maps.Marker({
-//         position: { lat, lng },
-//         map,
-//         label: {
-//           text: f.properties.SHORTNAME ?? f.properties.name ?? "",
-//           color: f.properties.sdorgid === selectedId ? "yellow" : "white",
-//           fontWeight: f.properties.sdorgid === selectedId ? "bold" : "normal",
-//           fontSize: "14px",
-//         },
-//         icon: {
-//           path: google.maps.SymbolPath.CIRCLE,
-//           scale: 0,
-//         },
-//         zIndex: f.properties.sdorgid === selectedId ? 1000 : 1,
-//       });
-//     })
-//     .filter((m): m is google.maps.Marker => m !== null);
-
-//   setLabelMarkers(newMarkers);
-// };
