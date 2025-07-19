@@ -137,23 +137,30 @@ export default function MapWithDistricts() {
         });
         if (!bounds.isEmpty()) map.fitBounds(bounds);
 
-        map.data.addListener("mouseover", (event) => {
-          const id = event.feature.getProperty("sdorgid") as string;
-          setHoveredId(id);
-          setHoveredFeatureProps({
-            sdorgid: id,
-            name: event.feature.getProperty("name"),
-            SDORGNAME: event.feature.getProperty("SDORGNAME"),
-            SHORTNAME: event.feature.getProperty("SHORTNAME"),
-          });
-        });
+        map.data.addListener(
+          "mouseover",
+          (event: google.maps.Data.MouseEvent) => {
+            const id = event.feature.getProperty("sdorgid") as string;
+            setHoveredId(id);
+            setHoveredFeatureProps({
+              sdorgid: id,
+              name: event.feature.getProperty("name") as string | undefined,
+              SDORGNAME: event.feature.getProperty("SDORGNAME") as
+                | string
+                | undefined,
+              SHORTNAME: event.feature.getProperty("SHORTNAME") as
+                | string
+                | undefined,
+            });
+          }
+        );
 
         map.data.addListener("mouseout", () => {
           setHoveredId(null);
           setHoveredFeatureProps(null);
         });
 
-        map.data.addListener("click", (event) => {
+        map.data.addListener("click", (event: google.maps.Data.MouseEvent) => {
           const clickedFeature = event.feature;
           const clickedId = clickedFeature.getProperty("sdorgid") as string;
           setSelectedId(clickedId);
