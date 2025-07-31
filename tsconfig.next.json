@@ -23,7 +23,8 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/app/*": ["app/*"],
+      "@/utils/*": ["utils/*"]
     }
   },
   "include": [

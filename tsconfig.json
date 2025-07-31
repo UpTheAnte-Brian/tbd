@@ -7,7 +7,10 @@
     "strict": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@/app/*": ["app/*"]
+    }
   },
   "exclude": ["node_modules", ".next", "app", "pages", "components"]
 }

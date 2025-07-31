@@ -1,10 +1,11 @@
-import { ExtendedFeature, DistrictProperties } from "../../lib/interfaces";
+import { DistrictWithFoundation } from "../../lib/types";
 import { Button } from "../button";
+import FoundationEditor from "./foundation-editor";
 
 type DistrictsPanelProps = {
   selectedId: string | null;
   setSelectedId: (id: string | null) => void;
-  districts: ExtendedFeature[];
+  districts: DistrictWithFoundation[];
   mapRef: React.RefObject<google.maps.Map | null>;
   panToMinnesota: () => void;
 };
@@ -56,21 +57,43 @@ export function DistrictsPanel({
 
       {/* Selected feature details */}
       <div className="flex-1 p-4 border-t border-gray-600 overflow-y-auto">
-        {selectedFeature ? (
-          <div>
-            <h2 className="text-lg font-bold mb-2">
-              {(selectedFeature.properties as DistrictProperties)?.SHORTNAME ??
-                "Selected District"}
-            </h2>
-            <p className="text-sm text-gray-400 mb-2">
-              ID: {selectedFeature.id}
-            </p>
-            <pre className="text-xs text-gray-400 whitespace-pre-wrap">
-              {JSON.stringify(selectedFeature.properties, null, 2)}
-            </pre>
-          </div>
-        ) : (
-          <p className="text-gray-500">Select a district to view details</p>
+        {selectedFeature?.properties?.SDORGID && (
+          <FoundationEditor
+            foundation={{
+              district_id: selectedFeature.properties.SDORGID,
+              name: "",
+              contact: "",
+              website: selectedFeature.properties.WEB_URL,
+              founding_year: null,
+              average_class_size: null,
+              balance_sheet: null,
+              ...(selectedFeature.foundation ?? {}),
+            }}
+            onSave={async (updated) => {
+              try {
+                if (!updated.district_id) {
+                  throw new Error("Missing district_id for foundation update");
+                }
+
+                const response = await fetch(
+                  `/api/foundations/${updated.district_id}`,
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(updated),
+                  }
+                );
+
+                if (!response.ok) {
+                  throw new Error(
+                    `Failed to save foundation: ${response.statusText}`
+                  );
+                }
+              } catch (error) {
+                console.error("Error saving foundation data:", error);
+              }
+            }}
+          />
         )}
       </div>
     </aside>
