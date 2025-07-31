@@ -34,10 +34,10 @@ importers:
         version: 2.20.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@supabase/ssr':
         specifier: ^0.6.1
-        version: 0.6.1(@supabase/supabase-js@2.53.0(bufferutil@4.0.9))
+        version: 0.6.1(@supabase/supabase-js@2.52.0(bufferutil@4.0.9))
       '@supabase/supabase-js':
-        specifier: ^2.53.0
-        version: 2.53.0(bufferutil@4.0.9)
+        specifier: 2.52.0
+        version: 2.52.0(bufferutil@4.0.9)
       '@tailwindcss/forms':
         specifier: ^0.5.10
         version: 0.5.10(tailwindcss@3.4.17(ts-node@10.9.2(@types/node@22.17.0)(typescript@5.8.3)))
@@ -741,11 +741,11 @@ packages:
     peerDependencies:
       '@supabase/supabase-js': ^2.43.4
 
-  '@supabase/storage-js@2.10.4':
-    resolution: {integrity: sha512-cvL02GarJVFcNoWe36VBybQqTVRq6wQSOCvTS64C+eyuxOruFIm1utZAY0xi2qKtHJO3EjKaj8iWJKySusDmAQ==}
+  '@supabase/storage-js@2.7.1':
+    resolution: {integrity: sha512-asYHcyDR1fKqrMpytAS1zjyEfvxuOIp1CIXX7ji4lHHcJKqyk+sLl/Vxgm4sN6u8zvuUtae9e4kDxQP2qrwWBA==}
 
-  '@supabase/supabase-js@2.53.0':
-    resolution: {integrity: sha512-Vg9sl0oFn55cCPaEOsDsRDbxOVccxRrK/cikjL1XbywHEOfyA5SOOEypidMvQLwgoAfnC2S4D9BQwJDcZs7/TQ==}
+  '@supabase/supabase-js@2.52.0':
+    resolution: {integrity: sha512-jbs3CV1f2+ge7sgBeEduboT9v/uGjF22v0yWi/5/XFn5tbM8MfWRccsMtsDwAwu24XK8H6wt2LJDiNnZLtx/bg==}
 
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
@@ -3976,23 +3976,23 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@supabase/ssr@0.6.1(@supabase/supabase-js@2.53.0(bufferutil@4.0.9))':
+  '@supabase/ssr@0.6.1(@supabase/supabase-js@2.52.0(bufferutil@4.0.9))':
     dependencies:
-      '@supabase/supabase-js': 2.53.0(bufferutil@4.0.9)
+      '@supabase/supabase-js': 2.52.0(bufferutil@4.0.9)
       cookie: 1.0.2
 
-  '@supabase/storage-js@2.10.4':
+  '@supabase/storage-js@2.7.1':
     dependencies:
       '@supabase/node-fetch': 2.6.15
 
-  '@supabase/supabase-js@2.53.0(bufferutil@4.0.9)':
+  '@supabase/supabase-js@2.52.0(bufferutil@4.0.9)':
     dependencies:
       '@supabase/auth-js': 2.71.1
       '@supabase/functions-js': 2.4.5
       '@supabase/node-fetch': 2.6.15
       '@supabase/postgrest-js': 1.19.4
       '@supabase/realtime-js': 2.11.15(bufferutil@4.0.9)
-      '@supabase/storage-js': 2.10.4
+      '@supabase/storage-js': 2.7.1
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
