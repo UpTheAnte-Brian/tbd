@@ -6,7 +6,6 @@ import { DistrictsPanel, panToMinnesota } from "../../ui/districts/district";
 import { getLabel, getLabelPosition } from "../../lib/district/utils";
 import React from "react";
 import {
-  Foundation,
   DistrictProperties,
   DistrictWithFoundation,
   LatLngLiteral,
