@@ -26,7 +26,7 @@ export const formatDateToLocal = (
 export const generateYAxis = (revenue: Revenue[]) => {
   // Calculate what labels we need to display on the y-axis
   // based on highest record and in 1000s
-  const yAxisLabels = [];
+  const yAxisLabels: string[] = [];
   const highestRecord = Math.max(...revenue.map((month) => month.revenue));
   const topLabel = Math.ceil(highestRecord / 1000) * 1000;
 

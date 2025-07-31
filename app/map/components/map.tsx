@@ -254,7 +254,7 @@ const MapComponent = React.memo(() => {
             mapTypeId: "roadmap",
             mapId: "74d818485994559a",
             zoomControl: true,
-            disableDefaultUI: false,
+            disableDefaultUI: true,
           }}
         />
       </LoadScript>
@@ -278,11 +278,11 @@ const MapComponent = React.memo(() => {
         </div>
       )}
 
-      {/* <div className="absolute top-12 right-3 bg-black text-white text-sm px-2 py-1 rounded z-50">
+      <div className="absolute top-12 right-3 bg-black text-white text-sm px-2 py-1 rounded z-50">
         Zoom: {zoomLevel}
         <br />
         Center: {center.lat}
-      </div> */}
+      </div>
     </div>
   );
 });

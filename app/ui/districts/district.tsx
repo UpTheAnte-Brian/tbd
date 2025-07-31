@@ -1,17 +1,10 @@
+import { ExtendedFeature, DistrictProperties } from "../../lib/interfaces";
 import { Button } from "../button";
-import { Feature, Geometry } from "geojson";
-
-interface DistrictProperties {
-  sdorgid: string;
-  name?: string;
-  SDORGNAME?: string;
-  SHORTNAME?: string;
-}
 
 type DistrictsPanelProps = {
   selectedId: string | null;
   setSelectedId: (id: string | null) => void;
-  districts: Feature<Geometry, DistrictProperties>[];
+  districts: ExtendedFeature[];
   mapRef: React.RefObject<google.maps.Map | null>;
   panToMinnesota: () => void;
 };
@@ -30,7 +23,7 @@ export function DistrictsPanel({
   panToMinnesota,
 }: DistrictsPanelProps) {
   const selectedFeature = districts.find(
-    (f) => f.properties?.sdorgid === selectedId
+    (f) => f.properties?.SDORGID === selectedId
   );
   return (
     <aside className="w-80 h-full border-r flex flex-col bg-inherit">
@@ -42,7 +35,7 @@ export function DistrictsPanel({
       <div className="overflow-y-auto flex-1">
         <ul>
           {districts.map((feature) => {
-            const id = feature.properties?.sdorgid;
+            const id = feature.properties?.SDORGID;
             const name = feature.properties?.SHORTNAME || "Unnamed";
             return (
               <li
@@ -66,7 +59,7 @@ export function DistrictsPanel({
         {selectedFeature ? (
           <div>
             <h2 className="text-lg font-bold mb-2">
-              {(selectedFeature.properties as DistrictProperties)?.name ??
+              {(selectedFeature.properties as DistrictProperties)?.SHORTNAME ??
                 "Selected District"}
             </h2>
             <p className="text-sm text-gray-400 mb-2">
