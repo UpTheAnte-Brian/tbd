@@ -1,28 +1,41 @@
-import { createClient } from "../../../../utils/supabase/server"; // adjust if needed
 import { NextResponse } from "next/server";
-export async function POST(
-    req: Request,
-    { params }: { params: { id: string } },
-) {
-    const { id } = params;
+import { createClient } from "../../../../utils/supabase/server"; // Adjust if needed
 
-    if (!id) {
-        return NextResponse.json({ error: "Missing district ID" }, {
-            status: 400,
-        });
+export async function GET(
+    _req: Request,
+    context: { params: Promise<{ id: string }> },
+) {
+    const { id } = await context.params;
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from("foundations")
+        .select("*")
+        .eq("district_id", id)
+        .single();
+
+    if (error) {
+        return NextResponse.json({ error: error.message }, { status: 404 });
     }
 
-    const body = await req.json();
+    return NextResponse.json({ data }, { status: 200 });
+}
+
+export async function POST(
+    _req: Request,
+    context: { params: Promise<{ id: string }> },
+) {
+    const { id } = await context.params;
     const supabase = await createClient();
+    const body = await _req.json();
 
     const { data, error } = await supabase
         .from("foundations")
         .upsert({ ...body, district_id: id }, { onConflict: "district_id" });
 
     if (error) {
-        console.error("Error upserting foundation:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ data });
+    return NextResponse.json({ data }, { status: 200 });
 }

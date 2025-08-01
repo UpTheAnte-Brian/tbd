@@ -3,7 +3,7 @@ import { GoogleMap, LoadScript } from "@react-google-maps/api";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getBoundsFromGeoJSON } from "../../lib/getBoundsFromGeoJSON";
 import { DistrictsPanel, panToMinnesota } from "../../ui/districts/district";
-import { ExtendedFeature, DistrictProperties } from "../../lib/interfaces";
+import { DistrictProperties, DistrictWithFoundation } from "../../lib/types";
 import { getLabel, getLabelPosition } from "../../lib/district/utils";
 import React from "react";
 type LatLngLiteral = google.maps.LatLngLiteral;
@@ -19,12 +19,14 @@ const containerStyle = {
 };
 
 function panToFeature(
-  feature: ExtendedFeature | google.maps.Data.Feature,
+  feature: DistrictWithFoundation | google.maps.Data.Feature,
   map: google.maps.Map
 ) {
   if ("getGeometry" in feature) {
     feature.toGeoJson((geoJsonFeature) => {
-      map.fitBounds(getBoundsFromGeoJSON(geoJsonFeature as ExtendedFeature));
+      map.fitBounds(
+        getBoundsFromGeoJSON(geoJsonFeature as DistrictWithFoundation)
+      );
     });
   } else {
     const bounds = getBoundsFromGeoJSON(feature);
@@ -34,7 +36,7 @@ function panToFeature(
 
 const MapComponent = React.memo(() => {
   const mapRef = useRef<google.maps.Map | null>(null);
-  const [features, setFeatures] = useState<ExtendedFeature[]>([]);
+  const [features, setFeatures] = useState<DistrictWithFoundation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredFeatureProps, setHoveredFeatureProps] =
     useState<DistrictProperties | null>(null);
@@ -54,7 +56,7 @@ const MapComponent = React.memo(() => {
   };
 
   const updateLabelMarkers = useCallback(
-    (map: google.maps.Map, features: ExtendedFeature[]) => {
+    (map: google.maps.Map, features: DistrictWithFoundation[]) => {
       //   labelMarkersRef.current.forEach((m) => m.setMap(null));
 
       //   const zoomThreshold = 4;
@@ -95,7 +97,7 @@ const MapComponent = React.memo(() => {
 
     await fetch("/api/districts")
       .then((res) => res.json())
-      .then((geojson: { features: ExtendedFeature[] }) => {
+      .then((geojson: { features: DistrictWithFoundation[] }) => {
         map.data.addGeoJson(geojson);
         setFeatures(geojson.features);
 
