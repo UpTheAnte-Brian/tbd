@@ -1,8 +1,10 @@
 import { createClient } from "../../../../utils/supabase/server"; // adjust if needed
 import { NextResponse } from "next/server";
-
-export async function POST(req: Request, context: { params: { id: string } }) {
-    const { id } = context.params;
+export async function POST(
+    req: Request,
+    { params }: { params: { id: string } },
+) {
+    const { id } = params;
 
     if (!id) {
         return NextResponse.json({ error: "Missing district ID" }, {
