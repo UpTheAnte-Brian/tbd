@@ -11,13 +11,22 @@ import {
   LatLngLiteral,
 } from "../../lib/types";
 
+function checkImageExists(src: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = src;
+  });
+}
+
 const mapContainerStyle = {
   width: "100%",
-  height: "100vh",
+  height: "80vh",
 };
 const containerStyle = {
   width: "100%",
-  height: "100vh",
+  height: "80vh",
   display: "flex",
 };
 
@@ -59,7 +68,7 @@ const MapComponent = React.memo(() => {
   };
 
   const updateLabelMarkers = useCallback(
-    (map: google.maps.Map, features: DistrictWithFoundation[]) => {
+    async (map: google.maps.Map, features: DistrictWithFoundation[]) => {
       //   labelMarkersRef.current.forEach((m) => m.setMap(null));
 
       //   const zoomThreshold = 4;
@@ -68,28 +77,33 @@ const MapComponent = React.memo(() => {
       //     setLabelMarkers([]);
       //     return;
       //   }
-      const customMarkerContent = document.createElement("div");
-      customMarkerContent.style.backgroundColor = "blue";
-      customMarkerContent.style.color = "white";
-      customMarkerContent.style.padding = "5px 10px";
-      customMarkerContent.style.borderRadius = "5px";
-      customMarkerContent.textContent = "Custom Marker";
-      customMarkerContent.innerHTML = "test";
+      const defaultPin = document.createElement("div");
+      defaultPin.textContent = "📍";
 
-      const newMarkers: google.maps.marker.AdvancedMarkerElement[] = features
-        .map((feature) => {
+      const newMarkers = await Promise.all(
+        features.map(async (feature) => {
+          const logoPath = `/districtLogos/${feature.sdorgid}.svg`;
+          const hasLogo = await checkImageExists(logoPath);
+
+          const wrapperDiv = document.createElement("template");
+          wrapperDiv.style.height = "50";
+          wrapperDiv.style.width = "50";
+          wrapperDiv.className = "my-custom-marker";
+          wrapperDiv.innerHTML = logoPath;
+          const svgElement = wrapperDiv.content.firstChild;
+          const content = hasLogo ? svgElement : defaultPin;
           const position = getLabelPosition(feature);
           const label = getLabel(feature) || "";
+
           return new google.maps.marker.AdvancedMarkerElement({
             position,
             title: label,
-            content: customMarkerContent,
+            content,
             zIndex: 1000,
           });
         })
-        .filter(
-          (m): m is google.maps.marker.AdvancedMarkerElement => m !== null
-        );
+      );
+
       labelMarkersRef.current = newMarkers;
       //   setLabelMarkers(newMarkers);
     },
@@ -259,7 +273,7 @@ const MapComponent = React.memo(() => {
             mapTypeId: "roadmap",
             mapId: "74d818485994559a",
             zoomControl: true,
-            disableDefaultUI: true,
+            disableDefaultUI: false,
           }}
         />
       </LoadScript>

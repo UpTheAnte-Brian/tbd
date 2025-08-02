@@ -1,9 +1,9 @@
-import type { Feature, Geometry, MultiPolygon, Polygon } from "geojson";
+import type { Feature, Geometry } from "geojson";
 
-export type DistrictFeature = Feature<
-    Polygon | MultiPolygon,
-    DistrictProperties
->;
+// export type DistrictFeature = Feature<
+//     Polygon | MultiPolygon,
+//     DistrictProperties
+// >;
 
 export type MarkerType = {
     id: string;
@@ -29,6 +29,8 @@ export interface Foundation {
 export interface ExtendedFeature extends Feature<Geometry, DistrictProperties> {
     centroid_lat?: number;
     centroid_lng?: number;
+    sdorgid: string;
+    shortname: string;
 }
 export interface DistrictProperties {
     ACRES: string;
@@ -46,6 +48,37 @@ export interface DistrictProperties {
 
 export type LatLngLiteral = google.maps.LatLngLiteral;
 
-export type DistrictWithFoundation = ExtendedFeature & {
+export interface DistrictWithFoundation extends ExtendedFeature {
     foundation: Foundation | null;
+    metadata: DistrictMetadata | null;
+}
+
+export interface DistrictMetadata {
+    logo_path: string | null;
+    extra_info?: ExtraInfo;
+}
+
+export interface DistrictFeature extends Feature<Geometry, DistrictProperties> {
+    sdorgid: string;
+    shortname: string;
+    centroid_lat: number | null;
+    centroid_lng: number | null;
+    district_metadata: DistrictMetadata | null;
+}
+
+export interface ExtraInfo {
+    tagline?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    contactEmail?: string;
+    notes?: string;
+}
+
+export type ApiDistrict = {
+    sdorgid: string;
+    shortname: string;
+    metadata: {
+        logo_path: string | null;
+        extra_info?: ExtraInfo;
+    } | null;
 };

@@ -24,6 +24,10 @@ body {
   }
 }
 
+.marker-svg {
+  width: 5vw; /* Adjust width based on viewport width */
+  height: 5vh; /* Adjust height based on viewport height */
+}
 
 input[type='number'] {
   -moz-appearance: textfield;

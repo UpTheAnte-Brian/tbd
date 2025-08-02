@@ -10,7 +10,7 @@ import DesktopMenu from "./components/DesktopMenu";
 import MobMenu from "./components/MobMenu";
 import AUNLogo from "./components/AUNLogo";
 import SignInButton from "./components/SignInButton";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "../utils/supabase/server";
 import { Button } from "./ui/button";
 
 // This sets the title on your browser tab.
@@ -44,7 +44,7 @@ export default async function RootLayout({
         ></meta> */}
       </head>
       <body
-        className={`${inter.className} antialiased flex flex-col min-h-100vh p-1`}
+        className={`${inter.className} antialiased flex flex-col min-h-screen p-1`}
       >
         <script
           src="https://accounts.google.com/gsi/client"
@@ -84,8 +84,8 @@ export default async function RootLayout({
                 </div>
               </nav>
             </header>
-            <div className="min-h-75svh mt-8">{children}</div>
-            <div className="inset-0 min-h-10svh bg-[#18181A]">
+            <div className="min-h-[80vh] mt-8">{children}</div>
+            <div className="inset-0 min-h-10vh bg-[#18181A]">
               <Footer />
             </div>
           </main>

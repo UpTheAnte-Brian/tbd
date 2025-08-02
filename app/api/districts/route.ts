@@ -7,15 +7,19 @@ const supabase = createClient(
 );
 
 export async function GET() {
-    const { data: foundations, error: districtError } = await supabase
+    const { data: foundations, error: foundationError } = await supabase
         .from("foundations")
         .select("*");
 
-    const { data: districts } = await supabase
+    const { data: districts, error: districtError } = await supabase
         .from("districts")
         .select(
             "sdorgid, sdorgname, properties, geometry, centroid_lat, centroid_lng",
         );
+
+    if (districtError || foundationError) {
+        return new Response("Failed to fetch data", { status: 500 });
+    }
 
     const enriched = districts?.map((d) => ({
         ...d,
@@ -23,12 +27,9 @@ export async function GET() {
             null,
     }));
 
-    if (districtError) {
-        return new Response("Failed to fetch data", { status: 500 });
-    }
-
     const features = enriched?.map((row) => ({
         type: "Feature",
+        sdorgid: row.sdorgid,
         properties: {
             sdorgid: row.sdorgid,
             sdorgname: row.sdorgname,
