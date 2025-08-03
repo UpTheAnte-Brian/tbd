@@ -29,7 +29,7 @@ export function DistrictsPanel({
   return (
     <aside className="w-80 h-full border-r flex flex-col bg-inherit">
       <div className="sticky top-0 z-10 border-b px-4 py-3 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Districts</h2>
+        <h2 className="text-lg font-semibold">Districts {districts.length}</h2>
         <Button onClick={panToMinnesota}>Reset Map</Button>
       </div>
 

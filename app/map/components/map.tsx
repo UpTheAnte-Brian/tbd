@@ -10,15 +10,38 @@ import {
   DistrictWithFoundation,
   LatLngLiteral,
 } from "../../lib/types";
+import { createClient } from "../../../utils/supabase/client";
+import { SupabaseClient } from "@supabase/supabase-js";
 
-function checkImageExists(src: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(true);
-    img.onerror = () => resolve(false);
-    img.src = src;
-  });
-}
+const getSignedImageUrl = async (
+  path: string,
+  supabase: SupabaseClient
+): Promise<string | null> => {
+  const parts = path.split("/");
+  const filename = parts.pop();
+  const folder = parts.join("/");
+
+  // Step 1: Check if file exists
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: files, error: listError } = await supabase.storage
+    .from("logos")
+    .list(folder, { search: filename });
+
+  const exists = files?.some((f) => f.name === filename);
+  if (!exists) return null;
+
+  // Step 2: Generate signed URL
+  const { data, error } = await supabase.storage
+    .from("logos")
+    .createSignedUrl(path, 60 * 60);
+
+  if (error || !data?.signedUrl) {
+    console.error("Signed URL error for:", path, error);
+    return null;
+  }
+
+  return data.signedUrl;
+};
 
 const mapContainerStyle = {
   width: "100%",
@@ -55,10 +78,7 @@ const MapComponent = React.memo(() => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(6);
   const center = useMemo<LatLngLiteral>(() => ({ lat: 46.3, lng: -94.2 }), []);
-  // const { updateLabelMarkers, clearLabelMarkers } = useLabelMarkers();
-  //   const [, setLabelMarkers] = useState<
-  //     google.maps.marker.AdvancedMarkerElement[]
-  //   >([]);
+  const supabase = createClient();
   const labelMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>(
     []
   );
@@ -67,45 +87,56 @@ const MapComponent = React.memo(() => {
     mapRef.current = null;
   };
 
-  const updateLabelMarkers = useCallback(
+  const createLabelMarkers = useCallback(
     async (map: google.maps.Map, features: DistrictWithFoundation[]) => {
-      //   labelMarkersRef.current.forEach((m) => m.setMap(null));
+      // Clear existing markers
+      labelMarkersRef.current = [];
+      // labelMarkersRef.current.forEach((m) => m.setMap(null));
+      // const zoomThreshold = 8;
+      // if (zoomLevel < zoomThreshold) {
+      //   labelMarkersRef.current = [];
+      //   return;
+      // }
 
-      //   const zoomThreshold = 4;
-      //   if (zoomLevel < zoomThreshold) {
-      //     labelMarkersRef.current = [];
-      //     setLabelMarkers([]);
-      //     return;
-      //   }
       const defaultPin = document.createElement("div");
       defaultPin.textContent = "📍";
 
       const newMarkers = await Promise.all(
         features.map(async (feature) => {
-          const logoPath = `/districtLogos/${feature.sdorgid}.svg`;
-          const hasLogo = await checkImageExists(logoPath);
+          const logoPath = `district-logos/${feature.sdorgid}/logo.svg`;
+          const signedUrl = await getSignedImageUrl(logoPath, supabase);
 
-          const wrapperDiv = document.createElement("template");
-          wrapperDiv.style.height = "50";
-          wrapperDiv.style.width = "50";
-          wrapperDiv.className = "my-custom-marker";
-          wrapperDiv.innerHTML = logoPath;
-          const svgElement = wrapperDiv.content.firstChild;
-          const content = hasLogo ? svgElement : defaultPin;
-          const position = getLabelPosition(feature);
-          const label = getLabel(feature) || "";
+          const markerContent = document.createElement("div");
+          markerContent.style.width = "40px";
+          markerContent.style.height = "40px";
+
+          if (signedUrl) {
+            const img = document.createElement("img");
+            img.src = signedUrl;
+            img.alt = "Logo";
+            img.style.width = "100%";
+            img.style.height = "100%";
+            img.style.objectFit = "contain";
+            img.onerror = () => {
+              img.remove();
+              markerContent.textContent = "📍";
+            };
+            markerContent.appendChild(img);
+          } else {
+            markerContent.textContent = "📍";
+          }
 
           return new google.maps.marker.AdvancedMarkerElement({
-            position,
-            title: label,
-            content,
+            position: getLabelPosition(feature),
+            title: getLabel(feature) || "",
+            content: markerContent,
             zIndex: 1000,
           });
         })
       );
 
       labelMarkersRef.current = newMarkers;
-      //   setLabelMarkers(newMarkers);
+      // newMarkers.forEach((marker) => (marker.map = map));
     },
     [zoomLevel]
   );
@@ -188,7 +219,7 @@ const MapComponent = React.memo(() => {
 
         // Inside your onLoad function, after map and features are ready:
         // const zoom = map.getZoom() ?? 0;
-        updateLabelMarkers(map, geojson.features);
+        createLabelMarkers(map, geojson.features);
       });
   };
   useEffect(() => {

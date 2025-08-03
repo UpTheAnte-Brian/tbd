@@ -100,7 +100,7 @@ export default function DistrictMetadataEditor() {
             <div className="text-sm text-gray-500">{district.sdorgid}</div>
             {district.metadata?.logo_path && (
               <img
-                src={`https://ficwwbcophgsttirthxd.supabase.co/storage/v1/object/public/logos/${district.metadata.logo_path}`}
+                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_LOGO_PATH}${district.metadata.logo_path}`}
                 alt="Logo"
                 className="h-10 object-contain"
               />
