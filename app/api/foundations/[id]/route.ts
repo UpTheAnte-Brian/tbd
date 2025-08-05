@@ -29,13 +29,27 @@ export async function POST(
     const supabase = await createClient();
     const body = await _req.json();
 
-    const { data, error } = await supabase
+    const { error: upsertError } = await supabase
         .from("foundations")
         .upsert({ ...body, district_id: id }, { onConflict: "district_id" });
 
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    if (upsertError) {
+        return NextResponse.json({ error: upsertError.message }, {
+            status: 500,
+        });
     }
 
-    return NextResponse.json({ data }, { status: 200 });
+    const { data, error: selectError } = await supabase
+        .from("foundations")
+        .select("*")
+        .eq("district_id", id)
+        .single();
+
+    if (selectError) {
+        return NextResponse.json({ error: selectError.message }, {
+            status: 404,
+        });
+    }
+
+    return NextResponse.json({ data }, { status: 201 });
 }

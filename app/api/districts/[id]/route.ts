@@ -41,8 +41,8 @@ export async function GET(
             centroid_lat: district.centroid_lat,
             centroid_lng: district.centroid_lng,
             ...district.properties,
-            foundation: foundation ?? null,
         },
+        foundation: foundation ?? null,
     };
 
     return Response.json(feature);

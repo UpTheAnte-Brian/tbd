@@ -42,6 +42,7 @@ export async function GET() {
             ...row.properties,
         },
         geometry: row.geometry,
+        foundation: row.foundation,
     }));
 
     return Response.json({

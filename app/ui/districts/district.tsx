@@ -11,6 +11,7 @@ type DistrictsPanelProps = {
   districts: DistrictWithFoundation[];
   mapRef: React.RefObject<google.maps.Map | null>;
   panToMinnesota: () => void;
+  updateDistrictInList: (district: DistrictWithFoundation) => void;
 };
 
 export function DistrictsPanel({
@@ -20,6 +21,7 @@ export function DistrictsPanel({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   mapRef,
   panToMinnesota,
+  updateDistrictInList,
 }: DistrictsPanelProps) {
   // WRAP IN USE EFFECT WITH selectedId dependency
   const [selectedFeature, setSelectedFeature] =
@@ -81,16 +83,20 @@ export function DistrictsPanel({
         {selectedFeature?.properties?.SDORGID && (
           <FoundationEditor
             key={selectedFeature.properties.SDORGID} // 👈 force remount on ID change
-            foundation={{
-              district_id: selectedFeature.properties.SDORGID,
-              name: "",
-              contact: "",
-              website: selectedFeature.properties.WEB_URL,
-              founding_year: null,
-              average_class_size: null,
-              balance_sheet: null,
-              ...(selectedFeature.foundation ?? {}),
-            }}
+            foundation={
+              selectedFeature.foundation == null
+                ? {
+                    district_id: selectedFeature.properties.SDORGID,
+                    name: "",
+                    contact: "",
+                    website: selectedFeature.properties.WEB_URL,
+                    founding_year: null,
+                    average_class_size: null,
+                    balance_sheet: null,
+                    ...(selectedFeature.foundation ?? {}),
+                  }
+                : selectedFeature.foundation
+            }
             onSave={async (updated) => {
               try {
                 if (!updated.district_id) {
@@ -111,6 +117,12 @@ export function DistrictsPanel({
                     `Failed to save foundation: ${response.statusText}`
                   );
                 }
+
+                const refreshed = await fetch(
+                  `/api/districts/${updated.district_id}`
+                ).then((res) => res.json());
+                setSelectedFeature(refreshed);
+                updateDistrictInList(refreshed);
               } catch (error) {
                 console.error("Error saving foundation data:", error);
               }

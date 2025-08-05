@@ -92,6 +92,17 @@ const MapComponent = React.memo(() => {
     []
   );
 
+  const updateDistrictInList = useCallback(
+    (district: DistrictWithFoundation) => {
+      setFeatures((prev) =>
+        prev.map((d) =>
+          d.sdorgid === district.sdorgid ? { ...d, ...district } : d
+        )
+      );
+    },
+    []
+  );
+
   const onUnMount = () => {
     mapRef.current = null;
   };
@@ -329,6 +340,7 @@ const MapComponent = React.memo(() => {
             panToMinnesota(mapRef.current);
           }
         }}
+        updateDistrictInList={updateDistrictInList}
       />
 
       {hoveredFeatureProps && (
