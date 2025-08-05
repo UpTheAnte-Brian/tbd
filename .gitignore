@@ -11,6 +11,9 @@
 # scratch files
 /scratchfiles
 
+# Local Supabase
+/supabase
+
 # next.js
 /.next/
 /out/
