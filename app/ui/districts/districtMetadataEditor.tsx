@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Input } from "../../components/ui/input";
 import { ApiDistrict } from "../../lib/types";
-import { createClient } from "../../../utils/supabase/client";
+import { getSupabaseClient } from "../../../utils/supabase/client";
 
 const cardWrapper = "grid gap-4 p-6 sm:grid-cols-2 md:grid-cols-3";
 const card =
@@ -13,9 +13,9 @@ const card =
 export default function DistrictMetadataEditor() {
   const [districts, setDistricts] = useState<ApiDistrict[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [userId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const isMounted = useRef(true);
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   useEffect(() => {
     return () => {
@@ -33,13 +33,13 @@ export default function DistrictMetadataEditor() {
     fetchDistricts();
 
     // Load session
-    //   supabase.auth.getSession().then(({ data }) => {
-    //     if (data.session?.user) {
-    //       setUserId(data.session.user.id);
-    //     } else {
-    //       console.warn("No active session found");
-    //     }
-    //   });
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) {
+        setUserId(data.session.user.id);
+      } else {
+        console.warn("No active session found");
+      }
+    });
   }, []);
 
   const handleLogoUpload = async (
@@ -54,9 +54,11 @@ export default function DistrictMetadataEditor() {
     if (isMounted.current) {
       setUploading(true);
     }
+    const formData = new FormData();
+    formData.append("file", file);
     const { data, error: uploadError } = await supabase.storage
       .from("logos")
-      .upload(filePath, file, { upsert: true });
+      .upload(filePath, formData, { upsert: true });
 
     if (!uploadError) {
       console.log("upload data response: ", data);

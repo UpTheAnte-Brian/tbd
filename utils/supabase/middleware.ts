@@ -1,66 +1,107 @@
-import { createServerClient } from "@supabase/ssr";
+export const runtime = "nodejs";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function updateSession(request: NextRequest) {
-    let supabaseResponse = NextResponse.next({
-        request,
-    });
-
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return request.cookies.getAll();
-                },
-                setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value }) =>
-                        request.cookies.set(name, value)
-                    );
-                    supabaseResponse = NextResponse.next({
-                        request,
-                    });
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        supabaseResponse.cookies.set(name, value, options)
-                    );
-                },
-            },
-        },
-    );
-
-    // IMPORTANT: Avoid writing any logic between createServerClient and
-    // supabase.auth.getClaims(). A simple mistake could make it very hard to debug
-    // issues with users being randomly logged out.
-
-    // IMPORTANT: Don't remove getClaims()
-    const { data } = await supabase.auth.getClaims();
-
-    const user = data?.claims;
-
-    if (
-        !user &&
-        !request.nextUrl.pathname.startsWith("/login") &&
-        !request.nextUrl.pathname.startsWith("/auth")
-    ) {
-        // no user, potentially respond by redirecting the user to the login page
-        const url = request.nextUrl.clone();
-        url.pathname = "/login";
-        return NextResponse.redirect(url);
+    if (request.nextUrl.pathname.startsWith("/auth")) {
+        return NextResponse.next();
     }
 
-    // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
-    // creating a new response object with NextResponse.next() make sure to:
-    // 1. Pass the request in it, like so:
-    //    const myNewResponse = NextResponse.next({ request })
-    // 2. Copy over the cookies, like so:
-    //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-    // 3. Change the myNewResponse object to fit your needs, but avoid changing
-    //    the cookies!
-    // 4. Finally:
-    //    return myNewResponse
-    // If this is not done, you may be causing the browser and server to go out
-    // of sync and terminate the user's session prematurely!
+    const response = NextResponse.next({ request });
 
-    return supabaseResponse;
+    const token = request.cookies.get("sb-access-token")?.value;
+    const role = request.cookies.get("sb-role")?.value;
+
+    if (!token) {
+        if (
+            !request.nextUrl.pathname.startsWith("/login") &&
+            !request.nextUrl.pathname.startsWith("/")
+        ) {
+            const url = request.nextUrl.clone();
+            url.pathname = "/auth/sign-in";
+            console.log("redirect to signin");
+            return NextResponse.redirect(url);
+        }
+        return response;
+    }
+
+    if (role) {
+        response.headers.set("x-user-role", role);
+    }
+
+    return response;
 }
+
+// export const runtime = "nodejs";
+// import { type NextRequest, NextResponse } from "next/server";
+// import { decodeJwt, importJWK, jwtVerify } from "jose";
+
+// export async function updateSession(request: NextRequest) {
+//     if (request.nextUrl.pathname.startsWith("/auth")) {
+//         return NextResponse.next();
+//     }
+
+//     // JWKS is a callable verifier function, not serializable
+//     // const JWKS = createRemoteJWKSet(
+//     //     new URL("https://ficwwbcophgsttirthxd.supabase.co/auth/v1/keys"),
+//     // );
+//     const supabaseResponse = NextResponse.next({ request });
+
+//     const token = request.cookies.get("sb-access-token")?.value;
+
+//     if (!token) {
+//         if (
+//             !request.nextUrl.pathname.startsWith("/login") &&
+//             !request.nextUrl.pathname.startsWith("/")
+//         ) {
+//             const url = request.nextUrl.clone();
+//             url.pathname = "/auth/sign-in";
+//             console.log("redirect to signin");
+//             return NextResponse.redirect(url);
+//         }
+//         return supabaseResponse;
+//     }
+
+//     // your JWK object
+
+//     // your JWK object
+//     const jwk = {
+//         x: "YxpWC7TfWk_RsF6g6ygfSWCMO7KVgXagEH-cFGdo9Jo",
+//         y: "xkkuGh0GrLZ7MgSMgC1CvlIdqMpmrepkNgmDkNJVaXs",
+//         alg: "ES256",
+//         crv: "P-256",
+//         ext: true,
+//         kid: "c6963d48-41ff-44f2-b2cc-4578641da01a",
+//         kty: "EC",
+//         key_ops: ["verify"],
+//     };
+//     try {
+//         try {
+//             const decoded = decodeJwt(token);
+//             console.log("Decoded payload:", decoded);
+//         } catch (err) {
+//             console.error("Failed to decode JWT:", err);
+//         }
+//         // convert the JWK into a usable key
+//         const publicKey = await importJWK(jwk, "ES256");
+
+//         // verify the token
+//         const { payload } = await jwtVerify(token, publicKey);
+//         const role = payload?.role;
+//         console.log("payload: ", JSON.stringify(payload));
+//         // console.log(
+//         //     "payload: ",
+//         //     JSON.stringify(payload?.session?.user?.user_metadata),
+//         // );
+//         if (role) {
+//             console.log("role: ", role);
+//             supabaseResponse.headers.set("x-user-role", role as string);
+//         }
+//     } catch (err) {
+//         console.error("JWT verification failed:", err);
+//         const url = request.nextUrl.clone();
+//         url.pathname = "/auth/sign-in";
+//         return NextResponse.redirect(url);
+//     }
+
+//     return supabaseResponse;
+// }

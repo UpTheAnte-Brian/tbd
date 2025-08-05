@@ -1,12 +1,8 @@
-// app/api/districts/route.ts
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
+// The client you created from the Server-Side Auth instructions
+import { createClient } from "../../../utils/supabase/server";
 
 export async function GET() {
+    const supabase = await createClient();
     const { data: foundations, error: foundationError } = await supabase
         .from("foundations")
         .select("*");
@@ -16,6 +12,14 @@ export async function GET() {
         .select(
             "sdorgid, sdorgname, properties, geometry, centroid_lat, centroid_lng",
         );
+    // const supabaseAdmin = createClient(
+    //   process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    //   process.env.SUPABASE_SERVICE_ROLE_KEY! // needs admin privileges
+    // );
+
+    // await supabaseAdmin.auth.admin.updateUserById("fe1de8d1-b05e-4ee8-beb4-4d50f2d61cf0", {
+    //   user_metadata: { role: "admin" },
+    // });
 
     if (districtError || foundationError) {
         return new Response("Failed to fetch data", { status: 500 });

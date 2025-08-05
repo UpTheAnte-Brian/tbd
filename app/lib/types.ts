@@ -58,14 +58,6 @@ export interface DistrictMetadata {
     extra_info?: ExtraInfo;
 }
 
-export interface DistrictFeature extends Feature<Geometry, DistrictProperties> {
-    sdorgid: string;
-    shortname: string;
-    centroid_lat: number | null;
-    centroid_lng: number | null;
-    district_metadata: DistrictMetadata | null;
-}
-
 export interface ExtraInfo {
     tagline?: string;
     primaryColor?: string;

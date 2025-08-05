@@ -1,6 +1,9 @@
+"use client";
+import { useState, useEffect } from "react";
 import { DistrictWithFoundation } from "../../lib/types";
 import { Button } from "../button";
 import FoundationEditor from "./foundation-editor";
+// import DebugJWT from "./debug-jwt";
 
 type DistrictsPanelProps = {
   selectedId: string | null;
@@ -8,11 +11,6 @@ type DistrictsPanelProps = {
   districts: DistrictWithFoundation[];
   mapRef: React.RefObject<google.maps.Map | null>;
   panToMinnesota: () => void;
-};
-
-export const panToMinnesota = (map: google.maps.Map) => {
-  map.setZoom(6);
-  map.panTo({ lat: 46.3, lng: -94.3 }); // Center of MN
 };
 
 export function DistrictsPanel({
@@ -23,16 +21,40 @@ export function DistrictsPanel({
   mapRef,
   panToMinnesota,
 }: DistrictsPanelProps) {
-  const selectedFeature = districts.find(
-    (f) => f.properties?.SDORGID === selectedId
-  );
+  // WRAP IN USE EFFECT WITH selectedId dependency
+  const [selectedFeature, setSelectedFeature] =
+    useState<DistrictWithFoundation>();
+
+  useEffect(() => {
+    const fetchDistrict = async () => {
+      if (!selectedId) {
+        setSelectedFeature(undefined);
+        return;
+      }
+
+      // Reset immediately before fetching
+      setSelectedFeature(undefined);
+
+      try {
+        const json = await fetch(`/api/districts/${selectedId}`).then((res) =>
+          res.json()
+        );
+        setSelectedFeature(json);
+      } catch (err) {
+        console.error("Failed to fetch district", err);
+      }
+    };
+
+    fetchDistrict();
+  }, [selectedId]);
+
   return (
     <aside className="w-80 h-full border-r flex flex-col bg-inherit">
       <div className="sticky top-0 z-10 border-b px-4 py-3 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Districts {districts.length}</h2>
         <Button onClick={panToMinnesota}>Reset Map</Button>
       </div>
-
+      {/* <DebugJWT /> */}
       <div className="overflow-y-auto flex-1">
         <ul>
           {districts.map((feature) => {
@@ -54,11 +76,11 @@ export function DistrictsPanel({
           })}
         </ul>
       </div>
-
       {/* Selected feature details */}
       <div className="flex-1 p-4 border-t border-gray-600 overflow-y-auto">
         {selectedFeature?.properties?.SDORGID && (
           <FoundationEditor
+            key={selectedFeature.properties.SDORGID} // 👈 force remount on ID change
             foundation={{
               district_id: selectedFeature.properties.SDORGID,
               name: "",

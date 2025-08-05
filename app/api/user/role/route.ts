@@ -1,14 +1,11 @@
 // app/api/user/role/route.ts
 import { cookies } from "next/headers";
-import { createClient } from "@supabase/supabase-js";
+// The client you created from the Server-Side Auth instructions
+import { createClient } from "../../../../utils/supabase/server";
 import { NextResponse } from "next/server";
 
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
-
 export async function GET() {
+    const supabase = await createClient();
     const cookieStore = await cookies();
     const access_token = cookieStore.get("sb-access-token")?.value;
 

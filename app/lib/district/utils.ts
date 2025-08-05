@@ -38,3 +38,8 @@ function averageLatLng(coords: number[][]): google.maps.LatLngLiteral {
         lng: sumLng / count,
     };
 }
+
+export const panToMinnesota = (map: google.maps.Map) => {
+    map.setZoom(6);
+    map.panTo({ lat: 46.3, lng: -94.3 }); // Center of MN
+};

@@ -1,17 +1,26 @@
 "use client";
-import { GoogleMap, LoadScript } from "@react-google-maps/api";
+import { GoogleMap, Libraries, LoadScript } from "@react-google-maps/api";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getBoundsFromGeoJSON } from "../../lib/getBoundsFromGeoJSON";
-import { DistrictsPanel, panToMinnesota } from "../../ui/districts/district";
-import { getLabel, getLabelPosition } from "../../lib/district/utils";
+import { DistrictsPanel } from "../../ui/districts/district";
+import {
+  getLabel,
+  getLabelPosition,
+  panToMinnesota,
+} from "../../lib/district/utils";
 import React from "react";
 import {
   DistrictProperties,
   DistrictWithFoundation,
   LatLngLiteral,
 } from "../../lib/types";
-import { createClient } from "../../../utils/supabase/client";
+import { getSupabaseClient } from "../../../utils/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
+
+const googleApiLibraries = process.env.NEXT_PUBLIC_GOOGLE_LIBRARIES;
+const googleApiLibrariesArray = (
+  googleApiLibraries ? googleApiLibraries.split(",") : []
+) as Libraries;
 
 const getSignedImageUrl = async (
   path: string,
@@ -78,7 +87,7 @@ const MapComponent = React.memo(() => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(6);
   const center = useMemo<LatLngLiteral>(() => ({ lat: 46.3, lng: -94.2 }), []);
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
   const labelMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>(
     []
   );
@@ -150,6 +159,7 @@ const MapComponent = React.memo(() => {
         setFeatures(geojson.features);
 
         map.data.setStyle((feature) => {
+          // TODO: Don't think this should come from props. root.prop
           const id = feature.getProperty("SDORGID");
           const isSelected = id === selectedId;
           const isHovered = id === hoveredId;
@@ -254,11 +264,12 @@ const MapComponent = React.memo(() => {
       }
     }
 
-    const clickEvent = map.data.addListener("click", handleClick);
+    // const clickEvent = map.data.addListener("click", handleClick);
+    map.data.addListener("click", handleClick);
 
     // updateLabelMarkers(map, features);
     return () => {
-      clickEvent.remove();
+      // clickEvent.remove();
       // map.data.removeListener("click", handleClick);
     };
   }, [selectedId, features]);
@@ -289,7 +300,7 @@ const MapComponent = React.memo(() => {
     <div style={containerStyle}>
       <LoadScript
         version="beta"
-        libraries={["marker"]}
+        libraries={googleApiLibrariesArray}
         googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
       >
         <GoogleMap

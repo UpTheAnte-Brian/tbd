@@ -8,7 +8,7 @@ import { signInWithLoginCode, signInWithMagicLink } from "./actions";
 import { useActionState, useState } from "react";
 import { ActionState } from "@/app/lib/auth/middleware";
 // import config from "../../../config";
-import { createClient } from "@/utils/supabase/client";
+import { getSupabaseClient } from "@/utils/supabase/client";
 import AUNLogo from "@/app/components/AUNLogo";
 import { Button } from "../components/button";
 
@@ -23,7 +23,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
   const handleGoogleSignIn = () => {
     const redirectTo = `${host}/auth/callback`;
     setLoading(true);
-    const supabase = createClient();
+    const supabase = getSupabaseClient();
     supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -141,7 +141,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <div className="flex justify-center items-center">
+                  <div className="flex justify-center items-center text-gray-700">
                     <svg className="mr-2 w-5 h-5" viewBox="0 0 24 24">
                       <path
                         fill="#4285F4"

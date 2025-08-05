@@ -1,8 +1,15 @@
 "use server";
 import { z } from "zod";
-import { validatedAction } from "@/app/lib/auth/middleware";
+import { validatedAction } from "../../../app/lib/auth/middleware";
 import { redirect } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "../../../utils/supabase/server";
+
+// Notes
+// 	•	Why email as key?: Without IP access in actions, the email is a logical fallback.
+// 	•	For production, switch to Redis or Supabase to store request timestamps across serverless invocations.
+// 	•	Custom middleware: You could also wrap validatedAction itself in a throttle-aware version if you want to enforce throttling globally.
+
+// Would you like help writing a Redis- or Supabase-backed throttler next?
 
 const signInSchema = z.object({
   email: z.string().email().min(3).max(255),
@@ -52,103 +59,6 @@ const signUpSchema = z.object({
 export const signUp = validatedAction(signUpSchema, async (data) => {
   const supabase = await createClient();
   const { email } = data;
-
-  // const existingUser = await supabase
-  //   .select()
-  //   .from('auth.users')
-  //   .where(eq(users.email, email))
-  //   .limit(1);
-
-  // if (existingUser.length > 0) {
-  //   return { error: 'User already exists.' };
-  // }
-
-  // const passwordHash = await hashPassword(password);
-
-  // const newUser: NewUser = {
-  //   email,
-  //   passwordHash,
-  //   role: 'owner', // Default role, will be overridden if there's an invitation
-  // };
-
-  // const [createdUser] = await db.insert(users).values(newUser).returning();
-
-  // if (!createdUser) {
-  //   return { error: 'Failed to create user. Please try again.' };
-  // }
-
-  // let teamId: number;
-  // let userRole: string;
-  // let createdTeam: typeof teams.$inferSelect | null = null;
-
-  // if (inviteId) {
-  //   // Check if there's a valid invitation
-  //   const [invitation] = await db
-  //     .select()
-  //     .from(invitations)
-  //     .where(
-  //       and(
-  //         eq(invitations.id, parseInt(inviteId)),
-  //         eq(invitations.email, email),
-  //         eq(invitations.status, 'pending')
-  //       )
-  //     )
-  //     .limit(1);
-
-  //   if (invitation) {
-  //     teamId = invitation.teamId;
-  //     userRole = invitation.role;
-
-  //     await db
-  //       .update(invitations)
-  //       .set({ status: 'accepted' })
-  //       .where(eq(invitations.id, invitation.id));
-
-  //     await logActivity(teamId, createdUser.id, ActivityType.ACCEPT_INVITATION);
-
-  //     [createdTeam] = await db
-  //       .select()
-  //       .from(teams)
-  //       .where(eq(teams.id, teamId))
-  //       .limit(1);
-  //   } else {
-  //     return { error: 'Invalid or expired invitation.' };
-  //   }
-  // } else {
-  //   // Create a new team if there's no invitation
-  //   const newTeam: NewTeam = {
-  //     name: `${email}'s Team`,
-  //   };
-
-  //   [createdTeam] = await db.insert(teams).values(newTeam).returning();
-
-  //   if (!createdTeam) {
-  //     return { error: 'Failed to create team. Please try again.' };
-  //   }
-
-  //   teamId = createdTeam.id;
-  //   userRole = 'owner';
-
-  //   await logActivity(teamId, createdUser.id, ActivityType.CREATE_TEAM);
-  // }
-
-  // const newTeamMember: NewTeamMember = {
-  //   userId: createdUser.id,
-  //   teamId: teamId,
-  //   role: userRole,
-  // };
-
-  // await Promise.all([
-  //   db.insert(teamMembers).values(newTeamMember),
-  //   logActivity(teamId, createdUser.id, ActivityType.SIGN_UP),
-  //   setSession(createdUser),
-  // ]);
-
-  // const redirectTo = formData.get('redirect') as string | null;
-  // if (redirectTo === 'checkout') {
-  //   const priceId = formData.get('priceId') as string;
-  //   return createCheckoutSession({ team: createdTeam, priceId });
-  // }
 
   const { data: signInData, error } = await supabase.auth.signInWithOtp({
     email,
@@ -235,10 +145,4 @@ export const signInWithGoogle = async (
       message: error,
     };
   }
-};
-
-export const signOut = async () => {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  redirect("/auth/sign-in");
 };

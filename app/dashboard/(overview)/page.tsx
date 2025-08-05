@@ -7,7 +7,7 @@ import {
   RevenueChartSkeleton,
   CardsSkeleton,
 } from "@/app/ui/skeletons";
-import MapComponent from "../../ui/maps/map3";
+import MapComponent from "../../map/components/map";
 
 export default async function Page() {
   return (

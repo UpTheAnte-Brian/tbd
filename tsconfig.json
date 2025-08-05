@@ -8,9 +8,14 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "types": ["node"],
+    "jsx": "react-jsx", // or "preserve" for React -17
+    "baseUrl": ".",
     "paths": {
-      "@/app/*": ["app/*"]
+      "@/*": ["./*"],
+      "@/app/*": ["./app/*"],
+      "@/components/*": ["app/components/*"],
+      "@/utils/*": ["utils/*"]
     }
   },
-  "exclude": ["node_modules", ".next", "app", "pages", "components"]
+  "exclude": ["node_modules", ".next", "supabase/functions"]
 }
