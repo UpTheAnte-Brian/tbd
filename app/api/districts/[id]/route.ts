@@ -20,7 +20,7 @@ export async function GET(
         .from("districts")
         .select("sdorgid, sdorgname, properties, centroid_lat, centroid_lng")
         .eq("sdorgid", id)
-        .single();
+        .maybeSingle();
 
     if (districtError || !district) {
         return new Response("District not found", { status: 404 });
@@ -30,7 +30,7 @@ export async function GET(
         .from("foundations")
         .select("*")
         .eq("district_id", id)
-        .single();
+        .maybeSingle();
 
     const feature = {
         type: "Feature",

@@ -100,6 +100,11 @@ export default function DistrictMetadataEditor() {
           <div key={district.sdorgid} className={card}>
             <div className="text-lg font-semibold">{district.shortname}</div>
             <div className="text-sm text-gray-500">{district.sdorgid}</div>
+            <div className="text-sm text-gray-500">
+              test
+              {`${district?.metadata?.logo_path}`}
+            </div>
+
             {district.metadata?.logo_path && (
               <img
                 src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_LOGO_PATH}${district.metadata.logo_path}`}

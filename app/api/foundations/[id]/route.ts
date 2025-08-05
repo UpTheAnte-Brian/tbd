@@ -12,7 +12,7 @@ export async function GET(
         .from("foundations")
         .select("*")
         .eq("district_id", id)
-        .single();
+        .maybeSingle();
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 404 });
@@ -39,17 +39,5 @@ export async function POST(
         });
     }
 
-    const { data, error: selectError } = await supabase
-        .from("foundations")
-        .select("*")
-        .eq("district_id", id)
-        .single();
-
-    if (selectError) {
-        return NextResponse.json({ error: selectError.message }, {
-            status: 404,
-        });
-    }
-
-    return NextResponse.json({ data }, { status: 201 });
+    return NextResponse.json({}, { status: 201 });
 }
