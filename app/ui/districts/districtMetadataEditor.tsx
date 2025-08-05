@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Input } from "../../components/ui/input";
-import { ApiDistrict } from "../../lib/types";
+import { DistrictWithFoundation } from "../../lib/types";
 import { getSupabaseClient } from "../../../utils/supabase/client";
 
 const cardWrapper = "grid gap-4 p-6 sm:grid-cols-2 md:grid-cols-3";
@@ -11,7 +11,7 @@ const card =
   "rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3";
 
 export default function DistrictMetadataEditor() {
-  const [districts, setDistricts] = useState<ApiDistrict[]>([]);
+  const [districts, setDistricts] = useState<DistrictWithFoundation[]>([]);
   const [uploading, setUploading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const isMounted = useRef(true);
@@ -62,10 +62,13 @@ export default function DistrictMetadataEditor() {
 
     if (!uploadError) {
       console.log("upload data response: ", data);
-      await supabase.from("district_metadata").upsert({
+      const { error } = await supabase.from("district_metadata").upsert({
         sdorgid,
         logo_path: filePath,
       });
+      if (error) {
+        console.log("metadata upsert error: ", error);
+      }
 
       if (isMounted.current) {
         setDistricts((prev) =>
@@ -78,6 +81,7 @@ export default function DistrictMetadataEditor() {
       }
       setUploading(false);
     }
+    console.log("upload error: ", uploadError);
   };
 
   const handleSignIn = () => {
@@ -107,7 +111,7 @@ export default function DistrictMetadataEditor() {
 
             {district.metadata?.logo_path && (
               <img
-                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_LOGO_PATH}${district.metadata.logo_path}`}
+                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_LOGO_PATH}${district.metadata.logo_path}`}
                 alt="Logo"
                 className="h-10 object-contain"
               />
