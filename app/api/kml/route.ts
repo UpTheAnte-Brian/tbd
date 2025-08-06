@@ -99,7 +99,7 @@ export async function GET() {
         );
 
         // Unique key
-        const sdorgid = extProps["SDORGID"] ?? crypto.randomUUID();
+        const sdorgid = extProps["sdorgid"] ?? crypto.randomUUID();
 
         const poly = p.Polygon;
         const multi = p.MultiGeometry?.Polygon;

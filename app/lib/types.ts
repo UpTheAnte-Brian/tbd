@@ -33,17 +33,17 @@ export interface ExtendedFeature extends Feature<Geometry, DistrictProperties> {
     shortname: string;
 }
 export interface DistrictProperties {
-    ACRES: string;
-    FORMID: string;
-    SDTYPE: string;
-    SDORGID: string;
-    SQMILES: string;
-    WEB_URL: string;
-    PREFNAME: string;
-    SDNUMBER: string;
-    SHORTNAME: string;
-    Shape_Area: string;
-    Shape_Leng: string;
+    acres: string; // "514149.7135"
+    formid: string; // "0004-01"
+    sdtype: string; // "01"
+    sdorgid: string; // "10004000000.0"
+    sqmiles: string; // "803.3552"
+    web_url: string; // "https://www.mcgregor.k12.mn.us/"
+    prefname: string; // "McGregor Public School District"
+    sdnumber: string; // "0004"
+    shortname: string; // "McGregor"
+    shape_area: string; // "2080689853.05"
+    shape_leng: string; // "327108.90135599999"
 }
 
 export type LatLngLiteral = google.maps.LatLngLiteral;

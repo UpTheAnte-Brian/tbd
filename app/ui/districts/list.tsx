@@ -43,8 +43,8 @@ export function DistrictList({
       <div className="overflow-y-auto flex-1">
         <ul>
           {districts.map((feature) => {
-            const id = feature.properties?.SDORGID;
-            const name = feature.properties?.SHORTNAME || "Unnamed";
+            const id = feature.properties?.sdorgid;
+            const name = feature.properties?.shortname || "Unnamed";
             return (
               <li
                 key={id}
@@ -63,13 +63,13 @@ export function DistrictList({
       </div>
       {/* Selected feature details */}
       <div className="flex-1 p-4 border-t border-gray-600 overflow-y-auto">
-        {selectedFeature?.properties?.SDORGID && (
+        {selectedFeature?.properties?.sdorgid && (
           <FoundationEditor
             foundation={{
-              district_id: selectedFeature.properties.SDORGID,
+              district_id: selectedFeature.properties.sdorgid,
               name: "",
               contact: "",
-              website: selectedFeature.properties.WEB_URL,
+              website: selectedFeature.properties.web_url,
               founding_year: null,
               average_class_size: null,
               balance_sheet: null,

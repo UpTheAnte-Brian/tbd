@@ -1,21 +1,32 @@
-// districtMetadataEditor.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Input } from "../../components/ui/input";
-import { DistrictWithFoundation } from "../../lib/types";
-import { getSupabaseClient } from "../../../utils/supabase/client";
+import { DistrictWithFoundation } from "@/app/lib/types";
+import DistrictCard from "@/app/ui/districts/district-card";
+import { getSupabaseClient } from "@/utils/supabase/client";
+import { Input } from "@mui/material";
+import React from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 const cardWrapper = "grid gap-4 p-6 sm:grid-cols-2 md:grid-cols-3";
-const card =
-  "rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3";
 
-export default function DistrictMetadataEditor() {
+const DistrictMetadataEditor = React.memo(() => {
   const [districts, setDistricts] = useState<DistrictWithFoundation[]>([]);
   const [uploading, setUploading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const isMounted = useRef(true);
   const supabase = getSupabaseClient();
+
+  const updateDistrictInList = useCallback(
+    (district: DistrictWithFoundation) => {
+      setDistricts((prev) =>
+        prev.map((d) =>
+          d.sdorgid === district.sdorgid ? { ...d, ...district } : d
+        )
+      );
+    },
+    []
+  );
 
   useEffect(() => {
     return () => {
@@ -84,6 +95,29 @@ export default function DistrictMetadataEditor() {
     console.log("upload error: ", uploadError);
   };
 
+  // const handleSave = async (
+  //   sdorgid: string,
+  //   updates: Partial<DistrictWithFoundation>
+  // ) => {
+  //   const { foundation, metadata } = updates;
+  //   if (foundation) {
+  //     await supabase.from("foundations").upsert({
+  //       sdorgid,
+  //       ...foundation,
+  //     });
+  //   }
+  //   if (metadata) {
+  //     await supabase.from("district_metadata").upsert({
+  //       sdorgid,
+  //       ...metadata,
+  //     });
+  //   }
+
+  //   setDistricts((prev) =>
+  //     prev.map((d) => (d.sdorgid === sdorgid ? { ...d, ...updates } : d))
+  //   );
+  // };
+
   const handleSignIn = () => {
     supabase.auth.signInWithOAuth({ provider: "google" });
   };
@@ -99,32 +133,34 @@ export default function DistrictMetadataEditor() {
         </button>
       ) : null}
 
-      <div className={cardWrapper}>
-        {districts.map((district) => (
-          <div key={district.sdorgid} className={card}>
-            <div className="text-lg font-semibold">{district.shortname}</div>
-            <div className="text-sm text-gray-500">{district.sdorgid}</div>
-            <div className="text-sm text-gray-500">
-              test
-              {`${district?.metadata?.logo_path}`}
-            </div>
+      <Input
+        className="mb-4"
+        placeholder="Search districts..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
 
-            {district.metadata?.logo_path && (
-              <img
-                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_LOGO_PATH}${district.metadata.logo_path}`}
-                alt="Logo"
-                className="h-10 object-contain"
-              />
-            )}
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e) => handleLogoUpload(e, district.sdorgid)}
-              disabled={uploading}
+      <div className={cardWrapper}>
+        {districts
+          .filter(
+            (district) =>
+              district.shortname
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
+              district.sdorgid.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+          .map((district) => (
+            <DistrictCard
+              key={district.sdorgid}
+              district={district}
+              uploading={uploading}
+              handleLogoUpload={handleLogoUpload}
+              handleSave={updateDistrictInList}
             />
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );
-}
+});
+
+export default DistrictMetadataEditor;

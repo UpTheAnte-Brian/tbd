@@ -31,20 +31,31 @@ export async function GET() {
             null,
     }));
 
-    const features = enriched?.map((row) => ({
-        type: "Feature",
-        sdorgid: row.sdorgid,
-        properties: {
+    const features = enriched?.map((row) => {
+        const rawProps = typeof row.properties === "string"
+            ? JSON.parse(row.properties)
+            : row.properties;
+
+        const props = Object.fromEntries(
+            Object.entries(rawProps).map(([k, v]) => [k.toLowerCase(), v]),
+        );
+
+        return {
+            type: "Feature",
             sdorgid: row.sdorgid,
-            sdorgname: row.sdorgname,
-            centroid_lat: row.centroid_lat,
-            centroid_lng: row.centroid_lng,
-            ...row.properties,
-        },
-        geometry: row.geometry,
-        foundation: row.foundation,
-        metadata: row.district_metadata,
-    }));
+            shortname: props?.shortname ?? "",
+            properties: {
+                sdorgid: row.sdorgid,
+                sdorgname: row.sdorgname,
+                centroid_lat: row.centroid_lat,
+                centroid_lng: row.centroid_lng,
+                ...props,
+            },
+            geometry: row.geometry,
+            foundation: row.foundation,
+            metadata: row.district_metadata,
+        };
+    });
 
     return Response.json({
         type: "FeatureCollection",

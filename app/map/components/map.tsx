@@ -171,7 +171,7 @@ const MapComponent = React.memo(() => {
 
         map.data.setStyle((feature) => {
           // TODO: Don't think this should come from props. root.prop
-          const id = feature.getProperty("SDORGID");
+          const id = feature.getProperty("sdorgid");
           const isSelected = id === selectedId;
           const isHovered = id === hoveredId;
 
@@ -215,20 +215,20 @@ const MapComponent = React.memo(() => {
         map.data.addListener(
           "mouseover",
           (event: google.maps.Data.MouseEvent) => {
-            const id = event.feature.getProperty("SDORGID") as string;
+            const id = event.feature.getProperty("sdorgid") as string;
             setHoveredId(id);
             setHoveredFeatureProps({
-              SDORGID: id,
-              ACRES: event.feature.getProperty("ACRES") as string,
-              FORMID: event.feature.getProperty("FORMID") as string,
-              SDTYPE: event.feature.getProperty("SDTYPE") as string,
-              SQMILES: event.feature.getProperty("SQMILES") as string,
-              WEB_URL: event.feature.getProperty("WEB_URL") as string,
-              PREFNAME: event.feature.getProperty("PREFNAME") as string,
-              SDNUMBER: event.feature.getProperty("SDNUMBER") as string,
-              SHORTNAME: event.feature.getProperty("SHORTNAME") as string,
-              Shape_Area: event.feature.getProperty("Shape_Area") as string,
-              Shape_Leng: event.feature.getProperty("Shape_Leng") as string,
+              sdorgid: id,
+              acres: event.feature.getProperty("acres") as string,
+              formid: event.feature.getProperty("formid") as string,
+              sdtype: event.feature.getProperty("sdtype") as string,
+              sqmiles: event.feature.getProperty("sqmiles") as string,
+              web_url: event.feature.getProperty("web_url") as string,
+              prefname: event.feature.getProperty("prefname") as string,
+              sdnumber: event.feature.getProperty("sdnumber") as string,
+              shortname: event.feature.getProperty("shortname") as string,
+              shape_area: event.feature.getProperty("shape_area") as string,
+              shape_leng: event.feature.getProperty("shape_leng") as string,
             });
           }
         );
@@ -247,7 +247,7 @@ const MapComponent = React.memo(() => {
     if (!mapRef.current || !selectedId) return;
 
     const selectedFeature = features.find(
-      (f) => f.properties?.SDORGID === selectedId
+      (f) => f.properties?.sdorgid === selectedId
     );
 
     if (selectedFeature) {
@@ -264,7 +264,7 @@ const MapComponent = React.memo(() => {
       // using event.feature to access feature data
 
       const clickedFeature = event.feature;
-      const clickedId = clickedFeature.getProperty("SDORGID") as string;
+      const clickedId = clickedFeature.getProperty("sdorgid") as string;
 
       if (!clickedId) return;
 
@@ -290,7 +290,7 @@ const MapComponent = React.memo(() => {
     if (!map || !features.length) return;
 
     map.data.setStyle((feature) => {
-      const id = feature.getProperty("SDORGID");
+      const id = feature.getProperty("sdorgid");
       const isSelected = id === selectedId;
       const isHovered = id === hoveredId;
 
@@ -345,8 +345,8 @@ const MapComponent = React.memo(() => {
 
       {hoveredFeatureProps && (
         <div className="absolute top-24 left-3 bg-black/80 text-white rounded-lg px-4 py-2 pointer-events-none z-50 shadow-lg transition-all duration-150 opacity-100">
-          <div className="font-semibold">{hoveredFeatureProps.SHORTNAME}</div>
-          <div className="text-sm">ID: {hoveredFeatureProps.SDORGID}</div>
+          <div className="font-semibold">{hoveredFeatureProps.shortname}</div>
+          <div className="text-sm">ID: {hoveredFeatureProps.sdorgid}</div>
           {/* <div>{labelMarkersRef.current}</div> */}
         </div>
       )}

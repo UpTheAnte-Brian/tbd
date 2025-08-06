@@ -5,7 +5,7 @@ export function getLabel(
     feature: Feature<Geometry, DistrictProperties>,
 ): string | null {
     // Adjust based on your actual property keys
-    return feature.properties?.SHORTNAME || feature.properties?.SDORGID || null;
+    return feature.properties?.shortname || feature.properties?.sdorgid || null;
 }
 
 export function getLabelPosition(

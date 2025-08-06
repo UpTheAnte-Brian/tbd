@@ -59,14 +59,21 @@ async function run() {
         // Step 7: Enrich with centroid
         console.log(`🔍 Enriching ${fc.features.length} features...`);
         const enriched = fc.features.map((f) => {
-            const props = f.properties || {};
+            const rawProps = typeof f.properties === "string"
+                ? JSON.parse(f.properties)
+                : f.properties;
+
+            const props = Object.fromEntries(
+                Object.entries(rawProps).map(([k, v]) => [k.toLowerCase(), v]),
+            ) || {};
+
             const center = centroid(f).geometry.coordinates;
             const [lng, lat] = center;
 
             return {
-                sdorgid: props.SDORGID,
+                sdorgid: props.sdorgid,
                 sdorgname: props.SDORGNAME,
-                shortname: props.SHORTNAME ?? null,
+                shortname: props.shortname ?? null,
                 geometry: f.geometry,
                 properties: f.properties,
                 centroid_lat: lat,

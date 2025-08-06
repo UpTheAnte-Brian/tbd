@@ -18,7 +18,9 @@ export async function GET(
 
     const { data: district, error: districtError } = await supabase
         .from("districts")
-        .select("sdorgid, sdorgname, properties, centroid_lat, centroid_lng")
+        .select(
+            "sdorgid, sdorgname, properties, centroid_lat, centroid_lng, district_metadata(logo_path)",
+        )
         .eq("sdorgid", id)
         .maybeSingle();
 
@@ -32,6 +34,14 @@ export async function GET(
         .eq("district_id", id)
         .maybeSingle();
 
+    const rawProps = typeof district.properties === "string"
+        ? JSON.parse(district.properties)
+        : district.properties;
+
+    const props = Object.fromEntries(
+        Object.entries(rawProps).map(([k, v]) => [k.toLowerCase(), v]),
+    );
+
     const feature = {
         type: "Feature",
         sdorgid: district.sdorgid,
@@ -40,9 +50,10 @@ export async function GET(
             sdorgname: district.sdorgname,
             centroid_lat: district.centroid_lat,
             centroid_lng: district.centroid_lng,
-            ...district.properties,
+            ...props,
         },
         foundation: foundation ?? null,
+        metadata: district.district_metadata,
     };
 
     return Response.json(feature);

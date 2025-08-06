@@ -6,13 +6,13 @@ async function Menus() {
   const res: Menu[] = [
     {
       name: "Features",
-      subMenuHeading: ["Design", "Scale"],
+      subMenuHeading: ["Admin", "Scale"],
       subMenu: [
         {
-          name: "Design",
-          desc: "Responsive design",
+          name: "District Management",
+          desc: "Manage data and logos",
           icon: "panels-top-left",
-          path: "/dashboard",
+          path: "/admin/districts",
           method: "GET",
         },
         {
