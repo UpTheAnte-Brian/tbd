@@ -72,7 +72,6 @@ async function run() {
 
             return {
                 sdorgid: props.sdorgid,
-                sdorgname: props.SDORGNAME,
                 shortname: props.shortname ?? null,
                 geometry: f.geometry,
                 properties: f.properties,
