@@ -107,59 +107,49 @@ const MapComponent = React.memo(() => {
     mapRef.current = null;
   };
 
-  const createLabelMarkers = useCallback(
-    async (map: google.maps.Map, features: DistrictWithFoundation[]) => {
-      // Clear existing markers
-      labelMarkersRef.current = [];
-      // labelMarkersRef.current.forEach((m) => m.setMap(null));
-      // const zoomThreshold = 8;
-      // if (zoomLevel < zoomThreshold) {
-      //   labelMarkersRef.current = [];
-      //   return;
-      // }
+  async function createLabelMarkers(features: DistrictWithFoundation[]) {
+    // Clear existing markers
+    labelMarkersRef.current = [];
 
-      const defaultPin = document.createElement("div");
-      defaultPin.textContent = "📍";
+    const newMarkers = await Promise.all(
+      features.map(async (feature) => {
+        const markerContent = document.createElement("div");
+        const size = Math.max(20, zoomLevel * 5);
+        markerContent.style.width = `${size}px`;
+        markerContent.style.height = `${size}px`;
 
-      const newMarkers = await Promise.all(
-        features.map(async (feature) => {
-          const logoPath = `district-logos/${feature.sdorgid}/logo.svg`;
-          const signedUrl = await getSignedImageUrl(logoPath, supabase);
-
-          const markerContent = document.createElement("div");
-          markerContent.style.width = "40px";
-          markerContent.style.height = "40px";
-
-          if (signedUrl) {
-            const img = document.createElement("img");
-            img.src = signedUrl;
-            img.alt = "Logo";
-            img.style.width = "100%";
-            img.style.height = "100%";
-            img.style.objectFit = "contain";
-            img.onerror = () => {
-              img.remove();
-              markerContent.textContent = "📍";
-            };
-            markerContent.appendChild(img);
-          } else {
+        if (feature.metadata?.logo_path) {
+          const signedUrl = await getSignedImageUrl(
+            feature.metadata.logo_path,
+            supabase
+          );
+          const img = document.createElement("img");
+          img.src = signedUrl || "";
+          img.alt = "Logo";
+          img.style.width = "100%";
+          img.style.height = "100%";
+          img.style.objectFit = "contain";
+          img.onerror = () => {
+            img.remove();
             markerContent.textContent = "📍";
-          }
+          };
+          markerContent.appendChild(img);
+        } else {
+          markerContent.textContent = "📍";
+        }
 
-          return new google.maps.marker.AdvancedMarkerElement({
-            position: getLabelPosition(feature),
-            title: getLabel(feature) || "",
-            content: markerContent,
-            zIndex: 1000,
-          });
-        })
-      );
+        return new google.maps.marker.AdvancedMarkerElement({
+          position: getLabelPosition(feature),
+          title: getLabel(feature) || "",
+          content: markerContent,
+          zIndex: 1000,
+        });
+      })
+    );
 
-      labelMarkersRef.current = newMarkers;
-      // newMarkers.forEach((marker) => (marker.map = map));
-    },
-    [zoomLevel]
-  );
+    labelMarkersRef.current = newMarkers;
+    // newMarkers.forEach((marker) => (marker.map = map));
+  }
   const onLoad = async (map: google.maps.Map) => {
     mapRef.current = map;
 
@@ -167,6 +157,10 @@ const MapComponent = React.memo(() => {
       .then((res) => res.json())
       .then((geojson: { features: DistrictWithFoundation[] }) => {
         map.data.addGeoJson(geojson);
+        map.data.setStyle({
+          visible: true,
+          icon: undefined, // ⬅️ disables default pins
+        });
         setFeatures(geojson.features);
 
         map.data.setStyle((feature) => {
@@ -188,19 +182,23 @@ const MapComponent = React.memo(() => {
         });
 
         // Assuming 'map' is your google.maps.Map object and 'marker' is your google.maps.Marker object
-        const minZoomLevel = 8; // Set your desired minimum zoom level for the marker to be visible
+        const minZoomLevel = 7; // Set your desired minimum zoom level for the marker to be visible
 
         map.addListener("zoom_changed", function () {
           const currentZoom = map.getZoom() ?? 6;
-          if (currentZoom >= minZoomLevel) {
-            labelMarkersRef.current.map((mark) => {
+          const size = Math.max(20, currentZoom * 5);
+
+          labelMarkersRef.current.forEach((mark) => {
+            const container = mark.content as HTMLDivElement;
+            container.style.width = `${size}px`;
+            container.style.height = `${size}px`;
+
+            if (currentZoom >= minZoomLevel) {
               mark.map = map;
-            });
-          } else {
-            labelMarkersRef.current.map((mark) => {
+            } else {
               mark.map = null;
-            });
-          }
+            }
+          });
         });
 
         const bounds = new google.maps.LatLngBounds();
@@ -240,7 +238,7 @@ const MapComponent = React.memo(() => {
 
         // Inside your onLoad function, after map and features are ready:
         // const zoom = map.getZoom() ?? 0;
-        createLabelMarkers(map, geojson.features);
+        createLabelMarkers(geojson.features);
       });
   };
   useEffect(() => {
@@ -355,6 +353,8 @@ const MapComponent = React.memo(() => {
         Zoom: {zoomLevel}
         <br />
         Center: {center.lat}
+        <br />
+        Marker Length: {labelMarkersRef.current.length}
       </div>
     </div>
   );

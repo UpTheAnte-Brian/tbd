@@ -3,7 +3,7 @@
 import { DistrictWithFoundation } from "@/app/lib/types";
 import DistrictCard from "@/app/ui/districts/district-card";
 import { getSupabaseClient } from "@/utils/supabase/client";
-import { Input } from "@mui/material";
+import { Input } from "@/app/components/ui/input";
 import React from "react";
 import { useState, useRef, useCallback, useEffect } from "react";
 
@@ -67,12 +67,11 @@ const DistrictMetadataEditor = React.memo(() => {
     }
     const formData = new FormData();
     formData.append("file", file);
-    const { data, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from("logos")
       .upload(filePath, formData, { upsert: true });
 
     if (!uploadError) {
-      console.log("upload data response: ", data);
       const { error } = await supabase.from("district_metadata").upsert({
         sdorgid,
         logo_path: filePath,
@@ -91,8 +90,9 @@ const DistrictMetadataEditor = React.memo(() => {
         );
       }
       setUploading(false);
+    } else {
+      console.warn("upload error: ", uploadError);
     }
-    console.log("upload error: ", uploadError);
   };
 
   // const handleSave = async (
@@ -134,7 +134,7 @@ const DistrictMetadataEditor = React.memo(() => {
       ) : null}
 
       <Input
-        className="mb-4"
+        className="mb-4 bg-slate-400 text-white"
         placeholder="Search districts..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}

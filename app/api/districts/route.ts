@@ -44,6 +44,8 @@ export async function GET() {
             type: "Feature",
             sdorgid: row.sdorgid,
             shortname: props?.shortname ?? "",
+            centroid_lat: row.centroid_lat,
+            centroid_lng: row.centroid_lng,
             properties: {
                 sdorgid: row.sdorgid,
                 sdorgname: row.sdorgname,

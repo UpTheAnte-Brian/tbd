@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+// import { useState } from "react";
 import { Input } from "../../components/ui/input";
 import { DistrictWithFoundation } from "../../lib/types";
 import FoundationEditor from "@/app/ui/districts/foundation-editor";
@@ -22,15 +22,27 @@ const DistrictCard = React.memo(
     handleSave: (district: DistrictWithFoundation) => void;
   }) => {
     // const [description, setDescription] = useState(district.metadata?.description || "");
-    const [description, setDescription] = useState("");
+    // const [description, setDescription] = useState("");
 
     return (
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3">
         <div className="text-lg font-semibold text-gray-500 text-center">
-          {district.shortname}
+          {district.shortname} ({Number(district.properties.sdnumber)})
         </div>
-        <div className="text-sm text-gray-500">Id: {district.sdorgid}</div>
 
+        {district.metadata?.logo_path && (
+          <img
+            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_LOGO_PATH}${district.metadata.logo_path}`}
+            alt="Logo"
+            className="h-10 object-contain"
+          />
+        )}
+        <Input
+          type="file"
+          accept="image/*"
+          onChange={(e) => handleLogoUpload(e, district.sdorgid)}
+          disabled={uploading}
+        />
         <FoundationEditor
           key={district.sdorgid} // 👈 force remount on ID change
           foundation={
@@ -78,36 +90,23 @@ const DistrictCard = React.memo(
             }
           }}
         />
-        <Input
+        {/* <Input
           placeholder="Metadata Description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-        />
+        /> */}
 
-        {district.metadata?.logo_path && (
-          <img
-            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_LOGO_PATH}${district.metadata.logo_path}`}
-            alt="Logo"
-            className="h-10 object-contain"
-          />
-        )}
-        <Input
-          type="file"
-          accept="image/*"
-          onChange={(e) => handleLogoUpload(e, district.sdorgid)}
-          disabled={uploading}
-        />
-        <button
+        {/* <button
           className="mt-2 px-3 py-1 bg-blue-500 text-white rounded"
-          // onClick={() =>
-          //   handleSave(district.sdorgid, {
-          //     foundation: { ...district.foundation, name: foundationName },
-          //     metadata: { ...district.metadata, description },
-          //   })
-          // }
+          onClick={() =>
+            handleSave(district.sdorgid, {
+              foundation: { ...district.foundation, name: foundationName },
+              metadata: { ...district.metadata, description },
+            })
+          }
         >
           Save
-        </button>
+        </button> */}
       </div>
     );
   }
