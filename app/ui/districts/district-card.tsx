@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 // import { useState } from "react";
 import { Input } from "../../components/ui/input";
 import { DistrictWithFoundation } from "../../lib/types";
@@ -26,10 +27,11 @@ const DistrictCard = React.memo(
 
     return (
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3">
-        <div className="text-lg font-semibold text-gray-500 text-center">
-          {district.shortname} ({Number(district.properties.sdnumber)})
-        </div>
-
+        <Link href={`/admin/districts/${district.sdorgid}`}>
+          <div className="text-lg font-semibold text-gray-500 text-center">
+            {district.shortname} ({Number(district.properties.sdnumber)})
+          </div>
+        </Link>
         {district.metadata?.logo_path && (
           <img
             src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_LOGO_PATH}${district.metadata.logo_path}`}

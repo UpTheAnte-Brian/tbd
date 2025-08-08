@@ -1,34 +1,32 @@
-import Form from "@/app/ui/invoices/edit-form";
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
-import { fetchInvoiceById, fetchCustomers } from "@/app/lib/data";
-import { notFound } from "next/navigation";
+import { getDistrictDTO } from "@/app/data/districts-dto";
+import { DistrictWithFoundation } from "@/app/lib/types";
 
 export default async function DistrictPage(props: {
   params: Promise<{ id: string }>;
 }) {
-  const params = await props.params;
-  const id = params.id;
-  const [invoice, customers] = await Promise.all([
-    fetchInvoiceById(id),
-    fetchCustomers(),
-  ]);
-  if (!invoice) {
-    notFound();
-  }
+  const { id } = await props.params;
+  const district: DistrictWithFoundation = await getDistrictDTO(id);
+
+  if (!district) return <p>No district found</p>;
 
   return (
     <main>
       <Breadcrumbs
         breadcrumbs={[
-          { label: "Invoices", href: "/dashboard/invoices" },
+          { label: "Districts", href: "/admin/districts" },
           {
             label: "Edit Invoice",
-            href: `/dashboard/invoices/${id}/edit`,
+            href: `/admin/districts/:${id}`,
             active: true,
           },
         ]}
       />
-      <Form invoice={invoice} customers={customers} />
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3">
+        <div className="text-lg font-semibold text-gray-500 text-center">
+          {district.shortname} ({Number(district.properties.sdnumber)})
+        </div>
+      </div>
     </main>
   );
 }
