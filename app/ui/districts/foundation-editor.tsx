@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useState } from "react";
 
 type Foundation = {
@@ -45,6 +46,11 @@ export default function FoundationEditor({
           className="mt-1 block w-full border border-gray-300 rounded px-3 py-2"
         />
       </div>
+      <Link href={`/admin/districts/${foundation.district_id}`}>
+        <div className="text-lg font-semibold text-gray-500 text-center">
+          {foundation.district_id} ({Number(foundation.website)})
+        </div>
+      </Link>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
