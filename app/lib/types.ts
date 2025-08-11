@@ -112,3 +112,19 @@ export interface User {
     deleted_at: string | null; // ISO timestamp
     is_anonymous: boolean;
 }
+
+export interface KmlFeatureData {
+    author: {
+        email: string;
+        name: string;
+        uri: string;
+    };
+    description: string;
+    id: string;
+    infoWindowHtml: string;
+    name: string;
+    snippet: string;
+    position: google.maps.LatLng | google.maps.LatLngLiteral | undefined;
+    content: string;
+    pixelOffset: google.maps.Size | null;
+}

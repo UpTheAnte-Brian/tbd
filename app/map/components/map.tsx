@@ -1,5 +1,5 @@
 "use client";
-import { GoogleMap, Libraries, LoadScript } from "@react-google-maps/api";
+import { GoogleMap } from "@react-google-maps/api";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getBoundsFromGeoJSON } from "../../lib/getBoundsFromGeoJSON";
 import { DistrictsPanel } from "../../ui/districts/district";
@@ -16,11 +16,6 @@ import {
 } from "../../lib/types";
 import { getSupabaseClient } from "../../../utils/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
-
-const googleApiLibraries = process.env.NEXT_PUBLIC_GOOGLE_LIBRARIES;
-const googleApiLibrariesArray = (
-  googleApiLibraries ? googleApiLibraries.split(",") : []
-) as Libraries;
 
 const getSignedImageUrl = async (
   path: string,
@@ -307,27 +302,21 @@ const MapComponent = React.memo(() => {
 
   return (
     <div style={containerStyle}>
-      <LoadScript
-        version="beta"
-        libraries={googleApiLibrariesArray}
-        googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
-      >
-        <GoogleMap
-          mapContainerStyle={mapContainerStyle}
-          onLoad={onLoad}
-          onClick={onMapClick}
-          onUnmount={onUnMount}
-          center={center}
-          zoom={zoomLevel}
-          onZoomChanged={() => setZoomLevel(mapRef.current?.getZoom() ?? 6)}
-          options={{
-            mapTypeId: "roadmap",
-            mapId: "74d818485994559a",
-            zoomControl: true,
-            disableDefaultUI: false,
-          }}
-        />
-      </LoadScript>
+      <GoogleMap
+        mapContainerStyle={mapContainerStyle}
+        onLoad={onLoad}
+        onClick={onMapClick}
+        onUnmount={onUnMount}
+        center={center}
+        zoom={zoomLevel}
+        onZoomChanged={() => setZoomLevel(mapRef.current?.getZoom() ?? 6)}
+        options={{
+          mapTypeId: "roadmap",
+          mapId: "74d818485994559a",
+          zoomControl: true,
+          disableDefaultUI: false,
+        }}
+      />
       <DistrictsPanel
         selectedId={selectedId}
         setSelectedId={setSelectedId}
