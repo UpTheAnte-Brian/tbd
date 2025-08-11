@@ -2,7 +2,7 @@ import "server-only";
 
 export async function getDistrictDTO(id: string) {
   // Don't pass values, read back cached values, also solves context and easier to make it lazy
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_HOST || "http://localhost:3000";
   const district = await fetch(`${baseUrl}/api/districts/${id}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
