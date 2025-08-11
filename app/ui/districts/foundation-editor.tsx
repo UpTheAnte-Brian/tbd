@@ -48,7 +48,7 @@ export default function FoundationEditor({
       </div>
       <Link href={`/admin/districts/${foundation.district_id}`}>
         <div className="text-lg font-semibold text-gray-500 text-center">
-          {foundation.district_id} ({Number(foundation.website)})
+          {foundation.district_id}
         </div>
       </Link>
 

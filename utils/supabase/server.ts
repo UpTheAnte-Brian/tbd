@@ -12,12 +12,19 @@ export async function createClient() {
         {
             cookies: {
                 getAll() {
-                    return cookieStore.getAll();
+                    return cookieStore.getAll().map(({ name, value }) => ({
+                        name,
+                        value,
+                    }));
                 },
                 setAll(cookiesToSet) {
                     try {
                         cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
+                            cookieStore.set(name, value, {
+                                ...options,
+                                secure: options?.secure ??
+                                    process.env.NODE_ENV === "production",
+                            })
                         );
                     } catch {
                         // The `setAll` method was called from a Server Component.

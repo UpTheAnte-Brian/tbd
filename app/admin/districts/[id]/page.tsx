@@ -16,15 +16,15 @@ export default async function DistrictPage(props: {
         breadcrumbs={[
           { label: "Districts", href: "/admin/districts" },
           {
-            label: "Edit Invoice",
-            href: `/admin/districts/:${id}`,
+            label: id,
+            href: `/admin/districts/${id}`,
             active: true,
           },
         ]}
       />
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3">
         <div className="text-lg font-semibold text-gray-500 text-center">
-          {district.shortname} ({Number(district.properties.sdnumber)})
+          {district.shortname}
         </div>
       </div>
     </main>

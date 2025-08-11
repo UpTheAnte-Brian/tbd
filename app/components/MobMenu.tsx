@@ -63,7 +63,11 @@ export default function MobMenu({ Menus }: { Menus: MenuObj[] }) {
                         key={name}
                         className="p-2 flex items-center hover:bg-white/5 rounded-md gap-x-2 cursor-pointer"
                       >
-                        <Link href={path} className="flex items-center w-full">
+                        <Link
+                          href={path}
+                          onClick={toggleDrawer} // closes drawer on click
+                          className="flex items-center gap-x-2 w-full"
+                        >
                           <span className="w-6 flex justify-center items-center flex-shrink-0">
                             <DynamicIcon
                               name={icon as IconName}

@@ -7,7 +7,7 @@ export async function getDistrictDTO(id: string) {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });
-  const foundation = await fetch(`${baseUrl}/api/foundation/${id}`, {
+  const foundation = await fetch(`${baseUrl}/api/foundations/${id}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });

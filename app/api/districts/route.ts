@@ -10,7 +10,7 @@ export async function GET() {
     const { data: districts, error: districtError } = await supabase
         .from("districts")
         .select(
-            "sdorgid, properties, geometry, centroid_lat, centroid_lng, district_metadata(logo_path)",
+            "sdorgid, shortname, properties, geometry, centroid_lat, centroid_lng, district_metadata(logo_path)",
         );
     // const supabaseAdmin = createClient(
     //   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -43,7 +43,7 @@ export async function GET() {
         return {
             type: "Feature",
             sdorgid: row.sdorgid,
-            shortname: props?.shortname ?? "",
+            shortname: row.shortname,
             centroid_lat: row.centroid_lat,
             centroid_lng: row.centroid_lng,
             properties: {

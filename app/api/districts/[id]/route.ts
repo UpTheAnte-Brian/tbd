@@ -22,7 +22,7 @@ export async function GET(
     const { data: district, error: districtError } = await supabase
         .from("districts")
         .select(
-            "sdorgid, properties, geometry, centroid_lat, centroid_lng, district_metadata(logo_path)",
+            "sdorgid, shortname, properties, geometry, centroid_lat, centroid_lng, district_metadata(logo_path)",
         )
         .eq("sdorgid", id)
         .maybeSingle();
@@ -50,7 +50,7 @@ export async function GET(
     const feature = {
         type: "Feature",
         sdorgid: district.sdorgid,
-        shortname: props?.shortname ?? "",
+        shortname: district.shortname,
         centroid_lat: district.centroid_lat,
         centroid_lng: district.centroid_lng,
         properties: {
