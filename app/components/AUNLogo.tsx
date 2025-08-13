@@ -8,7 +8,7 @@ export default function AUNLogo() {
     <>
       <Link className="flex-center-center gap-x-1 relative" href={"/"}>
         <Image src={Logo} alt="Logo" className="size-4 md:size-8" />
-        <h3 className="text-lg font-semibold md:text-md">Ante Up Nation</h3>
+        <h3 className="text-sm font-semibold md:text-md">Ante Up Nation</h3>
       </Link>
     </>
   );

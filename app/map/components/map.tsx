@@ -87,6 +87,29 @@ const MapComponent = React.memo(() => {
     []
   );
 
+  // Mobile search state for the compact overlay
+  const [query, setQuery] = useState<string>("");
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+  const suggestions = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [] as { id: string; label: string }[];
+    return features
+      .map((f) => {
+        const id =
+          (f.properties?.sdorgid as string) ??
+          (f as unknown as { sdorgid?: string }).sdorgid ??
+          "";
+        const label =
+          getLabel(f) ||
+          (f.properties?.shortname as string) ||
+          (f.properties?.prefname as string) ||
+          "";
+        return { id, label };
+      })
+      .filter((x) => x.id && x.label.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [query, features]);
+
   const updateDistrictInList = useCallback(
     (district: DistrictWithFoundation) => {
       setFeatures((prev) =>
@@ -301,7 +324,10 @@ const MapComponent = React.memo(() => {
   };
 
   return (
-    <div style={containerStyle}>
+    <div
+      style={containerStyle}
+      className="relative flex flex-col md:flex-row w-full"
+    >
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         onLoad={onLoad}
@@ -317,18 +343,20 @@ const MapComponent = React.memo(() => {
           disableDefaultUI: false,
         }}
       />
-      <DistrictsPanel
-        selectedId={selectedId}
-        setSelectedId={setSelectedId}
-        districts={features}
-        mapRef={mapRef}
-        panToMinnesota={() => {
-          if (mapRef.current) {
-            panToMinnesota(mapRef.current);
-          }
-        }}
-        updateDistrictInList={updateDistrictInList}
-      />
+      <div className="hidden md:flex w-[380px] shrink-0">
+        <DistrictsPanel
+          selectedId={selectedId}
+          setSelectedId={setSelectedId}
+          districts={features}
+          mapRef={mapRef}
+          panToMinnesota={() => {
+            if (mapRef.current) {
+              panToMinnesota(mapRef.current);
+            }
+          }}
+          updateDistrictInList={updateDistrictInList}
+        />
+      </div>
 
       {hoveredFeatureProps && (
         <div className="absolute top-24 left-3 bg-black/80 text-white rounded-lg px-4 py-2 pointer-events-none z-50 shadow-lg transition-all duration-150 opacity-100">
@@ -337,6 +365,75 @@ const MapComponent = React.memo(() => {
           {/* <div>{labelMarkersRef.current}</div> */}
         </div>
       )}
+
+      {/* Mobile search/autocomplete overlay */}
+      <div className="absolute bottom-0 w-4/5 p-4 z-50">
+        <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-2">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search districts…"
+            className="w-full rounded border px-3 py-2 outline-none"
+            type="text"
+            onKeyDown={(e) => {
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setHighlightedIndex((prev) =>
+                  Math.min(prev + 1, suggestions.length - 1)
+                );
+              } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+              } else if (e.key === "Enter") {
+                e.preventDefault();
+                if (
+                  highlightedIndex >= 0 &&
+                  highlightedIndex < suggestions.length
+                ) {
+                  const s = suggestions[highlightedIndex];
+                  setSelectedId(s.id);
+                  const f = features.find(
+                    (d) =>
+                      (d.properties?.sdorgid as string) === s.id ||
+                      ((d as unknown as { sdorgid?: string }).sdorgid ?? "") ===
+                        s.id
+                  );
+                  if (f && mapRef.current) panToFeature(f, mapRef.current);
+                  setQuery("");
+                  setHighlightedIndex(-1);
+                }
+              }
+            }}
+          />
+          {query && suggestions.length > 0 && (
+            <ul className="mt-2 max-h-60 overflow-y-auto divide-y">
+              {suggestions.map((s, i) => (
+                <li key={s.id}>
+                  <button
+                    className={`w-full text-left px-3 py-2 hover:bg-gray-100 ${
+                      i === highlightedIndex ? "bg-gray-200  text-black" : ""
+                    }`}
+                    onClick={() => {
+                      setSelectedId(s.id);
+                      const f = features.find(
+                        (d) =>
+                          (d.properties?.sdorgid as string) === s.id ||
+                          ((d as unknown as { sdorgid?: string }).sdorgid ??
+                            "") === s.id
+                      );
+                      if (f && mapRef.current) panToFeature(f, mapRef.current);
+                      setQuery("");
+                      setHighlightedIndex(-1);
+                    }}
+                  >
+                    {s.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
 
       <div className="absolute top-12 right-3 bg-black text-white text-sm px-2 py-1 rounded z-50">
         Zoom: {zoomLevel}
