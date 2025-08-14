@@ -1,13 +1,8 @@
 "use client";
 import { GoogleMap } from "@react-google-maps/api";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getBoundsFromGeoJSON } from "../../lib/getBoundsFromGeoJSON";
-import { DistrictsPanel } from "../../ui/districts/district";
-import {
-  getLabel,
-  getLabelPosition,
-  panToMinnesota,
-} from "../../lib/district/utils";
+import { getLabel, getLabelPosition } from "../../lib/district/utils";
 import React from "react";
 import {
   DistrictProperties,
@@ -16,6 +11,7 @@ import {
 } from "../../lib/types";
 import { getSupabaseClient } from "../../../utils/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
+import DistrictPopUp from "@/app/ui/districts/district-pop-up";
 
 const getSignedImageUrl = async (
   path: string,
@@ -51,11 +47,6 @@ const mapContainerStyle = {
   width: "100%",
   height: "80vh",
 };
-const containerStyle = {
-  width: "100%",
-  height: "80vh",
-  display: "flex",
-};
 
 function panToFeature(
   feature: DistrictWithFoundation | google.maps.Data.Feature,
@@ -76,6 +67,8 @@ function panToFeature(
 const MapComponent = React.memo(() => {
   const mapRef = useRef<google.maps.Map | null>(null);
   const [features, setFeatures] = useState<DistrictWithFoundation[]>([]);
+  const [selectedFeature, setSelectedFeature] =
+    useState<DistrictWithFoundation | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredFeatureProps, setHoveredFeatureProps] =
     useState<DistrictProperties | null>(null);
@@ -86,6 +79,17 @@ const MapComponent = React.memo(() => {
   const labelMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>(
     []
   );
+
+  // const updateDistrictInList = useCallback(
+  //   (district: DistrictWithFoundation) => {
+  //     setFeatures((prev) =>
+  //       prev.map((d) =>
+  //         d.sdorgid === district.sdorgid ? { ...d, ...district } : d
+  //       )
+  //     );
+  //   },
+  //   []
+  // );
 
   // Mobile search state for the compact overlay
   const [query, setQuery] = useState<string>("");
@@ -110,16 +114,16 @@ const MapComponent = React.memo(() => {
       .slice(0, 8);
   }, [query, features]);
 
-  const updateDistrictInList = useCallback(
-    (district: DistrictWithFoundation) => {
-      setFeatures((prev) =>
-        prev.map((d) =>
-          d.sdorgid === district.sdorgid ? { ...d, ...district } : d
-        )
-      );
-    },
-    []
-  );
+  // const updateDistrictInList = useCallback(
+  //   (district: DistrictWithFoundation) => {
+  //     setFeatures((prev) =>
+  //       prev.map((d) =>
+  //         d.sdorgid === district.sdorgid ? { ...d, ...district } : d
+  //       )
+  //     );
+  //   },
+  //   []
+  // );
 
   const onUnMount = () => {
     mapRef.current = null;
@@ -262,12 +266,13 @@ const MapComponent = React.memo(() => {
   useEffect(() => {
     if (!mapRef.current || !selectedId) return;
 
-    const selectedFeature = features.find(
+    const findFeature = features.find(
       (f) => f.properties?.sdorgid === selectedId
     );
 
-    if (selectedFeature) {
-      panToFeature(selectedFeature, mapRef.current);
+    if (findFeature) {
+      setSelectedFeature(findFeature);
+      panToFeature(findFeature, mapRef.current);
       // optionally update label styling, etc.
     }
   }, [selectedId, mapRef, features]);
@@ -323,11 +328,12 @@ const MapComponent = React.memo(() => {
     console.log("event: ", e);
   };
 
+  // const selectedFeature = (id: string): DistrictWithFoundation => {
+  //   return features.find((x) => x.id === id);
+  // }
+
   return (
-    <div
-      style={containerStyle}
-      className="relative flex flex-col md:flex-row w-full"
-    >
+    <div className="relative flex flex-col md:flex-row w-full">
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         onLoad={onLoad}
@@ -343,7 +349,7 @@ const MapComponent = React.memo(() => {
           disableDefaultUI: false,
         }}
       />
-      <div className="hidden md:flex w-[380px] shrink-0">
+      {/* <div className="hidden md:flex w-[380px] shrink-0">
         <DistrictsPanel
           selectedId={selectedId}
           setSelectedId={setSelectedId}
@@ -356,13 +362,22 @@ const MapComponent = React.memo(() => {
           }}
           updateDistrictInList={updateDistrictInList}
         />
-      </div>
+      </div> */}
 
       {hoveredFeatureProps && (
-        <div className="absolute top-24 left-3 bg-black/80 text-white rounded-lg px-4 py-2 pointer-events-none z-50 shadow-lg transition-all duration-150 opacity-100">
+        <div className="hidden md:block absolute top-16 left-3 bg-black/80 text-white rounded-lg px-4 py-2 pointer-events-none z-50 shadow-lg transition-all duration-150 opacity-100">
           <div className="font-semibold">{hoveredFeatureProps.shortname}</div>
           <div className="text-sm">ID: {hoveredFeatureProps.sdorgid}</div>
           {/* <div>{labelMarkersRef.current}</div> */}
+        </div>
+      )}
+
+      {selectedFeature && (
+        <div className="absolute top-32 left-3 bg-black/80 text-white rounded-lg px-4 py-2 pointer-events-none z-50 shadow-lg transition-all duration-150 opacity-100">
+          <DistrictPopUp
+            district={selectedFeature}
+            // handleSave={updateDistrictInList}
+          />
         </div>
       )}
 
@@ -410,8 +425,10 @@ const MapComponent = React.memo(() => {
               {suggestions.map((s, i) => (
                 <li key={s.id}>
                   <button
-                    className={`w-full text-left px-3 py-2 hover:bg-gray-100 ${
-                      i === highlightedIndex ? "bg-gray-200  text-black" : ""
+                    className={`w-full text-left px-3 py-2 hover:bg-gray-100 hover:text-black ${
+                      i === highlightedIndex
+                        ? "bg-gray-200  hover:text-black"
+                        : ""
                     }`}
                     onClick={() => {
                       setSelectedId(s.id);
@@ -435,13 +452,13 @@ const MapComponent = React.memo(() => {
         </div>
       </div>
 
-      <div className="absolute top-12 right-3 bg-black text-white text-sm px-2 py-1 rounded z-50">
+      {/* <div className="absolute top-12 right-3 bg-black text-white text-sm px-2 py-1 rounded z-50">
         Zoom: {zoomLevel}
         <br />
         Center: {center.lat}
         <br />
         Marker Length: {labelMarkersRef.current.length}
-      </div>
+      </div> */}
     </div>
   );
 });

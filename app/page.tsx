@@ -10,18 +10,12 @@ const googleApiLibrariesArray = (
 
 export default function Page() {
   return (
-    <>
-      {/* <TokenSync />
-      <DebugJWT /> */}
-      <div className="flex flex-col gap-4 md:flex-row">
-        <LoadScript
-          version="beta"
-          libraries={googleApiLibrariesArray}
-          googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
-        >
-          <MapComponent />
-        </LoadScript>
-      </div>
-    </>
+    <LoadScript
+      version="beta"
+      libraries={googleApiLibrariesArray}
+      googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
+    >
+      <MapComponent />
+    </LoadScript>
   );
 }

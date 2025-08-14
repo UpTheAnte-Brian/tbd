@@ -4,14 +4,15 @@ import "@/app/ui/style.css";
 import { inter } from "./ui/fonts";
 import Footer from "./ui/dashboard/footer";
 import { StyledEngineProvider } from "@mui/material";
-import Menus from "./lib/menus";
-import { Menu } from "./lib/definitions";
-import DesktopMenu from "./components/DesktopMenu";
-import MobMenu from "./components/MobMenu";
-import AUNLogo from "./components/AUNLogo";
-import SignInButton from "./components/SignInButton";
-import { createClient } from "../utils/supabase/server";
-import { Button } from "./ui/button";
+// import Menus from "./lib/menus";
+// import { Menu } from "./lib/definitions";
+// import DesktopMenu from "./components/DesktopMenu";
+// import MobMenu from "./components/MobMenu";
+// import AUNLogo from "./components/AUNLogo";
+// import SignInButton from "./components/SignInButton";
+// import { createClient } from "../utils/supabase/server";
+// import { Button } from "./ui/button";
+import NavBarComponent from "@/app/components/nav/NavBar";
 
 // This sets the title on your browser tab.
 // export const metadata = {
@@ -26,9 +27,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   // console.log("Menus", Menus);
-  const testMenus = await Menus();
-  const supabase = await createClient();
-  const { data: session } = await supabase.auth.getUser();
+  // const testMenus = await Menus();
+  // const supabase = await createClient();
+  // const { data: session } = await supabase.auth.getUser();
   // console.log("testMenus", testMenus);
   return (
     <html lang="en">
@@ -44,7 +45,7 @@ export default async function RootLayout({
         ></meta> */}
       </head>
       <body
-        className={`${inter.className} antialiased flex flex-col min-h-screen p-1`}
+        className={`${inter.className} antialiased flex flex-col min-h-screen overflow-x-hidden`}
       >
         <script
           src="https://accounts.google.com/gsi/client"
@@ -54,38 +55,19 @@ export default async function RootLayout({
         .
         <StyledEngineProvider injectFirst>
           <main className="relative">
-            <header className="h-16 text-[15px] fixed inset-0 flex-center bg-[#18181A] z-[999]">
-              <nav className=" px-3 flex-center-between w-full max-w-7xl mx-auto">
-                <AUNLogo />
-
-                <ul className="gap-x-1 lg:flex-center hidden">
-                  {testMenus.map((menu: Menu) => (
-                    <DesktopMenu menu={JSON.stringify(menu)} key={menu.name} />
-                  ))}
-                </ul>
-                <div className="flex-center-center gap-x-2">
-                  {session.user && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <p className="text-sky-600">
-                        {session.user && session.user.email
-                          ? `${session.user.email.split("@")[0]}`
-                          : "Not logged in"}
-                      </p>
-
-                      <form action="/auth/signout" method="post">
-                        <Button type="submit">Sign Out</Button>
-                      </form>
-                    </div>
-                  )}
-                  {!session.user && <SignInButton />}
-                  <div className="lg:hidden">
-                    <MobMenu Menus={testMenus} />
-                  </div>
-                </div>
-              </nav>
+            {/* Header: Fixed position, ensure content flows below it */}
+            <header className="h-16 text-[15px] fixed top-0 w-full bg-[#18181A] z-[999]">
+              <NavBarComponent></NavBarComponent>
             </header>
-            <div className="min-h-[80vh] mt-8">{children}</div>
-            <div className="inset-0 min-h-10vh bg-[#18181A]">
+
+            {/* Main Content Area: Use padding-top to create space below the fixed header */}
+            <div className="pt-10 min-h-[80vh]">
+              {/* Added pt-8 to account for header height */}
+              {children}
+            </div>
+
+            {/* Footer */}
+            <div className="min-h-10vh bg-[#18181A]">
               <Footer />
             </div>
           </main>
