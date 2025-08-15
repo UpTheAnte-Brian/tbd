@@ -26,6 +26,7 @@ const DistrictPopUp = React.memo(
     // handleSave: (district: DistrictWithFoundation) => void;
   }) => {
     const [uploading, setUploading] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
     const isMounted = useRef(true);
     const supabase = getSupabaseClient();
 
@@ -72,10 +73,26 @@ const DistrictPopUp = React.memo(
     };
 
     useEffect(() => {
+      // Cleanup function
       return () => {
         isMounted.current = false;
       };
     }, []);
+    useEffect(() => {
+      // Fetch user and check admin status
+      const checkAdmin = async () => {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (
+          user?.user_metadata?.admin ||
+          user?.user_metadata?.role === "admin"
+        ) {
+          setIsAdmin(true);
+        }
+      };
+      checkAdmin();
+    }, [supabase]);
     return (
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3">
         <Link href={`/admin/districts/${district.sdorgid}`}>
@@ -90,12 +107,14 @@ const DistrictPopUp = React.memo(
             className="h-10 object-contain"
           />
         )}
-        <Input
-          type="file"
-          accept="image/*"
-          onChange={(e) => handleLogoUpload(e, district.sdorgid)}
-          disabled={uploading}
-        />
+        {isAdmin && (
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleLogoUpload(e, district.sdorgid)}
+            disabled={uploading}
+          />
+        )}
         {/* <FoundationEditor
           key={district.sdorgid} // 👈 force remount on ID change
           foundation={

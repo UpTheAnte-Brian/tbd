@@ -74,6 +74,11 @@ const MapComponent = React.memo(() => {
     useState<DistrictProperties | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(6);
+  const [showPopup, setShowPopup] = useState<boolean>(true);
+  const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
   const center = useMemo<LatLngLiteral>(() => ({ lat: 46.3, lng: -94.2 }), []);
   const supabase = getSupabaseClient();
   const labelMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>(
@@ -250,6 +255,17 @@ const MapComponent = React.memo(() => {
               shape_area: event.feature.getProperty("shape_area") as string,
               shape_leng: event.feature.getProperty("shape_leng") as string,
             });
+            // Set mouse position if available
+            if (
+              event.domEvent &&
+              typeof (event.domEvent as MouseEvent).clientX === "number" &&
+              typeof (event.domEvent as MouseEvent).clientY === "number"
+            ) {
+              setHoverPosition({
+                x: (event.domEvent as MouseEvent).clientX,
+                y: (event.domEvent as MouseEvent).clientY,
+              });
+            }
           }
         );
 
@@ -290,6 +306,7 @@ const MapComponent = React.memo(() => {
       if (!clickedId) return;
 
       setSelectedId(clickedId);
+      setShowPopup(true);
 
       if (mapRef.current) {
         panToFeature(clickedFeature, mapRef.current);
@@ -365,15 +382,30 @@ const MapComponent = React.memo(() => {
       </div> */}
 
       {hoveredFeatureProps && (
-        <div className="hidden md:block absolute top-16 left-3 bg-black/80 text-white rounded-lg px-4 py-2 pointer-events-none z-50 shadow-lg transition-all duration-150 opacity-100">
+        <div
+          className="hidden md:block absolute bg-black/80 text-white rounded-lg px-4 py-2 pointer-events-none z-50 shadow-lg transition-all duration-150 opacity-100"
+          style={{
+            left: hoverPosition.x + 10,
+            top: hoverPosition.y - 40,
+          }}
+        >
           <div className="font-semibold">{hoveredFeatureProps.shortname}</div>
           <div className="text-sm">ID: {hoveredFeatureProps.sdorgid}</div>
           {/* <div>{labelMarkersRef.current}</div> */}
         </div>
       )}
 
-      {selectedFeature && (
-        <div className="absolute top-32 left-3 bg-black/80 text-white rounded-lg px-4 py-2 pointer-events-none z-50 shadow-lg transition-all duration-150 opacity-100">
+      {selectedFeature && showPopup && (
+        <div className="absolute top-32 left-3 bg-black/80 text-white rounded-lg px-4 py-2 z-50 shadow-lg transition-all duration-150 opacity-100 pointer-events-auto">
+          <button
+            className="absolute top-1 right-1 text-white bg-gray-700 hover:bg-gray-900 rounded-full px-2 py-0.5 text-xs font-bold z-10"
+            style={{ lineHeight: "1" }}
+            onClick={() => setShowPopup(false)}
+            aria-label="Close popup"
+            type="button"
+          >
+            X
+          </button>
           <DistrictPopUp
             district={selectedFeature}
             // handleSave={updateDistrictInList}

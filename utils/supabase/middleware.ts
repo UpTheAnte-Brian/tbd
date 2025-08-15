@@ -2,18 +2,18 @@ export const runtime = "nodejs";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function updateSession(request: NextRequest) {
+    console.log("Cookies in middleware:", request.cookies.getAll());
     if (
         request.nextUrl.pathname.startsWith("/auth") ||
-        request.nextUrl.pathname.startsWith("/api") ||
-        request.nextUrl.pathname.startsWith("/admin")
+        request.nextUrl.pathname.startsWith("/api")
     ) {
         return NextResponse.next();
     }
 
-    const response = NextResponse.next({ request });
-
     const token = request.cookies.get("sb-access-token")?.value;
     const role = request.cookies.get("sb-role")?.value;
+    const admin = request.cookies.get("sb-admin")?.value;
+    const adminCookie = request.cookies.get("sb-admin")?.value === "true";
 
     if (!token) {
         if (
@@ -25,11 +25,23 @@ export async function updateSession(request: NextRequest) {
             console.log("redirect to signin");
             return NextResponse.redirect(url);
         }
-        return response;
+        return NextResponse.next();
     }
+
+    if (request.nextUrl.pathname.startsWith("/admin") && !adminCookie) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/";
+        return NextResponse.redirect(url);
+    }
+
+    const response = NextResponse.next({ request });
 
     if (role) {
         response.headers.set("x-user-role", role);
+    }
+
+    if (admin) {
+        response.headers.set("x-user-admin", admin);
     }
 
     return response;

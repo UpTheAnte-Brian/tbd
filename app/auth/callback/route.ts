@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 // The client you created from the Server-Side Auth instructions
 import { createClient } from "../../../utils/supabase/server";
 import { cookies } from "next/headers";
+import { ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
 
 export async function GET(request: Request) {
   const isProd = process.env.NODE_ENV === "production";
@@ -25,20 +26,30 @@ export async function GET(request: Request) {
     );
 
     if (!error) { // after session exchange
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData?.user;
+
       let role = "authenticated";
+      if (user?.user_metadata?.role) {
+        role = user.user_metadata.role;
+      } else if (user?.user_metadata?.admin === true) {
+        role = "admin";
+      }
 
       let sessionData;
       for (let i = 0; i < 10; i++) {
         const result = await supabase.auth.getSession();
         if (result.data?.session?.access_token) {
           sessionData = result.data;
-          const { data: roleData, error: userRoleError } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", session?.user?.id)
-            .maybeSingle();
-          if (!userRoleError) {
-            role = roleData?.role;
+          if (role === "authenticated") {
+            const { data: roleData, error: userRoleError } = await supabase
+              .from("user_roles")
+              .select("role")
+              .eq("user_id", session?.user?.id)
+              .maybeSingle();
+            if (!userRoleError) {
+              role = roleData?.role;
+            }
           }
           break;
         }
@@ -60,12 +71,23 @@ export async function GET(request: Request) {
       //   credentials: "include", // so the cookie is set
       // });
       if (sessionData?.session?.access_token) {
-        (await cookies()).set("role", role, {
+        const cookieOptions = {
           path: "/",
           httpOnly: true,
           secure: isProd,
           sameSite: "lax",
-        });
+        };
+        (await cookies()).set(
+          "role",
+          role,
+          cookieOptions as Partial<ResponseCookie>,
+        );
+        const isAdmin = role === "admin";
+        (await cookies()).set(
+          "sb-admin",
+          isAdmin ? "true" : "false",
+          cookieOptions as Partial<ResponseCookie>,
+        );
       }
 
       const forwardedHost = request.headers.get("x-forwarded-host"); // original origin before load balancer
