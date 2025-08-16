@@ -9,12 +9,36 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.next();
     }
 
-    const token = request.cookies.get("sb-access-token")?.value;
+    // console.log("All cookies:", request.cookies.getAll());
+
+    // Collect supabase-[projectId]-auth-token.[index] cookies
+    const supabaseChunks = request.cookies
+        .getAll()
+        .filter((c) => c.name.includes("-auth-token."))
+        .sort((a, b) => {
+            const ai = parseInt(a.name.split(".").pop() || "0", 10);
+            const bi = parseInt(b.name.split(".").pop() || "0", 10);
+            return ai - bi;
+        })
+        .map((c, i) => i === 0 ? c.value.replace(/^base64-/, "") : c.value);
+
+    let supabaseDecoded = undefined;
+    if (supabaseChunks.length > 0) {
+        try {
+            const combined = supabaseChunks.join("");
+            const jsonStr = Buffer.from(combined, "base64").toString("utf-8");
+            supabaseDecoded = JSON.parse(jsonStr);
+            console.log("Decoded supabase auth token:", supabaseDecoded);
+        } catch (err) {
+            console.error("Failed to decode supabase auth token:", err);
+        }
+    }
+
+    const token = supabaseDecoded ? supabaseDecoded.access_token : undefined;
     const role = request.cookies.get("sb-role")?.value;
     const admin = request.cookies.get("sb-admin")?.value;
     const adminCookie = request.cookies.get("sb-admin")?.value === "true";
-    console.log("adminCookie: ", adminCookie);
-    console.log("adminCookie: ", token);
+
     if (!token) {
         if (
             !request.nextUrl.pathname.startsWith("/auth") &&
