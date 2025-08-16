@@ -28,7 +28,6 @@ export async function updateSession(request: NextRequest) {
             const combined = supabaseChunks.join("");
             const jsonStr = Buffer.from(combined, "base64").toString("utf-8");
             supabaseDecoded = JSON.parse(jsonStr);
-            console.log("Decoded supabase auth token:", supabaseDecoded);
         } catch (err) {
             console.error("Failed to decode supabase auth token:", err);
         }
