@@ -6,17 +6,16 @@ import { Input } from "../../components/ui/input";
 import { DistrictWithFoundation } from "../../lib/types";
 // import FoundationEditor from "@/app/ui/districts/foundation-editor";
 import React, { useEffect, useRef, useState } from "react";
-import { getSupabaseClient } from "@/utils/supabase/client";
 
 const DistrictPopUp = React.memo(
   ({
     district,
-  }: // handleSave,
-  // uploading,
-  // handleLogoUpload,
-  // handleSave,
-  {
+    isAdmin,
+    onLogoUpload,
+  }: {
     district: DistrictWithFoundation;
+    isAdmin: boolean;
+    onLogoUpload: (file: File, sdorgid: string) => Promise<void>;
     // handleSave: (district: DistrictWithFoundation) => void;
     // uploading: boolean;
     // handleLogoUpload: (
@@ -26,9 +25,7 @@ const DistrictPopUp = React.memo(
     // handleSave: (district: DistrictWithFoundation) => void;
   }) => {
     const [uploading, setUploading] = useState(false);
-    const [isAdmin, setIsAdmin] = useState(false);
     const isMounted = useRef(true);
-    const supabase = getSupabaseClient();
 
     const handleLogoUpload = async (
       e: React.ChangeEvent<HTMLInputElement>,
@@ -37,38 +34,16 @@ const DistrictPopUp = React.memo(
       const file = e.target.files?.[0];
       if (!file) return;
 
-      const extension = file.name.split(".").pop();
-      const filePath = `district-logos/${sdorgid}/logo.${extension}`;
       if (isMounted.current) {
         setUploading(true);
       }
-      const formData = new FormData();
-      formData.append("file", file);
-      const { error: uploadError } = await supabase.storage
-        .from("logos")
-        .upload(filePath, formData, { upsert: true });
 
-      if (!uploadError) {
-        const { error } = await supabase.from("district_metadata").upsert({
-          sdorgid,
-          logo_path: filePath,
-        });
-        if (error) {
-          console.log("metadata upsert error: ", error);
-        }
-
+      try {
+        await onLogoUpload(file, sdorgid);
+      } finally {
         if (isMounted.current) {
-          //   setDistricts((prev) =>
-          //     prev.map((d) =>
-          //       d.sdorgid === sdorgid
-          //         ? { ...d, metadata: { logo_path: filePath } }
-          //         : d
-          //     )
-          //   );
+          setUploading(false);
         }
-        setUploading(false);
-      } else {
-        console.warn("upload error: ", uploadError);
       }
     };
 
@@ -78,21 +53,7 @@ const DistrictPopUp = React.memo(
         isMounted.current = false;
       };
     }, []);
-    useEffect(() => {
-      // Fetch user and check admin status
-      const checkAdmin = async () => {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (
-          user?.user_metadata?.admin ||
-          user?.user_metadata?.role === "admin"
-        ) {
-          setIsAdmin(true);
-        }
-      };
-      checkAdmin();
-    }, [supabase]);
+
     return (
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3">
         <Link href={`/admin/districts/${district.sdorgid}`}>

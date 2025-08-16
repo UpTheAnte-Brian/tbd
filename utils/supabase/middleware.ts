@@ -2,7 +2,6 @@ export const runtime = "nodejs";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function updateSession(request: NextRequest) {
-    console.log("Cookies in middleware:", request.cookies.getAll());
     if (
         request.nextUrl.pathname.startsWith("/auth") ||
         request.nextUrl.pathname.startsWith("/api")
@@ -14,15 +13,16 @@ export async function updateSession(request: NextRequest) {
     const role = request.cookies.get("sb-role")?.value;
     const admin = request.cookies.get("sb-admin")?.value;
     const adminCookie = request.cookies.get("sb-admin")?.value === "true";
-
+    console.log("adminCookie: ", adminCookie);
+    console.log("adminCookie: ", token);
     if (!token) {
         if (
-            !request.nextUrl.pathname.startsWith("/login") &&
-            !request.nextUrl.pathname.startsWith("/")
+            !request.nextUrl.pathname.startsWith("/auth") &&
+            request.nextUrl.pathname !== "/" &&
+            !request.nextUrl.pathname.startsWith("/api")
         ) {
             const url = request.nextUrl.clone();
             url.pathname = "/auth/sign-in";
-            console.log("redirect to signin");
             return NextResponse.redirect(url);
         }
         return NextResponse.next();

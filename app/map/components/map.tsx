@@ -79,11 +79,88 @@ const MapComponent = React.memo(() => {
     x: 0,
     y: 0,
   });
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const center = useMemo<LatLngLiteral>(() => ({ lat: 46.3, lng: -94.2 }), []);
   const supabase = getSupabaseClient();
   const labelMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>(
     []
   );
+  // Fetch isAdmin from Supabase on mount
+  useEffect(() => {
+    const fetchIsAdmin = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          setIsAdmin(false);
+          return;
+        }
+        // Assuming you have a user profile table or claims
+        // We'll check for a custom claim or role
+        // Example: user.user_metadata.role === 'admin'
+        // Or fetch from a profile table
+        // Try both, fallback to false
+        if (user.user_metadata && user.user_metadata.role === "admin") {
+          setIsAdmin(true);
+          return;
+        }
+        // Try a profile table (adjust as needed)
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+        if (!error && profile?.role === "admin") {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (err) {
+        console.log("Admin Check Error: ", err);
+        setIsAdmin(false);
+      }
+    };
+    fetchIsAdmin();
+  }, []);
+
+  // handleLogoUpload implementation
+  const handleLogoUpload = async (file: File, sdorgid: string) => {
+    if (!file || !sdorgid) return;
+    // Get extension
+    const ext = file.name.split(".").pop();
+    const path = `district-logos/${sdorgid}/logo.${ext}`;
+    // Upload to Supabase storage
+    const { error: uploadError } = await supabase.storage
+      .from("logos")
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (uploadError) {
+      console.error("Logo upload error:", uploadError);
+      return;
+    }
+    // Upsert district_metadata with logo_path
+    const { error: upsertError } = await supabase
+      .from("district_metadata")
+      .upsert({ sdorgid, logo_path: path }, { onConflict: "sdorgid" });
+    if (upsertError) {
+      console.error("Metadata upsert error:", upsertError);
+      return;
+    }
+    // Update features state with new logo_path for the affected district
+    setFeatures((prev) =>
+      prev.map((d) =>
+        (d.sdorgid ?? d.properties?.sdorgid) === sdorgid
+          ? {
+              ...d,
+              metadata: {
+                ...(d.metadata || {}),
+                logo_path: path,
+              },
+            }
+          : d
+      )
+    );
+  };
 
   // const updateDistrictInList = useCallback(
   //   (district: DistrictWithFoundation) => {
@@ -408,7 +485,8 @@ const MapComponent = React.memo(() => {
           </button>
           <DistrictPopUp
             district={selectedFeature}
-            // handleSave={updateDistrictInList}
+            isAdmin={isAdmin}
+            onLogoUpload={handleLogoUpload}
           />
         </div>
       )}
