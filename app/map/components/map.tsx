@@ -1,6 +1,7 @@
 "use client";
 import { GoogleMap } from "@react-google-maps/api";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { getBoundsFromGeoJSON } from "../../lib/getBoundsFromGeoJSON";
 import { getLabel, getLabelPosition } from "../../lib/district/utils";
 import React from "react";
@@ -13,34 +14,12 @@ import { getSupabaseClient } from "../../../utils/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import DistrictPopUp from "@/app/ui/districts/district-pop-up";
 
-const getSignedImageUrl = async (
+const getPublicImageUrl = (
   path: string,
   supabase: SupabaseClient
-): Promise<string | null> => {
-  const parts = path.split("/");
-  const filename = parts.pop();
-  const folder = parts.join("/");
-
-  // Step 1: Check if file exists
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: files, error: listError } = await supabase.storage
-    .from("logos")
-    .list(folder, { search: filename });
-
-  const exists = files?.some((f) => f.name === filename);
-  if (!exists) return null;
-
-  // Step 2: Generate signed URL
-  const { data, error } = await supabase.storage
-    .from("logos")
-    .createSignedUrl(path, 60 * 60);
-
-  if (error || !data?.signedUrl) {
-    console.error("Signed URL error for:", path, error);
-    return null;
-  }
-
-  return data.signedUrl;
+): string | null => {
+  const { data } = supabase.storage.from("logos").getPublicUrl(path);
+  return data?.publicUrl ?? null;
 };
 
 const mapContainerStyle = {
@@ -70,14 +49,18 @@ const MapComponent = React.memo(() => {
   const [selectedFeature, setSelectedFeature] =
     useState<DistrictWithFoundation | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [hoveredFeatureProps, setHoveredFeatureProps] =
-    useState<DistrictProperties | null>(null);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  // Remove hovered state, use refs for tooltip content and id
+  const hoveredFeaturePropsRef = useRef<DistrictProperties | null>(null);
+  const [mouseLatLng, setMouseLatLng] =
+    useState<google.maps.LatLngLiteral | null>(null);
+  const hoveredIdRef = useRef<string | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(6);
   const [showPopup, setShowPopup] = useState<boolean>(true);
-  const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number }>({
+  // Remove hoverPosition state; use a ref to track mouse position for the tooltip.
+  const hoverRef = useRef<{ x: number; y: number; visible: boolean }>({
     x: 0,
     y: 0,
+    visible: false,
   });
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const center = useMemo<LatLngLiteral>(() => ({ lat: 46.3, lng: -94.2 }), []);
@@ -212,7 +195,8 @@ const MapComponent = React.memo(() => {
   };
 
   async function createLabelMarkers(features: DistrictWithFoundation[]) {
-    // Clear existing markers
+    // Only create once, clear any existing
+    labelMarkersRef.current.forEach((marker) => (marker.map = null));
     labelMarkersRef.current = [];
 
     const newMarkers = await Promise.all(
@@ -223,12 +207,12 @@ const MapComponent = React.memo(() => {
         markerContent.style.height = `${size}px`;
 
         if (feature.metadata?.logo_path) {
-          const signedUrl = await getSignedImageUrl(
+          const publicUrl = getPublicImageUrl(
             feature.metadata.logo_path,
             supabase
           );
           const img = document.createElement("img");
-          img.src = signedUrl || "";
+          img.src = publicUrl || "";
           img.alt = "Logo";
           img.style.width = "100%";
           img.style.height = "100%";
@@ -252,51 +236,32 @@ const MapComponent = React.memo(() => {
     );
 
     labelMarkersRef.current = newMarkers;
-    // newMarkers.forEach((marker) => (marker.map = map));
   }
   const onLoad = async (map: google.maps.Map) => {
     mapRef.current = map;
 
     await fetch("/api/districts")
       .then((res) => res.json())
-      .then((geojson: { features: DistrictWithFoundation[] }) => {
+      .then(async (geojson: { features: DistrictWithFoundation[] }) => {
         map.data.addGeoJson(geojson);
         map.data.setStyle({
           visible: true,
-          icon: undefined, // ⬅️ disables default pins
+          icon: undefined,
         });
         setFeatures(geojson.features);
 
-        map.data.setStyle((feature) => {
-          // TODO: Don't think this should come from props. root.prop
-          const id = feature.getProperty("sdorgid");
-          const isSelected = id === selectedId;
-          const isHovered = id === hoveredId;
+        // Markers: create and attach once
+        await createLabelMarkers(geojson.features);
 
-          return {
-            fillColor: isSelected
-              ? "#FFEB3B"
-              : isHovered
-              ? "#FFF176"
-              : "#2196F3",
-            fillOpacity: 0.5,
-            strokeColor: isSelected || isHovered ? "#FBC02D" : "#1976D2",
-            strokeWeight: 2,
-          };
-        });
-
-        // Assuming 'map' is your google.maps.Map object and 'marker' is your google.maps.Marker object
-        const minZoomLevel = 7; // Set your desired minimum zoom level for the marker to be visible
-
+        // Marker visibility on zoom
+        const minZoomLevel = 7;
         map.addListener("zoom_changed", function () {
           const currentZoom = map.getZoom() ?? 6;
           const size = Math.max(20, currentZoom * 5);
-
           labelMarkersRef.current.forEach((mark) => {
             const container = mark.content as HTMLDivElement;
             container.style.width = `${size}px`;
             container.style.height = `${size}px`;
-
             if (currentZoom >= minZoomLevel) {
               mark.map = map;
             } else {
@@ -305,6 +270,7 @@ const MapComponent = React.memo(() => {
           });
         });
 
+        // Fit map to bounds
         const bounds = new google.maps.LatLngBounds();
         geojson.features.forEach((feature) => {
           const { centroid_lat, centroid_lng } = feature;
@@ -314,12 +280,21 @@ const MapComponent = React.memo(() => {
         });
         if (!bounds.isEmpty()) map.fitBounds(bounds);
 
+        // Tooltip hover logic using refs and animation frame (no React state)
+        let tooltipFrame: number | null = null;
+        let tooltipVisible = false;
+
+        function updateTooltipPosition() {
+          // This function triggers a rerender of the tooltip by updating a dummy state
+          setTooltipTick((tick) => tick + 1);
+        }
+
         map.data.addListener(
           "mouseover",
           (event: google.maps.Data.MouseEvent) => {
             const id = event.feature.getProperty("sdorgid") as string;
-            setHoveredId(id);
-            setHoveredFeatureProps({
+            hoveredIdRef.current = id;
+            hoveredFeaturePropsRef.current = {
               sdorgid: id,
               acres: event.feature.getProperty("acres") as string,
               formid: event.feature.getProperty("formid") as string,
@@ -331,29 +306,62 @@ const MapComponent = React.memo(() => {
               shortname: event.feature.getProperty("shortname") as string,
               shape_area: event.feature.getProperty("shape_area") as string,
               shape_leng: event.feature.getProperty("shape_leng") as string,
-            });
-            // Set mouse position if available
+            };
             if (
               event.domEvent &&
               typeof (event.domEvent as MouseEvent).clientX === "number" &&
               typeof (event.domEvent as MouseEvent).clientY === "number"
             ) {
-              setHoverPosition({
-                x: (event.domEvent as MouseEvent).clientX,
-                y: (event.domEvent as MouseEvent).clientY,
-              });
+              hoverRef.current.x = (event.domEvent as MouseEvent).clientX;
+              hoverRef.current.y = (event.domEvent as MouseEvent).clientY;
+              hoverRef.current.visible = true;
+              tooltipVisible = true;
+              if (tooltipFrame === null) {
+                tooltipFrame = requestAnimationFrame(function tick() {
+                  if (tooltipVisible) {
+                    updateTooltipPosition();
+                    tooltipFrame = requestAnimationFrame(tick);
+                  } else {
+                    tooltipFrame = null;
+                  }
+                });
+              }
             }
+            // Mousemove to update tooltip position
+            map.data.addListener(
+              "mousemove",
+              (moveEvent: google.maps.Data.MouseEvent) => {
+                if (
+                  moveEvent.domEvent &&
+                  typeof (moveEvent.domEvent as MouseEvent).clientX ===
+                    "number" &&
+                  typeof (moveEvent.domEvent as MouseEvent).clientY === "number"
+                ) {
+                  hoverRef.current.x = (
+                    moveEvent.domEvent as MouseEvent
+                  ).clientX;
+                  hoverRef.current.y = (
+                    moveEvent.domEvent as MouseEvent
+                  ).clientY;
+                  hoverRef.current.visible = true;
+                }
+              }
+            );
           }
         );
 
         map.data.addListener("mouseout", () => {
-          setHoveredId(null);
-          setHoveredFeatureProps(null);
+          hoveredIdRef.current = null;
+          hoveredFeaturePropsRef.current = null;
+          hoverRef.current.visible = false;
+          tooltipVisible = false;
+          updateTooltipPosition();
         });
-
-        // Inside your onLoad function, after map and features are ready:
-        // const zoom = map.getZoom() ?? 0;
-        createLabelMarkers(geojson.features);
+        map.addListener("mousemove", (e: google.maps.MapMouseEvent) => {
+          if (e.latLng) {
+            setMouseLatLng(e.latLng.toJSON());
+          }
+        });
       });
   };
   useEffect(() => {
@@ -403,12 +411,11 @@ const MapComponent = React.memo(() => {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !features.length) return;
-
     map.data.setStyle((feature) => {
       const id = feature.getProperty("sdorgid");
       const isSelected = id === selectedId;
-      const isHovered = id === hoveredId;
-
+      // Use hoveredIdRef directly (not state)
+      const isHovered = id === hoveredIdRef.current;
       return {
         fillColor: isSelected ? "#FFEB3B" : isHovered ? "#FFF176" : "#2196F3",
         fillOpacity: 0.5,
@@ -416,7 +423,7 @@ const MapComponent = React.memo(() => {
         strokeWeight: 2,
       };
     });
-  }, [hoveredId, selectedId]);
+  }, [selectedId, features]);
 
   const onMapClick = (e: google.maps.MapMouseEvent) => {
     console.log("event: ", e);
@@ -425,6 +432,9 @@ const MapComponent = React.memo(() => {
   // const selectedFeature = (id: string): DistrictWithFoundation => {
   //   return features.find((x) => x.id === id);
   // }
+
+  // Tooltip tick state to force rerender of tooltip on mousemove (dummy state)
+  const [, setTooltipTick] = useState(0);
 
   return (
     <div className="relative flex flex-col md:flex-row w-full">
@@ -458,22 +468,40 @@ const MapComponent = React.memo(() => {
         />
       </div> */}
 
-      {hoveredFeatureProps && (
-        <div
-          className="hidden md:block absolute bg-black/80 text-white rounded-lg px-4 py-2 pointer-events-none z-50 shadow-lg transition-all duration-150 opacity-100"
-          style={{
-            left: hoverPosition.x + 10,
-            top: hoverPosition.y - 40,
-          }}
-        >
-          <div className="font-semibold">{hoveredFeatureProps.shortname}</div>
-          <div className="text-sm">ID: {hoveredFeatureProps.sdorgid}</div>
-          {/* <div>{labelMarkersRef.current}</div> */}
-        </div>
-      )}
+      {/* Hovered tooltip rendered via portal, using refs and fixed positioning */}
+      {typeof window !== "undefined" &&
+        hoveredFeaturePropsRef.current &&
+        hoverRef.current.visible &&
+        createPortal(
+          <div
+            className="hidden md:block"
+            style={{
+              position: "fixed",
+              left: hoverRef.current.x + 10,
+              top: hoverRef.current.y - 40,
+              background: "rgba(0,0,0,0.8)",
+              color: "white",
+              borderRadius: "0.5rem",
+              padding: "0.5rem 1rem",
+              pointerEvents: "none",
+              zIndex: 50,
+              boxShadow: "0 4px 16px rgba(0,0,0,0.14)",
+              opacity: 1,
+              transition: "all 150ms",
+            }}
+          >
+            <div className="font-semibold">
+              {hoveredFeaturePropsRef.current.shortname}
+            </div>
+            <div className="text-sm">
+              ID: {hoveredFeaturePropsRef.current.sdorgid}
+            </div>
+          </div>,
+          document.body
+        )}
 
       {selectedFeature && showPopup && (
-        <div className="absolute top-32 left-3 bg-black/80 text-white rounded-lg px-4 py-2 z-50 shadow-lg transition-all duration-150 opacity-100 pointer-events-auto">
+        <div className="absolute top-24 left-1/2 transform -translate-x-1/2 md:left-3 md:transform-none md:-translate-x-0 bg-black/80 text-white rounded-lg px-4 py-2 z-50 shadow-lg transition-all duration-150 opacity-100 pointer-events-auto">
           <button
             className="absolute top-1 right-1 text-white bg-gray-700 hover:bg-gray-900 rounded-full px-2 py-0.5 text-xs font-bold z-10"
             style={{ lineHeight: "1" }}
@@ -561,7 +589,11 @@ const MapComponent = React.memo(() => {
           )}
         </div>
       </div>
-
+      {mouseLatLng && isAdmin && (
+        <div className="absolute top-3 left-3 bg-black text-white text-xs px-2 py-1 rounded z-50">
+          Lat: {mouseLatLng.lat.toFixed(5)}, Lng: {mouseLatLng.lng.toFixed(5)}
+        </div>
+      )}
       {/* <div className="absolute top-12 right-3 bg-black text-white text-sm px-2 py-1 rounded z-50">
         Zoom: {zoomLevel}
         <br />

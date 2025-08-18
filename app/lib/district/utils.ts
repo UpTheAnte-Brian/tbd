@@ -10,37 +10,44 @@ export function getLabel(
 
 export function getLabelPosition(
     feature: ExtendedFeature,
-): google.maps.LatLngLiteral | null {
-    // const geom = feature.geometry;
+): google.maps.LatLng | null {
+    const geom = feature.geometry;
 
-    // if (geom.type === "Polygon") {
-    //     const coords = geom.coordinates[0]; // outer ring
-    //     return averageLatLng(coords);
-    // }
+    if (geom.type === "Polygon") {
+        const coords = geom.coordinates[0];
+        return new google.maps.LatLng(...getPolygonCentroid(coords));
+    }
 
-    // if (geom.type === "MultiPolygon") {
-    //     const coords = geom.coordinates[0][0]; // first polygon’s outer ring
-    //     return averageLatLng(coords);
-    // }
+    if (geom.type === "MultiPolygon") {
+        const outerRing = geom.coordinates[0][0];
+        return new google.maps.LatLng(...getPolygonCentroid(outerRing));
+    }
 
-    return {
-        lat: feature.centroid_lat || 45,
-        lng: feature.centroid_lng || -93,
-    };
+    // fallback
+    return new google.maps.LatLng(
+        feature.centroid_lat || 45,
+        feature.centroid_lng || -93,
+    );
 }
 
-// Basic centroid approximation (by averaging coordinates)
-// function averageLatLng(coords: number[][]): google.maps.LatLngLiteral {
-//     const [sumLng, sumLat] = coords.reduce(
-//         ([lngSum, latSum], [lng, lat]) => [lngSum + lng, latSum + lat],
-//         [0, 0],
-//     );
-//     const count = coords.length;
-//     return {
-//         lat: sumLat / count,
-//         lng: sumLng / count,
-//     };
-// }
+// Updated polygon centroid to return [lat, lng] tuple for LatLng
+function getPolygonCentroid(coords: number[][]): [number, number] {
+    let area = 0,
+        x = 0,
+        y = 0;
+    for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+        const [lng0, lat0] = coords[i];
+        const [lng1, lat1] = coords[j];
+        const f = lng0 * lat1 - lng1 * lat0;
+        x += (lng0 + lng1) * f;
+        y += (lat0 + lat1) * f;
+        area += f;
+    }
+    area *= 0.5;
+    x /= 6 * area;
+    y /= 6 * area;
+    return [y, x]; // [lat, lng] order for LatLng
+}
 
 export const panToMinnesota = (map: google.maps.Map) => {
     map.setZoom(6);
