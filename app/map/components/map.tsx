@@ -3,12 +3,13 @@ import { GoogleMap } from "@react-google-maps/api";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getBoundsFromGeoJSON } from "../../lib/getBoundsFromGeoJSON";
-import { getLabel, getLabelPosition } from "../../lib/district/utils";
+import { getLabel } from "../../lib/district/utils";
 import React from "react";
 import { DistrictProperties, DistrictWithFoundation } from "../../lib/types";
 import { getSupabaseClient } from "../../../utils/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import DistrictPopUp from "@/app/ui/districts/district-pop-up";
+import { pointOnFeature } from "@turf/turf";
 
 const getPublicImageUrl = (
   path: string,
@@ -197,7 +198,6 @@ const MapComponent = React.memo(() => {
     const newMarkers = await Promise.all(
       features.map(async (feature) => {
         const markerContent = document.createElement("div");
-        const markerPosition = getLabelPosition(feature);
         const size = Math.max(20, zoomLevel * 5);
         markerContent.style.width = `${size}px`;
         markerContent.style.height = `${size}px`;
@@ -222,8 +222,13 @@ const MapComponent = React.memo(() => {
           markerContent.textContent = "📍";
         }
 
+        // Use centroid or pointOnFeature
+        const c = pointOnFeature(feature); // safer, always inside
         return new google.maps.marker.AdvancedMarkerElement({
-          position: markerPosition,
+          position: {
+            lat: c.geometry.coordinates[1],
+            lng: c.geometry.coordinates[0],
+          },
           title: getLabel(feature) || "",
           content: markerContent,
           zIndex: 1000,
