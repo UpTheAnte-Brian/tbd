@@ -1,4 +1,4 @@
-import type { Feature, Geometry } from "geojson";
+import type { Feature, Geometry, MultiPolygon, Polygon } from "geojson";
 
 // export type DistrictFeature = Feature<
 //     Polygon | MultiPolygon,
@@ -26,7 +26,10 @@ export interface Foundation {
     updated_at: string; // ISO timestamp
 }
 
-export interface ExtendedFeature extends Feature<Geometry, DistrictProperties> {
+export interface ExtendedFeature<
+    G extends Geometry = Geometry,
+    P = DistrictProperties,
+> extends Feature<G, P> {
     centroid_lat?: number;
     centroid_lng?: number;
     sdorgid: string;
@@ -48,7 +51,8 @@ export interface DistrictProperties {
 
 export type LatLngLiteral = google.maps.LatLngLiteral;
 
-export interface DistrictWithFoundation extends ExtendedFeature {
+export interface DistrictWithFoundation
+    extends ExtendedFeature<Polygon | MultiPolygon, DistrictProperties> {
     foundation: Foundation | null;
     metadata: DistrictMetadata | null;
 }

@@ -5,11 +5,7 @@ import { createPortal } from "react-dom";
 import { getBoundsFromGeoJSON } from "../../lib/getBoundsFromGeoJSON";
 import { getLabel, getLabelPosition } from "../../lib/district/utils";
 import React from "react";
-import {
-  DistrictProperties,
-  DistrictWithFoundation,
-  LatLngLiteral,
-} from "../../lib/types";
+import { DistrictProperties, DistrictWithFoundation } from "../../lib/types";
 import { getSupabaseClient } from "../../../utils/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import DistrictPopUp from "@/app/ui/districts/district-pop-up";
@@ -63,7 +59,6 @@ const MapComponent = React.memo(() => {
     visible: false,
   });
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const center = useMemo<LatLngLiteral>(() => ({ lat: 46.3, lng: -94.2 }), []);
   const supabase = getSupabaseClient();
   const labelMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>(
     []
@@ -202,6 +197,7 @@ const MapComponent = React.memo(() => {
     const newMarkers = await Promise.all(
       features.map(async (feature) => {
         const markerContent = document.createElement("div");
+        const markerPosition = getLabelPosition(feature);
         const size = Math.max(20, zoomLevel * 5);
         markerContent.style.width = `${size}px`;
         markerContent.style.height = `${size}px`;
@@ -227,10 +223,11 @@ const MapComponent = React.memo(() => {
         }
 
         return new google.maps.marker.AdvancedMarkerElement({
-          position: getLabelPosition(feature),
+          position: markerPosition,
           title: getLabel(feature) || "",
           content: markerContent,
           zIndex: 1000,
+          map: mapRef.current!, // <--- ensure markers are on the map initially
         });
       })
     );
@@ -253,8 +250,7 @@ const MapComponent = React.memo(() => {
         // Markers: create and attach once
         await createLabelMarkers(geojson.features);
 
-        // Marker visibility on zoom
-        const minZoomLevel = 7;
+        // Marker visibility on zoom (always show markers)
         map.addListener("zoom_changed", function () {
           const currentZoom = map.getZoom() ?? 6;
           const size = Math.max(20, currentZoom * 5);
@@ -262,11 +258,7 @@ const MapComponent = React.memo(() => {
             const container = mark.content as HTMLDivElement;
             container.style.width = `${size}px`;
             container.style.height = `${size}px`;
-            if (currentZoom >= minZoomLevel) {
-              mark.map = map;
-            } else {
-              mark.map = null;
-            }
+            mark.map = map;
           });
         });
 
@@ -443,8 +435,8 @@ const MapComponent = React.memo(() => {
         onLoad={onLoad}
         onClick={onMapClick}
         onUnmount={onUnMount}
-        center={center}
-        zoom={zoomLevel}
+        // center={center}
+        // zoom={zoomLevel}
         onZoomChanged={() => setZoomLevel(mapRef.current?.getZoom() ?? 6)}
         options={{
           mapTypeId: "roadmap",
