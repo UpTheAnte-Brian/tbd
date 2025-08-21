@@ -1,6 +1,7 @@
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
 import { getDistrictDTO } from "@/app/data/districts-dto";
 import { DistrictWithFoundation } from "@/app/lib/types";
+import DistrictSideBar from "@/app/components/ui/district-sidebar";
 
 export default async function DistrictPage(props: {
   params: Promise<{ id: string }>;
@@ -22,9 +23,18 @@ export default async function DistrictPage(props: {
           },
         ]}
       />
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3">
-        <div className="text-lg font-semibold text-gray-500 text-center">
-          {district.shortname}
+
+      {/* Flex container for two-column layout */}
+      <div className="flex gap-4 w-full">
+        {/* Left content: 3/4 width */}
+        <div className="w-3/4">
+          <p>Main content goes here</p>
+          {/* Replace this with your actual district details */}
+        </div>
+
+        {/* Right sidebar: 1/4 width, sticky */}
+        <div className="w-1/4 sticky top-4 self-start">
+          <DistrictSideBar district={district} />
         </div>
       </div>
     </main>
