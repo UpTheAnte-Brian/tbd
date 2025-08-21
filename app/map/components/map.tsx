@@ -9,7 +9,7 @@ import { DistrictProperties, DistrictWithFoundation } from "../../lib/types";
 import { getSupabaseClient } from "../../../utils/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import DistrictPopUp from "@/app/ui/districts/district-pop-up";
-import { pointOnFeature } from "@turf/turf";
+// import { pointOnFeature } from "@turf/turf";
 
 const getPublicImageUrl = (
   path: string,
@@ -190,8 +190,11 @@ const MapComponent = React.memo(() => {
     mapRef.current = null;
   };
 
-  async function createLabelMarkers(features: DistrictWithFoundation[]) {
-    // Only create once, clear any existing
+  async function createLabelMarkers(
+    features: DistrictWithFoundation[],
+    map: google.maps.Map
+  ) {
+    // Clear existing markers
     labelMarkersRef.current.forEach((marker) => (marker.map = null));
     labelMarkersRef.current = [];
 
@@ -201,6 +204,11 @@ const MapComponent = React.memo(() => {
         const size = Math.max(20, zoomLevel * 5);
         markerContent.style.width = `${size}px`;
         markerContent.style.height = `${size}px`;
+        markerContent.style.display = "flex";
+        markerContent.style.alignItems = "center";
+        markerContent.style.justifyContent = "center";
+        markerContent.style.transform = "translate(-50%, -50%)"; // centers the div
+        markerContent.style.position = "absolute";
 
         if (feature.metadata?.logo_path) {
           const publicUrl = getPublicImageUrl(
@@ -222,17 +230,16 @@ const MapComponent = React.memo(() => {
           markerContent.textContent = "📍";
         }
 
-        // Use centroid or pointOnFeature
-        const c = pointOnFeature(feature); // safer, always inside
+        // 👇 set anchor at center of content
         return new google.maps.marker.AdvancedMarkerElement({
           position: {
-            lat: c.geometry.coordinates[1],
-            lng: c.geometry.coordinates[0],
+            lat: feature.centroid_lat!,
+            lng: feature.centroid_lng!,
           },
-          title: getLabel(feature) || "",
+          title: `Lat: ${feature.centroid_lat!}, lng: ${feature.centroid_lng!}`,
           content: markerContent,
           zIndex: 1000,
-          map: mapRef.current!, // <--- ensure markers are on the map initially
+          map,
         });
       })
     );
@@ -253,19 +260,19 @@ const MapComponent = React.memo(() => {
         setFeatures(geojson.features);
 
         // Markers: create and attach once
-        await createLabelMarkers(geojson.features);
+        await createLabelMarkers(geojson.features, map);
 
         // Marker visibility on zoom (always show markers)
-        map.addListener("zoom_changed", function () {
-          const currentZoom = map.getZoom() ?? 6;
-          const size = Math.max(20, currentZoom * 5);
-          labelMarkersRef.current.forEach((mark) => {
-            const container = mark.content as HTMLDivElement;
-            container.style.width = `${size}px`;
-            container.style.height = `${size}px`;
-            mark.map = map;
-          });
-        });
+        // map.addListener("zoom_changed", function () {
+        //   const currentZoom = map.getZoom() ?? 6;
+        //   const size = Math.max(20, currentZoom * 5);
+        //   labelMarkersRef.current.forEach((mark) => {
+        //     const container = mark.content as HTMLDivElement;
+        //     container.style.width = `${size}px`;
+        //     container.style.height = `${size}px`;
+        //     mark.map = map;
+        //   });
+        // });
 
         // Fit map to bounds
         const bounds = new google.maps.LatLngBounds();
@@ -422,9 +429,9 @@ const MapComponent = React.memo(() => {
     });
   }, [selectedId, features]);
 
-  const onMapClick = (e: google.maps.MapMouseEvent) => {
-    console.log("event: ", e);
-  };
+  // const onMapClick = (e: google.maps.MapMouseEvent) => {
+  //   console.log("event: ", e);
+  // };
 
   // const selectedFeature = (id: string): DistrictWithFoundation => {
   //   return features.find((x) => x.id === id);
@@ -438,7 +445,7 @@ const MapComponent = React.memo(() => {
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         onLoad={onLoad}
-        onClick={onMapClick}
+        // onClick={onMapClick}
         onUnmount={onUnMount}
         // center={center}
         // zoom={zoomLevel}
