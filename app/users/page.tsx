@@ -26,7 +26,7 @@ const UsersPage = async () => {
   //   }
   // );
 
-  const { data: Session, error } = await supabase.from("users").select("*");
+  const { data: Session, error } = await supabase.from("profiles").select("*");
 
   if (error) {
     return <div>Error fetching users: {error.message}</div>;

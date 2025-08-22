@@ -36,8 +36,11 @@ export default async function DistrictPage(props: {
             -Calendar of Events - Ante Up Nation could layer in campaign related
             events and dates.
           </p>
-          <p>-Foundation Highlights</p>
-          <p>-Imagery</p>
+          <p>
+            -It would be interesting to experiment with an opaque map background
+            from the districts geojson.{" "}
+          </p>
+          <p>-On Hover Hook to show magnifying glass that zooms. </p>
         </div>
 
         {/* Right sidebar: 1/4 width, sticky */}

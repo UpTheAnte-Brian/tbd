@@ -23,7 +23,7 @@ const DistrictSideBar = React.memo(
             <img
               src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_LOGO_PATH}${district.metadata.logo_path}`}
               alt="Logo"
-              className="absolute top-1 left-1 h-10 object-contain"
+              className="absolute top-1 left-1 h-16 object-contain"
             />
           )}
         </div>

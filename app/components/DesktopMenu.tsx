@@ -74,6 +74,11 @@ export default function DesktopMenu({ menu }: { menu: string }) {
     >
       <span className="flex-center gap-1 hover:bg-white/5 cursor-pointer px-3 py-1 rounded-xl">
         {menuObj.name}
+        {!hasSubMenu && (
+          <Link href={menuObj.path} className="flex items-center">
+            {menuObj.name}
+          </Link>
+        )}
         {hasSubMenu && (
           <DynamicIcon
             name="chevron-down"

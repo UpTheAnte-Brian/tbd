@@ -66,6 +66,8 @@ export async function updateSession(request: NextRequest) {
     if (admin) {
         response.headers.set("x-user-admin", admin);
     }
+    // refreshing the auth token??
+    //   await supabase.auth.getUser()
 
     return response;
 }
