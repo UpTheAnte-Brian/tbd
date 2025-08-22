@@ -236,7 +236,7 @@ const MapComponent = React.memo(() => {
             lat: feature.centroid_lat!,
             lng: feature.centroid_lng!,
           },
-          title: `Lat: ${feature.centroid_lat!}, lng: ${feature.centroid_lng!}`,
+          title: feature.shortname,
           content: markerContent,
           zIndex: 1000,
           map,

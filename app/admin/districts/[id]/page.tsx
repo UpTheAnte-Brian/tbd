@@ -38,9 +38,17 @@ export default async function DistrictPage(props: {
           </p>
           <p>
             -It would be interesting to experiment with an opaque map background
-            from the districts geojson.{" "}
+            from the districts geojson. Could include district facilities from
+            another state-provided KML Layer.{" "}
           </p>
           <p>-On Hover Hook to show magnifying glass that zooms. </p>
+          <h3 className="text-lg font-semibold mb-2">Academic Data:</h3>
+          <ul className="list-disc list-inside space-y-1">
+            <li>Graduation rate percentage</li>
+            <li>Average SAT/ACT scores</li>
+            <li>Number of AP courses offered</li>
+            <li>State test proficiency ratings</li>
+          </ul>
         </div>
 
         {/* Right sidebar: 1/4 width, sticky */}

@@ -73,17 +73,18 @@ export default function DesktopMenu({ menu }: { menu: string }) {
       key={menuObj.name}
     >
       <span className="flex-center gap-1 hover:bg-white/5 cursor-pointer px-3 py-1 rounded-xl">
-        {menuObj.name}
-        {!hasSubMenu && (
+        {hasSubMenu ? (
+          <>
+            {menuObj.name}{" "}
+            <DynamicIcon
+              name="chevron-down"
+              className="mt-[0.6px] group-hover/link:rotate-180 duration-200"
+            />
+          </>
+        ) : (
           <Link href={menuObj.path} className="flex items-center">
             {menuObj.name}
           </Link>
-        )}
-        {hasSubMenu && (
-          <DynamicIcon
-            name="chevron-down"
-            className="mt-[0.6px] group-hover/link:rotate-180 duration-200"
-          />
         )}
       </span>
       {hasSubMenu && (
