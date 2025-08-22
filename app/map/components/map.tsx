@@ -1,14 +1,14 @@
 "use client";
 import { GoogleMap } from "@react-google-maps/api";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getBoundsFromGeoJSON } from "../../lib/getBoundsFromGeoJSON";
-import { getLabel } from "../../lib/district/utils";
 import React from "react";
 import { DistrictProperties, DistrictWithFoundation } from "../../lib/types";
 import { getSupabaseClient } from "../../../utils/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import DistrictPopUp from "@/app/ui/districts/district-pop-up";
+import DistrictSearch from "@/app/map/components/district-search";
 // import { pointOnFeature } from "@turf/turf";
 
 const getPublicImageUrl = (
@@ -140,51 +140,6 @@ const MapComponent = React.memo(() => {
       )
     );
   };
-
-  // const updateDistrictInList = useCallback(
-  //   (district: DistrictWithFoundation) => {
-  //     setFeatures((prev) =>
-  //       prev.map((d) =>
-  //         d.sdorgid === district.sdorgid ? { ...d, ...district } : d
-  //       )
-  //     );
-  //   },
-  //   []
-  // );
-
-  // Mobile search state for the compact overlay
-  const [query, setQuery] = useState<string>("");
-  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-  const suggestions = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [] as { id: string; label: string }[];
-    return features
-      .map((f) => {
-        const id =
-          (f.properties?.sdorgid as string) ??
-          (f as unknown as { sdorgid?: string }).sdorgid ??
-          "";
-        const label =
-          getLabel(f) ||
-          (f.properties?.shortname as string) ||
-          (f.properties?.prefname as string) ||
-          "";
-        return { id, label };
-      })
-      .filter((x) => x.id && x.label.toLowerCase().includes(q))
-      .slice(0, 8);
-  }, [query, features]);
-
-  // const updateDistrictInList = useCallback(
-  //   (district: DistrictWithFoundation) => {
-  //     setFeatures((prev) =>
-  //       prev.map((d) =>
-  //         d.sdorgid === district.sdorgid ? { ...d, ...district } : d
-  //       )
-  //     );
-  //   },
-  //   []
-  // );
 
   const onUnMount = () => {
     mapRef.current = null;
@@ -523,76 +478,13 @@ const MapComponent = React.memo(() => {
         </div>
       )}
 
-      {/* Mobile search/autocomplete overlay */}
-      <div className="absolute bottom-0 w-4/5 p-4 z-50">
-        <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-2">
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search districts…"
-            className="w-full rounded border px-3 py-2 outline-none"
-            type="text"
-            onKeyDown={(e) => {
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                setHighlightedIndex((prev) =>
-                  Math.min(prev + 1, suggestions.length - 1)
-                );
-              } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                setHighlightedIndex((prev) => Math.max(prev - 1, 0));
-              } else if (e.key === "Enter") {
-                e.preventDefault();
-                if (
-                  highlightedIndex >= 0 &&
-                  highlightedIndex < suggestions.length
-                ) {
-                  const s = suggestions[highlightedIndex];
-                  setSelectedId(s.id);
-                  const f = features.find(
-                    (d) =>
-                      (d.properties?.sdorgid as string) === s.id ||
-                      ((d as unknown as { sdorgid?: string }).sdorgid ?? "") ===
-                        s.id
-                  );
-                  if (f && mapRef.current) panToFeature(f, mapRef.current);
-                  setQuery("");
-                  setHighlightedIndex(-1);
-                }
-              }
-            }}
-          />
-          {query && suggestions.length > 0 && (
-            <ul className="mt-2 max-h-60 overflow-y-auto divide-y">
-              {suggestions.map((s, i) => (
-                <li key={s.id}>
-                  <button
-                    className={`w-full text-left px-3 py-2 hover:bg-gray-100 hover:text-black ${
-                      i === highlightedIndex
-                        ? "bg-gray-200  hover:text-black"
-                        : ""
-                    }`}
-                    onClick={() => {
-                      setSelectedId(s.id);
-                      const f = features.find(
-                        (d) =>
-                          (d.properties?.sdorgid as string) === s.id ||
-                          ((d as unknown as { sdorgid?: string }).sdorgid ??
-                            "") === s.id
-                      );
-                      if (f && mapRef.current) panToFeature(f, mapRef.current);
-                      setQuery("");
-                      setHighlightedIndex(-1);
-                    }}
-                  >
-                    {s.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
+      <DistrictSearch
+        features={features}
+        onSelect={(id) => setSelectedId(id)}
+        panToFeature={(f) => {
+          if (mapRef.current) panToFeature(f, mapRef.current);
+        }}
+      />
       {mouseLatLng && isAdmin && (
         <div className="absolute top-3 left-3 bg-black text-white text-xs px-2 py-1 rounded z-50">
           Lat: {mouseLatLng.lat.toFixed(5)}, Lng: {mouseLatLng.lng.toFixed(5)}

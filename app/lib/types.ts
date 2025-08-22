@@ -53,6 +53,7 @@ export type LatLngLiteral = google.maps.LatLngLiteral;
 
 export interface DistrictWithFoundation
     extends ExtendedFeature<Polygon | MultiPolygon, DistrictProperties> {
+    id: string; // <-- UUID from Supabase
     foundation: Foundation | null;
     metadata: DistrictMetadata | null;
 }
@@ -68,6 +69,12 @@ export interface ExtraInfo {
     secondaryColor?: string;
     contactEmail?: string;
     notes?: string;
+}
+export interface Profile {
+    id: string;
+    email: string | null;
+    full_name: string | null;
+    // add other fields from your `profiles` table if you have them
 }
 
 export type ApiDistrict = {
