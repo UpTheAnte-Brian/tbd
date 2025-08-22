@@ -669,6 +669,10 @@ video {
   left: 0px;
 }
 
+.left-1 {
+  left: 0.25rem;
+}
+
 .left-1\/2 {
   left: 50%;
 }
@@ -1657,6 +1661,10 @@ video {
 
 .to-yellow-300 {
   --tw-gradient-to: #fde047 var(--tw-gradient-to-position);
+}
+
+.stroke-blue-700 {
+  stroke: #1d4ed8;
 }
 
 .object-contain {
@@ -2868,6 +2876,10 @@ button.primary,
 .group\/menubox:hover .group-hover\/menubox\:bg-white {
   --tw-bg-opacity: 1;
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+}
+
+.group:hover .group-hover\:stroke-blue-900 {
+  stroke: #1e3a8a;
 }
 
 .group\/menubox:hover .group-hover\/menubox\:text-gray-900 {
