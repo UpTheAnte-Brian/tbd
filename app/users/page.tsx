@@ -5,8 +5,8 @@ import { DistrictWithFoundation } from "@/app/lib/types";
 
 type Profile = {
   id: string;
-  email: string | null;
   full_name: string | null;
+  districts: { id: string; sdorgid: string; shortname: string }[]; // 👈 added
 };
 
 export default function UsersPage() {
@@ -75,7 +75,7 @@ export default function UsersPage() {
               Name
             </th>
             <th className="border border-gray-300 px-2 py-1 text-left text-black">
-              Email
+              Districts
             </th>
             <th className="border border-gray-300 px-2 py-1 text-black">
               Actions
@@ -88,7 +88,18 @@ export default function UsersPage() {
               <td className="border border-gray-300 px-2 py-1">
                 {u.full_name}
               </td>
-              <td className="border border-gray-300 px-2 py-1">{u.email}</td>
+
+              <td className="border border-gray-300 px-2 py-1">
+                {u.districts && u.districts.length > 0 ? (
+                  <ul className="list-disc pl-4 text-white">
+                    {u.districts.map((d) => (
+                      <li key={d.id}>{d.shortname}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span className="text-gray-500 italic">None</span>
+                )}
+              </td>
               <td className="border border-gray-300 px-2 py-1">
                 <button
                   className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"

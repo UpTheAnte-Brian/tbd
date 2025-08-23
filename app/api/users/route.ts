@@ -4,14 +4,19 @@ import { createClient } from "@/utils/supabase/server";
 
 export async function GET() {
     const supabase = await createClient();
+    // ✅ secure: validated against Supabase Auth server
     const {
-        data: { session },
-    } = await supabase.auth.getSession();
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser();
 
-    const role = session?.user?.user_metadata?.role;
+    const role = user?.user_metadata?.role;
 
     if (role !== "admin") {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        return NextResponse.json({
+            error: "Unauthorized",
+            getUserError: userError,
+        }, { status: 403 });
     }
 
     const users = await getAllUsers();

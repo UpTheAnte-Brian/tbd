@@ -12,11 +12,64 @@
 // }
 import { createClient } from "@/utils/supabase/server";
 
-export async function getAllUsers() {
+export interface District {
+    id: string;
+    sdorgid: string;
+    shortname: string;
+}
+
+export interface UserWithDistricts {
+    id: string;
+    full_name: string;
+    districts: District[];
+}
+
+// type for each district_user row returned by Supabase
+// each district_user row
+interface DistrictUserRow {
+    districts: District | District[]; // single object or array
+}
+
+// profile row returned from Supabase
+interface ProfileRow {
+    id: string;
+    full_name: string;
+    district_users: DistrictUserRow[];
+}
+
+export async function getAllUsers(): Promise<UserWithDistricts[]> {
     const supabase = await createClient();
-    const { data, error } = await supabase.from("profiles").select("*");
+
+    const { data, error } = await supabase
+        .from("profiles")
+        .select(`
+      id,
+      full_name,
+      district_users (
+        districts (
+          id,
+          sdorgid,
+          shortname
+        )
+      )
+    `);
+
     if (error) throw error;
-    return data;
+
+    return data.map((u: ProfileRow) => ({
+        id: u.id,
+        full_name: u.full_name,
+        districts: u.district_users.flatMap((du: DistrictUserRow) => {
+            const districtsArray = Array.isArray(du.districts)
+                ? du.districts
+                : [du.districts];
+            return districtsArray.map((d: District) => ({
+                id: d.id,
+                sdorgid: d.sdorgid,
+                shortname: d.shortname,
+            }));
+        }),
+    }));
 }
 
 export async function assignUserToDistrict(userId: string, districtId: string) {
@@ -25,6 +78,8 @@ export async function assignUserToDistrict(userId: string, districtId: string) {
         user_id: userId,
         district_id: districtId,
         role: "board_member",
+    }, {
+        onConflict: "district_id,user_id", // 👈 use your unique key here
     });
     if (error) throw error;
     return { success: true };
