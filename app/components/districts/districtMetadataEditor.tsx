@@ -1,7 +1,7 @@
 "use client";
 
 import { DistrictWithFoundation } from "@/app/lib/types";
-import DistrictCard from "@/app/ui/districts/district-card";
+import DistrictCard from "@/app/components/districts/district-card";
 import { getSupabaseClient } from "@/utils/supabase/client";
 import { Input } from "@/app/components/ui/input";
 import React from "react";

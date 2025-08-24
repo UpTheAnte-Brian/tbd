@@ -70,11 +70,39 @@ export interface ExtraInfo {
     contactEmail?: string;
     notes?: string;
 }
+
+export interface District {
+    id: string;
+    sdorgid: string;
+    shortname: string;
+}
+
+export interface UserWithDistricts {
+    id: string;
+    full_name: string;
+    districts: District[];
+}
+
+// type for each district_user row returned by Supabase
+// each district_user row
+export interface DistrictUserRow {
+    role: string;
+    district_id: string;
+    user_id: string;
+    district: District;
+}
+
 export interface Profile {
     id: string;
     email: string | null;
     full_name: string | null;
-    // add other fields from your `profiles` table if you have them
+    first_name: string | null;
+    last_name: string | null;
+    updated_at: string | null;
+    username: string | null;
+    avatar_url: string | null;
+    website: string | null;
+    district_users: DistrictUserRow[];
 }
 
 export type ApiDistrict = {

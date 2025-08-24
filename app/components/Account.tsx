@@ -1,51 +1,56 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { getSupabaseClient } from "@/utils/supabase/client";
-import { type User } from "@supabase/supabase-js";
-import Avatar from "../account/avatar";
+import Avatar from "./ui/avatar";
+import { Profile } from "@/app/lib/types";
 
 // ...
 
-export default function AccountForm({ user }: { user: User | null }) {
+export default function AccountForm({ user }: { user: Profile | null }) {
   const supabase = getSupabaseClient();
   const [loading, setLoading] = useState(true);
-  const [fullname, setFullname] = useState<string | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-  const [website, setWebsite] = useState<string | null>(null);
-  const [avatar_url, setAvatarUrl] = useState<string | null>(null);
+  const [fullname, setFullname] = useState<string>(user?.full_name || "");
+  const [email, setEmail] = useState<string | null>(user?.email || "");
+  const [firstName, setFirstName] = useState<string | null>(null);
+  const [lastName, setLastName] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(user?.username || "");
+  const [website, setWebsite] = useState<string | null>(user?.website || "");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(
+    user?.avatar_url || ""
+  );
 
-  const getProfile = useCallback(async () => {
-    try {
-      setLoading(true);
+  // const getProfile = useCallback(async () => {
+  //   try {
+  //     setLoading(true);
 
-      const { data, error, status } = await supabase
-        .from("profiles")
-        .select(`full_name, username, website, avatar_url`)
-        .eq("id", user?.id)
-        .single();
+  //     const { data, error, status } = await supabase
+  //       .from("profiles")
+  //       .select(`full_name, username, website, avatar_url`)
+  //       .eq("id", user?.id)
+  //       .single();
 
-      if (error && status !== 406) {
-        console.log(error);
-        throw error;
-      }
+  //     if (error && status !== 406) {
+  //       console.log(error);
+  //       throw error;
+  //     }
 
-      if (data) {
-        setFullname(data.full_name);
-        setUsername(data.username);
-        setWebsite(data.website);
-        setAvatarUrl(data.avatar_url);
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      alert("Error loading user data!");
-    } finally {
-      setLoading(false);
-    }
-  }, [user, supabase]);
+  //     if (data) {
+  //       setFullname(data.full_name);
+  //       setUsername(data.username);
+  //       setWebsite(data.website);
+  //       setAvatarUrl(data.avatar_url);
+  //     }
+  //     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //   } catch (error) {
+  //     alert("Error loading user data!");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [user, supabase]);
 
-  useEffect(() => {
-    getProfile();
-  }, [user, getProfile]);
+  // useEffect(() => {
+  //   getProfile();
+  // }, [user, getProfile]);
 
   async function updateProfile({
     username,
@@ -83,7 +88,7 @@ export default function AccountForm({ user }: { user: User | null }) {
       <div className="form-widget">
         <Avatar
           uid={user?.id ?? null}
-          url={avatar_url}
+          url={avatarUrl}
           size={256}
           onUpload={(url) => {
             setAvatarUrl(url);
@@ -96,7 +101,12 @@ export default function AccountForm({ user }: { user: User | null }) {
 
           <div>
             <label htmlFor="email">Email</label>
-            <input id="email" type="text" value={user?.email} disabled />
+            <input
+              id="email"
+              type="text"
+              value={email || ""}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
           <div>
             <label htmlFor="fullName">Full Name</label>
@@ -105,6 +115,24 @@ export default function AccountForm({ user }: { user: User | null }) {
               type="text"
               value={fullname || ""}
               onChange={(e) => setFullname(e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="firstName">First Name</label>
+            <input
+              id="firstName"
+              type="text"
+              value={firstName || ""}
+              onChange={(e) => setFirstName(e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="lastName">Last Name</label>
+            <input
+              id="lastName"
+              type="text"
+              value={lastName || ""}
+              onChange={(e) => setLastName(e.target.value)}
             />
           </div>
           <div>
@@ -130,7 +158,12 @@ export default function AccountForm({ user }: { user: User | null }) {
             <button
               className="button primary block"
               onClick={() =>
-                updateProfile({ fullname, username, website, avatar_url })
+                updateProfile({
+                  fullname,
+                  username,
+                  website,
+                  avatar_url: avatarUrl,
+                })
               }
               disabled={loading}
             >

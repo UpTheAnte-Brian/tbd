@@ -10,66 +10,72 @@
 //   // Privacy rules
 //   return viewer.isAdmin || team === viewer.team
 // }
+import { Profile } from "@/app/lib/types";
 import { createClient } from "@/utils/supabase/server";
 
-export interface District {
-    id: string;
-    sdorgid: string;
-    shortname: string;
-}
-
-export interface UserWithDistricts {
-    id: string;
-    full_name: string;
-    districts: District[];
-}
-
-// type for each district_user row returned by Supabase
-// each district_user row
-interface DistrictUserRow {
-    districts: District | District[]; // single object or array
-}
-
-// profile row returned from Supabase
-interface ProfileRow {
-    id: string;
-    full_name: string;
-    district_users: DistrictUserRow[];
-}
-
-export async function getAllUsers(): Promise<UserWithDistricts[]> {
+export async function getAllUsers(): Promise<Profile[]> {
     const supabase = await createClient();
 
     const { data, error } = await supabase
         .from("profiles")
         .select(`
-      id,
-      full_name,
-      district_users (
-        districts (
-          id,
-          sdorgid,
-          shortname
-        )
-      )
-    `);
+    *,
+    district_users (
+      role,
+      district_id,
+      user_id,
+      district:districts ( id, sdorgid, shortname )
+    )
+  `);
 
     if (error) throw error;
 
-    return data.map((u: ProfileRow) => ({
+    return data.map((u) => ({
         id: u.id,
+        first_name: u.first_name,
+        last_name: u.last_name,
+        website: u.website,
+        username: u.username,
+        avatar_url: u.avatar_url,
+        email: u.email,
         full_name: u.full_name,
-        districts: u.district_users.flatMap((du: DistrictUserRow) => {
-            const districtsArray = Array.isArray(du.districts)
-                ? du.districts
-                : [du.districts];
-            return districtsArray.map((d: District) => ({
-                id: d.id,
-                sdorgid: d.sdorgid,
-                shortname: d.shortname,
-            }));
-        }),
+        updated_at: u.updated_at,
+        district_users: u.district_users,
     }));
+}
+
+export async function getUser(id: string): Promise<Profile> {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from("profiles")
+        .select(`
+      *,
+    district_users (
+      role,
+      district_id,
+      user_id,
+      district:districts ( id, sdorgid, shortname )
+    )
+    `)
+        .eq("id", id)
+        .maybeSingle();
+
+    if (error || !data) throw error;
+
+    const user = {
+        id: data.id,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        website: data.website,
+        username: data.username,
+        avatar_url: data.avatar_url,
+        email: data.email,
+        full_name: data.full_name,
+        updated_at: data.updated_at,
+        district_users: data.district_users,
+    };
+    return user;
 }
 
 export async function assignUserToDistrict(userId: string, districtId: string) {

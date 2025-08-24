@@ -1,6 +1,6 @@
 // /app/admin/districts/page.tsx
 import React from "react";
-import DistrictMetadataEditor from "../../ui/districts/districtMetadataEditor"; // adjust path as needed
+import DistrictMetadataEditor from "../../components/districts/districtMetadataEditor"; // adjust path as needed
 
 export default function DistrictsAdminPage() {
   return (

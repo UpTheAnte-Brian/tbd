@@ -1,12 +1,14 @@
-import { createClient } from "@/utils/supabase/server";
+// app/account/page.tsx
+"use client";
+
 import AccountForm from "../components/Account";
+import { useUser } from "@/app/hooks/useUser";
 
-export default async function Account() {
-  const supabase = await createClient();
+export default function Account() {
+  const { user, loading } = useUser();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  if (loading) return <p>Loading...</p>;
+  if (!user) return <p>You must be signed in</p>;
 
   return <AccountForm user={user} />;
 }

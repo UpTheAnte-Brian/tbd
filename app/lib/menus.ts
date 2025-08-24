@@ -112,7 +112,7 @@ async function Menus() {
           desc: "View your profile",
           icon: "user-pen",
           path: "/account",
-          method: "POST",
+          method: "GET",
         },
         {
           name: "Dashboard",

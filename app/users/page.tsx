@@ -1,13 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import DistrictSearch from "@/app/map/components/district-search";
-import { DistrictWithFoundation } from "@/app/lib/types";
-
-type Profile = {
-  id: string;
-  full_name: string | null;
-  districts: { id: string; sdorgid: string; shortname: string }[]; // 👈 added
-};
+import DistrictMultiSelectSearch from "@/app/components/districts/district-multi-select-search";
+import { DistrictWithFoundation, Profile } from "@/app/lib/types";
+import Link from "next/link";
 
 export default function UsersPage() {
   const [users, setUsers] = useState<Profile[]>([]);
@@ -43,27 +38,32 @@ export default function UsersPage() {
     fetchData();
   }, []);
 
-  // Assign district → call API
-  const handleAssignDistrict = async (districtId: string) => {
-    if (!assigningUserId) return;
-
-    try {
-      const res = await fetch(`/api/users/${assigningUserId}/district`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ districtId }),
-      });
-
-      if (!res.ok) throw new Error("Failed to assign district");
-      setAssigningUserId(null); // close modal
-    } catch (err) {
-      console.error(err);
-      alert("Error assigning district");
-    }
-  };
-
   if (loading) return <div>Loading…</div>;
   if (error) return <div>Error: {error}</div>;
+
+  const handleSaveAssignments = async () => {
+    const user = users.find((u) => u.id === assigningUserId);
+    if (!user) return;
+
+    try {
+      const res = await fetch("/api/user-districts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          districtIds: user.district_users.map((d) => d.district_id),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to save assignments");
+
+      // ✅ Close modal and rely on local state (already updated)
+      setAssigningUserId(null);
+    } catch (err) {
+      console.error(err);
+      alert("Error saving districts");
+    }
+  };
 
   return (
     <div className="p-6">
@@ -86,14 +86,19 @@ export default function UsersPage() {
           {users.map((u) => (
             <tr key={u.id}>
               <td className="border border-gray-300 px-2 py-1">
-                {u.full_name}
+                <Link
+                  href={`/users/${u.id}`}
+                  className="text-blue-600 hover:underline"
+                >
+                  {u.full_name}
+                </Link>
               </td>
 
               <td className="border border-gray-300 px-2 py-1">
-                {u.districts && u.districts.length > 0 ? (
+                {u.district_users && u.district_users.length > 0 ? (
                   <ul className="list-disc pl-4 text-white">
-                    {u.districts.map((d) => (
-                      <li key={d.id}>{d.shortname}</li>
+                    {u.district_users.map((d) => (
+                      <li key={d.district_id}>{d.district.shortname}</li>
                     ))}
                   </ul>
                 ) : (
@@ -112,7 +117,6 @@ export default function UsersPage() {
           ))}
         </tbody>
       </table>
-
       {/* Modal for district search */}
       {assigningUserId && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
@@ -123,11 +127,67 @@ export default function UsersPage() {
             >
               ✕
             </button>
+
+            {/* ✅ Live-updating selected districts */}
+            {users.find((u) => u.id === assigningUserId)?.district_users
+              .length ? (
+              <div className="mb-4">
+                <h3 className="font-semibold text-sm text-gray-700">
+                  Currently Assigned:
+                </h3>
+                <ul className="list-disc list-inside text-sm text-gray-900">
+                  {users
+                    .find((u) => u.id === assigningUserId)
+                    ?.district_users.map((d) => (
+                      <li className="text-gray-900" key={d.district_id}>
+                        {d.district.shortname}
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            ) : (
+              <div className="mb-4 text-sm text-gray-500 italic">
+                No districts assigned
+              </div>
+            )}
+
             <h2 className="text-lg font-bold mb-4">Assign District</h2>
-            <DistrictSearch
+
+            <DistrictMultiSelectSearch
               features={features}
-              onSelect={(id) => handleAssignDistrict(id)}
+              selectedIds={
+                users
+                  .find((u) => u.id === assigningUserId)
+                  ?.district_users.map((d) => d.district_id) || []
+              }
+              onChange={(newSelectedIds) => {
+                setUsers((prev) =>
+                  prev.map((u) =>
+                    u.id === assigningUserId
+                      ? {
+                          ...u,
+                          districts: newSelectedIds.map((id) => {
+                            const f = features.find((ft) => ft.id === id);
+                            return f
+                              ? {
+                                  id,
+                                  sdorgid: f.sdorgid,
+                                  shortname: f.shortname,
+                                }
+                              : { id, sdorgid: "", shortname: "Unknown" };
+                          }),
+                        }
+                      : u
+                  )
+                );
+              }}
             />
+            <button
+              className="absolute bottom-2 right-2 mb-4 bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+              onClick={handleSaveAssignments}
+            >
+              Save
+            </button>
           </div>
         </div>
       )}

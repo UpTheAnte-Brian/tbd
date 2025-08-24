@@ -7,8 +7,8 @@ import React from "react";
 import { DistrictProperties, DistrictWithFoundation } from "../../lib/types";
 import { getSupabaseClient } from "../../../utils/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
-import DistrictPopUp from "@/app/ui/districts/district-pop-up";
-import DistrictSearch from "@/app/map/components/district-search";
+import DistrictPopUp from "@/app/components/districts/district-pop-up";
+import DistrictSearch from "@/app/components/districts/district-search";
 // import { pointOnFeature } from "@turf/turf";
 
 const getPublicImageUrl = (

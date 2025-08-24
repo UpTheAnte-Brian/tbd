@@ -4,7 +4,7 @@ import Link from "next/link";
 // import { useState } from "react";
 import { Input } from "../../components/ui/input";
 import { DistrictWithFoundation } from "../../lib/types";
-import FoundationEditor from "@/app/ui/districts/foundation-editor";
+import FoundationEditor from "@/app/components/districts/foundation-editor";
 import React from "react";
 
 const DistrictCard = React.memo(
