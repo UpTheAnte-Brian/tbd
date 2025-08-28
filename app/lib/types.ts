@@ -94,7 +94,6 @@ export interface DistrictUserRow {
 
 export interface Profile {
     id: string;
-    email: string | null;
     full_name: string | null;
     first_name: string | null;
     last_name: string | null;
@@ -103,6 +102,7 @@ export interface Profile {
     avatar_url: string | null;
     website: string | null;
     district_users: DistrictUserRow[];
+    role: string | null;
 }
 
 export type ApiDistrict = {
@@ -114,42 +114,59 @@ export type ApiDistrict = {
     } | null;
 };
 
+export interface SubMenu {
+    name: string;
+    desc?: string;
+    icon: string;
+    path: string;
+    method: string;
+    authRequired?: boolean;
+    roles?: string[];
+}
+export interface Menu {
+    name: string;
+    subMenuHeading?: string[];
+    subMenu?: SubMenu[];
+    gridCols?: number;
+    path: string;
+}
+
 export interface User {
-    instance_id: string; // uuid
+    // instance_id: string; // uuid
     id: string; // uuid
-    aud: string;
-    role: string;
-    email: string;
-    encrypted_password: string;
-    email_confirmed_at: string | null; // ISO timestamp
-    invited_at: string | null; // ISO timestamp
-    confirmation_token: string;
-    confirmation_sent_at: string | null; // ISO timestamp
-    recovery_token: string;
-    recovery_sent_at: string | null; // ISO timestamp
-    email_change_token_new: string;
-    email_change: string;
-    email_change_sent_at: string | null; // ISO timestamp
-    last_sign_in_at: string | null; // ISO timestamp
-    raw_app_meta_data: Record<string, unknown>;
-    raw_user_meta_data: Record<string, unknown>;
-    is_super_admin: boolean;
-    created_at: string; // ISO timestamp
-    updated_at: string; // ISO timestamp
-    phone: string;
-    phone_confirmed_at: string | null; // ISO timestamp
-    phone_change: string;
-    phone_change_token: string;
-    phone_change_sent_at: string | null; // ISO timestamp
-    confirmed_at: string | null; // ISO timestamp
-    email_change_token_current: string;
-    email_change_confirm_status: number;
-    banned_until: string | null; // ISO timestamp
-    reauthentication_token: string;
-    reauthentication_sent_at: string | null; // ISO timestamp
-    is_sso_user: boolean;
-    deleted_at: string | null; // ISO timestamp
-    is_anonymous: boolean;
+    // aud: string;
+    role?: string;
+    email?: string;
+    // encrypted_password: string;
+    // email_confirmed_at: string | null; // ISO timestamp
+    // invited_at: string | null; // ISO timestamp
+    // confirmation_token: string;
+    // confirmation_sent_at: string | null; // ISO timestamp
+    // recovery_token: string;
+    // recovery_sent_at: string | null; // ISO timestamp
+    // email_change_token_new: string;
+    // email_change: string;
+    // email_change_sent_at: string | null; // ISO timestamp
+    // last_sign_in_at: string | null; // ISO timestamp
+    // raw_app_meta_data: Record<string, unknown>;
+    // raw_user_meta_data: Record<string, unknown>;
+    // is_super_admin: boolean;
+    // created_at: string; // ISO timestamp
+    // updated_at: string; // ISO timestamp
+    // phone: string;
+    // phone_confirmed_at: string | null; // ISO timestamp
+    // phone_change: string;
+    // phone_change_token: string;
+    // phone_change_sent_at: string | null; // ISO timestamp
+    // confirmed_at: string | null; // ISO timestamp
+    // email_change_token_current: string;
+    // email_change_confirm_status: number;
+    // banned_until: string | null; // ISO timestamp
+    // reauthentication_token: string;
+    // reauthentication_sent_at: string | null; // ISO timestamp
+    // is_sso_user: boolean;
+    // deleted_at: string | null; // ISO timestamp
+    // is_anonymous: boolean;
 }
 
 export interface KmlFeatureData {

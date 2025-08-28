@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Menu } from "../lib/definitions";
+import { Menu, Profile } from "../lib/types";
 import DynamicIcon from "./DynamicIcon";
+import { buildColumns } from "../lib/menuUtils";
 
 import dynamicIconImports from "lucide-react/dynamicIconImports";
 import Link from "next/link";
@@ -18,7 +19,13 @@ type IconName = keyof typeof dynamicIconImports;
 </instructions> */
 }
 
-export default function DesktopMenu({ menu }: { menu: string }) {
+export default function DesktopMenu({
+  menu,
+  user,
+}: {
+  menu: string;
+  user: Profile | null;
+}) {
   const [isHover, toggleHover] = useState(false);
   const toggleHoverMenu = () => {
     toggleHover(!isHover);
@@ -45,23 +52,8 @@ export default function DesktopMenu({ menu }: { menu: string }) {
     },
   };
   const menuObj: Menu = JSON.parse(menu);
-  // console.log("menuObj", menuObj);
-  const hasSubMenu = menuObj?.subMenu?.length;
-  let columns: { heading: string; items: typeof menuObj.subMenu }[] = [];
-  if (menuObj?.subMenuHeading?.length) {
-    const numCols = menuObj.subMenuHeading.length;
-    const itemsPerCol = Math.ceil((menuObj.subMenu?.length || 0) / numCols);
-    columns = menuObj.subMenuHeading.map((heading, colIndex) => {
-      const start = colIndex * itemsPerCol;
-      const end = start + itemsPerCol;
-      return {
-        heading,
-        items: menuObj.subMenu?.slice(start, end) || [],
-      };
-    });
-  } else {
-    columns = [{ heading: "", items: menuObj.subMenu || [] }];
-  }
+  const hasSubMenu = menuObj?.subMenu?.length && menuObj?.subMenu?.length > 0;
+  const columns = buildColumns(menuObj, user);
 
   return (
     <motion.li

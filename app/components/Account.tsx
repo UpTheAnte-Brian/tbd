@@ -8,13 +8,17 @@ import { Profile } from "@/app/lib/types";
 
 export default function AccountForm({ user }: { user: Profile | null }) {
   const supabase = getSupabaseClient();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [fullname, setFullname] = useState<string>(user?.full_name || "");
-  const [email, setEmail] = useState<string | null>(user?.email || "");
-  const [firstName, setFirstName] = useState<string | null>(null);
-  const [lastName, setLastName] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState<string | null>(
+    user?.first_name || ""
+  );
+  const [lastName, setLastName] = useState<string | null>(
+    user?.last_name || ""
+  );
   const [username, setUsername] = useState<string | null>(user?.username || "");
   const [website, setWebsite] = useState<string | null>(user?.website || "");
+  const [role, setRole] = useState<string | null>(user?.role || "Patron");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
     user?.avatar_url || ""
   );
@@ -54,30 +58,45 @@ export default function AccountForm({ user }: { user: Profile | null }) {
 
   async function updateProfile({
     username,
+    fullname,
     website,
     avatar_url,
+    firstName,
+    lastName,
+    role,
   }: {
     username: string | null;
     fullname: string | null;
     website: string | null;
     avatar_url: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    role: string | null;
   }) {
     try {
       setLoading(true);
-
-      const { error } = await supabase.from("profiles").upsert({
+      const payload = {
         id: user?.id as string,
         full_name: fullname,
+        first_name: firstName,
+        last_name: lastName,
         username,
         website,
         avatar_url,
         updated_at: new Date().toISOString(),
-      });
+        role: role,
+      };
+
+      const { error } = await supabase
+        .from("profiles")
+        .upsert(payload, { onConflict: "id" })
+        // .upsert(payload)
+        .select()
+        .single();
       if (error) throw error;
       alert("Profile updated!");
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      alert("Error updating the data!");
+      alert("Error updating the data: " + JSON.stringify(error));
     } finally {
       setLoading(false);
     }
@@ -92,7 +111,15 @@ export default function AccountForm({ user }: { user: Profile | null }) {
           size={256}
           onUpload={(url) => {
             setAvatarUrl(url);
-            updateProfile({ fullname, username, website, avatar_url: url });
+            updateProfile({
+              username,
+              fullname,
+              website,
+              avatar_url: url,
+              firstName,
+              lastName,
+              role,
+            });
           }}
         />
 
@@ -100,12 +127,13 @@ export default function AccountForm({ user }: { user: Profile | null }) {
           {/* ... */}
 
           <div>
-            <label htmlFor="email">Email</label>
+            <label htmlFor="role">Role</label>
             <input
-              id="email"
+              id="role"
               type="text"
-              value={email || ""}
-              onChange={(e) => setEmail(e.target.value)}
+              // disabled={isAdmin}
+              value={role || ""}
+              onChange={(e) => setRole(e.target.value)}
             />
           </div>
           <div>
@@ -159,10 +187,13 @@ export default function AccountForm({ user }: { user: Profile | null }) {
               className="button primary block"
               onClick={() =>
                 updateProfile({
-                  fullname,
                   username,
+                  fullname,
                   website,
                   avatar_url: avatarUrl,
+                  firstName,
+                  lastName,
+                  role,
                 })
               }
               disabled={loading}

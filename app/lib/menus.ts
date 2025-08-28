@@ -1,6 +1,6 @@
 "use server";
 
-import { Menu } from "./definitions";
+import { Menu } from "./types";
 
 async function Menus() {
   const res: Menu[] = [
@@ -14,6 +14,8 @@ async function Menus() {
           icon: "panels-top-left",
           path: "/admin/districts",
           method: "GET",
+          authRequired: true,
+          roles: ["admin"],
         },
         // {
         //   name: "Management",
@@ -40,70 +42,6 @@ async function Menus() {
       gridCols: 1,
       path: "/dashboard",
     },
-    // {
-    //   name: "Resources",
-    //   subMenuHeading: ["Get started", "Programs", "Recent"],
-    //   subMenu: [
-    //     {
-    //       name: "Markplace",
-    //       desc: "Browse templates",
-    //       icon: "shopping-bag",
-    //       path: "/dashboard",
-    //       method: "GET",
-    //     },
-    //     {
-    //       name: "Meetups",
-    //       desc: "Upcoming events",
-    //       icon: "map-pin",
-    //       path: "/dashboard",
-    //       method: "GET",
-    //     },
-    //     {
-    //       name: "Updates",
-    //       desc: "Changelog",
-    //       icon: "bell-dot",
-    //       path: "/dashboard",
-    //       method: "GET",
-    //     },
-    //     {
-    //       name: "Academy",
-    //       desc: "Watch lessions",
-    //       icon: "play",
-    //       path: "/dashboard",
-    //       method: "GET",
-    //     },
-    //     {
-    //       name: "Blog",
-    //       desc: "Posts",
-    //       icon: "book-open-text",
-    //       path: "/dashboard",
-    //       method: "GET",
-    //     },
-    //     {
-    //       name: "Figma",
-    //       desc: "Plugin",
-    //       icon: "figma",
-    //       path: "/dashboard",
-    //       method: "GET",
-    //     },
-    //     {
-    //       name: "Experts",
-    //       desc: "Jobs",
-    //       icon: "briefcase-business",
-    //       path: "/dashboard",
-    //       method: "GET",
-    //     },
-    //     {
-    //       name: "Gallery",
-    //       desc: "Images",
-    //       icon: "images",
-    //       path: "/dashboard",
-    //       method: "GET",
-    //     },
-    //   ],
-    //   gridCols: 3,
-    //   path: "/dashboard",
-    // },
     {
       name: "Account",
       subMenu: [
@@ -113,6 +51,7 @@ async function Menus() {
           icon: "user-pen",
           path: "/account",
           method: "GET",
+          authRequired: true,
         },
         {
           name: "Dashboard",
@@ -127,6 +66,8 @@ async function Menus() {
           icon: "users",
           path: "/users",
           method: "GET",
+          authRequired: true,
+          roles: ["admin"],
         },
       ],
       gridCols: 1,

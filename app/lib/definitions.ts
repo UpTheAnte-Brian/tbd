@@ -86,18 +86,3 @@ export type InvoiceForm = {
   amount: number;
   status: "pending" | "paid";
 };
-
-export interface subMenu {
-  name: string;
-  desc?: string;
-  icon: string;
-  path: string;
-  method: string;
-}
-export interface Menu {
-  name: string;
-  subMenuHeading?: string[];
-  subMenu?: subMenu[];
-  gridCols?: number;
-  path: string;
-}

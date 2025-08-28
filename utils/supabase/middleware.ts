@@ -5,7 +5,9 @@ export async function updateSession(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // 1️⃣ Always allow auth + api routes
-    if (pathname.startsWith("/auth") || pathname.startsWith("/api")) {
+    if (
+        pathname.startsWith("/auth") || pathname.startsWith("/api")
+    ) {
         return NextResponse.next();
     }
 
@@ -31,12 +33,10 @@ export async function updateSession(request: NextRequest) {
             console.error("Failed to decode supabase auth token:", err);
         }
     }
-
     const token = supabaseDecoded ? supabaseDecoded.access_token : undefined;
     const role = request.cookies.get("sb-role")?.value;
     const adminCookie = request.cookies.get("sb-admin")?.value === "true";
 
-    // console.log("token: ", token);
     // 3️⃣ If no token and not on auth/api/home, redirect to sign in
     if (!token) {
         if (

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Menu as MenuObj } from "../lib/definitions";
+import { Menu as MenuObj } from "../lib/types";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
 type IconName = keyof typeof dynamicIconImports;
 import DynamicIcon from "./DynamicIcon";

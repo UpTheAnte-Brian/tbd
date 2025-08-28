@@ -1,6 +1,8 @@
 import { createClient } from "../../../utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers"; // added import
+
 // Add this at the top of your file (module-level cache)
 const recentSignouts = new Map<string, number>();
 const THROTTLE_MS = 30_000; // e.g. 30 seconds between requests
@@ -12,7 +14,6 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // TODO: GPT-Let me know if you want to switch to something like session ID instead of IP — that’s often more precise if you can trust the session/cookie.
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "unknown";
   const lastSignout = recentSignouts.get(ip);
@@ -25,11 +26,12 @@ export async function POST(req: NextRequest) {
 
   if (user) {
     await supabase.auth.signOut();
-    await fetch(new URL("/auth/set-token-cookie", req.url), {
-      method: "DELETE",
-      headers: {
-        Cookie: req.headers.get("cookie") || "",
-      },
+    (await cookies()).set("sb-admin", "", {
+      path: "/",
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: 0, // deletes the cookie
     });
     recentSignouts.set(ip, now);
   }

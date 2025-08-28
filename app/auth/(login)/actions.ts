@@ -4,6 +4,7 @@ import { validatedAction } from "../../../app/lib/auth/middleware";
 import { redirect } from "next/navigation";
 import { createClient } from "../../../utils/supabase/server";
 
+const host = process.env.NEXT_PUBLIC_HOST;
 // Notes
 // 	•	Why email as key?: Without IP access in actions, the email is a logical fallback.
 // 	•	For production, switch to Redis or Supabase to store request timestamps across serverless invocations.
@@ -112,6 +113,9 @@ export const signInWithLoginCode = validatedAction(
       email,
       token: loginCode,
       type: "email",
+      options: {
+        redirectTo: `${host}/auth/callback`,
+      },
     });
     if (error) {
       console.error("Error sending magic link:", error);
@@ -127,7 +131,6 @@ export const signInWithGoogle = async (
   event.preventDefault();
 
   const supabase = await createClient();
-  const host = process.env.NEXT_PUBLIC_HOST;
 
   try {
     const { error: signInError } = await supabase.auth.signInWithOAuth({

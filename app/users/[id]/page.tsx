@@ -1,12 +1,9 @@
-import AccountForm from "../../components/Account";
-import { useUserById } from "@/app/hooks/useUserById";
+// app/users/[id]/page.tsx
+import { getUser } from "@/app/data/users";
+import AccountForm from "@/app/components/Account";
 
-export default async function UserPage(props: {
-  params: Promise<{ id: string }>;
-}) {
-  const params = await props.params;
-  // page.tsx
-  const profile = useUserById(params.id);
+export default async function UserPage({ params }: { params: { id: string } }) {
+  const user = await getUser((await params).id);
 
-  return <AccountForm user={profile.user} />;
+  return <AccountForm user={user} />;
 }

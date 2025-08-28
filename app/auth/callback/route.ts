@@ -24,6 +24,15 @@ export async function GET(request: Request) {
     const { data: session, error } = await supabase.auth.exchangeCodeForSession(
       code,
     );
+    if (error) {
+      console.error("Failed to decode supabase auth token:", error);
+      // TODO: Create a dedicated /auth/auth-code-error page.
+      // For now, redirect users to the app root so they don't get stuck.
+      return NextResponse.redirect(origin);
+    } else {
+      // OTP / magic link flow: session already exists
+      // Nothing to exchange — cookies are already set by Supabase client
+    }
 
     if (!error) { // after session exchange
       const { data: userData } = await supabase.auth.getUser();
@@ -56,20 +65,6 @@ export async function GET(request: Request) {
         await new Promise((res) => setTimeout(res, 100));
       }
 
-      // For alternative RLS approach for admin
-      // await fetch(`${process.env.NEXT_PUBLIC_HOST}/auth/set-token-cookie`, {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({
-      //     session: {
-      //       access_token: sessionData.session.access_token,
-      //       refresh_token: sessionData.session.refresh_token,
-      //     },
-      //   }),
-      //   credentials: "include", // so the cookie is set
-      // });
       if (sessionData?.session?.access_token) {
         const cookieOptions = {
           path: "/",
@@ -101,8 +96,8 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}${next}`);
       }
     }
-  }
 
-  // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+    // return the user to an error page with instructions
+    return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+  }
 }
