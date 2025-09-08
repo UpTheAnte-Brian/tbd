@@ -14,7 +14,8 @@ export async function updateSession(request: NextRequest) {
     // 2️⃣ Reconstruct supabase auth token from cookies
     const supabaseChunks = request.cookies
         .getAll()
-        .filter((c) => c.name.includes("-auth-token."))
+        .filter((c) => /^sb-.*-auth-token(\.\d+)?$/.test(c.name) // match sb-xxx-auth-token or sb-xxx-auth-token.0, .1 …
+        )
         .sort((a, b) => {
             const ai = parseInt(a.name.split(".").pop() || "0", 10);
             const bi = parseInt(b.name.split(".").pop() || "0", 10);
@@ -34,6 +35,8 @@ export async function updateSession(request: NextRequest) {
         }
     }
     const token = supabaseDecoded ? supabaseDecoded.access_token : undefined;
+
+    // TODO: Remove these lines here I think, security vulnerability
     const role = request.cookies.get("sb-role")?.value;
     const adminCookie = request.cookies.get("sb-admin")?.value === "true";
 
@@ -43,7 +46,6 @@ export async function updateSession(request: NextRequest) {
             pathname !== "/" && !pathname.startsWith("/auth") &&
             !pathname.startsWith("/api")
         ) {
-            // console.log("no token in midleware: ", token);
             const url = request.nextUrl.clone();
             url.pathname = "/auth/sign-in";
             return NextResponse.redirect(url);

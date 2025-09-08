@@ -590,7 +590,7 @@ video {
 
 .sub-menu {
   position: absolute;
-  top: 4.2rem;
+  top: 3rem;
   transform-origin: 50% -170px;
   border-radius: 6px;
   border-width: 1px;
@@ -1701,6 +1701,10 @@ video {
 
 .stroke-blue-700 {
   stroke: #1d4ed8;
+}
+
+.stroke-gray-300 {
+  stroke: #d1d5db;
 }
 
 .object-contain {
@@ -2926,6 +2930,10 @@ button.primary,
 .group\/menubox:hover .group-hover\/menubox\:bg-white {
   --tw-bg-opacity: 1;
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+}
+
+.group\/menubox:hover .group-hover\/menubox\:stroke-gray-900 {
+  stroke: #111827;
 }
 
 .group:hover .group-hover\:stroke-blue-900 {

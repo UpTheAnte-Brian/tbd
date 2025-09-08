@@ -78,7 +78,7 @@ export default function DistrictMultiSelectSearch({
             {suggestions.map((s, i) => (
               <li
                 key={s.id}
-                className="flex items-center px-3 py-2 text-black hover:bg-gray-100"
+                className="flex px-3 py-2 text-black hover:bg-gray-100 justify-start cursor-pointer"
               >
                 <input
                   type="checkbox"

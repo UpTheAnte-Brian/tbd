@@ -39,11 +39,9 @@ export default async function NavBarComponent() {
           <div className="flex items-center gap-x-3 ml-auto">
             {user && (
               <p className="text-sky-600 md:flex items-center hidden">
-                {user
-                  ? user.username
-                    ? user.username
-                    : "No User Name"
-                  : "Not Logged In"}
+                {user.username
+                  ? `${user.username} (${user.role})`
+                  : "No User Name"}
               </p>
             )}
             {user && (

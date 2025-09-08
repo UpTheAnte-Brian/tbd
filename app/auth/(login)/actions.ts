@@ -3,6 +3,7 @@ import { z } from "zod";
 import { validatedAction } from "../../../app/lib/auth/middleware";
 import { redirect } from "next/navigation";
 import { createClient } from "../../../utils/supabase/server";
+import { AuthResponse } from "@supabase/supabase-js";
 
 const host = process.env.NEXT_PUBLIC_HOST;
 // Notes
@@ -108,21 +109,52 @@ export const signInWithLoginCode = validatedAction(
     const supabase = await createClient();
     const { email, loginCode } = data;
     // const redirectTo = `${config.domainName}/api/auth/callback`;
+    let response: AuthResponse;
 
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token: loginCode,
-      type: "email",
-      options: {
-        redirectTo: `${host}/auth/callback`,
-      },
-    });
-    if (error) {
-      console.error("Error sending magic link:", error);
-      return { error: error.message };
+    try {
+      response = await supabase.auth.verifyOtp({
+        email,
+        token: loginCode,
+        type: "email",
+        options: {
+          redirectTo: `${host}/auth/callback`,
+        },
+      });
+
+      if (response.error) {
+        console.error("verifyOtp error:", response.error);
+        return { error: response.error.message };
+      }
+      if (!response.data || !response.data.user) {
+        console.error("verifyOtp returned no user data");
+        return { error: "Invalid or expired code." };
+      }
+    } catch (err) {
+      console.error("verifyOtp threw exception:", err);
+      throw err;
     }
 
-    return { success: "Magic link sent to your email." };
+    try {
+      const { data: existingProfile } = await supabase
+        .from("profile")
+        .select("*")
+        .eq("id", response.data.user.id)
+        .maybeSingle();
+
+      if (!existingProfile) {
+        await supabase.from("profile").insert({
+          id: response.data.user.id,
+          username: response.data.user.email?.split("@")[0] ??
+            response.data.user.id,
+        });
+      }
+    } catch (cookieErr) {
+      console.error("Error fetching user/session after verifyOtp:", cookieErr);
+    }
+
+    console.log("About to redirect after successful login");
+
+    return { success: "Successfully signed in with login code." };
   },
 );
 export const signInWithGoogle = async (

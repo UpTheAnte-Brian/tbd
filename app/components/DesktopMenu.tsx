@@ -109,7 +109,10 @@ export default function DesktopMenu({
                       >
                         <div className="bg-white/5 w-fit p-2 rounded-md group-hover/menubox:bg-white group-hover/menubox:text-gray-900 duration-300">
                           {submenu.icon && (
-                            <DynamicIcon name={submenu.icon as IconName} />
+                            <DynamicIcon
+                              name={submenu.icon as IconName}
+                              className="stroke-gray-300 group-hover/menubox:stroke-gray-900"
+                            />
                           )}
                         </div>
                         <div>

@@ -90,7 +90,12 @@ export default function UsersPage() {
                   href={`/users/${u.id}`}
                   className="text-blue-600 hover:underline"
                 >
-                  {u.full_name}
+                  {!u.full_name
+                    ? !u.username
+                      ? u.id
+                      : u.username
+                    : u.full_name}
+                  &nbsp;- ({u.role})
                 </Link>
               </td>
 

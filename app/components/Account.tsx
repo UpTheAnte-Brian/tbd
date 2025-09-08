@@ -89,8 +89,8 @@ export default function AccountForm({ user }: { user: Profile | null }) {
 
       const { error } = await supabase
         .from("profiles")
-        .upsert(payload, { onConflict: "id" })
-        // .upsert(payload)
+        // .upsert(payload, { onConflict: "id" })
+        .upsert(payload)
         .select()
         .single();
       if (error) throw error;

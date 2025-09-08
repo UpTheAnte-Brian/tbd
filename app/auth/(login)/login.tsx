@@ -19,7 +19,6 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
   const redirect = searchParams.get("redirect");
   const priceId = searchParams.get("priceId");
   const host = process.env.NEXT_PUBLIC_HOST;
-  console.log("redirect uri and host: ", redirect, host);
   const handleGoogleSignIn = () => {
     const redirectTo = `${host}/auth/callback`;
     setLoading(true);
