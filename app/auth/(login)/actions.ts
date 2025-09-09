@@ -134,23 +134,23 @@ export const signInWithLoginCode = validatedAction(
       throw err;
     }
 
-    try {
-      const { data: existingProfile } = await supabase
-        .from("profile")
-        .select("*")
-        .eq("id", response.data.user.id)
-        .maybeSingle();
+    // try {
+    //   const { data: existingProfile } = await supabase
+    //     .from("profile")
+    //     .select("*")
+    //     .eq("id", response.data.user.id)
+    //     .maybeSingle();
 
-      if (!existingProfile) {
-        await supabase.from("profile").insert({
-          id: response.data.user.id,
-          username: response.data.user.email?.split("@")[0] ??
-            response.data.user.id,
-        });
-      }
-    } catch (cookieErr) {
-      console.error("Error fetching user/session after verifyOtp:", cookieErr);
-    }
+    //   if (!existingProfile) {
+    //     await supabase.from("profile").insert({
+    //       id: response.data.user.id,
+    //       username: response.data.user.email?.split("@")[0] ??
+    //         response.data.user.id,
+    //     });
+    //   }
+    // } catch (cookieErr) {
+    //   console.error("Error fetching user/session after verifyOtp:", cookieErr);
+    // }
 
     console.log("About to redirect after successful login");
 

@@ -129,6 +129,8 @@ export interface Menu {
     subMenu?: SubMenu[];
     gridCols?: number;
     path: string;
+    authRequired?: boolean;
+    roles?: string[];
 }
 
 export interface User {

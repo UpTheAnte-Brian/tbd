@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 // The client you created from the Server-Side Auth instructions
 import { createClient } from "../../../utils/supabase/server";
-import { cookies } from "next/headers";
-import { ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
+// import { cookies } from "next/headers";
+// import { ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
 
 export async function GET(request: Request) {
   console.log("inside callback route");
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { data: session, error } = await supabase.auth.exchangeCodeForSession(
+    const { error } = await supabase.auth.exchangeCodeForSession(
       code,
     );
     if (error) {
@@ -36,55 +36,55 @@ export async function GET(request: Request) {
     }
 
     if (!error) { // after session exchange
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData?.user;
+      // const { data: userData } = await supabase.auth.getUser();
+      // const user = userData?.user;
 
-      let role = "authenticated";
-      if (user?.user_metadata?.role) {
-        role = user.user_metadata.role;
-      } else if (user?.user_metadata?.admin === true) {
-        role = "admin";
-      }
+      // let role = "authenticated";
+      // if (user?.user_metadata?.role) {
+      //   role = user.user_metadata.role;
+      // } else if (user?.user_metadata?.admin === true) {
+      //   role = "admin";
+      // }
 
-      let sessionData;
-      for (let i = 0; i < 10; i++) {
-        const result = await supabase.auth.getSession();
-        if (result.data?.session?.access_token) {
-          sessionData = result.data;
-          if (role === "authenticated") {
-            const { data: roleData, error: userRoleError } = await supabase
-              .from("user_roles")
-              .select("role")
-              .eq("user_id", session?.user?.id)
-              .maybeSingle();
-            if (!userRoleError) {
-              role = roleData?.role;
-            }
-          }
-          break;
-        }
-        await new Promise((res) => setTimeout(res, 100));
-      }
+      // let sessionData;
+      // for (let i = 0; i < 10; i++) {
+      //   const result = await supabase.auth.getSession();
+      //   if (result.data?.session?.access_token) {
+      //     sessionData = result.data;
+      //     if (role === "authenticated") {
+      //       const { data: roleData, error: userRoleError } = await supabase
+      //         .from("user_roles")
+      //         .select("role")
+      //         .eq("user_id", session?.user?.id)
+      //         .maybeSingle();
+      //       if (!userRoleError) {
+      //         role = roleData?.role;
+      //       }
+      //     }
+      //     break;
+      //   }
+      //   await new Promise((res) => setTimeout(res, 100));
+      // }
 
-      if (sessionData?.session?.access_token) {
-        const cookieOptions = {
-          path: "/",
-          httpOnly: true,
-          secure: isProd,
-          sameSite: "lax",
-        };
-        (await cookies()).set(
-          "role",
-          role,
-          cookieOptions as Partial<ResponseCookie>,
-        );
-        const isAdmin = role === "admin";
-        (await cookies()).set(
-          "sb-admin",
-          isAdmin ? "true" : "false",
-          cookieOptions as Partial<ResponseCookie>,
-        );
-      }
+      // if (sessionData?.session?.access_token) {
+      //   const cookieOptions = {
+      //     path: "/",
+      //     httpOnly: true,
+      //     secure: isProd,
+      //     sameSite: "lax",
+      //   };
+      //   (await cookies()).set(
+      //     "role",
+      //     role,
+      //     cookieOptions as Partial<ResponseCookie>,
+      //   );
+      //   const isAdmin = role === "admin";
+      //   (await cookies()).set(
+      //     "sb-admin",
+      //     isAdmin ? "true" : "false",
+      //     cookieOptions as Partial<ResponseCookie>,
+      //   );
+      // }
 
       const forwardedHost = request.headers.get("x-forwarded-host"); // original origin before load balancer
 

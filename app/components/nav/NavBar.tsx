@@ -12,6 +12,16 @@ import { getCurrentUser } from "@/app/data/users";
 export default async function NavBarComponent() {
   const testMenus = await Menus();
   const user = await getCurrentUser();
+  const isLoggedIn = !!user;
+  const filteredMenus = testMenus.filter((menu: Menu) => {
+    if (
+      !menu.authRequired ||
+      (isLoggedIn && (!menu.roles || menu.roles?.includes(user?.role || "")))
+    ) {
+      return true;
+    }
+    return false;
+  });
 
   return (
     <nav className="w-full bg-gray-900 text-white">
@@ -24,7 +34,7 @@ export default async function NavBarComponent() {
         {/* Center: Desktop Menu */}
         <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2">
           <ul className="flex gap-x-6">
-            {testMenus.map((menu: Menu) => (
+            {filteredMenus.map((menu: Menu) => (
               <DesktopMenu
                 menu={JSON.stringify(menu)}
                 user={user}
@@ -51,7 +61,7 @@ export default async function NavBarComponent() {
             )}
             {!user && <SignInButton />}
             <div className="lg:hidden">
-              <MobMenu Menus={testMenus} />
+              <MobMenu Menus={filteredMenus} />
             </div>
           </div>
         </div>
