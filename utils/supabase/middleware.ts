@@ -1,5 +1,6 @@
 export const runtime = "nodejs";
 import { type NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
 export async function updateSession(request: NextRequest) {
     const { pathname } = request.nextUrl;
@@ -36,10 +37,6 @@ export async function updateSession(request: NextRequest) {
     }
     const token = supabaseDecoded ? supabaseDecoded.access_token : undefined;
 
-    // TODO: Remove these lines here I think, security vulnerability
-    const role = request.cookies.get("sb-role")?.value;
-    const adminCookie = request.cookies.get("sb-admin")?.value === "true";
-
     // 3️⃣ If no token and not on auth/api/home, redirect to sign in
     if (!token) {
         if (
@@ -52,6 +49,25 @@ export async function updateSession(request: NextRequest) {
         }
         return NextResponse.next();
     }
+
+    interface SupabaseJWT {
+        app_metadata?: {
+            role?: string;
+        };
+        [key: string]: unknown;
+    }
+
+    let role: string | null = null;
+    if (token) {
+        try {
+            const decoded = jwt.decode(token) as SupabaseJWT | null;
+            role = decoded?.app_metadata?.role ?? null;
+        } catch (err) {
+            console.error("JWT decode error:", err);
+        }
+    }
+
+    const adminCookie = role === "admin";
 
     // 4️⃣ Restrict /users list to admins only
     if (pathname === "/users" && !adminCookie) {

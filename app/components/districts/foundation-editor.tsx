@@ -46,7 +46,7 @@ export default function FoundationEditor({
           className="mt-1 block w-full border border-gray-300 rounded px-3 py-2"
         />
       </div>
-      <Link href={`/admin/districts/${foundation.district_id}`}>
+      <Link href={`/districts/${foundation.district_id}`}>
         <div className="text-lg font-semibold text-gray-500 text-center">
           {foundation.district_id}
         </div>

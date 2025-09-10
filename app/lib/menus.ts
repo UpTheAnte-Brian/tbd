@@ -13,7 +13,7 @@ async function Menus() {
           name: "District Management",
           desc: "Manage data and logos",
           icon: "panels-top-left",
-          path: "/admin/districts",
+          path: "/districts",
           method: "GET",
           authRequired: true,
           roles: ["admin"],
@@ -85,10 +85,10 @@ async function Menus() {
       gridCols: 1,
       path: "/info",
     },
-    {
-      name: "Contact",
-      path: "/contact",
-    },
+    // {
+    //   name: "Contact",
+    //   path: "/contact",
+    // },
   ];
 
   return res;

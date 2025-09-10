@@ -81,7 +81,7 @@ export default function DesktopMenu({
       </span>
       {hasSubMenu && (
         <motion.div
-          className="sub-menu"
+          className="sub-menu w-max px-6"
           initial="exit"
           animate={isHover ? "enter" : "exit"}
           variants={subMenuAnimate}
