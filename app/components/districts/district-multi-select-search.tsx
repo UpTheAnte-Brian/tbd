@@ -35,6 +35,8 @@ export default function DistrictMultiSelectSearch({
   }, [query, features]);
 
   const toggleSelect = (s: { id: string; label: string }) => {
+    console.log("selectedIds: ", selectedIds);
+    console.log("id: ", s.label);
     if (selectedIds.includes(s.id)) {
       onChange(selectedIds.filter((id) => id !== s.id));
     } else {
@@ -74,7 +76,7 @@ export default function DistrictMultiSelectSearch({
           }}
         />
         {query && suggestions.length > 0 && (
-          <ul className="mt-2 max-h-60 overflow-y-auto divide-y">
+          <ul className="mt-2 max-h-60 overflow-y-auto divide-y text-left">
             {suggestions.map((s, i) => (
               <li
                 key={s.id}
@@ -83,6 +85,7 @@ export default function DistrictMultiSelectSearch({
                 <input
                   type="checkbox"
                   checked={selectedIds.includes(s.id)}
+                  onClick={(e) => e.stopPropagation()}
                   onChange={() => toggleSelect(s)}
                   className="flex-1 mr-2 w-2"
                 />

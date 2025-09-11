@@ -1,17 +1,13 @@
-// /pages/api/admin/set-role.ts (Next.js)
-import { NextApiRequest, NextApiResponse } from "next";
-import { supabaseServiceClient } from "../../../utils/supabase/service-worker";
+import { NextResponse } from "next/server";
+import { supabaseServiceClient } from "../../../../utils/supabase/service-worker";
 
-export default async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse,
-) {
-    if (req.method !== "POST") return res.status(405).end();
-
-    const { userId, role } = req.body;
+export async function POST(req: Request) {
+    const { userId, role } = await req.json();
 
     if (!userId || !role) {
-        return res.status(400).json({ error: "Missing userId or role" });
+        return NextResponse.json({ error: "Missing userId or role" }, {
+            status: 400,
+        });
     }
 
     try {
@@ -32,9 +28,11 @@ export default async function handler(
 
         if (authError) throw authError;
 
-        return res.status(200).json({ success: true });
+        return NextResponse.json({ success: true });
     } catch (err) {
         console.error("Failed to set role:", err);
-        return res.status(500).json({ error: "Failed to update role" });
+        return NextResponse.json({ error: "Failed to update role" }, {
+            status: 500,
+        });
     }
 }

@@ -38,6 +38,24 @@ export default function UsersPage() {
     fetchData();
   }, []);
 
+  // Change user role
+  const handleRoleChange = async (userId: string, role: string) => {
+    try {
+      const res = await fetch("/api/admin/set-role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, role }),
+      });
+      if (!res.ok) throw new Error("Failed to update role");
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, role } : u))
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Error updating role");
+    }
+  };
+
   if (loading) return <div>Loading…</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -75,6 +93,9 @@ export default function UsersPage() {
               Name
             </th>
             <th className="border border-gray-300 px-2 py-1 text-left text-black">
+              Role
+            </th>
+            <th className="border border-gray-300 px-2 py-1 text-left text-black">
               Districts
             </th>
             <th className="border border-gray-300 px-2 py-1 text-black">
@@ -95,8 +116,17 @@ export default function UsersPage() {
                       ? u.id
                       : u.username
                     : u.full_name}
-                  &nbsp;- ({u.role})
                 </Link>
+              </td>
+              <td className="border border-gray-300 px-2 py-1">
+                <select
+                  className="w-full bg-white text-black border border-gray-300 rounded px-2 py-1"
+                  value={u.role || ""}
+                  onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                >
+                  <option value="Patron">Patron</option>
+                  <option value="admin">admin</option>
+                </select>
               </td>
 
               <td className="border border-gray-300 px-2 py-1">
@@ -171,15 +201,18 @@ export default function UsersPage() {
                     u.id === assigningUserId
                       ? {
                           ...u,
-                          districts: newSelectedIds.map((id) => {
+                          district_users: newSelectedIds.map((id) => {
                             const f = features.find((ft) => ft.id === id);
-                            return f
-                              ? {
-                                  id,
-                                  sdorgid: f.sdorgid,
-                                  shortname: f.shortname,
-                                }
-                              : { id, sdorgid: "", shortname: "Unknown" };
+                            return {
+                              district_id: id,
+                              user_id: u.id,
+                              role: "member",
+                              district: {
+                                id: id,
+                                sdorgid: id,
+                                shortname: f ? f.shortname : "Unknown",
+                              },
+                            };
                           }),
                         }
                       : u

@@ -4,8 +4,6 @@ import { getSupabaseClient } from "@/utils/supabase/client";
 import Avatar from "./ui/avatar";
 import { Profile } from "@/app/lib/types";
 
-// ...
-
 export default function AccountForm({ user }: { user: Profile | null }) {
   const supabase = getSupabaseClient();
   const [loading, setLoading] = useState(false);
@@ -18,43 +16,9 @@ export default function AccountForm({ user }: { user: Profile | null }) {
   );
   const [username, setUsername] = useState<string | null>(user?.username || "");
   const [website, setWebsite] = useState<string | null>(user?.website || "");
-  const [role, setRole] = useState<string | null>(user?.role || "Patron");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
     user?.avatar_url || ""
   );
-
-  // const getProfile = useCallback(async () => {
-  //   try {
-  //     setLoading(true);
-
-  //     const { data, error, status } = await supabase
-  //       .from("profiles")
-  //       .select(`full_name, username, website, avatar_url`)
-  //       .eq("id", user?.id)
-  //       .single();
-
-  //     if (error && status !== 406) {
-  //       console.log(error);
-  //       throw error;
-  //     }
-
-  //     if (data) {
-  //       setFullname(data.full_name);
-  //       setUsername(data.username);
-  //       setWebsite(data.website);
-  //       setAvatarUrl(data.avatar_url);
-  //     }
-  //     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  //   } catch (error) {
-  //     alert("Error loading user data!");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }, [user, supabase]);
-
-  // useEffect(() => {
-  //   getProfile();
-  // }, [user, getProfile]);
 
   async function updateProfile({
     username,
@@ -63,7 +27,6 @@ export default function AccountForm({ user }: { user: Profile | null }) {
     avatar_url,
     firstName,
     lastName,
-    role,
   }: {
     username: string | null;
     fullname: string | null;
@@ -71,7 +34,6 @@ export default function AccountForm({ user }: { user: Profile | null }) {
     avatar_url: string | null;
     firstName: string | null;
     lastName: string | null;
-    role: string | null;
   }) {
     try {
       setLoading(true);
@@ -84,7 +46,6 @@ export default function AccountForm({ user }: { user: Profile | null }) {
         website,
         avatar_url,
         updated_at: new Date().toISOString(),
-        role: role,
       };
 
       const { error } = await supabase
@@ -118,7 +79,6 @@ export default function AccountForm({ user }: { user: Profile | null }) {
               avatar_url: url,
               firstName,
               lastName,
-              role,
             });
           }}
         />
@@ -126,16 +86,6 @@ export default function AccountForm({ user }: { user: Profile | null }) {
         <div className="form-widget">
           {/* ... */}
 
-          <div>
-            <label htmlFor="role">Role</label>
-            <input
-              id="role"
-              type="text"
-              // disabled={isAdmin}
-              value={role || ""}
-              onChange={(e) => setRole(e.target.value)}
-            />
-          </div>
           <div>
             <label htmlFor="fullName">Full Name</label>
             <input
@@ -193,7 +143,6 @@ export default function AccountForm({ user }: { user: Profile | null }) {
                   avatar_url: avatarUrl,
                   firstName,
                   lastName,
-                  role,
                 })
               }
               disabled={loading}

@@ -12,7 +12,7 @@ export default async function DistrictPage(props: {
   if (!district) return <p>No district found</p>;
 
   return (
-    <main>
+    <main className="p-4">
       <Breadcrumbs
         breadcrumbs={[
           { label: "Districts", href: "/districts" },
@@ -25,7 +25,7 @@ export default async function DistrictPage(props: {
       />
 
       {/* Flex container for two-column layout */}
-      <div className="flex gap-4 w-full p-4">
+      <div className="flex gap-4 w-full">
         {/* Left content: 3/4 width */}
         <div className="w-3/4">
           <p>Main content goes here</p>
