@@ -29,5 +29,6 @@
     ".next/types/**/*.ts",
     "app/lib/placeholder-data.ts",
     "scripts/seed.js"  ],
-  "exclude": ["node_modules", ".next", "supabase", "scripts"]
+  "exclude": ["node_modules", ".next", "supabase", "scripts", 
+    "scratchfiles"]
 }
