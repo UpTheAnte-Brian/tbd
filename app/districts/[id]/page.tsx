@@ -4,6 +4,7 @@ import { DistrictWithFoundation } from "@/app/lib/types";
 import DistrictSideBar from "@/app/components/ui/district-sidebar";
 import { OneTimeDonateButton } from "@/app/components/stripe/DonationButton";
 import { MonthlyDonateButton } from "@/app/components/stripe/RecurringDonationButton";
+import DistrictDonationsSummary from "@/app/components/districts/DistrictDonationsSummary";
 
 export default async function DistrictPage(props: {
   params: Promise<{ id: string }>;
@@ -51,10 +52,12 @@ export default async function DistrictPage(props: {
             <li>Number of AP courses offered</li>
             <li>State test proficiency ratings</li>
           </ul>
-        </div>
 
-        <OneTimeDonateButton></OneTimeDonateButton>
-        <MonthlyDonateButton></MonthlyDonateButton>
+          <DistrictDonationsSummary districtId={id} />
+
+          <OneTimeDonateButton></OneTimeDonateButton>
+          <MonthlyDonateButton></MonthlyDonateButton>
+        </div>
 
         {/* Right sidebar: 1/4 width, sticky */}
         <div className="w-1/4 sticky top-4 self-start">
