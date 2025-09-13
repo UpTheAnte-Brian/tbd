@@ -2,6 +2,8 @@ import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
 import { getDistrictDTO } from "@/app/data/districts-dto";
 import { DistrictWithFoundation } from "@/app/lib/types";
 import DistrictSideBar from "@/app/components/ui/district-sidebar";
+import { OneTimeDonateButton } from "@/app/components/stripe/DonationButton";
+import { MonthlyDonateButton } from "@/app/components/stripe/RecurringDonationButton";
 
 export default async function DistrictPage(props: {
   params: Promise<{ id: string }>;
@@ -50,6 +52,9 @@ export default async function DistrictPage(props: {
             <li>State test proficiency ratings</li>
           </ul>
         </div>
+
+        <OneTimeDonateButton></OneTimeDonateButton>
+        <MonthlyDonateButton></MonthlyDonateButton>
 
         {/* Right sidebar: 1/4 width, sticky */}
         <div className="w-1/4 sticky top-4 self-start">
