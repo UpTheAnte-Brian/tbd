@@ -19,8 +19,8 @@ export async function POST() {
                 quantity: 1,
             },
         ],
-        success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/donate/success`,
-        cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/donate/cancel`,
+        success_url: `${process.env.NEXT_PUBLIC_HOST}/donate/success`,
+        cancel_url: `${process.env.NEXT_PUBLIC_HOST}/donate/cancel`,
     });
 
     return NextResponse.json({ id: session.id });
