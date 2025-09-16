@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import React from "react";
 import { use } from "react";
 import { useEffect, useState } from "react";
 
@@ -32,7 +33,7 @@ export default function DonationSuccessPage({
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const params = use(searchParams) as { session_id: string };
+  const params = React.use(searchParams) as { session_id: string };
   const sessionId = params?.session_id;
 
   useEffect(() => {
