@@ -25,7 +25,7 @@ export default function DistrictDonationsSummary({
     // Fetch donations
     const { data: donationsAgg, error: donationsError } = await supabase
       .from("donations")
-      .select("amount,donor_email")
+      .select("amount,email")
       .eq("district_id", districtId);
 
     if (!donationsError && donationsAgg) {
@@ -35,7 +35,7 @@ export default function DistrictDonationsSummary({
       );
       const donorEmails = new Set<string>();
       for (const row of donationsAgg) {
-        if (row.donor_email) donorEmails.add(row.donor_email);
+        if (row.email) donorEmails.add(row.email);
       }
       setTotalAmount(total);
       setUniqueDonors(donorEmails.size);

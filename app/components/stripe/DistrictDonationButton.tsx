@@ -5,9 +5,13 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 );
 
-export function OneTimeDonateButton() {
+export function DistrictDonateButton({ districtId }: { districtId: string }) {
   const handleClick = async () => {
-    const res = await fetch("/api/create-checkout-session", { method: "POST" });
+    const res = await fetch("/api/stripe/create-district-checkout-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ districtId }),
+    });
     const { id } = await res.json();
     const stripe = await stripePromise;
     if (stripe) stripe.redirectToCheckout({ sessionId: id });
@@ -16,9 +20,9 @@ export function OneTimeDonateButton() {
   return (
     <button
       onClick={handleClick}
-      className="px-4 py-2 bg-blue-600 text-white rounded"
+      className="px-4 py-2 bg-green-600 text-white rounded"
     >
-      Donate $25
+      Donate to this District
     </button>
   );
 }

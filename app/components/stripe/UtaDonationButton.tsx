@@ -5,9 +5,9 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 );
 
-export function MonthlyDonateButton() {
+export function OneTimeDonateButton() {
   const handleClick = async () => {
-    const res = await fetch("/api/stripe/create-subscription-session", {
+    const res = await fetch("/api/stripe/create-checkout-session", {
       method: "POST",
     });
     const { id } = await res.json();
@@ -18,9 +18,9 @@ export function MonthlyDonateButton() {
   return (
     <button
       onClick={handleClick}
-      className="px-4 py-2 bg-green-600 text-white rounded"
+      className="px-4 py-2 bg-blue-600 text-white rounded"
     >
-      Donate Monthly
+      Donate $25
     </button>
   );
 }
