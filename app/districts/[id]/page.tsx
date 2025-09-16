@@ -2,7 +2,6 @@ import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
 import { getDistrictDTO } from "@/app/data/districts-dto";
 import { DistrictWithFoundation } from "@/app/lib/types";
 import DistrictSideBar from "@/app/components/ui/district-sidebar";
-import { OneTimeDonateButton } from "@/app/components/stripe/UtaDonationButton";
 import { MonthlyDonateButton } from "@/app/components/stripe/RecurringDonationButton";
 import DistrictDonationsSummary from "@/app/components/districts/DistrictDonationsSummary";
 import { DistrictDonateButton } from "@/app/components/stripe/DistrictDonationButton";

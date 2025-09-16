@@ -30,7 +30,13 @@ export default function DistrictDonationsSummary({
 
     if (!donationsError && donationsAgg) {
       const total = donationsAgg.reduce(
-        (sum: number, row: any) => sum + (row.amount ?? 0),
+        (
+          sum: number,
+          row: {
+            amount: number;
+            email: string;
+          }
+        ) => sum + (row.amount ?? 0),
         0
       );
       const donorEmails = new Set<string>();

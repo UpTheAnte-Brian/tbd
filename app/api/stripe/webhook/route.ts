@@ -156,6 +156,7 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({ received: true });
+        /* eslint-disable @typescript-eslint/no-explicit-any */
     } catch (err: any) {
         console.error("Webhook error:", err.message);
         return new NextResponse(`Webhook error: ${err.message}`, {
