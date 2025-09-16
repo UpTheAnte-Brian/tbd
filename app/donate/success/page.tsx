@@ -3,7 +3,6 @@
 
 import Link from "next/link";
 import React from "react";
-import { use } from "react";
 import { useEffect, useState } from "react";
 
 interface Receipt {
