@@ -186,3 +186,14 @@ export interface KmlFeatureData {
     content: string;
     pixelOffset: google.maps.Size | null;
 }
+
+export interface Receipt {
+    id: string;
+    stripe_session_id: string;
+    amount: number;
+    date: string;
+    district_name?: string;
+    user_id?: string;
+    type?: string;
+    email?: string;
+}

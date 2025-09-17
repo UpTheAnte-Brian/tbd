@@ -1,15 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { Receipt } from "@/app/lib/types";
 import Link from "next/link";
 import React from "react";
 import { useEffect, useState } from "react";
-
-interface Receipt {
-  id: string;
-  amount: number;
-  date: string;
-}
 
 async function getReceipt(sessionId: string): Promise<Receipt | null> {
   try {
@@ -68,13 +63,14 @@ export default function DonationSuccessPage({
         {!loading && receipt && (
           <div>
             <p className="text-black">
-              <strong>Receipt ID:</strong> {receipt.id}
+              <strong className="text-black">Receipt ID:</strong> {receipt.id}
             </p>
             <p className="text-black">
-              <strong>Amount:</strong> ${(receipt.amount / 100).toFixed(2)}
+              <strong className="text-black">Amount:</strong> $
+              {(receipt.amount / 100).toFixed(2)}
             </p>
             <p className="text-black">
-              <strong>Date:</strong> {receipt.date}
+              <strong className="text-black">Date:</strong> {receipt.date}
             </p>
           </div>
         )}
