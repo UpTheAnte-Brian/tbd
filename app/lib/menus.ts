@@ -85,10 +85,10 @@ async function Menus() {
       gridCols: 1,
       path: "/info",
     },
-    // {
-    //   name: "Contact",
-    //   path: "/contact",
-    // },
+    {
+      name: "Receipts",
+      path: "/receipts",
+    },
   ];
 
   return res;

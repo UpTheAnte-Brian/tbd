@@ -10,6 +10,9 @@ type DonationRow = {
     user_id?: string;
     type?: "platform" | "district";
     email?: string | null;
+    receipt_url?: string | null;
+    subscription_id?: string | null;
+    invoice_id?: string | null;
 };
 
 export async function getReceipts(): Promise<Receipt[]> {
@@ -24,6 +27,9 @@ export async function getReceipts(): Promise<Receipt[]> {
             user_id,
             type,
             email,
+            receipt_url,
+            subscription_id,
+            invoice_id,
             district:district_id(shortname)
         `)
         .order("created_at", { ascending: false });
@@ -40,5 +46,8 @@ export async function getReceipts(): Promise<Receipt[]> {
         user_id: r.user_id ?? undefined,
         type: r.type ?? undefined,
         email: r.email ?? undefined,
+        invoice_id: r.invoice_id ?? undefined,
+        receipt_url: r.receipt_url ?? undefined,
+        subscription_id: r.subscription_id ?? undefined,
     }));
 }

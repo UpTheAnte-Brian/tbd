@@ -197,4 +197,6 @@ export interface Receipt {
     type?: string;
     email?: string;
     receipt_url?: string;
+    subscription_id?: string;
+    invoice_id?: string;
 }
