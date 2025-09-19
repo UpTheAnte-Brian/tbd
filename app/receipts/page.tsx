@@ -71,7 +71,7 @@ export default function ReceiptsPage() {
               )}
               {r.stripe_session_id && (
                 <a
-                  //   href={r.receipt_url}
+                  href={r.receipt_url}
                   target="_blank"
                   className="text-blue-600 underline"
                 >
