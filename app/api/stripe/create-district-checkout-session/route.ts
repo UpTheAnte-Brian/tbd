@@ -8,21 +8,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 // This route creates a Stripe Checkout session for a district donation
 export async function POST(req: Request) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-        error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Expect JSON body with { districtId }
+    // Expect JSON body with { districtId, anonymous? }
     let districtId: string | undefined;
+    let anonymous: boolean | undefined;
     try {
         const body = await req.json();
         districtId = body.districtId;
+        anonymous = body.anonymous;
     } catch {
         return NextResponse.json({ error: "Invalid request body" }, {
             status: 400,
@@ -33,6 +25,31 @@ export async function POST(req: Request) {
             status: 400,
         });
     }
+    if (anonymous !== undefined && typeof anonymous !== "boolean") {
+        return NextResponse.json({ error: "Invalid anonymous flag" }, {
+            status: 400,
+        });
+    }
+    const metadata: Record<string, string> = {
+        district_id: districtId,
+    };
+    if (anonymous !== undefined) {
+        metadata.anonymous = anonymous.toString();
+    }
+    if (!anonymous) {
+        const supabase = await createClient();
+        const {
+            data: { user },
+            error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError || !user) {
+            return NextResponse.json({ error: "Unauthorized" }, {
+                status: 401,
+            });
+        }
+        metadata.user_id = user.id;
+    }
 
     const session = await stripe.checkout.sessions.create({
         mode: "payment",
@@ -41,15 +58,19 @@ export async function POST(req: Request) {
             {
                 price_data: {
                     currency: "usd",
-                    product_data: { name: "District Donation" },
+                    product_data: {
+                        name: anonymous
+                            ? "District Donation (Anonymous)"
+                            : "District Donation",
+                    },
                     unit_amount: 2500, // $25.00
                 },
                 quantity: 1,
             },
         ],
-        metadata: {
-            district_id: districtId,
-            user_id: user.id,
+        metadata,
+        invoice_creation: {
+            enabled: true, // This ensures an invoice is generated for this session
         },
         success_url:
             `${process.env.NEXT_PUBLIC_HOST}/donate/success?session_id={CHECKOUT_SESSION_ID}`,

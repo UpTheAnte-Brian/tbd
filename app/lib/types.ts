@@ -196,4 +196,5 @@ export interface Receipt {
     user_id?: string;
     type?: string;
     email?: string;
+    receipt_url?: string;
 }

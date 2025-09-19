@@ -62,7 +62,7 @@ export default function DonationSuccessPage({
         )}
         {!loading && receipt && (
           <div>
-            <p className="text-black">
+            <p className="text-black wrap-break-word">
               <strong className="text-black">Receipt ID:</strong> {receipt.id}
             </p>
             <p className="text-black">

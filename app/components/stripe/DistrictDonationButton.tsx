@@ -5,12 +5,18 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 );
 
-export function DistrictDonateButton({ districtId }: { districtId: string }) {
+export function DistrictDonateButton({
+  districtId,
+  anonymous,
+}: {
+  districtId: string;
+  anonymous?: boolean;
+}) {
   const handleClick = async () => {
     const res = await fetch("/api/stripe/create-district-checkout-session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ districtId }),
+      body: JSON.stringify({ districtId, anonymous }),
     });
     const { id } = await res.json();
     const stripe = await stripePromise;
@@ -22,7 +28,7 @@ export function DistrictDonateButton({ districtId }: { districtId: string }) {
       onClick={handleClick}
       className="px-4 py-2 bg-green-600 text-white rounded"
     >
-      Donate to this District
+      {anonymous ? "Donate Anonymously" : "Donate to this District"}
     </button>
   );
 }

@@ -1,17 +1,22 @@
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
 import { getDistrictDTO } from "@/app/data/districts-dto";
-import { DistrictWithFoundation } from "@/app/lib/types";
+import { DistrictWithFoundation, Profile } from "@/app/lib/types";
 import DistrictSideBar from "@/app/components/ui/district-sidebar";
 import { MonthlyDonateButton } from "@/app/components/stripe/RecurringDonationButton";
 import DistrictDonationsSummary from "@/app/components/districts/DistrictDonationsSummary";
 import { DistrictDonateButton } from "@/app/components/stripe/DistrictDonationButton";
+import { getCurrentUser } from "@/app/data/users";
 
 export default async function DistrictPage(props: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await props.params;
   const district: DistrictWithFoundation = await getDistrictDTO(id);
-
+  const user: Profile | null = await getCurrentUser();
+  let anonymousDonor = true;
+  if (user) {
+    anonymousDonor = false;
+  }
   if (!district) return <p>No district found</p>;
 
   return (
@@ -53,10 +58,12 @@ export default async function DistrictPage(props: {
             <li>State test proficiency ratings</li>
           </ul>
 
-          <DistrictDonationsSummary districtId={district.id} />
-
-          <DistrictDonateButton districtId={district.id}></DistrictDonateButton>
+          <DistrictDonateButton
+            districtId={district.id}
+            anonymous={anonymousDonor}
+          ></DistrictDonateButton>
           <MonthlyDonateButton></MonthlyDonateButton>
+          <DistrictDonationsSummary districtId={district.id} />
         </div>
 
         {/* Right sidebar: 1/4 width, sticky */}

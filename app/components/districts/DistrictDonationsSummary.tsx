@@ -125,10 +125,12 @@ export default function DistrictDonationsSummary({
 
   return (
     <div className="border rounded p-4 mb-4 bg-gray-50">
-      <h2 className="text-lg font-semibold mb-2">Donation Summary</h2>
+      <h2 className="text-lg font-semibold mb-2 text-black">
+        Donation Summary
+      </h2>
       <div className="mb-1">
-        <span className="font-medium">Total Donations: </span>
-        <span>
+        <span className="font-medium text-black">Total Donations: </span>
+        <span className="text-black">
           $
           {(totalAmount / 100).toLocaleString("en-US", {
             minimumFractionDigits: 2,
@@ -136,12 +138,14 @@ export default function DistrictDonationsSummary({
         </span>
       </div>
       <div className="mb-1">
-        <span className="font-medium">Unique Donors: </span>
-        <span>{uniqueDonors}</span>
+        <span className="font-medium text-black">Unique Donors: </span>
+        <span className="text-black">{uniqueDonors}</span>
       </div>
       <div>
-        <span className="font-medium">Active Recurring Subscriptions: </span>
-        <span>{activeSubsCount}</span>
+        <span className="font-medium text-black">
+          Active Recurring Subscriptions:{" "}
+        </span>
+        <span className="text-black">{activeSubsCount}</span>
       </div>
     </div>
   );
