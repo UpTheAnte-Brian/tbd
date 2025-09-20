@@ -46,9 +46,9 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
   return (
     <div className="min-h-[100dvh] bg-gradient-to-b from-white to-gray-50 flex items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
-        <div className="flex justify-center">
-          <AUNLogo />
-        </div>
+        {/* <div className="flex flex-grow"> */}
+        <AUNLogo backgroundWhite={true} />
+        {/* </div> */}
 
         <h1 className="mt-10 text-2xl font-semibold tracking-tight text-center text-gray-900">
           {mode === "signin" ? "Welcome back" : "Create your account"}

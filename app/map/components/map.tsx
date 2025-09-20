@@ -21,7 +21,7 @@ const getPublicImageUrl = (
 
 const mapContainerStyle = {
   width: "100%",
-  height: "80vh",
+  height: "90dvh",
 };
 
 function panToFeature(

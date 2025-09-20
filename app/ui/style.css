@@ -1015,10 +1015,6 @@ video {
   min-height: 100dvh;
 }
 
-.min-h-\[calc\(100vh-4rem\)\] {
-  min-height: calc(100vh - 4rem);
-}
-
 .min-h-full {
   min-height: 100%;
 }
@@ -1900,10 +1896,6 @@ video {
 
 .pr-6 {
   padding-right: 1.5rem;
-}
-
-.pt-16 {
-  padding-top: 4rem;
 }
 
 .pt-2 {

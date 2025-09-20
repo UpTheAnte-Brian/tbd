@@ -8,7 +8,8 @@ export async function updateSession(request: NextRequest) {
     // 1️⃣ Always allow auth + api routes
     if (
         pathname.startsWith("/auth") || pathname.startsWith("/api") ||
-        pathname.startsWith("/districts") || pathname.startsWith("/donate")
+        pathname.startsWith("/districts") || pathname.startsWith("/donate") ||
+        pathname.startsWith("/info")
     ) {
         return NextResponse.next();
     }

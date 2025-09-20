@@ -1,6 +1,6 @@
 export default function GrowthPage() {
   return (
-    <div>
+    <div className="prose mx-auto p-6">
       <h1>Driving Growth Through Managed Round‑Up Programs</h1>
 
       <section>

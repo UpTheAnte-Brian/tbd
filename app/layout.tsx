@@ -61,7 +61,7 @@ export default async function RootLayout({
             </header>
 
             {/* Main Content Area: Use padding-top to create space below the fixed header */}
-            <div className="pt-16 min-h-[calc(100vh-4rem)]">
+            <div className="pt-8 min-h-[100dvh]">
               {/* Added pt-8 to account for header height */}
               {children}
             </div>

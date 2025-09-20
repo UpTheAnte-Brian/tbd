@@ -12,7 +12,7 @@ const cardWrapper = "grid gap-4 p-6 sm:grid-cols-2 md:grid-cols-3";
 const DistrictMetadataEditor = React.memo(() => {
   const [districts, setDistricts] = useState<DistrictWithFoundation[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [, setUserId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const isMounted = useRef(true);
   const supabase = getSupabaseClient();
@@ -95,44 +95,8 @@ const DistrictMetadataEditor = React.memo(() => {
     }
   };
 
-  // const handleSave = async (
-  //   sdorgid: string,
-  //   updates: Partial<DistrictWithFoundation>
-  // ) => {
-  //   const { foundation, metadata } = updates;
-  //   if (foundation) {
-  //     await supabase.from("foundations").upsert({
-  //       sdorgid,
-  //       ...foundation,
-  //     });
-  //   }
-  //   if (metadata) {
-  //     await supabase.from("district_metadata").upsert({
-  //       sdorgid,
-  //       ...metadata,
-  //     });
-  //   }
-
-  //   setDistricts((prev) =>
-  //     prev.map((d) => (d.sdorgid === sdorgid ? { ...d, ...updates } : d))
-  //   );
-  // };
-
-  const handleSignIn = () => {
-    supabase.auth.signInWithOAuth({ provider: "google" });
-  };
-
   return (
     <div className="p-4">
-      {!userId ? (
-        <button
-          className="mb-4 px-4 py-2 bg-blue-600 text-white rounded shadow"
-          onClick={handleSignIn}
-        >
-          Sign in with Google to Upload Logos
-        </button>
-      ) : null}
-
       <Input
         className="mb-4 bg-slate-400 text-white"
         placeholder="Search districts..."

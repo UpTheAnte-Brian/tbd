@@ -1,6 +1,6 @@
 export default function FundamentalsPage() {
   return (
-    <div>
+    <div className="prose mx-auto p-6">
       <h1>Fundamentals of Round-Up Fundraising</h1>
 
       <section>
