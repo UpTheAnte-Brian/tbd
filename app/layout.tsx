@@ -2,7 +2,7 @@
 
 import "@/app/ui/style.css";
 import { inter } from "./ui/fonts";
-import Footer from "./ui/dashboard/footer";
+// import Footer from "./ui/dashboard/footer";
 import { StyledEngineProvider } from "@mui/material";
 // import Menus from "./lib/menus";
 // import { Menu } from "./lib/definitions";

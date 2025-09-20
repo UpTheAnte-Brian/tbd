@@ -1,4 +1,5 @@
 import { getReceiptBySessionId } from "@/app/data/receipt-dto";
+import { Receipt } from "@/app/lib/types";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -23,9 +24,10 @@ export async function GET(req: Request) {
 
         const receipt = await getReceiptBySessionId(sessionId);
 
-        const result: any = {
-            id: session.id,
-            amount: session.amount_total,
+        const result: Receipt = {
+            id: receipt?.id ?? "",
+            stripe_session_id: session.id,
+            amount: session.amount_total ?? 0,
             date: new Date(session.created * 1000).toLocaleString(),
         };
         if (receipt) {

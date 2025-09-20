@@ -42,8 +42,6 @@ export default function DonationSuccessPage({
     });
   }, [sessionId]);
 
-  const fireworksRef = React.useRef<any>(null);
-
   return (
     <div className="relative w-full h-full bg-black">
       <Canvas
