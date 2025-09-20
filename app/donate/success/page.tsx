@@ -5,6 +5,7 @@ import { Receipt } from "@/app/lib/types";
 import Link from "next/link";
 import React from "react";
 import { useEffect, useState } from "react";
+import Canvas from "react-canvas-confetti/dist/presets/fireworks";
 
 async function getReceipt(sessionId: string): Promise<Receipt | null> {
   try {
@@ -41,47 +42,69 @@ export default function DonationSuccessPage({
     });
   }, [sessionId]);
 
+  const fireworksRef = React.useRef<any>(null);
+
   return (
-    <div className="max-w-xl mx-auto py-16 px-6 text-center">
-      <h1 className="text-3xl font-bold text-green-600 mb-4">
-        🎉 Thank you for your donation!
-      </h1>
-      <p className="text-lg mb-6">Your payment was processed successfully.</p>
+    <div className="relative w-full h-full bg-black">
+      <Canvas
+        autorun={{ speed: 1 }}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          zIndex: 0,
+          pointerEvents: "none",
+        }}
+      />
+      <div className="max-w-xl mx-auto py-16 px-6 text-center relative z-10">
+        <h1 className="text-3xl font-bold text-green-600 mb-4">
+          🎉 Thank you for your donation!
+        </h1>
+        <p className="text-lg mb-6">Your payment was processed successfully.</p>
 
-      <div className="border rounded-lg p-6 shadow-md bg-white text-left">
-        <h2 className="text-xl font-semibold mb-4 text-black">
-          Donation Receipt
-        </h2>
+        <div className="border rounded-lg p-6 shadow-md bg-white text-left">
+          <h2 className="text-xl font-semibold mb-4 text-black">
+            Donation Receipt
+          </h2>
 
-        {loading && <p className="text-gray-600">Loading receipt...</p>}
-        {!loading && !sessionId && (
-          <p className="text-red-600">Missing session ID in URL.</p>
-        )}
-        {!loading && sessionId && !receipt && (
-          <p className="text-red-600">Unable to load receipt details.</p>
-        )}
-        {!loading && receipt && (
-          <div>
-            <p className="text-black wrap-break-word">
-              <strong className="text-black">Receipt ID:</strong> {receipt.id}
-            </p>
-            <p className="text-black">
-              <strong className="text-black">Amount:</strong> $
-              {(receipt.amount / 100).toFixed(2)}
-            </p>
-            <p className="text-black">
-              <strong className="text-black">Date:</strong> {receipt.date}
-            </p>
-          </div>
-        )}
+          {loading && <p className="text-gray-600">Loading receipt...</p>}
+          {!loading && !sessionId && (
+            <p className="text-red-600">Missing session ID in URL.</p>
+          )}
+          {!loading && sessionId && !receipt && (
+            <p className="text-red-600">Unable to load receipt details.</p>
+          )}
+          {!loading && receipt && (
+            <div>
+              <p>
+                <a
+                  href={receipt.receipt_url}
+                  target="_blank"
+                  className="text-blue-600 underline"
+                >
+                  View Receipt
+                </a>
+              </p>
+              <p className="text-black">
+                <strong className="text-black">Amount:</strong> $
+                {(receipt.amount / 100).toFixed(2)}
+              </p>
+              <p className="text-black">
+                <strong className="text-black">Date:</strong> {receipt.date}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <Link
+          href="/"
+          className="inline-block mt-8 px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700"
+        >
+          Return to Home
+        </Link>
       </div>
-
-      <Link
-        href="/"
-        className="inline-block mt-8 px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700"
-      >
-        Return to Home
-      </Link>
     </div>
   );
 }

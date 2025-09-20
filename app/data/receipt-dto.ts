@@ -51,3 +51,45 @@ export async function getReceipts(): Promise<Receipt[]> {
         subscription_id: r.subscription_id ?? undefined,
     }));
 }
+
+export async function getReceiptBySessionId(
+    stripeSessionId: string,
+): Promise<Receipt | null> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("donations")
+        .select(`
+            id,
+            amount,
+            created_at,
+            stripe_session_id,
+            user_id,
+            type,
+            email,
+            receipt_url,
+            subscription_id,
+            invoice_id,
+            district:district_id(shortname)
+        `)
+        .eq("stripe_session_id", stripeSessionId)
+        .limit(1)
+        .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    const r = data as DonationRow;
+    return {
+        id: r.id,
+        amount: r.amount,
+        date: new Date(r.created_at).toISOString().split("T")[0],
+        district_name: r.district?.[0]?.shortname ?? undefined,
+        stripe_session_id: r.stripe_session_id ?? undefined,
+        user_id: r.user_id ?? undefined,
+        type: r.type ?? undefined,
+        email: r.email ?? undefined,
+        invoice_id: r.invoice_id ?? undefined,
+        receipt_url: r.receipt_url ?? undefined,
+        subscription_id: r.subscription_id ?? undefined,
+    };
+}

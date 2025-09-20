@@ -44,6 +44,7 @@
     "next": "latest",
     "nodemailer": "^7.0.5",
     "react": "latest",
+    "react-canvas-confetti": "^2.0.7",
     "react-dom": "latest",
     "stripe": "^18.5.0",
     "tailwind-merge": "^3.3.1",

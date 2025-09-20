@@ -88,6 +88,7 @@ async function Menus() {
     {
       name: "Receipts",
       path: "/receipts",
+      authRequired: true,
     },
   ];
 
