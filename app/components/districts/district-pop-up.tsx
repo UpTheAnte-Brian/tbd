@@ -3,7 +3,7 @@
 import Link from "next/link";
 // import { useState } from "react";
 import { Input } from "../../components/ui/input";
-import { DistrictWithFoundation } from "../../lib/types";
+import { DistrictWithFoundation, Profile } from "../../lib/types";
 // import FoundationEditor from "@/app/ui/districts/foundation-editor";
 import React, { useEffect, useRef, useState } from "react";
 import { DistrictDonateButton } from "@/app/components/stripe/DistrictDonationButton";
@@ -11,19 +11,12 @@ import { DistrictDonateButton } from "@/app/components/stripe/DistrictDonationBu
 const DistrictPopUp = React.memo(
   ({
     district,
-    isAdmin,
+    user,
     onLogoUpload,
   }: {
     district: DistrictWithFoundation;
-    isAdmin: boolean;
+    user: Profile | null;
     onLogoUpload: (file: File, sdorgid: string) => Promise<void>;
-    // handleSave: (district: DistrictWithFoundation) => void;
-    // uploading: boolean;
-    // handleLogoUpload: (
-    //   e: React.ChangeEvent<HTMLInputElement>,
-    //   sdorgid: string
-    // ) => void;
-    // handleSave: (district: DistrictWithFoundation) => void;
   }) => {
     const [uploading, setUploading] = useState(false);
     const isMounted = useRef(true);
@@ -55,6 +48,7 @@ const DistrictPopUp = React.memo(
       };
     }, []);
 
+    const anonymous = !user;
     return (
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3">
         <Link href={`/districts/${district.sdorgid}`}>
@@ -69,7 +63,7 @@ const DistrictPopUp = React.memo(
             className="h-10 object-contain"
           />
         )}
-        {isAdmin && (
+        {user && (
           <Input
             type="file"
             accept="image/*"
@@ -79,7 +73,7 @@ const DistrictPopUp = React.memo(
         )}
         <DistrictDonateButton
           districtId={district.id}
-          anonymous={true}
+          anonymous={anonymous}
         ></DistrictDonateButton>
       </div>
     );

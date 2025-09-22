@@ -4,11 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getBoundsFromGeoJSON } from "../../lib/getBoundsFromGeoJSON";
 import React from "react";
-import { DistrictProperties, DistrictWithFoundation } from "../../lib/types";
+import {
+  DistrictProperties,
+  DistrictWithFoundation,
+  Profile,
+} from "../../lib/types";
 import { getSupabaseClient } from "../../../utils/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import DistrictPopUp from "@/app/components/districts/district-pop-up";
 import DistrictSearch from "@/app/components/districts/district-search";
+import { useUser } from "@/app/hooks/useUser";
 // import { pointOnFeature } from "@turf/turf";
 
 const getPublicImageUrl = (
@@ -60,48 +65,18 @@ const MapComponent = React.memo(() => {
     visible: false,
   });
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const { user, loading } = useUser();
   const supabase = getSupabaseClient();
   const labelMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>(
     []
   );
-  // Fetch isAdmin from Supabase on mount
   useEffect(() => {
-    const fetchIsAdmin = async () => {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) {
-          setIsAdmin(false);
-          return;
-        }
-        // Assuming you have a user profile table or claims
-        // We'll check for a custom claim or role
-        // Example: user.user_metadata.role === 'admin'
-        // Or fetch from a profile table
-        // Try both, fallback to false
-        if (user.user_metadata && user.user_metadata.role === "admin") {
-          setIsAdmin(true);
-          return;
-        }
-        // Try a profile table (adjust as needed)
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-        if (!error && profile?.role === "admin") {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-        }
-      } catch (err) {
-        console.log("Admin Check Error: ", err);
-        setIsAdmin(false);
-      }
-    };
-    fetchIsAdmin();
-  }, []);
+    if (user?.role === "admin") {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user]);
 
   // handleLogoUpload implementation
   const handleLogoUpload = async (file: File, sdorgid: string) => {
@@ -472,7 +447,7 @@ const MapComponent = React.memo(() => {
           </button>
           <DistrictPopUp
             district={selectedFeature}
-            isAdmin={isAdmin}
+            user={user}
             onLogoUpload={handleLogoUpload}
           />
         </div>
