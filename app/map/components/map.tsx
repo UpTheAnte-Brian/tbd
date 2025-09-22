@@ -10,6 +10,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import DistrictPopUp from "@/app/components/districts/district-pop-up";
 import DistrictSearch from "@/app/components/districts/district-search";
 import { useUser } from "@/app/hooks/useUser";
+import LoadingSpinner from "@/app/components/loading-spinner";
 // import { pointOnFeature } from "@turf/turf";
 
 const getPublicImageUrl = (
@@ -61,11 +62,14 @@ const MapComponent = React.memo(() => {
     visible: false,
   });
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const { user } = useUser();
+  const { user, loading, error } = useUser();
   const supabase = getSupabaseClient();
   const labelMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>(
     []
   );
+  if (error) {
+    console.warn("no user session");
+  }
   useEffect(() => {
     if (user?.role === "admin") {
       setIsAdmin(true);
@@ -366,8 +370,9 @@ const MapComponent = React.memo(() => {
   // Tooltip tick state to force rerender of tooltip on mousemove (dummy state)
   const [, setTooltipTick] = useState(0);
 
+  if (loading) return <LoadingSpinner />;
   return (
-    <div className="relative flex flex-col md:flex-row w-full">
+    <div className="relative flex flex-col md:flex-row w-full p-4">
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         onLoad={onLoad}
@@ -451,7 +456,10 @@ const MapComponent = React.memo(() => {
 
       <DistrictSearch
         features={features}
-        onSelect={(id) => setSelectedId(id)}
+        onSelect={(id) => {
+          setShowPopup(true);
+          setSelectedId(id);
+        }}
         panToFeature={(f) => {
           if (mapRef.current) panToFeature(f, mapRef.current);
         }}

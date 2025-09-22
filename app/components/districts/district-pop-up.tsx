@@ -47,7 +47,7 @@ const DistrictPopUp = React.memo(
         isMounted.current = false;
       };
     }, []);
-
+    console.log("user: ", user);
     const anonymous = !user;
     return (
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3">
