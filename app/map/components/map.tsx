@@ -372,7 +372,7 @@ const MapComponent = React.memo(() => {
 
   if (loading) return <LoadingSpinner />;
   return (
-    <div className="relative flex flex-col md:flex-row w-full p-4">
+    <div className="relative flex">
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         onLoad={onLoad}
@@ -456,19 +456,19 @@ const MapComponent = React.memo(() => {
 
       <DistrictSearch
         features={features}
-        onSelect={(id) => {
+        onSelect={(feature) => {
           setShowPopup(true);
-          setSelectedId(id);
-        }}
-        panToFeature={(f) => {
-          if (mapRef.current) panToFeature(f, mapRef.current);
+          setSelectedId(feature.properties?.sdorgid ?? null);
+          if (mapRef.current) {
+            panToFeature(feature, mapRef.current);
+          }
         }}
       />
-      {mouseLatLng && isAdmin && (
+      {/* {mouseLatLng && isAdmin && (
         <div className="absolute top-3 left-3 bg-black text-white text-xs px-2 py-1 rounded z-50">
           Lat: {mouseLatLng.lat.toFixed(5)}, Lng: {mouseLatLng.lng.toFixed(5)}
         </div>
-      )}
+      )} */}
       {/* <div className="absolute top-12 right-3 bg-black text-white text-sm px-2 py-1 rounded z-50">
         Zoom: {zoomLevel}
         <br />

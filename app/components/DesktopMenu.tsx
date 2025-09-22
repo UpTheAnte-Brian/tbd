@@ -103,25 +103,53 @@ export default function DesktopMenu({
                   )}
                   {(col.items ?? []).map((submenu, i) => (
                     <div className="relative cursor-pointer" key={i}>
-                      <Link
-                        href={submenu.path}
-                        className="flex items-center gap-x-4 group/menubox"
-                      >
-                        <div className="bg-white/5 w-fit p-2 rounded-md group-hover/menubox:bg-white group-hover/menubox:text-gray-900 duration-300">
-                          {submenu.icon && (
-                            <DynamicIcon
-                              name={submenu.icon as IconName}
-                              className="stroke-gray-300 group-hover/menubox:stroke-gray-900"
-                            />
-                          )}
-                        </div>
-                        <div>
-                          <h6 className="font-semibold">{submenu.name}</h6>
-                          <p className="text-sm text-gray-400">
-                            {submenu.desc}
-                          </p>
-                        </div>
-                      </Link>
+                      {String(submenu.method ?? "").toUpperCase() === "POST" ? (
+                        <form
+                          action={submenu.path}
+                          method="post"
+                          className="m-0 p-0"
+                        >
+                          <button
+                            type="submit"
+                            className="flex items-center gap-x-4 group/menubox w-full text-left"
+                          >
+                            <div className="bg-white/5 w-fit p-2 rounded-md group-hover/menubox:bg-white group-hover/menubox:text-gray-900 duration-300">
+                              {submenu.icon && (
+                                <DynamicIcon
+                                  name={submenu.icon as IconName}
+                                  className="stroke-gray-300 group-hover/menubox:stroke-gray-900"
+                                />
+                              )}
+                            </div>
+                            <div>
+                              <h6 className="font-semibold">{submenu.name}</h6>
+                              <p className="text-sm text-gray-400">
+                                {submenu.desc}
+                              </p>
+                            </div>
+                          </button>
+                        </form>
+                      ) : (
+                        <Link
+                          href={submenu.path}
+                          className="flex items-center gap-x-4 group/menubox"
+                        >
+                          <div className="bg-white/5 w-fit p-2 rounded-md group-hover/menubox:bg-white group-hover/menubox:text-gray-900 duration-300">
+                            {submenu.icon && (
+                              <DynamicIcon
+                                name={submenu.icon as IconName}
+                                className="stroke-gray-300 group-hover/menubox:stroke-gray-900"
+                              />
+                            )}
+                          </div>
+                          <div>
+                            <h6 className="font-semibold">{submenu.name}</h6>
+                            <p className="text-sm text-gray-400">
+                              {submenu.desc}
+                            </p>
+                          </div>
+                        </Link>
+                      )}
                     </div>
                   ))}
                 </div>

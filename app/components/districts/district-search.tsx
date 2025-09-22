@@ -5,15 +5,10 @@ import { getLabel } from "@/app/lib/district/utils";
 
 type Props = {
   features: DistrictWithFoundation[];
-  onSelect: (id: string) => void;
-  panToFeature?: (feature: DistrictWithFoundation) => void;
+  onSelect: (feature: DistrictWithFoundation) => void;
 };
 
-export default function DistrictSearch({
-  features,
-  onSelect,
-  panToFeature,
-}: Props) {
+export default function DistrictSearch({ features, onSelect }: Props) {
   const [query, setQuery] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
@@ -35,9 +30,10 @@ export default function DistrictSearch({
   }, [query, features]);
 
   const handleSelect = (s: { id: string; label: string }) => {
-    onSelect(s.id);
     const f = features.find((d) => d.id === s.id);
-    if (f && panToFeature) panToFeature(f);
+    if (f) {
+      onSelect(f);
+    }
     setQuery("");
     setHighlightedIndex(-1);
   };

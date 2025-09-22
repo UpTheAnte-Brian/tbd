@@ -58,12 +58,51 @@ export default function MobMenu({ Menus }: { Menus: MenuObj[] }) {
                     variants={subMenuDrawer}
                     className="pl-4 space-y-1" // small indent + spacing
                   >
-                    {subMenu.map(({ name, icon, path }) => (
+                    {subMenu.map(({ name, icon, path, method, desc }) => (
                       <li
                         key={name}
-                        className="p-2 flex items-center hover:bg-white/5 rounded-md gap-x-2 cursor-pointer"
+                        className="p-2 flex items-center hover:bg-white/5 rounded-md cursor-pointer"
                       >
-                        <Link
+                        {String(method ?? "").toUpperCase() === "POST" ? (
+                          <form action={path} method="post" className="m-0 p-0">
+                            <button
+                              type="submit"
+                              className="flex items-center gap-x-4 group/menubox w-full text-left"
+                            >
+                              <div className="bg-white/5 w-fit p-2 rounded-md group-hover/menubox:bg-white group-hover/menubox:text-gray-900 duration-300">
+                                {icon && (
+                                  <DynamicIcon
+                                    name={icon as IconName}
+                                    className="stroke-gray-300 group-hover/menubox:stroke-gray-900"
+                                  />
+                                )}
+                              </div>
+                              <div>
+                                <h6 className="font-semibold">{name}</h6>
+                                <p className="text-sm text-gray-400">{desc}</p>
+                              </div>
+                            </button>
+                          </form>
+                        ) : (
+                          <Link
+                            href={path}
+                            className="flex items-center gap-x-4 group/menubox"
+                          >
+                            <div className="bg-white/5 w-fit p-2 rounded-md group-hover/menubox:bg-white group-hover/menubox:text-gray-900 duration-300">
+                              {icon && (
+                                <DynamicIcon
+                                  name={icon as IconName}
+                                  className="stroke-gray-300 group-hover/menubox:stroke-gray-900"
+                                />
+                              )}
+                            </div>
+                            <div>
+                              <h6 className="font-semibold">{name}</h6>
+                              <p className="text-sm text-gray-400">{desc}</p>
+                            </div>
+                          </Link>
+                        )}
+                        {/* <Link
                           href={path}
                           onClick={toggleDrawer} // closes drawer on click
                           className="flex items-center gap-x-2 w-full"
@@ -76,7 +115,7 @@ export default function MobMenu({ Menus }: { Menus: MenuObj[] }) {
                           </span>
 
                           {name}
-                        </Link>
+                        </Link> */}
                       </li>
                     ))}
                   </motion.ul>
