@@ -50,8 +50,8 @@ const MapComponent = React.memo(() => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Remove hovered state, use refs for tooltip content and id
   const hoveredFeaturePropsRef = useRef<DistrictProperties | null>(null);
-  const [mouseLatLng, setMouseLatLng] =
-    useState<google.maps.LatLngLiteral | null>(null);
+  // const [mouseLatLng, setMouseLatLng] =
+  //   useState<google.maps.LatLngLiteral | null>(null);
   const hoveredIdRef = useRef<string | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(6);
   const [showPopup, setShowPopup] = useState<boolean>(true);
@@ -61,7 +61,7 @@ const MapComponent = React.memo(() => {
     y: 0,
     visible: false,
   });
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  // const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const { user, loading, error } = useUser();
   const supabase = getSupabaseClient();
   const labelMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>(
@@ -70,13 +70,13 @@ const MapComponent = React.memo(() => {
   if (error) {
     console.warn("no user session");
   }
-  useEffect(() => {
-    if (user?.role === "admin") {
-      setIsAdmin(true);
-    } else {
-      setIsAdmin(false);
-    }
-  }, [user]);
+  // useEffect(() => {
+  //   if (user?.role === "admin") {
+  //     setIsAdmin(true);
+  //   } else {
+  //     setIsAdmin(false);
+  //   }
+  // }, [user]);
 
   // handleLogoUpload implementation
   const handleLogoUpload = async (file: File, sdorgid: string) => {
@@ -291,11 +291,11 @@ const MapComponent = React.memo(() => {
           tooltipVisible = false;
           updateTooltipPosition();
         });
-        map.addListener("mousemove", (e: google.maps.MapMouseEvent) => {
-          if (e.latLng) {
-            setMouseLatLng(e.latLng.toJSON());
-          }
-        });
+        // map.addListener("mousemove", (e: google.maps.MapMouseEvent) => {
+        //   if (e.latLng) {
+        //     setMouseLatLng(e.latLng.toJSON());
+        //   }
+        // });
       });
   };
   useEffect(() => {
