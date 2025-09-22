@@ -4,11 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getBoundsFromGeoJSON } from "../../lib/getBoundsFromGeoJSON";
 import React from "react";
-import {
-  DistrictProperties,
-  DistrictWithFoundation,
-  Profile,
-} from "../../lib/types";
+import { DistrictProperties, DistrictWithFoundation } from "../../lib/types";
 import { getSupabaseClient } from "../../../utils/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import DistrictPopUp from "@/app/components/districts/district-pop-up";
@@ -65,7 +61,7 @@ const MapComponent = React.memo(() => {
     visible: false,
   });
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const { user, loading } = useUser();
+  const { user } = useUser();
   const supabase = getSupabaseClient();
   const labelMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>(
     []
