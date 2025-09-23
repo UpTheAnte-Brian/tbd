@@ -3,15 +3,21 @@ import { createClient } from "../../../utils/supabase/server";
 
 export async function GET() {
     const supabase = await createClient();
-    const { data: foundations, error: foundationError } = await supabase
-        .from("foundations")
-        .select("*");
 
-    const { data: districts, error: districtError } = await supabase
-        .from("districts")
-        .select(
-            "id, sdorgid, shortname, properties, geometry, centroid_lat, centroid_lng, district_metadata(logo_path)",
-        );
+    console.time("sb fetch districts and foundations");
+    const [foundationRes, districtRes] = await Promise.all([
+        supabase.from("foundations").select("*"),
+        supabase
+            .from("districts")
+            .select(
+                "id, sdorgid, shortname, properties, geometry_simplified, centroid_lat, centroid_lng, district_metadata(logo_path)",
+            ),
+    ]);
+    console.timeEnd("sb fetch districts and foundations");
+    console.time("combine districts and foundations");
+
+    const { data: foundations, error: foundationError } = foundationRes;
+    const { data: districts, error: districtError } = districtRes;
     // const supabaseAdmin = createClient(
     //   process.env.NEXT_PUBLIC_SUPABASE_URL!,
     //   process.env.SUPABASE_SERVICE_ROLE_KEY! // needs admin privileges
@@ -53,11 +59,12 @@ export async function GET() {
                 centroid_lng: row.centroid_lng,
                 ...props,
             },
-            geometry: row.geometry,
+            geometry: row.geometry_simplified,
             foundation: row.foundation,
             metadata: row.district_metadata,
         };
     });
+    console.timeEnd("combine districts and foundations");
 
     return Response.json({
         type: "FeatureCollection",

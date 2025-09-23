@@ -22,7 +22,7 @@ export async function GET(
     const { data: district, error: districtError } = await supabase
         .from("districts")
         .select(
-            "id, sdorgid, shortname, properties, geometry, centroid_lat, centroid_lng, district_metadata(logo_path)",
+            "id, sdorgid, shortname, properties, geometry_simplified, centroid_lat, centroid_lng, district_metadata(logo_path)",
         )
         .eq("sdorgid", id)
         .maybeSingle();
@@ -60,7 +60,7 @@ export async function GET(
             centroid_lng: district.centroid_lng,
             ...props,
         },
-        geometry: district.geometry,
+        geometry: district.geometry_simplified,
         // foundation: district.foundation,
         metadata: district.district_metadata,
     };

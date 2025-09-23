@@ -6,22 +6,27 @@ import DesktopMenu from "@/app/components/DesktopMenu";
 import { Menu } from "@/app/lib/types";
 import SignInButton from "@/app/components/SignInButton";
 import MobMenu from "@/app/components/MobMenu";
-import { Button } from "@/app/ui/button";
 import { getCurrentUser } from "@/app/data/users";
 
 export default async function NavBarComponent() {
   const testMenus = await Menus();
   const user = await getCurrentUser();
   const isLoggedIn = !!user;
-  const filteredMenus = testMenus.filter((menu: Menu) => {
-    if (
-      !menu.authRequired ||
-      (isLoggedIn && (!menu.roles || menu.roles?.includes(user?.role || "")))
-    ) {
-      return true;
-    }
-    return false;
-  });
+  const filteredMenus = testMenus
+    .filter((menu: Menu) => {
+      // Keep menu if not authRequired or user has role
+      return (
+        !menu.authRequired ||
+        (isLoggedIn && (!menu.roles || menu.roles.includes(user?.role || "")))
+      );
+    })
+    .map((menu: Menu) => {
+      // Replace "Account" menu label with username if available
+      if (menu.name === "Account" && user?.username) {
+        return { ...menu, name: user.username };
+      }
+      return menu;
+    });
 
   return (
     <nav className="w-full bg-gray-900 text-white">
@@ -47,7 +52,7 @@ export default async function NavBarComponent() {
         {/* Right: Sign out + Mobile Toggle */}
         <div className="flex-shrink-0 flex items-center gap-x-3 ml-auto">
           <div className="flex items-center gap-x-3 ml-auto">
-            {user && (
+            {/* {user && (
               <p className="text-sky-600 md:flex items-center hidden">
                 {user.username
                   ? `${user.username} (${user.role})`
@@ -58,7 +63,7 @@ export default async function NavBarComponent() {
               <form action="/auth/signout" method="post">
                 <Button type="submit">Sign Out</Button>
               </form>
-            )}
+            )} */}
             {!user && <SignInButton />}
             <div className="lg:hidden">
               <MobMenu Menus={filteredMenus} />

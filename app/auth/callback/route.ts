@@ -5,7 +5,6 @@ import { createClient } from "../../../utils/supabase/server";
 // import { ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
 
 export async function GET(request: Request) {
-  console.log("inside callback route");
   const isProd = process.env.NODE_ENV === "production";
   const host = request.headers.get("x-forwarded-host") ||
     request.headers.get("host");

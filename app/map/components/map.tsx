@@ -177,11 +177,14 @@ const MapComponent = React.memo(() => {
     labelMarkersRef.current = newMarkers;
   }
   const onLoad = async (map: google.maps.Map) => {
+    console.time("onload");
     mapRef.current = map;
 
+    console.time("districtsFetch");
     await fetch("/api/districts")
       .then((res) => res.json())
       .then(async (geojson: { features: DistrictWithFoundation[] }) => {
+        console.timeEnd("districtsFetch");
         map.data.addGeoJson(geojson);
         map.data.setStyle({
           visible: true,
@@ -296,6 +299,8 @@ const MapComponent = React.memo(() => {
         //     setMouseLatLng(e.latLng.toJSON());
         //   }
         // });
+
+        console.timeEnd("onload");
       });
   };
   useEffect(() => {
