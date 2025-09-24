@@ -97,6 +97,11 @@ async function Menus() {
       path: "/receipts",
       authRequired: true,
     },
+    {
+      name: "Donate",
+      path: "/donate",
+      authRequired: false,
+    },
   ];
 
   return res;

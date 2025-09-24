@@ -103,15 +103,25 @@ export default function DesktopMenu({
                   )}
                   {(col.items ?? []).map((submenu, i) => (
                     <div className="relative cursor-pointer" key={i}>
+                      {/* <instructions>
+- In `app/components/DesktopMenu.tsx`, find the block where `String(submenu.method ?? "").toUpperCase() === "POST"` is handled.
+- Inside that block, replace the `<form>` and `<button>` structure with a `<form>` wrapping a `<Link>`-style flex container, so styling matches the non-POST case.
+- Specifically:
+  - Remove the `button` element entirely.
+  - Apply the same classes from the `<Link>` in the non-POST case (`flex items-center gap-x-4 group/menubox`).
+  - Preserve the `form` tag with `action={submenu.path}` and `method="post"`.
+  - Inside the `form`, add a `button` but make it `className="flex items-center gap-x-4 group/menubox w-full text-left"` and wrap the same icon/text markup so it visually aligns with the non-POST links.
+</instructions> */}
+
                       {String(submenu.method ?? "").toUpperCase() === "POST" ? (
                         <form
                           action={submenu.path}
                           method="post"
                           className="m-0 p-0"
                         >
-                          <button
-                            type="submit"
-                            className="flex items-center gap-x-4 group/menubox w-full text-left"
+                          <div
+                            // type="submit"
+                            className="flex items-center gap-x-4 group/menubox"
                           >
                             <div className="bg-white/5 w-fit p-2 rounded-md group-hover/menubox:bg-white group-hover/menubox:text-gray-900 duration-300">
                               {submenu.icon && (
@@ -127,7 +137,7 @@ export default function DesktopMenu({
                                 {submenu.desc}
                               </p>
                             </div>
-                          </button>
+                          </div>
                         </form>
                       ) : (
                         <Link
