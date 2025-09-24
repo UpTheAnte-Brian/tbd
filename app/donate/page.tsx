@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import DistrictMultiSelectSearch from "../components/districts/district-multi-select-search";
 import { DistrictWithFoundation } from "@/app/lib/types";
-// import { DistrictWithFoundation } from "@/app/lib/types"; // Uncomment if types needed
+import Canvas from "react-canvas-confetti/dist/presets/snow";
 
 const presetDonationAmounts = [10, 25, 50, 100];
 const subscriptionOptions = [
@@ -62,6 +62,18 @@ export default function DonatePage() {
 
   return (
     <div className="max-w-xl mx-auto mt-12 p-6 bg-white rounded shadow">
+      <Canvas
+        autorun={{ speed: 10 }}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          zIndex: 0,
+          pointerEvents: "none",
+        }}
+      />
       <h1 className="text-3xl font-bold mb-2">Donate</h1>
       <p className="mb-6 text-gray-700">
         Support your favorite districts and help us make a difference!
