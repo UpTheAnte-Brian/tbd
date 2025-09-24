@@ -35,73 +35,69 @@ export default function DistrictMultiSelectSearch({
   }, [query, features]);
 
   const toggleSelect = (s: { id: string; label: string }) => {
-    console.log("selectedIds: ", selectedIds);
-    console.log("id: ", s.label);
     if (selectedIds.includes(s.id)) {
       onChange(selectedIds.filter((id) => id !== s.id));
     } else {
       onChange([...selectedIds, s.id]);
     }
-    setQuery("");
+    // setQuery("");
     setHighlightedIndex(-1);
   };
 
   return (
-    <div className="absolute bottom-0 w-4/5 p-4 z-50">
-      <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-2">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search districts…"
-          className="w-full rounded border px-3 py-2 outline-none"
-          type="text"
-          onKeyDown={(e) => {
-            if (e.key === "ArrowDown") {
-              e.preventDefault();
-              setHighlightedIndex((prev) =>
-                Math.min(prev + 1, suggestions.length - 1)
-              );
-            } else if (e.key === "ArrowUp") {
-              e.preventDefault();
-              setHighlightedIndex((prev) => Math.max(prev - 1, 0));
-            } else if (e.key === "Enter") {
-              e.preventDefault();
-              if (
-                highlightedIndex >= 0 &&
-                highlightedIndex < suggestions.length
-              ) {
-                toggleSelect(suggestions[highlightedIndex]);
-              }
+    <div className="flex-grow bg-white/95 backdrop-blur rounded-lg shadow-lg p-2">
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search districts…"
+        className="w-full rounded border px-3 py-2 outline-none"
+        type="text"
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setHighlightedIndex((prev) =>
+              Math.min(prev + 1, suggestions.length - 1)
+            );
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+          } else if (e.key === "Enter") {
+            e.preventDefault();
+            if (
+              highlightedIndex >= 0 &&
+              highlightedIndex < suggestions.length
+            ) {
+              toggleSelect(suggestions[highlightedIndex]);
             }
-          }}
-        />
-        {query && suggestions.length > 0 && (
-          <ul className="mt-2 max-h-60 overflow-y-auto divide-y text-left">
-            {suggestions.map((s, i) => (
-              <li
-                key={s.id}
-                className="flex px-3 py-2 text-black hover:bg-gray-100 justify-start cursor-pointer"
+          }
+        }}
+      />
+      {query && suggestions.length > 0 && (
+        <ul className="mt-2 max-h-60 overflow-y-auto divide-y text-left">
+          {suggestions.map((s, i) => (
+            <li
+              key={s.id}
+              className="flex justify-start px-3 py-2 text-black hover:bg-gray-100 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={selectedIds.includes(s.id)}
+                onClick={(e) => e.stopPropagation()}
+                onChange={() => toggleSelect(s)}
+                className="flex-none mr-2 w-2"
+              />
+              <span
+                className={`text-black cursor-pointer flex-grow ${
+                  i === highlightedIndex ? "bg-gray-200" : ""
+                }`}
+                onClick={() => toggleSelect(s)}
               >
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(s.id)}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={() => toggleSelect(s)}
-                  className="flex-1 mr-2 w-2"
-                />
-                <span
-                  className={` text-black cursor-pointer ${
-                    i === highlightedIndex ? "bg-gray-200" : ""
-                  }`}
-                  onClick={() => toggleSelect(s)}
-                >
-                  {s.label}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+                {s.label}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

@@ -67,7 +67,7 @@ export default function MobMenu({ Menus }: { Menus: MenuObj[] }) {
                           <form action={path} method="post" className="m-0 p-0">
                             <button
                               type="submit"
-                              className="flex items-center gap-x-4 group/menubox w-full text-left"
+                              className="flex items-center gap-x-4 group/menubox bg-transparent border-none p-0 font-inherit text-inherit cursor-pointer appearance-none"
                             >
                               <div className="bg-white/5 w-fit p-2 rounded-md group-hover/menubox:bg-white group-hover/menubox:text-gray-900 duration-300">
                                 {icon && (

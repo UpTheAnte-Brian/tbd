@@ -119,9 +119,9 @@ export default function DesktopMenu({
                           method="post"
                           className="m-0 p-0"
                         >
-                          <div
-                            // type="submit"
-                            className="flex items-center gap-x-4 group/menubox"
+                          <button
+                            type="submit"
+                            className="flex items-center gap-x-4 group/menubox bg-transparent border-none p-0 font-inherit text-inherit cursor-pointer appearance-none"
                           >
                             <div className="bg-white/5 w-fit p-2 rounded-md group-hover/menubox:bg-white group-hover/menubox:text-gray-900 duration-300">
                               {submenu.icon && (
@@ -137,7 +137,7 @@ export default function DesktopMenu({
                                 {submenu.desc}
                               </p>
                             </div>
-                          </div>
+                          </button>
                         </form>
                       ) : (
                         <Link
