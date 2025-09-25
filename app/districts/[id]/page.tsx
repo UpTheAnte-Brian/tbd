@@ -1,23 +1,34 @@
+"use client";
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
-import { getDistrictDTO } from "@/app/data/districts-dto";
-import { DistrictWithFoundation, Profile } from "@/app/lib/types";
 import DistrictSideBar from "@/app/components/ui/district-sidebar";
 import { MonthlyDonateButton } from "@/app/components/stripe/RecurringDonationButton";
 import DistrictDonationsSummary from "@/app/components/districts/DistrictDonationsSummary";
 import { DistrictDonateButton } from "@/app/components/stripe/DistrictDonationButton";
-import { getCurrentUser } from "@/app/data/users";
+import DistrictMap from "@/app/components/districts/DistrictMap";
+import DistrictSvgMap from "@/app/components/districts/DistrictFloatingSvg";
+import { useUser } from "@/app/hooks/useUser";
+import React from "react";
+import { useDistrict } from "@/app/hooks/useDistrict";
+import LoadingSpinner from "@/app/components/loading-spinner";
+import { useParams } from "next/navigation";
 
-export default async function DistrictPage(props: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await props.params;
-  const district: DistrictWithFoundation = await getDistrictDTO(id);
-  const user: Profile | null = await getCurrentUser();
-  let anonymousDonor = true;
-  if (user) {
-    anonymousDonor = false;
+export default function DistrictPage() {
+  const params = useParams();
+  const { id } = params;
+  const { user, loading, error: userError } = useUser();
+  console.log("districtId: ", id);
+  const {
+    district,
+    loading: districtLoading,
+    error: districtError,
+  } = useDistrict(id as string);
+
+  if (userError) {
+    console.warn("no user session");
   }
-  if (!district) return <p>No district found</p>;
+  const anonymousDonor = !user;
+  if (loading || districtLoading) return <LoadingSpinner />;
+  if (!district || districtError) return <p>No district found</p>;
 
   return (
     <main className="p-4">
@@ -25,8 +36,8 @@ export default async function DistrictPage(props: {
         breadcrumbs={[
           { label: "Districts", href: "/districts" },
           {
-            label: id,
-            href: `/districts/${id}`,
+            label: district.sdorgid,
+            href: `/districts/${district.sdorgid}`,
             active: true,
           },
         ]}
@@ -57,7 +68,15 @@ export default async function DistrictPage(props: {
             <li>Number of AP courses offered</li>
             <li>State test proficiency ratings</li>
           </ul>
+          <p>
+            -Establish donation goals and have a visual indicator of the status.
+            e.g. Coins filling a vase.{" "}
+          </p>
+        </div>
 
+        {/* Right sidebar: 1/4 width, sticky */}
+        <div className="w-1/4 sticky top-4 self-start">
+          <DistrictSideBar district={district} />
           <DistrictDonateButton
             districtId={district.id}
             anonymous={anonymousDonor}
@@ -65,12 +84,14 @@ export default async function DistrictPage(props: {
           <MonthlyDonateButton></MonthlyDonateButton>
           <DistrictDonationsSummary districtId={district.id} />
         </div>
-
-        {/* Right sidebar: 1/4 width, sticky */}
-        <div className="w-1/4 sticky top-4 self-start">
-          <DistrictSideBar district={district} />
-        </div>
       </div>
+
+      {district && (
+        <>
+          <DistrictMap d={district} />
+          <DistrictSvgMap d={district} />
+        </>
+      )}
     </main>
   );
 }

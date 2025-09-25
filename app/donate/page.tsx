@@ -74,7 +74,7 @@ export default function DonatePage() {
           pointerEvents: "none",
         }}
       />
-      <h1 className="text-3xl font-bold mb-2">Donate</h1>
+      <h1 className="text-3xl font-bold mb-2 text-gray-700">Donate</h1>
       <p className="mb-6 text-gray-700">
         Support your favorite districts and help us make a difference!
       </p>
@@ -83,6 +83,21 @@ export default function DonatePage() {
         <h2 className="text-sm font-semibold text-gray-700 mb-2">
           Select District(s)
         </h2>
+        {/* <AssignDistrictsModal
+          assignToId={assignToId!}
+          handleSaveAssignments={() => {
+            setUsers((localUsers) => {
+              // localUsers is not defined here; we must pass it from modal
+              // So instead, update handleSaveAssignments to accept localUsers
+              return localUsers;
+            });
+            handleSaveAssignments();
+          }}
+          users={users}
+          features={features}
+          setUsers={setUsers}
+          onClose={() => setAssignToId(null)}
+        /> */}
         <DistrictMultiSelectSearch
           features={districts}
           selectedIds={selectedDistrictIds}

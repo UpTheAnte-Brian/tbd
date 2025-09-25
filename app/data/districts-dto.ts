@@ -7,7 +7,7 @@ export async function getDistrictDTO(id: string) {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });
-  const foundation = await fetch(`${baseUrl}/api/foundations/${id}`, {
+  const foundationRes = await fetch(`${baseUrl}/api/foundations/${id}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });
@@ -20,10 +20,16 @@ export async function getDistrictDTO(id: string) {
 
   const json = await district.json();
 
+  let foundation;
+  if (foundationRes.ok) {
+    foundation = await foundationRes.json();
+  } else {
+    foundation = null;
+  }
+
   const enriched = {
     ...json,
-    foundation: foundation ??
-      null,
+    foundation: foundation,
   };
   return enriched;
   // only return the data relevant for this query and not everything
