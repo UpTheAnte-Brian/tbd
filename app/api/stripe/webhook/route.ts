@@ -75,21 +75,45 @@ export async function POST(req: Request) {
         // --------------------------
         if (event.type === "checkout.session.completed") {
             const session = event.data.object as Stripe.Checkout.Session;
-            const districtId = session.metadata?.district_id || null;
-            const userId = session.metadata?.user_id || null;
+            const districtId = session.metadata?.district_id ?? null;
+            const userId = session.metadata?.user_id ?? null;
+            const interval = session.metadata?.interval ?? null;
             const email = await getEmail(session);
-            console.log("checkout session:", session);
+
             await upsertDonation({
                 stripe_session_id: session.id,
                 invoice_id: session.invoice as string,
                 amount: session.amount_total || 0,
                 email,
                 type: districtId ? "district" : "platform",
-                district_id: districtId,
-                user_id: userId,
-                subscription_id: session.subscription as string | null,
+                ...(districtId && { district_id: districtId }),
+                ...(userId && { user_id: userId }),
+                ...(interval &&
+                    {
+                        subscription_id: session.subscription as
+                            | string
+                            | null,
+                    }),
                 receipt_url: session.invoice as string,
             });
+
+            if (session.mode === "subscription" && session.subscription) {
+                const payload = {
+                    stripe_subscription_id: session.subscription as string,
+                    user_id: userId ?? undefined,
+                    email,
+                    amount: session.amount_total ?? 0,
+                    type: districtId ? "district" : "platform",
+                    status: "active",
+                    created_at: new Date().toISOString(),
+                    ...(districtId && { district_id: districtId }),
+                    ...(interval && { interval }),
+                };
+
+                await supabase.from("subscriptions").upsert(payload, {
+                    onConflict: "stripe_subscription_id",
+                });
+            }
         }
 
         // --------------------------
@@ -130,7 +154,7 @@ export async function POST(req: Request) {
                 const { data: subscriptionData } = await supabase
                     .from("subscriptions")
                     .select("district_id, user_id")
-                    .eq("subscription_id", subscriptionId)
+                    .eq("stripe_subscription_id", subscriptionId)
                     .single();
 
                 const districtId = subscriptionData?.district_id ?? null;
@@ -141,8 +165,8 @@ export async function POST(req: Request) {
                     amount: invoice.amount_paid,
                     email,
                     type: districtId ? "district" : "platform",
-                    district_id: districtId,
-                    user_id: userId,
+                    ...(districtId && { district_id: districtId }),
+                    ...(userId && { user_id: userId }),
                     subscription_id: subscriptionId,
                     receipt_url: receiptUrl ?? null,
                 });
@@ -175,7 +199,7 @@ export async function POST(req: Request) {
             await supabase.from("subscriptions").update({
                 status: "canceled",
                 canceled_at: new Date().toISOString(),
-            }).eq("subscription_id", subscription.id);
+            }).eq("stripe_subscription_id", subscription.id);
         }
 
         return NextResponse.json({ received: true });

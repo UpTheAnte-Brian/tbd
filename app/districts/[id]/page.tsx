@@ -81,7 +81,7 @@ export default function DistrictPage() {
             districtId={district.id}
             anonymous={anonymousDonor}
           ></DistrictDonateButton>
-          <MonthlyDonateButton></MonthlyDonateButton>
+          <MonthlyDonateButton districtId={district.id}></MonthlyDonateButton>
           <DistrictDonationsSummary districtId={district.id} />
         </div>
       </div>

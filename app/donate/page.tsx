@@ -1,24 +1,28 @@
-// app/donate/page.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useState, useEffect } from "react";
+import { loadStripe } from "@stripe/stripe-js";
 import DistrictMultiSelectSearch from "../components/districts/district-multi-select-search";
 import { DistrictWithFoundation } from "@/app/lib/types";
 import Canvas from "react-canvas-confetti/dist/presets/snow";
+import { useUser } from "@/app/hooks/useUser";
 
 const presetDonationAmounts = [10, 25, 50, 100];
 const subscriptionOptions = [
-  { value: "monthly", label: "Monthly" },
-  { value: "yearly", label: "Yearly" },
-  { value: "custom", label: "Custom" },
+  { value: "none", label: "None" },
+  { value: "month", label: "Monthly" },
+  { value: "year", label: "Yearly" },
 ];
 
 export default function DonatePage() {
   const [selectedDistrictIds, setSelectedDistrictIds] = useState<string[]>([]);
   const [donationAmount, setDonationAmount] = useState<number | "">("");
-  const [subscriptionType, setSubscriptionType] = useState("monthly");
+  const [subscriptionType, setSubscriptionType] = useState("none");
   const [districts, setDistricts] = useState<DistrictWithFoundation[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useUser();
 
+  const anonymous = !user;
   useEffect(() => {
     async function fetchDistricts() {
       try {
@@ -43,13 +47,49 @@ export default function DonatePage() {
     }
   };
 
-  // Placeholder for Stripe integration
-  const handleDonate = () => {
-    alert(
-      `Donate $${donationAmount} (${subscriptionType}) to districts: ${selectedDistrictIds.join(
-        ", "
-      )}`
-    );
+  // Stripe integration
+  const stripePromise = loadStripe(
+    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+  );
+
+  const handleDonate = async () => {
+    const isRecurring =
+      subscriptionType === "month" || subscriptionType === "year";
+    const apiUrl = isRecurring
+      ? "/api/stripe/create-subscription-session"
+      : "/api/stripe/create-checkout-session";
+    const body: any = {
+      amount: donationAmount,
+      anonymous,
+      ...(selectedDistrictIds.length > 0 && {
+        districtId: selectedDistrictIds[0],
+      }),
+      ...(subscriptionType !== "none" && {
+        interval: subscriptionType,
+      }),
+    };
+    // For one-time donations, interval may not be needed, but API can ignore it.
+    try {
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const { id } = await res.json();
+      const stripe = await stripePromise;
+      if (!stripe) {
+        throw new Error("Stripe failed to initialize");
+      }
+      await stripe.redirectToCheckout({ sessionId: id });
+    } catch (error) {
+      console.error("Error during donation:", error);
+      // Optionally show error to user
+    }
   };
 
   if (loading) {
@@ -176,11 +216,7 @@ export default function DonatePage() {
       <button
         className="w-full mt-4 py-3 bg-blue-600 text-white rounded font-bold text-lg hover:bg-blue-700 transition"
         onClick={handleDonate}
-        disabled={
-          !donationAmount ||
-          Number(donationAmount) <= 0 ||
-          selectedDistrictIds.length === 0
-        }
+        disabled={!donationAmount || Number(donationAmount) <= 0}
       >
         Donate
       </button>

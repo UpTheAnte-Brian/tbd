@@ -12,12 +12,11 @@ export function DistrictDonateButton({
   districtId: string;
   anonymous?: boolean;
 }) {
-  console.log("anonymous flag: ", anonymous);
   const handleClick = async () => {
     const res = await fetch("/api/stripe/create-district-checkout-session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ districtId, anonymous }),
+      body: JSON.stringify({ districtId, anonymous, amount: 3500 }),
     });
     const { id } = await res.json();
     const stripe = await stripePromise;

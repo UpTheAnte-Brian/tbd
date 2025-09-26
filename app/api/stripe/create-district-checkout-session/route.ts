@@ -11,9 +11,11 @@ export async function POST(req: Request) {
     // Expect JSON body with { districtId, anonymous? }
     let districtId: string | undefined;
     let anonymous: boolean | undefined;
+    let amount: number;
     try {
         const body = await req.json();
         districtId = body.districtId;
+        amount = body.amount;
         anonymous = body.anonymous;
     } catch {
         return NextResponse.json({ error: "Invalid request body" }, {
@@ -30,9 +32,10 @@ export async function POST(req: Request) {
             status: 400,
         });
     }
-    const metadata: Record<string, string> = {
-        district_id: districtId,
-    };
+    const metadata: Record<string, string> = {};
+    if (districtId !== undefined) {
+        metadata.district_id = districtId;
+    }
     if (anonymous !== undefined) {
         metadata.anonymous = anonymous.toString();
     }
@@ -63,7 +66,7 @@ export async function POST(req: Request) {
                             ? "District Donation (Anonymous)"
                             : "District Donation",
                     },
-                    unit_amount: 2500, // $25.00
+                    unit_amount: amount * 100,
                 },
                 quantity: 1,
             },
