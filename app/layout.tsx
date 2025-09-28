@@ -2,16 +2,7 @@
 
 import "@/app/ui/style.css";
 import { inter } from "./ui/fonts";
-// import Footer from "./ui/dashboard/footer";
 import { StyledEngineProvider } from "@mui/material";
-// import Menus from "./lib/menus";
-// import { Menu } from "./lib/definitions";
-// import DesktopMenu from "./components/DesktopMenu";
-// import MobMenu from "./components/MobMenu";
-// import AUNLogo from "./components/AUNLogo";
-// import SignInButton from "./components/SignInButton";
-// import { createClient } from "../utils/supabase/server";
-// import { Button } from "./ui/button";
 import NavBarComponent from "@/app/components/nav/NavBar";
 
 // This sets the title on your browser tab.
@@ -26,24 +17,9 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // console.log("Menus", Menus);
-  // const testMenus = await Menus();
-  // const supabase = await createClient();
-  // const { data: session } = await supabase.auth.getUser();
-  // console.log("testMenus", testMenus);
   return (
     <html lang="en">
-      <head>
-        {/* <script
-          src="https://apis.google.com/js/platform.js"
-          async
-          defer
-        ></script> */}
-        {/* <meta
-          name="google-signin-client_id"
-          content={process.env.AUTH_GOOGLE_ID}
-        ></meta> */}
-      </head>
+      <head></head>
       <body
         className={`${inter.className} antialiased flex flex-col min-h-screen overflow-x-hidden`}
       >

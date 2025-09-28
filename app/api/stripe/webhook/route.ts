@@ -50,7 +50,7 @@ export async function POST(req: Request) {
             subscription_id?: string | null;
             receipt_url?: string | null;
         }) => {
-            console.log("dataa: ", data);
+            console.log("data: ", data);
             if (data.stripe_session_id) {
                 // Only include stripe_session_id if it exists
                 await supabase.from("donations").upsert(
@@ -80,6 +80,10 @@ export async function POST(req: Request) {
             const interval = session.metadata?.interval ?? null;
             const email = await getEmail(session);
 
+            // TODO This receiptUrl isn't quite right
+            const finalReceiptUrl =
+                `https://dashboard.stripe.com/invoices/${session.invoice}`;
+
             await upsertDonation({
                 stripe_session_id: session.id,
                 invoice_id: session.invoice as string,
@@ -94,9 +98,9 @@ export async function POST(req: Request) {
                             | string
                             | null,
                     }),
-                receipt_url: session.invoice as string,
+                receipt_url: finalReceiptUrl,
             });
-
+            // console.log("receipt ", session);
             if (session.mode === "subscription" && session.subscription) {
                 const payload = {
                     stripe_subscription_id: session.subscription as string,
@@ -133,13 +137,18 @@ export async function POST(req: Request) {
                 : null;
 
             let receiptUrl: string | undefined;
+
             if (invoice.hosted_invoice_url) {
                 receiptUrl = invoice.hosted_invoice_url;
             } else {
                 receiptUrl = await getReceiptUrl(invoice);
             }
 
-            console.log("invoice.payment_succeeded", invoice);
+            // Fallback to invoice ID if no URL could be retrieved
+            const finalReceiptUrl = receiptUrl ??
+                `https://dashboard.stripe.com/invoices/${invoice.id}`;
+
+            // console.log("invoice.payment_succeeded", invoice);
             if (!subscriptionId) {
                 // One-time invoice
                 await upsertDonation({
@@ -147,7 +156,7 @@ export async function POST(req: Request) {
                     amount: invoice.amount_paid,
                     email,
                     type: "platform",
-                    receipt_url: receiptUrl ?? invoice.id,
+                    receipt_url: finalReceiptUrl,
                 });
             } else {
                 // Subscription payment
@@ -168,7 +177,7 @@ export async function POST(req: Request) {
                     ...(districtId && { district_id: districtId }),
                     ...(userId && { user_id: userId }),
                     subscription_id: subscriptionId,
-                    receipt_url: receiptUrl ?? null,
+                    receipt_url: finalReceiptUrl,
                 });
             }
         }

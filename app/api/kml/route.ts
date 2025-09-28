@@ -66,7 +66,6 @@ export async function GET() {
         });
     }
     const kmzBuffer = await res.arrayBuffer();
-    // console.log("time for fetch: ", (new Date() - now))
     /* 2️⃣ unzip → .kml */
     const zip = await JSZip.loadAsync(kmzBuffer);
     const kmlText = await zip.file(/\.kml$/i)?.[0]?.async("string");

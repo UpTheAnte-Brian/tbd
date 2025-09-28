@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-// import { useState } from "react";
 import { Input } from "../../components/ui/input";
 import { DistrictWithFoundation, Profile } from "../../lib/types";
-// import FoundationEditor from "@/app/ui/districts/foundation-editor";
 import React, { useEffect, useRef, useState } from "react";
 import { DistrictDonateButton } from "@/app/components/stripe/DistrictDonationButton";
 
@@ -47,7 +45,7 @@ const DistrictPopUp = React.memo(
         isMounted.current = false;
       };
     }, []);
-    console.log("user: ", user);
+
     const anonymous = !user;
     return (
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3">

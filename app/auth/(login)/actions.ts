@@ -21,33 +21,17 @@ export const signIn = validatedAction(signInSchema, async (data) => {
   const supabase = await createClient();
   const { email } = data;
 
-  const { data: signInData, error } = await supabase.auth.signInWithOtp({
+  const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
       // set this to false if you do not want the user to be automatically signed up
       shouldCreateUser: true,
     },
   });
-  console.log("signin data: ", signInData);
+
   if (error) {
     return { error: "Invalid credentials. Please try again." };
   }
-  // const { data: userData, error: userDataError } = await supabase
-  //   .from("user_data")
-  //   .select("*")
-  //   .eq("user_id", signInData.user?.id)
-  //   .single();
-  // console.log("userdata: ", userData);
-  // if (userDataError && userDataError.code === "PGRST116") {
-  //   // No user_data entry found, create one
-  //   const { error: insertError } = await supabase
-  //     .from("user_data")
-  //     .insert({ user_id: signInData.user?.id });
-  //   if (insertError) {
-  //     console.error("Error creating user_data entry:", insertError);
-  //     // Consider how you want to handle this error
-  //   }
-  // }
   // If sign-in is successful, redirect to dashboard
   redirect("/");
 });
@@ -62,14 +46,14 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
   const supabase = await createClient();
   const { email } = data;
 
-  const { data: signInData, error } = await supabase.auth.signInWithOtp({
+  const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
       // set this to false if you do not want the user to be automatically signed up
       shouldCreateUser: true,
     },
   });
-  console.log("signin data: ", signInData);
+
   if (error) {
     return { error: "Invalid credentials. Please try again." };
   }
@@ -133,26 +117,6 @@ export const signInWithLoginCode = validatedAction(
       console.error("verifyOtp threw exception:", err);
       throw err;
     }
-
-    // try {
-    //   const { data: existingProfile } = await supabase
-    //     .from("profile")
-    //     .select("*")
-    //     .eq("id", response.data.user.id)
-    //     .maybeSingle();
-
-    //   if (!existingProfile) {
-    //     await supabase.from("profile").insert({
-    //       id: response.data.user.id,
-    //       username: response.data.user.email?.split("@")[0] ??
-    //         response.data.user.id,
-    //     });
-    //   }
-    // } catch (cookieErr) {
-    //   console.error("Error fetching user/session after verifyOtp:", cookieErr);
-    // }
-
-    console.log("About to redirect after successful login");
 
     return { success: "Successfully signed in with login code." };
   },

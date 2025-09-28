@@ -16,7 +16,7 @@ export default function DistrictPage() {
   const params = useParams();
   const { id } = params;
   const { user, loading, error: userError } = useUser();
-  console.log("districtId: ", id);
+
   const {
     district,
     loading: districtLoading,
