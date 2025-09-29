@@ -1,14 +1,5 @@
 "use client";
-import {
-  GoogleMap,
-  Polygon,
-  LoadScriptNext,
-  Libraries,
-} from "@react-google-maps/api";
-const googleApiLibraries = process.env.NEXT_PUBLIC_GOOGLE_LIBRARIES;
-const googleApiLibrariesArray = (
-  googleApiLibraries ? googleApiLibraries.split(",") : []
-) as Libraries;
+import { GoogleMap, Polygon } from "@react-google-maps/api";
 import { useEffect, useRef, useState } from "react";
 import { DistrictWithFoundation } from "@/app/lib/types";
 import { getBoundsFromGeoJSON } from "@/app/lib/getBoundsFromGeoJSON";
@@ -44,34 +35,62 @@ export default function DistrictMap({ d }: { d: DistrictWithFoundation }) {
     const bounds = getBoundsFromGeoJSON(d);
     map.fitBounds(bounds);
   };
+  const worldCoords = [
+    { lat: -85, lng: -180 },
+    { lat: 85, lng: -180 },
+    { lat: 85, lng: 180 },
+    { lat: -85, lng: 180 },
+  ];
 
   return (
-    <LoadScriptNext
-      libraries={googleApiLibrariesArray}
-      googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
+    // <LoadScriptNext
+    //   libraries={googleApiLibrariesArray}
+    //   googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
+    // >
+    <GoogleMap
+      mapContainerStyle={containerStyle}
+      onLoad={onLoad}
+      options={{
+        mapTypeId: "roadmap",
+        disableDefaultUI: true,
+        styles: [
+          {
+            featureType: "all",
+            elementType: "geometry",
+            stylers: [{ visibility: "off" }],
+          },
+          {
+            featureType: "water",
+            elementType: "geometry",
+            stylers: [{ visibility: "on" }, { color: "#e0f7fa" }],
+          },
+        ],
+      }}
     >
-      <GoogleMap
-        mapContainerStyle={containerStyle}
-        onLoad={onLoad}
+      <Polygon
+        paths={[worldCoords, ...paths.map((p) => [...p].reverse())]}
         options={{
-          mapTypeId: "roadmap",
-          disableDefaultUI: true,
-          backgroundColor: "transparent", // makes the base map transparent
+          fillColor: "black",
+          fillOpacity: 0.5,
+          strokeWeight: 0,
+          clickable: false, // mask should not capture clicks
         }}
-      >
-        {paths.map((p, idx) => (
-          <Polygon
-            key={idx}
-            paths={p}
-            options={{
-              fillColor: "#2196F3",
-              fillOpacity: 0.6,
-              strokeColor: "#1976D2",
-              strokeWeight: 2,
-            }}
-          />
-        ))}
-      </GoogleMap>
-    </LoadScriptNext>
+      />
+      {paths.map((p, idx) => (
+        <Polygon
+          key={idx}
+          paths={p}
+          options={{
+            fillOpacity: 0,
+            strokeColor: "#1976D2",
+            strokeWeight: 2,
+            clickable: false,
+          }}
+        />
+      ))}
+    </GoogleMap>
   );
+  {
+    /* </LoadScriptNext> */
+  }
 }

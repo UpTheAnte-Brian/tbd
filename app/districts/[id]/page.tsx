@@ -5,7 +5,7 @@ import { MonthlyDonateButton } from "@/app/components/stripe/RecurringDonationBu
 import DistrictDonationsSummary from "@/app/components/districts/DistrictDonationsSummary";
 import { DistrictDonateButton } from "@/app/components/stripe/DistrictDonationButton";
 import DistrictMap from "@/app/components/districts/DistrictMap";
-import DistrictSvgMap from "@/app/components/districts/DistrictFloatingSvg";
+// import DistrictSvgMap from "@/app/components/districts/DistrictFloatingSvg";
 import { useUser } from "@/app/hooks/useUser";
 import React from "react";
 import { useDistrict } from "@/app/hooks/useDistrict";
@@ -89,7 +89,7 @@ export default function DistrictPage() {
       {district && (
         <>
           <DistrictMap d={district} />
-          <DistrictSvgMap d={district} />
+          {/* <DistrictSvgMap d={district} /> */}
         </>
       )}
     </main>
