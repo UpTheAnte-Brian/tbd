@@ -200,3 +200,13 @@ export interface Receipt {
     subscription_id?: string;
     invoice_id?: string;
 }
+
+export type PlaceDetailsType = {
+    name: string;
+    formatted_address?: string;
+    formatted_phone_number?: string;
+    place_id?: string;
+    website?: string;
+    rating?: number;
+    user_ratings_total?: number;
+};
