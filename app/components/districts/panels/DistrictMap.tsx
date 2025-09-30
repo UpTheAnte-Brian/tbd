@@ -12,29 +12,36 @@ const containerStyle = {
   height: "400px",
 };
 
-export default function DistrictMap({ d }: { d: DistrictWithFoundation }) {
+export default function DistrictMap({
+  district,
+}: {
+  district: DistrictWithFoundation;
+}) {
   const mapRef = useRef<google.maps.Map | null>(null);
   const [paths, setPaths] = useState<google.maps.LatLngLiteral[][]>([]);
   const [selectedPlace, setSelectedPlace] = useState<PlaceDetailsType | null>(
     null
   );
+  // const { user } = useUser();
+
+  // const anonymous = !user;
 
   // Convert GeoJSON coords → LatLngLiterals
   useEffect(() => {
-    if (!d.geometry) return;
-    if (d.geometry.type === "Polygon") {
-      const coords = d.geometry.coordinates[0].map(([lng, lat]) => ({
+    if (!district.geometry) return;
+    if (district.geometry.type === "Polygon") {
+      const coords = district.geometry.coordinates[0].map(([lng, lat]) => ({
         lat,
         lng,
       }));
       setPaths([coords]);
-    } else if (d.geometry.type === "MultiPolygon") {
-      const multi = d.geometry.coordinates.map((poly) =>
+    } else if (district.geometry.type === "MultiPolygon") {
+      const multi = district.geometry.coordinates.map((poly) =>
         poly[0].map(([lng, lat]) => ({ lat, lng }))
       );
       setPaths(multi);
     }
-  }, [d]);
+  }, [district]);
 
   const onLoad = (map: google.maps.Map) => {
     mapRef.current = map;
@@ -63,7 +70,7 @@ export default function DistrictMap({ d }: { d: DistrictWithFoundation }) {
       }
     });
 
-    const bounds = getBoundsFromGeoJSON(d);
+    const bounds = getBoundsFromGeoJSON(district);
     map.fitBounds(bounds);
   };
   const worldCoords = [
@@ -128,6 +135,9 @@ export default function DistrictMap({ d }: { d: DistrictWithFoundation }) {
       <PlaceDetails
         place={selectedPlace ?? placeholderPlace}
         onClose={() => setSelectedPlace(null)}
+        onClaimOwnership={function (): void {
+          throw new Error("Function not implemented.");
+        }}
       />
     </div>
   );

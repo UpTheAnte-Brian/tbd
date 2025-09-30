@@ -1,18 +1,27 @@
-"use server";
+"use client";
 
+import React, { useEffect, useState } from "react";
 import AUNLogo from "@/app/components/AUNLogo";
 import Menus from "@/app/lib/menus";
 import DesktopMenu from "@/app/components/DesktopMenu";
 import { Menu } from "@/app/lib/types";
 import SignInButton from "@/app/components/SignInButton";
 import MobMenu from "@/app/components/MobMenu";
-import { getCurrentUser } from "@/app/data/users";
+import { useUser } from "@/app/hooks/useUser";
 
-export default async function NavBarComponent() {
-  const testMenus = await Menus();
-  const user = await getCurrentUser();
+export default function NavBarComponent() {
+  const [menus, setMenus] = useState<Menu[]>([]);
+  useEffect(() => {
+    async function fetchMenus() {
+      const result = await Menus();
+      setMenus(result);
+    }
+    fetchMenus();
+  }, []);
+
+  const { user } = useUser();
   const isLoggedIn = !!user;
-  const filteredMenus = testMenus
+  const filteredMenus = menus
     .filter((menu: Menu) => {
       // Keep menu if not authRequired or user has role
       return (

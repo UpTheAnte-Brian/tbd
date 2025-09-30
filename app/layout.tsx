@@ -5,6 +5,7 @@ import { inter } from "./ui/fonts";
 import { StyledEngineProvider } from "@mui/material";
 import NavBarComponent from "@/app/components/nav/NavBar";
 import GoogleMapsProvider from "@/app/lib/providers/GoogleMapsProvider";
+import { UserProvider } from "@/app/hooks/useUser";
 
 // This sets the title on your browser tab.
 // export const metadata = {
@@ -33,20 +34,23 @@ export default async function RootLayout({
           <StyledEngineProvider injectFirst>
             <main className="relative">
               {/* Header: Fixed position, ensure content flows below it */}
-              <header className="h-16 text-[15px] fixed top-0 w-full bg-[#18181A] z-[999]">
-                <NavBarComponent></NavBarComponent>
-              </header>
+              <UserProvider>
+                <header className="h-16 text-[15px] fixed top-0 w-full bg-[#18181A] z-[999]">
+                  <NavBarComponent></NavBarComponent>
+                </header>
 
-              {/* Main Content Area: Use padding-top to create space below the fixed header */}
-              <div className="pt-10 min-h-[100dvh]">
-                {/* Added pt- to account for header height */}
-                {children}
-              </div>
+                {/* Main Content Area: Use padding-top to create space below the fixed header */}
+                <div className="pt-10 min-h-[100dvh]">
+                  {/* Added pt- to account for header height */}
 
-              {/* Footer */}
-              {/* <div className="min-h-10vh bg-[#18181A]">
+                  {children}
+                </div>
+
+                {/* Footer */}
+                {/* <div className="min-h-10vh bg-[#18181A]">
                 <Footer />
               </div> */}
+              </UserProvider>
             </main>
           </StyledEngineProvider>
         </GoogleMapsProvider>

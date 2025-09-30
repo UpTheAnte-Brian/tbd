@@ -6,9 +6,14 @@ import React from "react";
 interface PlaceDetailsProps {
   place: PlaceDetailsType;
   onClose: () => void;
+  onClaimOwnership: () => void;
 }
 
-export default function PlaceDetails({ place, onClose }: PlaceDetailsProps) {
+export default function PlaceDetails({
+  place,
+  onClose,
+  onClaimOwnership,
+}: PlaceDetailsProps) {
   return (
     <div className="flex flex-col bg-white shadow-lg rounded-t-lg md:rounded-none md:rounded-l-lg md:w-96 w-full h-full overflow-auto">
       <div className="flex justify-between items-center p-4 border-b border-gray-200">
@@ -34,6 +39,14 @@ export default function PlaceDetails({ place, onClose }: PlaceDetailsProps) {
             {place.formatted_phone_number}
           </p>
         )}
+      </div>
+      <div>
+        <button
+          onClick={onClaimOwnership}
+          className="w-full py-3 mt-auto bg-blue-600 text-white font-semibold rounded-b-lg hover:bg-blue-700 focus:outline-none"
+        >
+          This is my business, claim ownership
+        </button>
       </div>
     </div>
   );
