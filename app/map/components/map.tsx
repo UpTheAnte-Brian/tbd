@@ -459,16 +459,18 @@ const MapComponent = React.memo(() => {
         </div>
       )}
 
-      <DistrictSearch
-        features={features}
-        onSelect={(feature) => {
-          setShowPopup(true);
-          setSelectedId(feature.properties?.sdorgid ?? null);
-          if (mapRef.current) {
-            panToFeature(feature, mapRef.current);
-          }
-        }}
-      />
+      <div className="absolute bottom-0 w-4/5 p-4 z-50">
+        <DistrictSearch
+          features={features}
+          onSelect={(feature) => {
+            setShowPopup(true);
+            setSelectedId(feature.properties?.sdorgid ?? null);
+            if (mapRef.current) {
+              panToFeature(feature, mapRef.current);
+            }
+          }}
+        />
+      </div>
       {/* {mouseLatLng && isAdmin && (
         <div className="absolute top-3 left-3 bg-black text-white text-xs px-2 py-1 rounded z-50">
           Lat: {mouseLatLng.lat.toFixed(5)}, Lng: {mouseLatLng.lng.toFixed(5)}

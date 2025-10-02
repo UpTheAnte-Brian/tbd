@@ -1,6 +1,5 @@
 "use client";
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
-import { useUser } from "@/app/hooks/useUser";
 import { useDistrict } from "@/app/hooks/useDistrict";
 import LoadingSpinner from "@/app/components/loading-spinner";
 import { useParams } from "next/navigation";
@@ -9,7 +8,7 @@ import DistrictPanels from "@/app/components/districts/DistrictPanels";
 export default function DistrictPage() {
   const params = useParams();
   const { id } = params;
-  const { user, loading, error: userError } = useUser();
+  // const { user, loading, error: userError } = useUser();
 
   const {
     district,
@@ -17,10 +16,10 @@ export default function DistrictPage() {
     error: districtError,
   } = useDistrict(id as string);
 
-  if (userError) {
-    console.warn("no user session");
-  }
-  if (loading || districtLoading) return <LoadingSpinner />;
+  // if (userError) {
+  //   console.warn("no user session");
+  // }
+  if (districtLoading) return <LoadingSpinner />;
   if (!district || districtError) return <p>No district found</p>;
 
   return (
@@ -35,7 +34,7 @@ export default function DistrictPage() {
           },
         ]}
       />
-      <DistrictPanels user={user} district={district}></DistrictPanels>
+      <DistrictPanels district={district}></DistrictPanels>
     </main>
   );
 }

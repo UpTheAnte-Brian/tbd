@@ -1,17 +1,24 @@
 "use client";
 import DistrictMap from "@/app/components/districts/panels/DistrictMap";
 import DistrictOverview from "@/app/components/districts/panels/overview";
-import { DistrictWithFoundation, Profile } from "@/app/lib/types";
+import { DistrictWithFoundation } from "@/app/lib/types";
 import React, { useState } from "react";
 
 export default function DistrictPanels({
-  user,
+  // user,
   district,
 }: {
-  user: Profile | null;
+  // user: Profile | null;
   district: DistrictWithFoundation;
 }) {
-  const tabs = ["Overview", "Map", "Foundation", "Other Charities", "Admin"];
+  const tabs = [
+    "Overview",
+    "Map",
+    "Foundation",
+    "Other Charities",
+    "Admin",
+    "Calendar",
+  ];
   const [activeTab, setActiveTab] = useState(tabs[0]);
 
   return (
@@ -35,7 +42,7 @@ export default function DistrictPanels({
         {activeTab === "Map" ? (
           <DistrictMap district={district} />
         ) : activeTab === "Overview" ? (
-          <DistrictOverview district={district} user={user} />
+          <DistrictOverview district={district} />
         ) : (
           <>
             <h2 className="text-xl font-semibold text-black">

@@ -39,51 +39,49 @@ export default function DistrictSearch({ features, onSelect }: Props) {
   };
 
   return (
-    <div className="absolute bottom-0 w-4/5 p-4 z-50">
-      <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-2">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search districts…"
-          className="w-full rounded border px-3 py-2 outline-none"
-          type="text"
-          onKeyDown={(e) => {
-            if (e.key === "ArrowDown") {
-              e.preventDefault();
-              setHighlightedIndex((prev) =>
-                Math.min(prev + 1, suggestions.length - 1)
-              );
-            } else if (e.key === "ArrowUp") {
-              e.preventDefault();
-              setHighlightedIndex((prev) => Math.max(prev - 1, 0));
-            } else if (e.key === "Enter") {
-              e.preventDefault();
-              if (
-                highlightedIndex >= 0 &&
-                highlightedIndex < suggestions.length
-              ) {
-                handleSelect(suggestions[highlightedIndex]);
-              }
+    <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-2">
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search districts…"
+        className="w-full rounded border px-3 py-2 outline-none"
+        type="text"
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setHighlightedIndex((prev) =>
+              Math.min(prev + 1, suggestions.length - 1)
+            );
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+          } else if (e.key === "Enter") {
+            e.preventDefault();
+            if (
+              highlightedIndex >= 0 &&
+              highlightedIndex < suggestions.length
+            ) {
+              handleSelect(suggestions[highlightedIndex]);
             }
-          }}
-        />
-        {query && suggestions.length > 0 && (
-          <ul className="mt-2 max-h-60 overflow-y-auto divide-y">
-            {suggestions.map((s, i) => (
-              <li key={s.id}>
-                <button
-                  className={`w-full text-left px-3 py-2 hover:bg-gray-100 hover:text-black ${
-                    i === highlightedIndex ? "bg-gray-200 hover:text-black" : ""
-                  }`}
-                  onClick={() => handleSelect(s)}
-                >
-                  {s.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+          }
+        }}
+      />
+      {query && suggestions.length > 0 && (
+        <ul className="mt-2 max-h-60 overflow-y-auto divide-y">
+          {suggestions.map((s, i) => (
+            <li key={s.id}>
+              <button
+                className={`w-full text-left px-3 py-2 hover:bg-gray-100 hover:text-black ${
+                  i === highlightedIndex ? "bg-gray-200 hover:text-black" : ""
+                }`}
+                onClick={() => handleSelect(s)}
+              >
+                {s.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

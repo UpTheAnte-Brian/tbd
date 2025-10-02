@@ -1,17 +1,15 @@
+import Link from "next/link";
 import DistrictDonationsSummary from "@/app/components/districts/DistrictDonationsSummary";
-import { DistrictDonateButton } from "@/app/components/stripe/DistrictDonationButton";
-import { MonthlyDonateButton } from "@/app/components/stripe/RecurringDonationButton";
 import DistrictSideBar from "@/app/components/ui/district-sidebar";
-import { DistrictWithFoundation, Profile } from "@/app/lib/types";
+import { DistrictWithFoundation } from "@/app/lib/types";
 
 export default function DistrictOverview({
   district,
-  user,
-}: {
+}: // user,
+{
   district: DistrictWithFoundation;
-  user: Profile | null;
+  // user: Profile | null;
 }) {
-  const anonymousDonor = !user;
   return (
     <div>
       {/* Flex container for two-column layout */}
@@ -48,11 +46,12 @@ export default function DistrictOverview({
         {/* Right sidebar: 1/4 width, sticky */}
         <div className="w-1/4 sticky top-4 self-start">
           <DistrictSideBar district={district} />
-          <DistrictDonateButton
-            districtId={district.id}
-            anonymous={anonymousDonor}
-          ></DistrictDonateButton>
-          <MonthlyDonateButton districtId={district.id}></MonthlyDonateButton>
+          <Link
+            href={`/donate/${district.id}`}
+            className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Donate
+          </Link>
           <DistrictDonationsSummary districtId={district.id} />
         </div>
       </div>
