@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Input } from "../../components/ui/input";
 import { DistrictWithFoundation, Profile } from "../../lib/types";
 import React, { useEffect, useRef, useState } from "react";
-import { DistrictDonateButton } from "@/app/components/stripe/DistrictDonationButton";
 
 const DistrictPopUp = React.memo(
   ({
@@ -46,11 +45,10 @@ const DistrictPopUp = React.memo(
       };
     }, []);
 
-    const anonymous = !user;
     return (
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3">
         <Link href={`/districts/${district.sdorgid}`}>
-          <div className="text-lg font-semibold text-blue-500 text-center">
+          <div className="text-lg font-semibold text-blue-500 underline decoration-blue-500 text-center hover:underline hover:decoration-blue-700">
             {district.shortname} ({Number(district.properties.sdnumber)})
           </div>
         </Link>
@@ -69,10 +67,12 @@ const DistrictPopUp = React.memo(
             disabled={uploading}
           />
         )}
-        <DistrictDonateButton
-          districtId={district.id}
-          anonymous={anonymous}
-        ></DistrictDonateButton>
+        <Link
+          href={`/donate/${district.id}`}
+          className="inline-block px-4 py-2 bg-blue-600 text-white justify-center text-center rounded hover:bg-blue-700 hover:underline hover:decoration-blue-700"
+        >
+          Donate
+        </Link>
       </div>
     );
   }

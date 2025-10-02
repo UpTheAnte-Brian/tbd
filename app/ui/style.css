@@ -762,6 +762,11 @@ video {
   margin-bottom: 0.5rem;
 }
 
+.my-4 {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
 .-mb-px {
   margin-bottom: -1px;
 }
@@ -1971,8 +1976,8 @@ video {
   padding-right: 1.5rem;
 }
 
-.pt-10 {
-  padding-top: 2.5rem;
+.pt-16 {
+  padding-top: 4rem;
 }
 
 .pt-2 {
@@ -2170,6 +2175,10 @@ video {
 
 .underline {
   text-decoration-line: underline;
+}
+
+.decoration-blue-500 {
+  text-decoration-color: #3b82f6;
 }
 
 .underline-offset-4 {
@@ -2956,6 +2965,10 @@ button.primary,
 
 .hover\:underline:hover {
   text-decoration-line: underline;
+}
+
+.hover\:decoration-blue-700:hover {
+  text-decoration-color: #1d4ed8;
 }
 
 .hover\:shadow-lg:hover {
