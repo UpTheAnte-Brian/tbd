@@ -209,4 +209,49 @@ export type PlaceDetailsType = {
     website?: string;
     rating?: number;
     user_ratings_total?: number;
+    geometry?: {
+        location: {
+            lat?: number;
+            lng?: number;
+        };
+    };
+    types?: string[];
 };
+
+export type BusinessStatus = "pending" | "active" | "inactive";
+export type BusinessUserRole = "owner" | "rep" | "viewer";
+export type CampaignType = "round_up" | "percent" | "flat";
+export type CampaignStatus = "pending" | "active" | "ended";
+
+export interface Business {
+    id: string;
+    place_id?: string;
+    name: string;
+    address?: string;
+    lat?: number;
+    lng?: number;
+    phone_number?: string;
+    website?: string;
+    types?: string[];
+    status: BusinessStatus;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface BusinessUser {
+    id: string;
+    business_id: string;
+    user_id: string;
+    role: BusinessUserRole;
+    created_at: string;
+}
+
+export interface BusinessCampaign {
+    id: string;
+    business_id: string;
+    district_id: string;
+    campaign_type: CampaignType;
+    status: CampaignStatus;
+    created_at: string;
+    updated_at: string;
+}

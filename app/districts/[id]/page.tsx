@@ -4,11 +4,12 @@ import { useDistrict } from "@/app/hooks/useDistrict";
 import LoadingSpinner from "@/app/components/loading-spinner";
 import { useParams } from "next/navigation";
 import DistrictPanels from "@/app/components/districts/DistrictPanels";
+import { useUser } from "@/app/hooks/useUser";
 
 export default function DistrictPage() {
   const params = useParams();
   const { id } = params;
-  // const { user, loading, error: userError } = useUser();
+  const { user, error: userError } = useUser();
 
   const {
     district,
@@ -16,9 +17,9 @@ export default function DistrictPage() {
     error: districtError,
   } = useDistrict(id as string);
 
-  // if (userError) {
-  //   console.warn("no user session");
-  // }
+  if (userError) {
+    console.warn("no user session");
+  }
   if (districtLoading) return <LoadingSpinner />;
   if (!district || districtError) return <p>No district found</p>;
 
@@ -34,7 +35,7 @@ export default function DistrictPage() {
           },
         ]}
       />
-      <DistrictPanels district={district}></DistrictPanels>
+      <DistrictPanels district={district} user={user}></DistrictPanels>
     </main>
   );
 }

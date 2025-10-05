@@ -1,9 +1,14 @@
 "use client";
 import { GoogleMap, Polygon } from "@react-google-maps/api";
 import { useEffect, useRef, useState } from "react";
-import { DistrictWithFoundation, PlaceDetailsType } from "@/app/lib/types";
+import {
+  DistrictWithFoundation,
+  PlaceDetailsType,
+  Profile,
+} from "@/app/lib/types";
 import { getBoundsFromGeoJSON } from "@/app/lib/getBoundsFromGeoJSON";
 import PlaceDetails from "@/app/components/places/PlaceDetails";
+import PlaceSearch from "@/app/ui/maps/place-search";
 
 type PlaceClickEvent = google.maps.MapMouseEvent & { placeId?: string };
 
@@ -14,15 +19,14 @@ const containerStyle = {
 
 export default function DistrictMap({
   district,
+  user,
 }: {
   district: DistrictWithFoundation;
+  user: Profile | null;
 }) {
   const mapRef = useRef<google.maps.Map | null>(null);
   const [paths, setPaths] = useState<google.maps.LatLngLiteral[][]>([]);
-  const [selectedPlace, setSelectedPlace] = useState<PlaceDetailsType | null>(
-    null
-  );
-  // const { user } = useUser();
+  const [activePlace, setActivePlace] = useState<PlaceDetailsType | null>(null);
 
   // const anonymous = !user;
 
@@ -56,7 +60,7 @@ export default function DistrictMap({
             status === google.maps.places.PlacesServiceStatus.OK &&
             placeResult
           ) {
-            setSelectedPlace({
+            setActivePlace({
               name: placeResult.name || "Unknown Place",
               formatted_address: placeResult.formatted_address,
               formatted_phone_number: placeResult.formatted_phone_number,
@@ -88,7 +92,7 @@ export default function DistrictMap({
 
   return (
     <div className="flex flex-col md:flex-row h-full w-full">
-      <div className="w-full md:w-3/4 h-full">
+      <div className="w-full md:w-3/4 h-full relative">
         <GoogleMap
           mapContainerStyle={containerStyle}
           onLoad={onLoad}
@@ -130,14 +134,37 @@ export default function DistrictMap({
               }}
             />
           ))}
+          <div
+            style={{
+              position: "absolute",
+              bottom: "10px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 10,
+            }}
+          >
+            <PlaceSearch
+              setPoint={(description) => {
+                if (description) {
+                  setActivePlace({
+                    name: description,
+                    formatted_address: description,
+                    formatted_phone_number: undefined,
+                    place_id: undefined,
+                    website: undefined,
+                    rating: undefined,
+                    user_ratings_total: undefined,
+                  });
+                }
+              }}
+            />
+          </div>
         </GoogleMap>
       </div>
       <PlaceDetails
-        place={selectedPlace ?? placeholderPlace}
-        onClose={() => setSelectedPlace(null)}
-        onClaimOwnership={function (): void {
-          throw new Error("Function not implemented.");
-        }}
+        place={activePlace ?? placeholderPlace}
+        onClose={() => setActivePlace(null)}
+        user={user}
       />
     </div>
   );

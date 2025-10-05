@@ -1,19 +1,44 @@
 "use client";
 
-import { PlaceDetailsType } from "@/app/lib/types";
+import { PlaceDetailsType, Profile } from "@/app/lib/types";
 import React from "react";
 
 interface PlaceDetailsProps {
   place: PlaceDetailsType;
+  user: Profile | null;
   onClose: () => void;
-  onClaimOwnership: () => void;
 }
 
 export default function PlaceDetails({
   place,
+  user,
   onClose,
-  onClaimOwnership,
 }: PlaceDetailsProps) {
+  async function handleClaimOwnership() {
+    const business = {
+      place_id: place.place_id,
+      name: place.name,
+      address: place.formatted_address,
+      lat: place.geometry?.location.lat,
+      lng: place.geometry?.location.lng,
+      phone_number: place.formatted_phone_number,
+      website: place.website,
+      types: place.types,
+    };
+
+    const res = await fetch("/api/businesses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user?.id, business }),
+    });
+
+    if (!res.ok) {
+      console.error("Failed to claim business");
+    } else {
+      console.log("Business claimed:", await res.json());
+    }
+  }
+
   return (
     <div className="flex flex-col bg-white shadow-lg rounded-t-lg md:rounded-none md:rounded-l-lg md:w-96 w-full h-full overflow-auto">
       <div className="flex justify-between items-center p-4 border-b border-gray-200">
@@ -40,14 +65,16 @@ export default function PlaceDetails({
           </p>
         )}
       </div>
-      <div>
-        <button
-          onClick={onClaimOwnership}
-          className="w-full py-3 mt-auto bg-blue-600 text-white font-semibold rounded-b-lg hover:bg-blue-700 focus:outline-none"
-        >
-          This is my business, claim ownership
-        </button>
-      </div>
+      {user && (
+        <div>
+          <button
+            onClick={handleClaimOwnership}
+            className="w-full py-3 mt-auto bg-blue-600 text-white font-semibold rounded-b-lg hover:bg-blue-700 focus:outline-none"
+          >
+            This is my business, claim ownership
+          </button>
+        </div>
+      )}
     </div>
   );
 }
