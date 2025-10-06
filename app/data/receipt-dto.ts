@@ -5,7 +5,7 @@ type DonationRow = {
     id: string;
     amount: number;
     created_at: string;
-    district?: { shortname: string }[];
+    district?: { shortname: string };
     stripe_session_id: string;
     user_id?: string;
     type?: "platform" | "district";
@@ -13,6 +13,7 @@ type DonationRow = {
     receipt_url?: string | null;
     subscription_id?: string | null;
     invoice_id?: string | null;
+    district_name?: string | null;
 };
 
 export async function getReceipts(): Promise<Receipt[]> {
@@ -36,12 +37,12 @@ export async function getReceipts(): Promise<Receipt[]> {
 
     if (error) throw error;
     if (!data) return [];
-
-    return (data as DonationRow[]).map((r) => ({
+    console.log(data[0]);
+    return (data as unknown as DonationRow[]).map((r) => ({
         id: r.id,
         amount: r.amount,
         date: new Date(r.created_at).toISOString().split("T")[0],
-        district_name: r.district?.[0]?.shortname ?? undefined,
+        district_name: r.district?.shortname ?? undefined,
         stripe_session_id: r.stripe_session_id ?? undefined,
         user_id: r.user_id ?? undefined,
         type: r.type ?? undefined,
@@ -78,12 +79,12 @@ export async function getReceiptBySessionId(
     if (error) throw error;
     if (!data) return null;
 
-    const r = data as DonationRow;
+    const r = data as unknown as DonationRow;
     return {
         id: r.id,
         amount: r.amount,
         date: new Date(r.created_at).toISOString().split("T")[0],
-        district_name: r.district?.[0]?.shortname ?? undefined,
+        district_name: r.district?.shortname ?? undefined,
         stripe_session_id: r.stripe_session_id ?? undefined,
         user_id: r.user_id ?? undefined,
         type: r.type ?? undefined,
