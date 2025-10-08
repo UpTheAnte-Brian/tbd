@@ -1,7 +1,7 @@
 "use client";
 
 import { PlaceDetailsType, Profile } from "@/app/lib/types";
-import React from "react";
+import React, { useState } from "react";
 
 interface PlaceDetailsProps {
   place: PlaceDetailsType;
@@ -14,7 +14,11 @@ export default function PlaceDetails({
   user,
   onClose,
 }: PlaceDetailsProps) {
+  const [loading, setLoading] = useState(false);
+  const [claimed, setClaimed] = useState(false);
+
   async function handleClaimOwnership() {
+    setLoading(true);
     const business = {
       place_id: place.place_id,
       name: place.name,
@@ -36,7 +40,9 @@ export default function PlaceDetails({
       console.error("Failed to claim business");
     } else {
       console.log("Business claimed:", await res.json());
+      setClaimed(true);
     }
+    setLoading(false);
   }
 
   return (
@@ -69,9 +75,18 @@ export default function PlaceDetails({
         <div>
           <button
             onClick={handleClaimOwnership}
-            className="w-full py-3 mt-auto bg-blue-600 text-white font-semibold rounded-b-lg hover:bg-blue-700 focus:outline-none"
+            disabled={loading || claimed}
+            className={`w-full py-3 mt-auto font-semibold rounded-b-lg focus:outline-none ${
+              claimed
+                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                : "bg-blue-600 text-white hover:bg-blue-700"
+            }`}
           >
-            This is my business, claim ownership
+            {loading
+              ? "Claiming..."
+              : claimed
+              ? "Already claimed"
+              : "This is my business, claim ownership"}
           </button>
         </div>
       )}

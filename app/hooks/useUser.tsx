@@ -8,12 +8,15 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { Profile } from "@/app/lib/types";
+import { Business, Profile } from "@/app/lib/types";
+import { useClaimedBusinesses } from "@/app/hooks/useClaimedBusinesses";
 
 type UserContextValue = {
   user: Profile | null;
   loading: boolean;
   error: Error | null;
+  claimedBusinesses: Business[] | undefined;
+  claimedLoading: boolean;
 };
 
 export const UserContext = createContext<UserContextValue | undefined>(
@@ -29,6 +32,8 @@ export function UserProvider({ children }: UserProviderProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  const { data: claimedBusinesses, isLoading: claimedLoading } =
+    useClaimedBusinesses(user?.id);
   useEffect(() => {
     let ignore = false;
 
@@ -64,7 +69,9 @@ export function UserProvider({ children }: UserProviderProps) {
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, loading, error }}>
+    <UserContext.Provider
+      value={{ user, loading, error, claimedBusinesses, claimedLoading }}
+    >
       {children}
     </UserContext.Provider>
   );

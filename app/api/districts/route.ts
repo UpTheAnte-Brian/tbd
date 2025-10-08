@@ -1,5 +1,5 @@
 // The client you created from the Server-Side Auth instructions
-import { supabaseServiceClient } from "@/utils/supabase/service-worker";
+// import { supabaseServiceClient } from "@/utils/supabase/service-worker";
 import { createClient } from "../../../utils/supabase/server";
 
 export async function GET() {
@@ -20,12 +20,12 @@ export async function GET() {
     const { data: foundations, error: foundationError } = foundationRes;
     const { data: districts, error: districtError } = districtRes;
 
-    await supabaseServiceClient.auth.admin.updateUserById(
-        "002c3f9d-91ba-4792-b1e3-581d3a19fce5",
-        {
-            app_metadata: { role: "admin" },
-        },
-    );
+    // await supabaseServiceClient.auth.admin.updateUserById(
+    //     "002c3f9d-91ba-4792-b1e3-581d3a19fce5",
+    //     {
+    //         app_metadata: { role: "admin" },
+    //     },
+    // );
 
     if (districtError || foundationError) {
         return new Response("Failed to fetch data", { status: 500 });
