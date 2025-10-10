@@ -2,7 +2,6 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 // The client you created from the Server-Side Auth instructions
-import { createClient } from "../../../../utils/supabase/server";
 import { getBusiness } from "@/app/data/businesses-dto";
 
 export async function GET(
@@ -11,9 +10,6 @@ export async function GET(
 ) {
     const { id } = await context.params;
     // rest of your code
-    const supabase = await createClient();
-    // NOTE: Ignore the warning. It’s not blocking anything, and it’ll go away in future stable versions. It’s a known false-positive in Next.js 14+.
-
     if (!id) {
         return NextResponse.json({ error: "Missing business ID" }, {
             status: 400,

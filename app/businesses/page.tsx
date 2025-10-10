@@ -7,6 +7,7 @@ import { themeQuartz } from "ag-grid-community";
 import { Business } from "@/app/lib/types";
 import { ColDef } from "ag-grid-community";
 import Link from "next/link";
+import type { ICellRendererParams } from "ag-grid-community";
 
 export default function BusinessesPage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -33,41 +34,12 @@ export default function BusinessesPage() {
         field: "name",
         headerName: "Name",
         flex: 1,
-        cellRenderer: (params: {
-          data: Business;
-          value:
-            | string
-            | number
-            | bigint
-            | boolean
-            | React.ReactElement<
-                unknown,
-                string | React.JSXElementConstructor<any>
-              >
-            | Iterable<React.ReactNode>
-            | React.ReactPortal
-            | Promise<
-                | string
-                | number
-                | bigint
-                | boolean
-                | React.ReactPortal
-                | React.ReactElement<
-                    unknown,
-                    string | React.JSXElementConstructor<any>
-                  >
-                | Iterable<React.ReactNode>
-                | null
-                | undefined
-              >
-            | null
-            | undefined;
-        }) => {
-          const districtId = params.data?.id;
-          if (!districtId) return params.value;
+        cellRenderer: (params: ICellRendererParams<Business, string>) => {
+          const businessId = params.data?.id;
+          if (!businessId) return params.value;
           return (
             <Link
-              href={`/businesses/${params.data.id}`}
+              href={`/businesses/${businessId}`}
               style={{ color: "#4dabf7" }}
             >
               {params.value}
