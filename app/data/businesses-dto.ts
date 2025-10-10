@@ -27,6 +27,19 @@ export async function getBusinesses(): Promise<Business[]> {
     }));
 }
 
+export async function getBusiness(id: string): Promise<Business> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("businesses")
+        .select(`*`)
+        .eq("id", id)
+        .maybeSingle();
+
+    if (error || !data) throw error;
+
+    return data as Business;
+}
+
 // Insert a new business + associate the current user as owner
 export async function registerBusiness(
     userId: string,
