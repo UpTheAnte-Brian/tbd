@@ -1,6 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { DistrictWithFoundation, Profile } from "@/app/lib/types";
+import {
+  DistrictUserJoined,
+  DistrictWithFoundation,
+  Profile,
+} from "@/app/lib/types";
 import Link from "next/link";
 import AssignDistrictsModal from "@/app/components/districts/AssignDistrictsModal";
 
@@ -121,7 +125,7 @@ export default function UsersPage() {
               <td className="border border-gray-300 px-2 py-1">
                 <select
                   className="w-full bg-white text-black border border-gray-300 rounded px-2 py-1"
-                  value={u.role || ""}
+                  value={u.global_role || ""}
                   onChange={(e) => handleRoleChange(u.id, e.target.value)}
                 >
                   <option value="Patron">Patron</option>
@@ -132,9 +136,11 @@ export default function UsersPage() {
               <td className="border border-gray-300 px-2 py-1">
                 {u.district_users && u.district_users.length > 0 ? (
                   <ul className="list-disc pl-4 text-white">
-                    {u.district_users.map((d) => (
-                      <li key={d.district_id}>{d.district.shortname}</li>
-                    ))}
+                    {u.district_users
+                      .filter((d): d is DistrictUserJoined => "district" in d)
+                      .map((d) => (
+                        <li key={d.district_id}>{d.district.shortname}</li>
+                      ))}
                   </ul>
                 ) : (
                   <span className="text-gray-500 italic">None</span>

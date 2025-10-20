@@ -1,4 +1,4 @@
-import type { Business } from "@/app/lib/types";
+import type { Business, BusinessUserJoined } from "@/app/lib/types";
 import { createClient } from "@/utils/supabase/server";
 
 export async function getBusinesses(): Promise<Business[]> {
@@ -31,13 +31,42 @@ export async function getBusiness(id: string): Promise<Business> {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from("businesses")
-        .select(`*`)
+        .select(`
+            *,
+            business_users (
+                role,
+                user:profiles (*)
+            )
+        `)
         .eq("id", id)
         .maybeSingle();
 
     if (error || !data) throw error;
 
-    return data as Business;
+    // Map business_users to users for the Business interface
+    const businessUsers = Array.isArray(data.business_users)
+        ? data.business_users.map((bu: BusinessUserJoined) => ({
+            role: bu.role,
+            user: bu.user,
+        }))
+        : [];
+
+    // Return the hydrated Business object
+    return {
+        id: data.id,
+        place_id: data.place_id,
+        name: data.name,
+        address: data.address,
+        lat: data.lat,
+        lng: data.lng,
+        phone_number: data.phone_number,
+        website: data.website,
+        types: data.types,
+        status: data.status,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        users: businessUsers,
+    } as Business;
 }
 
 // Insert a new business + associate the current user as owner

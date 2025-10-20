@@ -1,24 +1,22 @@
 import { NextResponse } from "next/server";
-import { createClient } from "../../../../utils/supabase/server"; // Adjust if needed
+import {
+    getFoundationDTO,
+    upsertFoundationDTO,
+} from "@/app/data/foundation-dto";
 
 export async function GET(
     _req: Request,
     context: { params: Promise<{ id: string }> },
 ) {
     const { id } = await context.params;
-    const supabase = await createClient();
 
-    const { data, error } = await supabase
-        .from("foundations")
-        .select("*")
-        .eq("district_id", id)
-        .maybeSingle();
+    const { data, error } = await getFoundationDTO(id);
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 404 });
     }
 
-    return NextResponse.json({ data }, { status: 200 });
+    return NextResponse.json(data, { status: 200 });
 }
 
 export async function POST(
@@ -26,15 +24,12 @@ export async function POST(
     context: { params: Promise<{ id: string }> },
 ) {
     const { id } = await context.params;
-    const supabase = await createClient();
     const body = await _req.json();
 
-    const { error: upsertError } = await supabase
-        .from("foundations")
-        .upsert({ ...body, district_id: id }, { onConflict: "district_id" });
+    const { error } = await upsertFoundationDTO(id, body);
 
-    if (upsertError) {
-        return NextResponse.json({ error: upsertError.message }, {
+    if (error) {
+        return NextResponse.json({ error: error.message }, {
             status: 500,
         });
     }

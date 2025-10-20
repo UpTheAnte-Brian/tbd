@@ -14,7 +14,7 @@ export type MarkerType = {
 };
 
 export interface Foundation {
-    id: string;
+    id?: string | null;
     district_id: string;
     name: string | null;
     contact: string | null;
@@ -22,8 +22,9 @@ export interface Foundation {
     founding_year: number | null;
     average_class_size: number | null;
     balance_sheet: number | null;
-    inserted_at: string; // ISO timestamp
-    updated_at: string; // ISO timestamp
+    // inserted_at: string; // ISO timestamp
+    // updated_at: string; // ISO timestamp
+    users?: BusinessUserJoined[]; // optional list of related users
 }
 
 export interface ExtendedFeature<
@@ -54,8 +55,9 @@ export type LatLngLiteral = google.maps.LatLngLiteral;
 export interface DistrictWithFoundation
     extends ExtendedFeature<Polygon | MultiPolygon, DistrictProperties> {
     id: string; // <-- UUID from Supabase
-    foundation: Foundation | null;
+    foundation?: Foundation | null;
     metadata: DistrictMetadata | null;
+    users?: BusinessUserJoined[]; // optional list of related users
 }
 
 export interface DistrictMetadata {
@@ -83,13 +85,26 @@ export interface UserWithDistricts {
     districts: District[];
 }
 
-// type for each district_user row returned by Supabase
-// each district_user row
 export interface DistrictUserRow {
-    role: string;
     district_id: string;
     user_id: string;
+    role: string;
+}
+
+export interface DistrictUserJoined extends DistrictUserRow {
     district: District;
+    user: Profile;
+}
+// each district_user row
+export interface BusinessUserRow {
+    business_id: string;
+    user_id: string;
+    role: string;
+}
+
+export interface BusinessUserJoined extends BusinessUserRow {
+    business: Business;
+    user: Profile;
 }
 
 export interface Profile {
@@ -101,8 +116,9 @@ export interface Profile {
     username: string | null;
     avatar_url: string | null;
     website: string | null;
-    district_users: DistrictUserRow[];
-    role: string | null;
+    district_users: (DistrictUserRow | DistrictUserJoined)[];
+    business_users: (BusinessUserRow | BusinessUserJoined)[];
+    global_role: string | null;
 }
 
 export type ApiDistrict = {
@@ -139,36 +155,6 @@ export interface User {
     // aud: string;
     role?: string;
     email?: string;
-    // encrypted_password: string;
-    // email_confirmed_at: string | null; // ISO timestamp
-    // invited_at: string | null; // ISO timestamp
-    // confirmation_token: string;
-    // confirmation_sent_at: string | null; // ISO timestamp
-    // recovery_token: string;
-    // recovery_sent_at: string | null; // ISO timestamp
-    // email_change_token_new: string;
-    // email_change: string;
-    // email_change_sent_at: string | null; // ISO timestamp
-    // last_sign_in_at: string | null; // ISO timestamp
-    // raw_app_meta_data: Record<string, unknown>;
-    // raw_user_meta_data: Record<string, unknown>;
-    // is_super_admin: boolean;
-    // created_at: string; // ISO timestamp
-    // updated_at: string; // ISO timestamp
-    // phone: string;
-    // phone_confirmed_at: string | null; // ISO timestamp
-    // phone_change: string;
-    // phone_change_token: string;
-    // phone_change_sent_at: string | null; // ISO timestamp
-    // confirmed_at: string | null; // ISO timestamp
-    // email_change_token_current: string;
-    // email_change_confirm_status: number;
-    // banned_until: string | null; // ISO timestamp
-    // reauthentication_token: string;
-    // reauthentication_sent_at: string | null; // ISO timestamp
-    // is_sso_user: boolean;
-    // deleted_at: string | null; // ISO timestamp
-    // is_anonymous: boolean;
 }
 
 export interface KmlFeatureData {
@@ -236,6 +222,7 @@ export interface Business {
     status: BusinessStatus;
     created_at: string;
     updated_at: string;
+    users?: BusinessUserJoined[]; // optional list of related users
 }
 
 export interface BusinessUser {

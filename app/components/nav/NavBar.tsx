@@ -26,7 +26,8 @@ export default function NavBarComponent() {
       // Keep menu if not authRequired or user has role
       return (
         !menu.authRequired ||
-        (isLoggedIn && (!menu.roles || menu.roles.includes(user?.role || "")))
+        (isLoggedIn &&
+          (!menu.roles || menu.roles.includes(user?.global_role || "")))
       );
     })
     .map((menu: Menu) => {

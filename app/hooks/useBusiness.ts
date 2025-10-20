@@ -33,6 +33,7 @@ export function useBusiness(id?: string) {
                 }
 
                 const data = await res.json();
+                console.log("useBusiness Data: ", data);
                 if (!ignore) {
                     setBusiness(data);
                 }

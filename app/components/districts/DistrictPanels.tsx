@@ -1,16 +1,40 @@
 "use client";
 import DistrictMap from "@/app/components/districts/panels/DistrictMap";
+import DistrictFoundation from "@/app/components/districts/panels/foundation";
 import DistrictOverview from "@/app/components/districts/panels/overview";
 import { DistrictWithFoundation, Profile } from "@/app/lib/types";
-import React, { useState } from "react";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 export default function DistrictPanels({
   user,
   district,
+  reloadFoundation,
 }: {
-  user: Profile | null;
+  user: Profile;
   district: DistrictWithFoundation;
+  reloadFoundation: () => void;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const initialTab = searchParams.get("tab") || "Overview";
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Keep internal state in sync with URL changes (e.g. back/forward)
+  useEffect(() => {
+    const current = searchParams.get("tab") || "Overview";
+    setActiveTab(current);
+  }, [searchParams]);
+
+  const handleTabChange = (tab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.push(`${pathname}?${params.toString()}`);
+    setActiveTab(tab);
+  };
+
   const tabs = [
     "Overview",
     "Map",
@@ -19,7 +43,6 @@ export default function DistrictPanels({
     "Admin",
     "Calendar",
   ];
-  const [activeTab, setActiveTab] = useState(tabs[0]);
 
   return (
     <div>
@@ -32,7 +55,7 @@ export default function DistrictPanels({
                 ? "border-blue-500 bg-white text-blue-600"
                 : "border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300"
             }`}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => handleTabChange(tab)} // ✅ use the URL-sync handler
           >
             {tab}
           </button>
@@ -43,6 +66,12 @@ export default function DistrictPanels({
           <DistrictMap district={district} user={user} />
         ) : activeTab === "Overview" ? (
           <DistrictOverview district={district} />
+        ) : activeTab === "Foundation" ? (
+          <DistrictFoundation
+            user={user}
+            reloadFoundation={reloadFoundation}
+            district={district}
+          />
         ) : (
           <>
             <h2 className="text-xl font-semibold text-black">

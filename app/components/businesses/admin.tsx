@@ -1,12 +1,12 @@
-import { Profile, DistrictWithFoundation } from "@/app/lib/types";
+import { Profile, Business } from "@/app/lib/types";
 import UserRolesAssignments from "@/app/components/ui/user-roles-assignments";
 
 export default function BusinessAdmin({
   user,
-  district,
+  business,
 }: {
   user: Profile;
-  district: DistrictWithFoundation;
+  business: Business;
 }) {
   return (
     <div className="flex flex-row sm:flex-col">
@@ -25,7 +25,7 @@ export default function BusinessAdmin({
         <p>Let's put a list of users here with role. </p>
       </div>
       <div className="w-64 p-4">
-        <UserRolesAssignments profiles={district.users || []} />
+        <UserRolesAssignments profiles={business.users || []} />
       </div>
     </div>
   );

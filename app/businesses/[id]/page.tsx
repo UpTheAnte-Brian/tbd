@@ -5,6 +5,7 @@ import LoadingSpinner from "@/app/components/loading-spinner";
 import { useParams } from "next/navigation";
 // import BusinessPanels from "@/app/components/businesses/BusinessPanels";
 import { useUser } from "@/app/hooks/useUser";
+import BusinessPanels from "@/app/components/businesses/BusinessPanels";
 
 export default function BusinessPage() {
   const params = useParams();
@@ -35,9 +36,7 @@ export default function BusinessPage() {
           },
         ]}
       />
-      <div>{business.name}</div>
-      <div>{user?.username}</div>
-      {/* <BusinessPanels business={business} user={user}></BusinessPanels> */}
+      <BusinessPanels business={business} user={user}></BusinessPanels>
     </main>
   );
 }

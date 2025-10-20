@@ -6,16 +6,15 @@ import {
 } from "@/app/lib/types";
 import React, { useEffect, useState } from "react";
 
-type User = Profile; // Replace with actual User type
 type Feature = DistrictWithFoundation; // Replace with actual Feature type
 
 interface AssignDistrictsModalProps {
   setAssignToId: (assignToId: string | null) => void;
   assignToId: string;
   handleSaveAssignments: () => void;
-  users: User[];
+  users: Profile[];
   features: Feature[];
-  setUsers: React.Dispatch<React.SetStateAction<User[]>>;
+  setUsers: React.Dispatch<React.SetStateAction<Profile[]>>;
   onClose: () => void;
 }
 
@@ -28,7 +27,7 @@ const AssignDistrictsModal: React.FC<AssignDistrictsModalProps> = ({
   setUsers,
   onClose,
 }) => {
-  const [localUsers, setLocalUsers] = useState<User[]>(() => [...users]);
+  const [localUsers, setLocalUsers] = useState<Profile[]>(() => [...users]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -101,11 +100,13 @@ const AssignDistrictsModal: React.FC<AssignDistrictsModalProps> = ({
                 <ul className="list-disc list-inside text-sm text-gray-900">
                   {localUsers
                     .find((u) => u.id === assignToId)
-                    ?.district_users.map((d: DistrictUserRow) => (
-                      <li className="text-gray-900" key={d.district_id}>
-                        {d.district.shortname}
-                      </li>
-                    ))}
+                    ?.district_users.map((d) =>
+                      "district" in d ? (
+                        <li className="text-gray-900" key={d.district_id}>
+                          {d.district.shortname}
+                        </li>
+                      ) : null
+                    )}
                 </ul>
               </div>
             ) : (

@@ -1,43 +1,55 @@
 import "server-only";
+import { createClient } from "@/utils/supabase/server";
+import { DistrictUserJoined } from "@/app/lib/types";
 
 export async function getDistrictDTO(id: string) {
-  // Don't pass values, read back cached values, also solves context and easier to make it lazy
-  const baseUrl = process.env.NEXT_PUBLIC_HOST || "http://localhost:3000";
-  const district = await fetch(`${baseUrl}/api/districts/${id}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  });
-  const foundationRes = await fetch(`${baseUrl}/api/foundations/${id}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  });
+  const supabase = await createClient();
 
-  if (!district.ok) {
-    throw new Error(
-      `Failed to load district: ${district.status} ${district.statusText}`,
-    );
+  // Fetch the district
+  const { data: district, error: districtError } = await supabase
+    .from("districts")
+    .select(
+      "id, sdorgid, shortname, properties, geometry_simplified, centroid_lat, centroid_lng, district_metadata(logo_path)",
+    )
+    .eq("sdorgid", id)
+    .maybeSingle();
+
+  if (districtError || !district) {
+    throw new Error("District not found");
   }
 
-  const json = await district.json();
+  // Parse properties
+  const rawProps = typeof district.properties === "string"
+    ? JSON.parse(district.properties)
+    : district.properties;
 
-  let foundation;
-  if (foundationRes.ok) {
-    foundation = await foundationRes.json();
-  } else {
-    foundation = null;
-  }
+  const props = Object.fromEntries(
+    Object.entries(rawProps).map(([k, v]) => [k.toLowerCase(), v]),
+  );
 
-  const enriched = {
-    ...json,
-    foundation: foundation,
+  // Optionally fetch related users
+  const { data: users } = await supabase
+    .from("district_users")
+    .select("*, user:profiles(*), district:districts(*)")
+    .eq("district_id", district.id);
+
+  const feature = {
+    type: "Feature",
+    id: district.id,
+    sdorgid: district.sdorgid,
+    shortname: district.shortname,
+    centroid_lat: district.centroid_lat,
+    centroid_lng: district.centroid_lng,
+    properties: {
+      sdorgid: district.sdorgid,
+      centroid_lat: district.centroid_lat,
+      centroid_lng: district.centroid_lng,
+      ...props,
+    },
+    geometry: district.geometry_simplified,
+    metadata: district.district_metadata,
+    users: users as DistrictUserJoined[] | undefined,
   };
-  return enriched;
-  // only return the data relevant for this query and not everything
-  // <https://www.w3.org/2001/tag/doc/APIMinimization>
-  // return {
-  //   username: canSeeUsername(currentUser) ? userData.username : null,
-  //   phonenumber: canSeePhoneNumber(currentUser, userData.team)
-  //     ? userData.phonenumber
-  //     : null,
-  // }
+
+  return feature;
 }

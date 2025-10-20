@@ -1,16 +1,6 @@
+import { Foundation } from "@/app/lib/types";
 import Link from "next/link";
 import { useState } from "react";
-
-type Foundation = {
-  id?: string;
-  district_id: string;
-  name: string | null;
-  contact: string | null;
-  website: string | null;
-  founding_year: number | null;
-  average_class_size: number | null;
-  balance_sheet: number | null;
-};
 
 export default function FoundationEditor({
   foundation,
@@ -19,7 +9,18 @@ export default function FoundationEditor({
   foundation: Foundation;
   onSave: (updates: Partial<Foundation>) => void;
 }) {
-  const [form, setForm] = useState<Foundation>(foundation);
+  const [form, setForm] = useState<Foundation>(
+    foundation ?? {
+      id: 0,
+      name: "",
+      contact: "",
+      website: "",
+      founding_year: undefined,
+      average_class_size: undefined,
+      balance_sheet: undefined,
+      district_id: 0,
+    }
+  );
 
   const handleChange = (field: keyof Foundation, value: string | number) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -29,7 +30,7 @@ export default function FoundationEditor({
     e.preventDefault();
     onSave(form);
   };
-
+  if (!form) return <div>Loading...</div>;
   return (
     <form
       onSubmit={handleSubmit}

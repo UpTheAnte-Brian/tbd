@@ -8,7 +8,10 @@ export function buildColumns(
 
     const filteredSubMenu = (menuObj.subMenu || []).filter((item) => {
         if (item.authRequired && !isLoggedIn) return false;
-        if (item.roles && user?.role && !item.roles.includes(user.role)) {
+        if (
+            item.roles && user?.global_role &&
+            !item.roles.includes(user.global_role)
+        ) {
             return false;
         }
         return true;
