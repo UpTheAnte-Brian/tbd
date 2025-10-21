@@ -11,7 +11,7 @@ export default function DistrictPanels({
   district,
   reloadFoundation,
 }: {
-  user: Profile;
+  user: Profile | null;
   district: DistrictWithFoundation;
   reloadFoundation: () => void;
 }) {
@@ -40,6 +40,7 @@ export default function DistrictPanels({
     "Map",
     "Foundation",
     "Other Charities",
+    "Businesses",
     "Admin",
     "Calendar",
   ];

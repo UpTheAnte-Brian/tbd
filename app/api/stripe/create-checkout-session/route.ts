@@ -28,12 +28,27 @@ export async function POST(req: Request) {
         });
     }
     const metadata: Record<string, string> = {};
+
     if (districtId !== undefined) {
         metadata.district_id = districtId;
+
+        // Fetch the district natural key (sdorgid)
+        const supabase = await createClient();
+        const { data: district } = await supabase
+            .from("districts")
+            .select("sdorgid")
+            .eq("id", districtId)
+            .single();
+
+        if (district?.sdorgid) {
+            metadata.district_sdorgid = district.sdorgid;
+        }
     }
+
     if (anonymous !== undefined) {
         metadata.anonymous = anonymous.toString();
     }
+
     if (!anonymous) {
         const supabase = await createClient();
         const {
@@ -48,6 +63,7 @@ export async function POST(req: Request) {
         }
         metadata.user_id = user.id;
     }
+
     const productName = anonymous
         ? (districtId
             ? "District Donation (Anonymous)"
@@ -61,18 +77,14 @@ export async function POST(req: Request) {
             {
                 price_data: {
                     currency: "usd",
-                    product_data: {
-                        name: productName,
-                    },
+                    product_data: { name: productName },
                     unit_amount: amount * 100,
                 },
                 quantity: 1,
             },
         ],
         metadata,
-        invoice_creation: {
-            enabled: true, // This ensures an invoice is generated for this session
-        },
+        invoice_creation: { enabled: true },
         success_url:
             `${process.env.NEXT_PUBLIC_HOST}/donate/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.NEXT_PUBLIC_HOST}/donate/cancel`,

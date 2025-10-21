@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Receipt } from "@/app/lib/types";
@@ -20,16 +19,23 @@ async function getReceipt(sessionId: string): Promise<Receipt | null> {
   }
 }
 
-export default function DonationSuccessPage({
-  searchParams,
-}: {
-  searchParams: any;
-}) {
+export default function DonationSuccessPage() {
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sdorgid, setSdorgid] = useState<string | null>(null);
 
-  const params = React.use(searchParams) as { session_id: string };
-  const sessionId = params?.session_id;
+  const sessionId = new URLSearchParams(window.location.search).get(
+    "session_id"
+  );
+
+  useEffect(() => {
+    if (!sessionId) return;
+    fetch(`/api/stripe/get-session?session_id=${sessionId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setSdorgid(data.metadata?.district_sdorgid || null);
+      });
+  }, []);
 
   useEffect(() => {
     if (!sessionId) {
@@ -41,6 +47,8 @@ export default function DonationSuccessPage({
       setLoading(false);
     });
   }, [sessionId]);
+
+  if (!sdorgid) return <p>Loading...</p>;
 
   return (
     <div className="relative w-full h-full bg-black">
@@ -95,10 +103,17 @@ export default function DonationSuccessPage({
             </div>
           )}
         </div>
-
+        {sdorgid && (
+          <Link
+            href={`/districts/${sdorgid}`}
+            className="inline-block mt-2 px-6 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700"
+          >
+            Return to District
+          </Link>
+        )}
         <Link
           href="/"
-          className="inline-block mt-8 px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700"
+          className="inline-block mt-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700"
         >
           Return to Home
         </Link>

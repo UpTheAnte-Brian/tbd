@@ -34,6 +34,7 @@ export function UserProvider({ children }: UserProviderProps) {
 
   const { data: claimedBusinesses, isLoading: claimedLoading } =
     useClaimedBusinesses(user?.id);
+
   useEffect(() => {
     let ignore = false;
 
@@ -43,11 +44,13 @@ export function UserProvider({ children }: UserProviderProps) {
       try {
         const res = await fetch("/api/users/me");
         if (!res.ok) {
+          setUser(null); // user is not logged in
           throw new Error(`Failed to load user: ${res.status}`);
-        }
-        const data = await res.json();
-        if (!ignore) {
-          setUser(data);
+        } else {
+          const data = await res.json();
+          if (!ignore) {
+            setUser(data);
+          }
         }
       } catch (err) {
         if (!ignore) {
@@ -55,9 +58,7 @@ export function UserProvider({ children }: UserProviderProps) {
           setError(err instanceof Error ? err : new Error("Unknown error"));
         }
       } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
+        if (!ignore) setLoading(false);
       }
     };
 
@@ -70,7 +71,13 @@ export function UserProvider({ children }: UserProviderProps) {
 
   return (
     <UserContext.Provider
-      value={{ user, loading, error, claimedBusinesses, claimedLoading }}
+      value={{
+        user,
+        loading,
+        error,
+        claimedBusinesses,
+        claimedLoading,
+      }}
     >
       {children}
     </UserContext.Provider>
@@ -79,7 +86,7 @@ export function UserProvider({ children }: UserProviderProps) {
 
 export function useUser() {
   const context = useContext(UserContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useUser must be used within a UserProvider");
   }
   return context;

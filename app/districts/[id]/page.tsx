@@ -10,7 +10,7 @@ import { useUser } from "@/app/hooks/useUser";
 export default function DistrictPage() {
   const params = useParams();
   const { id } = params;
-  const { user, error: userError } = useUser();
+  const { user, loading: userLoading, error: userError } = useUser();
 
   const {
     district,
@@ -28,16 +28,18 @@ export default function DistrictPage() {
   } = useFoundation(sdorgid);
 
   if (userError) {
-    console.warn("no user session");
+    console.warn("No user session");
   }
 
   if (districtLoading) return <LoadingSpinner />;
   if (!district || districtError) return <p>No district found</p>;
 
-  // Optionally show if foundation failed to load, but district did
   if (foundationError) {
     console.warn("Foundation error:", foundationError);
   }
+
+  // Unified loading state
+  const isLoading = userLoading || foundationLoading;
 
   return (
     <main className="p-4">
@@ -51,19 +53,18 @@ export default function DistrictPage() {
           },
         ]}
       />
-      {user && !foundationLoading && (
+
+      {isLoading ? (
+        <LoadingSpinner />
+      ) : (
         <div>
           <p className="text-black">Test Name: {foundation?.name}</p>
           <DistrictPanels
             district={{ ...district, foundation }}
-            user={user}
+            user={user} // can be null if logged out
             reloadFoundation={reload}
           />
         </div>
-      )}
-
-      {foundationLoading && (
-        <p className="text-sm text-gray-500 mt-2">Loading foundation data...</p>
       )}
     </main>
   );

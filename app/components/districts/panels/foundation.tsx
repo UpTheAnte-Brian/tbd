@@ -7,7 +7,7 @@ export default function DistrictFoundation({
   district,
   reloadFoundation,
 }: {
-  user: Profile;
+  user: Profile | null;
   district: DistrictWithFoundation;
   reloadFoundation: () => void;
 }) {
@@ -24,7 +24,7 @@ export default function DistrictFoundation({
       };
   const [editing, setEditing] = useState(false);
 
-  const isAdmin = user.global_role === "admin";
+  const isAdmin = user?.global_role === "admin";
 
   if (!foundation) {
     return <div>Loading foundation...</div>;
