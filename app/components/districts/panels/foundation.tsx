@@ -67,10 +67,21 @@ export default function DistrictFoundation({
             console.error("Error saving foundation data:", error);
           }
         }}
+        onCancel={() => setEditing(false)}
       />
     );
   }
 
+  if (!foundation.id) {
+    return (
+      <div>
+        <p className="text-black">No Foundation has been identified yet. </p>
+        {isAdmin && (
+          <button onClick={() => setEditing(true)}>Edit Foundation</button>
+        )}
+      </div>
+    );
+  }
   return (
     <div>
       <p className="text-black">Name: {foundation.name}</p>

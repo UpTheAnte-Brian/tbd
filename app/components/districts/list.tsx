@@ -65,6 +65,7 @@ export function DistrictList({
       <div className="flex-1 p-4 border-t border-gray-600 overflow-y-auto">
         {selectedFeature?.properties?.sdorgid && (
           <FoundationEditor
+            onCancel={() => {}}
             foundation={{
               district_id: selectedFeature.properties.sdorgid,
               name: "",

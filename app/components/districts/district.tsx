@@ -82,6 +82,7 @@ export function DistrictsPanel({
       <div className="flex-1 p-4 border-t border-gray-600 overflow-y-auto">
         {selectedFeature?.properties?.sdorgid && (
           <FoundationEditor
+            onCancel={() => {}}
             key={selectedFeature.properties.sdorgid} // 👈 force remount on ID change
             foundation={
               selectedFeature.foundation == null

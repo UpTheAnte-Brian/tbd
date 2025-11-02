@@ -11,6 +11,7 @@ import { useUser } from "@/app/hooks/useUser";
 
 export default function NavBarComponent() {
   const [menus, setMenus] = useState<Menu[]>([]);
+
   useEffect(() => {
     async function fetchMenus() {
       const result = await Menus();
@@ -21,9 +22,9 @@ export default function NavBarComponent() {
 
   const { user } = useUser();
   const isLoggedIn = !!user;
+
   const filteredMenus = menus
     .filter((menu: Menu) => {
-      // Keep menu if not authRequired or user has role
       return (
         !menu.authRequired ||
         (isLoggedIn &&
@@ -31,7 +32,6 @@ export default function NavBarComponent() {
       );
     })
     .map((menu: Menu) => {
-      // Replace "Account" menu label with username if available
       if (menu.name === "Account" && user?.username) {
         return { ...menu, name: user.username };
       }
@@ -40,14 +40,19 @@ export default function NavBarComponent() {
 
   return (
     <nav className="w-full bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center">
+      {/* center container with fixed max width */}
+      <div
+        className="max-w-7xl mx-0 px-4 h-16
+                      grid items-center
+                      lg:grid-cols-[auto_1fr_auto]"
+      >
         {/* Left: Logo */}
-        <div className="flex-shrink-0">
+        <div className="flex items-center justify-start">
           <AUNLogo />
         </div>
 
-        {/* Center: Desktop Menu */}
-        <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2">
+        {/* Center: Desktop Menu (truly centered between left & right) */}
+        <div className="hidden lg:flex justify-center">
           <ul className="flex gap-x-6">
             {filteredMenus.map((menu: Menu) => (
               <DesktopMenu
@@ -59,27 +64,18 @@ export default function NavBarComponent() {
           </ul>
         </div>
 
-        {/* Right: Sign out + Mobile Toggle */}
-        <div className="flex-shrink-0 flex items-center gap-x-3 ml-auto">
-          <div className="flex items-center gap-x-3 ml-auto">
-            {/* {user && (
-              <p className="text-sky-600 md:flex items-center hidden">
-                {user.username
-                  ? `${user.username} (${user.role})`
-                  : "No User Name"}
-              </p>
-            )}
-            {user && (
-              <form action="/auth/signout" method="post">
-                <Button type="submit">Sign Out</Button>
-              </form>
-            )} */}
-            {!user && <SignInButton />}
-            <div className="lg:hidden">
-              <MobMenu Menus={filteredMenus} />
-            </div>
+        {/* Right: Sign In / Mobile Menu */}
+        <div className="flex items-center justify-end gap-x-3">
+          {!user && <SignInButton />}
+          <div className="lg:hidden">
+            <MobMenu Menus={filteredMenus} />
           </div>
         </div>
+      </div>
+
+      {/* Optional: mobile dropdown (hidden on lg) */}
+      <div className="lg:hidden">
+        {/* MobMenu will render menu list when toggled */}
       </div>
     </nav>
   );

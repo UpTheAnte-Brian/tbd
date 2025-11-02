@@ -58,7 +58,6 @@ export default function DistrictPage() {
         <LoadingSpinner />
       ) : (
         <div>
-          <p className="text-black">Test Name: {foundation?.name}</p>
           <DistrictPanels
             district={{ ...district, foundation }}
             user={user} // can be null if logged out

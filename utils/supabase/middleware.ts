@@ -9,7 +9,7 @@ export async function updateSession(request: NextRequest) {
     if (
         pathname.startsWith("/auth") || pathname.startsWith("/api") ||
         pathname.startsWith("/districts") || pathname.startsWith("/donate") ||
-        pathname.startsWith("/info")
+        pathname.startsWith("/info") || pathname.startsWith("/businesses")
     ) {
         return NextResponse.next();
     }

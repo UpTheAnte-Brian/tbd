@@ -14,11 +14,8 @@ export default function BusinessOverview({
       <div className="flex gap-4 w-full">
         {/* Left content: 3/4 width */}
         <div className="w-3/4 [&>*]:text-black">
-          <p>
-            -Calendar of Events - Ante Up Nation could layer in campaign related
-            events and dates.
-          </p>
-          <p>-On Hover Hook to show magnifying glass that zooms. </p>
+          <p>-</p>
+          <p>- </p>
           <h3 className="text-lg font-semibold mb-2"> Data:</h3>
           <ul className="list-disc list-inside space-y-1 [&>*]:text-black">
             <li>

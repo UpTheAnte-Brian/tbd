@@ -64,7 +64,12 @@ export default function MobMenu({ Menus }: { Menus: MenuObj[] }) {
                         className="p-2 flex items-center hover:bg-white/5 rounded-md cursor-pointer"
                       >
                         {String(method ?? "").toUpperCase() === "POST" ? (
-                          <form action={path} method="post" className="m-0 p-0">
+                          <form
+                            action={path}
+                            method="post"
+                            onSubmit={toggleDrawer}
+                            className="m-0 p-0"
+                          >
                             <button
                               type="submit"
                               className="flex items-center gap-x-4 group/menubox bg-transparent border-none p-0 font-inherit text-inherit cursor-pointer appearance-none"
@@ -86,6 +91,7 @@ export default function MobMenu({ Menus }: { Menus: MenuObj[] }) {
                         ) : (
                           <Link
                             href={path}
+                            onClick={toggleDrawer} // close drawer on link click
                             className="flex items-center gap-x-4 group/menubox"
                           >
                             <div className="bg-white/5 w-fit p-2 rounded-md group-hover/menubox:bg-white group-hover/menubox:text-gray-900 duration-300">

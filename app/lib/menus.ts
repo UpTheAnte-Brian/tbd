@@ -5,6 +5,67 @@ import { Menu } from "./types";
 async function Menus() {
   const res: Menu[] = [
     {
+      name: "Learn",
+      authRequired: false,
+      subMenu: [
+        {
+          name: "Fundamentals",
+          desc: "Fundamentals",
+          icon: "user-pen",
+          path: "/info/fundamentals",
+          method: "GET",
+        },
+        {
+          name: "Up The Ante",
+          desc: "TBD",
+          icon: "users",
+          path: "/info/uptheante",
+          method: "GET",
+        },
+        {
+          name: "Capitalist Roots",
+          desc: "TBD",
+          icon: "users",
+          path: "/info/growth",
+          method: "GET",
+        },
+      ],
+      gridCols: 1,
+      path: "/info",
+    },
+    {
+      name: "Explore",
+      authRequired: false,
+      subMenu: [
+        {
+          name: "Districts",
+          desc: "School District List",
+          icon: "user-pen",
+          path: "/districts",
+          method: "GET",
+        },
+        {
+          name: "Businesses",
+          desc: "Participating Businesses",
+          icon: "users",
+          path: "/businesses",
+          method: "GET",
+        },
+      ],
+      gridCols: 1,
+      path: "/info",
+    },
+    {
+      name: "Receipts",
+      path: "/receipts",
+      authRequired: true,
+    },
+    {
+      name: "Donate",
+      path: "/donate",
+      authRequired: false,
+    },
+    {
       name: "Admin",
       authRequired: true,
       roles: ["admin"],
@@ -62,45 +123,6 @@ async function Menus() {
       ],
       gridCols: 1,
       path: "/account",
-    },
-    {
-      name: "Our Story",
-      authRequired: false,
-      subMenu: [
-        {
-          name: "Fundamentals",
-          desc: "Fundamentals",
-          icon: "user-pen",
-          path: "/info/fundamentals",
-          method: "GET",
-        },
-        {
-          name: "Up The Ante",
-          desc: "TBD",
-          icon: "users",
-          path: "/info/uptheante",
-          method: "GET",
-        },
-        {
-          name: "Capitalist Roots",
-          desc: "TBD",
-          icon: "users",
-          path: "/info/growth",
-          method: "GET",
-        },
-      ],
-      gridCols: 1,
-      path: "/info",
-    },
-    {
-      name: "Receipts",
-      path: "/receipts",
-      authRequired: true,
-    },
-    {
-      name: "Donate",
-      path: "/donate",
-      authRequired: false,
     },
   ];
 

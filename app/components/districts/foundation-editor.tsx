@@ -5,9 +5,11 @@ import { useState } from "react";
 export default function FoundationEditor({
   foundation,
   onSave,
+  onCancel,
 }: {
   foundation: Foundation;
   onSave: (updates: Partial<Foundation>) => void;
+  onCancel: () => void;
 }) {
   const [form, setForm] = useState<Foundation>(
     foundation ?? {
@@ -125,6 +127,13 @@ export default function FoundationEditor({
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
       >
         Save Foundation
+      </button>
+      <button
+        type="button"
+        onClick={onCancel}
+        className="bg-gray-500 text-white px-4 py-2 rounded ml-2 hover:bg-gray-600"
+      >
+        Cancel
       </button>
     </form>
   );

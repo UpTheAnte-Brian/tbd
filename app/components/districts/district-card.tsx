@@ -61,6 +61,7 @@ const DistrictCard = React.memo(
                 }
               : district.foundation
           }
+          onCancel={() => {}}
           onSave={async (updated) => {
             try {
               if (!updated.district_id) {
