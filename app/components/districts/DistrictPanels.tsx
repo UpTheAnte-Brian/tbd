@@ -1,4 +1,6 @@
 "use client";
+import { Calendar } from "@/app/components/calendar/calendar";
+import DistrictAdmin from "@/app/components/districts/panels/admin";
 import DistrictMap from "@/app/components/districts/panels/DistrictMap";
 import DistrictFoundation from "@/app/components/districts/panels/foundation";
 import DistrictOverview from "@/app/components/districts/panels/overview";
@@ -44,7 +46,10 @@ export default function DistrictPanels({
     "Admin",
     "Calendar",
   ];
-
+  const campaignDays = Array.from(
+    { length: 30 },
+    (_, i) => new Date(2025, 10, i + 1)
+  );
   return (
     <div>
       <div className="flex border-b border-gray-300">
@@ -67,6 +72,18 @@ export default function DistrictPanels({
           <DistrictMap district={district} user={user} />
         ) : activeTab === "Overview" ? (
           <DistrictOverview district={district} />
+        ) : activeTab === "Admin" && user ? (
+          <DistrictAdmin user={user} district={district}></DistrictAdmin>
+        ) : activeTab === "Calendar" && user ? (
+          <Calendar
+            month={10} // November
+            year={2025}
+            campaignDays={campaignDays}
+            initialData={{ "2025-11-05": 50 }}
+            onChange={(data) =>
+              console.log("Updated transaction counts:", data)
+            }
+          />
         ) : activeTab === "Foundation" ? (
           <DistrictFoundation
             user={user}
