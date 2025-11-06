@@ -12,10 +12,12 @@ export default function DistrictPanels({
   user,
   district,
   reloadFoundation,
+  reloadDistrict,
 }: {
   user: Profile | null;
   district: DistrictWithFoundation;
   reloadFoundation: () => void;
+  reloadDistrict: () => void;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -73,7 +75,11 @@ export default function DistrictPanels({
         ) : activeTab === "Overview" ? (
           <DistrictOverview district={district} />
         ) : activeTab === "Admin" && user ? (
-          <DistrictAdmin user={user} district={district}></DistrictAdmin>
+          <DistrictAdmin
+            user={user}
+            district={district}
+            reloadDistrict={reloadDistrict}
+          ></DistrictAdmin>
         ) : activeTab === "Calendar" && user ? (
           <Calendar
             month={10} // November

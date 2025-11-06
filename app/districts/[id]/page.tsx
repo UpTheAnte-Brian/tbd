@@ -16,6 +16,7 @@ export default function DistrictPage() {
     district,
     loading: districtLoading,
     error: districtError,
+    reload: reloadDistrict,
   } = useDistrict(id as string);
 
   // Lazy load foundation once district is available
@@ -62,6 +63,7 @@ export default function DistrictPage() {
             district={{ ...district, foundation }}
             user={user} // can be null if logged out
             reloadFoundation={reload}
+            reloadDistrict={reloadDistrict}
           />
         </div>
       )}

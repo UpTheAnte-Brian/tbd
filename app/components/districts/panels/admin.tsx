@@ -5,11 +5,14 @@ import UserRolesAssignments from "@/app/components/ui/user-roles-assignments";
 export default function DistrictAdmin({
   user,
   district,
+  reloadDistrict,
 }: {
   user: Profile;
   district: DistrictWithFoundation;
+  reloadDistrict: () => void;
 }) {
   const [users, setUsers] = useState<Profile[]>([]);
+  const [assignedUsers, setAssignedUsers] = useState(district.users || []);
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -25,6 +28,10 @@ export default function DistrictAdmin({
     loadUsers();
   }, []);
 
+  useEffect(() => {
+    setAssignedUsers(district.users || []);
+  }, [district]);
+
   return (
     <div className="flex flex-row sm:flex-col">
       <div className="flex-1 border-r border-gray-300 p-4">
@@ -33,8 +40,7 @@ export default function DistrictAdmin({
           district.
         </div>
         <p className="text-black">
-          The list below should be updated for changes. Also, changing roles is
-          not yet supported.{" "}
+          The list below should be updated for changes.{" "}
         </p>
 
         <form
@@ -60,7 +66,8 @@ export default function DistrictAdmin({
             }
 
             form.reset();
-            alert(`Added user with ID ${userId} as ${role}`);
+            // alert(`Added user with ID ${userId} as ${role}`);
+            await reloadDistrict();
           }}
           className="flex flex-col gap-2 mb-4"
         >
@@ -96,7 +103,10 @@ export default function DistrictAdmin({
         </form>
       </div>
       <div className="w-64 p-4">
-        <UserRolesAssignments profiles={district.users || []} />
+        <UserRolesAssignments
+          profiles={assignedUsers}
+          districtId={district.id}
+        />
       </div>
     </div>
   );

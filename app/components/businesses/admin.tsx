@@ -25,7 +25,7 @@ export default function BusinessAdmin({
         <p>Let's put a list of users here with role. </p>
       </div>
       <div className="w-64 p-4">
-        <UserRolesAssignments profiles={business.users || []} />
+        <UserRolesAssignments profiles={business.users || []} districtId={""} />
       </div>
     </div>
   );
