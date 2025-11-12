@@ -44,7 +44,7 @@ export default function NavBarComponent() {
       <div
         className="max-w-7xl mx-0 px-4 h-16
                       grid items-center
-                      lg:grid-cols-[auto_1fr_auto]"
+                      grid-cols-[auto_1fr_auto]"
       >
         {/* Left: Logo */}
         <div className="flex items-center justify-start">
@@ -71,11 +71,6 @@ export default function NavBarComponent() {
             <MobMenu Menus={filteredMenus} />
           </div>
         </div>
-      </div>
-
-      {/* Optional: mobile dropdown (hidden on lg) */}
-      <div className="lg:hidden">
-        {/* MobMenu will render menu list when toggled */}
       </div>
     </nav>
   );

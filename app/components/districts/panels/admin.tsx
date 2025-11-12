@@ -39,6 +39,13 @@ export default function DistrictAdmin({
           Welcome {user.first_name}. This is where we can manage users for the
           district.
         </div>
+        <ul className="list-disc list-inside space-y-1 [&>*]:text-black">
+          <li>This tab should be restricted to authenticated at a minimum. </li>
+          <li>Role=Admin on the Profile table or </li>
+          <li>Role=admin on the district_users table. </li>
+          <li>Get rid of the alerts. </li>
+          <li>Fix the look of the User Role Assignments. </li>
+        </ul>
         <p className="text-black">
           The list below should be updated for changes.{" "}
         </p>
