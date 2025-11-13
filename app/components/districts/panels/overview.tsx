@@ -11,48 +11,54 @@ export default function DistrictOverview({
   // user: Profile | null;
 }) {
   return (
-    <div>
-      {/* Flex container for two-column layout */}
-      <div className="flex gap-4 w-full">
-        {/* Left content: 3/4 width */}
-        <div className="w-3/4 [&>*]:text-black">
+    <div className="flex flex-col md:flex-row gap-4 w-full">
+      {/* Left / Main content */}
+      <div className="md:w-3/4 mb-4 md:mb-0 bg-white p-4 rounded-lg shadow-sm md:shadow-none md:bg-transparent md:p-0">
+        <div className="[&>*]:text-black space-y-2">
           <p>Main content goes here</p>
-          {/* Replace this with your actual district details */}
           <p>Ideas:</p>
-          <p>-Foundation and other local charities</p>
-          <p>
-            -Calendar of Events - Ante Up Nation could layer in campaign related
-            events and dates.
-          </p>
-          <p>
-            -It would be interesting to experiment with an opaque map background
-            from the districts geojson. Could include district facilities from
-            another state-provided KML Layer.{" "}
-          </p>
-          <p>-On Hover Hook to show magnifying glass that zooms. </p>
-          <h3 className="text-lg font-semibold mb-2">Academic Data:</h3>
           <ul className="list-disc list-inside space-y-1 [&>*]:text-black">
-            <li>Graduation rate percentage</li>
-            <li>Average SAT/ACT scores</li>
-            <li>Number of AP courses offered</li>
-            <li>State test proficiency ratings</li>
+            <li>Foundation and other local charities</li>
+            <li>
+              Calendar of Events – Ante Up Nation could layer in
+              campaign-related events and dates.
+            </li>
+            <li>
+              Experiment with an opaque map background from the district’s
+              GeoJSON. Could include facilities from a state-provided KML layer.
+            </li>
+            <li>Hover hook to show magnifying glass zoom.</li>
           </ul>
+
+          <h3 className="text-lg font-semibold mt-4">Academic Data</h3>
+          <ul className="list-disc list-inside space-y-1">
+            <li className="text-black">Graduation rate percentage</li>
+            <li className="text-black">Average SAT/ACT scores</li>
+            <li className="text-black">Number of AP courses offered</li>
+            <li className="text-black">State test proficiency ratings</li>
+          </ul>
+
           <p>
-            -Establish donation goals and have a visual indicator of the status.
-            e.g. Coins filling a vase.{" "}
+            Establish donation goals with a visual indicator (e.g., coins
+            filling a vase).
           </p>
         </div>
+      </div>
 
-        {/* Right sidebar: 1/4 width, sticky */}
-        <div className="w-1/4 sticky top-4 self-start">
-          <Link
-            href={`/donate/${district.id}`}
-            className="inline-block px-4 py-2 bg-blue-600 text-white justify-center text-center rounded hover:bg-blue-700 hover:underline hover:decoration-blue-700"
-          >
-            Donate
-          </Link>
-          <DistrictSideBar district={district} />
-          <DistrictDonationsSummary districtId={district.id} />
+      {/* Sidebar / Donate summary */}
+      <div className="md:w-1/4 mb-4 md:mb-0 bg-white p-4 rounded-lg shadow-sm md:shadow-none md:bg-transparent md:p-0">
+        <div className="md:sticky md:top-4 self-start">
+          <div className="flex flex-col gap-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+            <Link
+              href={`/donate/${district.id}`}
+              className="w-full text-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Donate
+            </Link>
+
+            <DistrictSideBar district={district} />
+            <DistrictDonationsSummary districtId={district.id} />
+          </div>
         </div>
       </div>
     </div>

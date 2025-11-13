@@ -54,20 +54,36 @@ export default function DistrictPanels({
   );
   return (
     <div>
-      <div className="flex border-b border-gray-300">
+      {/* Desktop Tabs */}
+      <div className="hidden md:flex border-b border-gray-300 overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab}
-            className={`px-4 py-2 -mb-px border-b-2 font-medium ${
+            className={`px-4 py-2 -mb-px border-b-2 font-medium whitespace-nowrap ${
               activeTab === tab
                 ? "border-blue-500 bg-white text-blue-600"
-                : "border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300"
+                : "border-transparent text-gray-300 hover:text-white hover:border-gray-300"
             }`}
-            onClick={() => handleTabChange(tab)} // ✅ use the URL-sync handler
+            onClick={() => handleTabChange(tab)}
           >
             {tab}
           </button>
         ))}
+      </div>
+
+      {/* Mobile Dropdown */}
+      <div className="md:hidden relative border-b border-gray-300">
+        <select
+          value={activeTab}
+          onChange={(e) => handleTabChange(e.target.value)}
+          className="w-full p-2 bg-white text-gray-800 border-none focus:ring-0 focus:outline-none"
+        >
+          {tabs.map((tab) => (
+            <option className="text-black" key={tab} value={tab}>
+              {tab}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="p-4 bg-white border border-t-0 border-gray-300">
         {activeTab === "Map" ? (

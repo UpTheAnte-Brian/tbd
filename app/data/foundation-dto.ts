@@ -13,6 +13,15 @@ export async function getFoundationDTO(id: string) {
     return { data, error };
 }
 
+export async function getFoundationsDTO() {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("foundations")
+        .select("*");
+
+    return { data, error };
+}
+
 export async function upsertFoundationDTO(
     district_id: string,
     foundation: Foundation,

@@ -62,14 +62,14 @@ const MapComponent = React.memo(() => {
     visible: false,
   });
   // const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const { user, loading, error } = useUser();
+  const { user, loading } = useUser();
   const supabase = getSupabaseClient();
   const labelMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>(
     []
   );
-  if (error) {
-    console.warn("no user session");
-  }
+  // if (error) {
+  //   console.warn("no user session");
+  // }
   // useEffect(() => {
   //   if (user?.role === "admin") {
   //     setIsAdmin(true);
@@ -177,14 +177,14 @@ const MapComponent = React.memo(() => {
     labelMarkersRef.current = newMarkers;
   }
   const onLoad = async (map: google.maps.Map) => {
-    console.time("onload");
+    // console.time("onload");
     mapRef.current = map;
 
-    console.time("districtsFetch");
+    // console.time("districtsFetch");
     await fetch("/api/districts")
       .then((res) => res.json())
       .then(async (geojson: { features: DistrictWithFoundation[] }) => {
-        console.timeEnd("districtsFetch");
+        // console.timeEnd("districtsFetch");
         map.data.addGeoJson(geojson);
         map.data.setStyle({
           visible: true,
@@ -300,7 +300,7 @@ const MapComponent = React.memo(() => {
         //   }
         // });
 
-        console.timeEnd("onload");
+        // console.timeEnd("onload");
       });
   };
   useEffect(() => {
