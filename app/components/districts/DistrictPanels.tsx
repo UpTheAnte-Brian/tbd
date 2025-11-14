@@ -26,6 +26,9 @@ export default function DistrictPanels({
   const initialTab = searchParams.get("tab") || "Overview";
   const [activeTab, setActiveTab] = useState(initialTab);
 
+  const admin = user?.global_role === "admin";
+  const districtAdmin = user?.district_users?.some((u) => u.role === "admin");
+
   // Keep internal state in sync with URL changes (e.g. back/forward)
   useEffect(() => {
     const current = searchParams.get("tab") || "Overview";
@@ -90,7 +93,7 @@ export default function DistrictPanels({
           <DistrictMap district={district} user={user} />
         ) : activeTab === "Overview" ? (
           <DistrictOverview district={district} />
-        ) : activeTab === "Admin" && user ? (
+        ) : activeTab === "Admin" && user && (admin || districtAdmin) ? (
           <DistrictAdmin
             user={user}
             district={district}

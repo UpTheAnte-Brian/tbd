@@ -59,11 +59,11 @@ export default function FoundationsPage() {
         headerName: "Foundation Name",
         flex: 1.5,
         cellRenderer: (params: ICellRendererParams<Foundation>) => {
-          const id = params.data?.id;
-          if (!id) return params.value;
+          const district_id = params.data?.district_id;
+          if (!district_id) return params.value;
           return (
             <Link
-              href={`/foundations/${id}`}
+              href={`/districts/${district_id}?tab=Foundation`}
               style={{ color: "#4dabf7", textDecoration: "none" }}
             >
               {params.value}

@@ -7,7 +7,7 @@ import { useParams } from "next/navigation";
 import DistrictPanels from "@/app/components/districts/DistrictPanels";
 import { useUser } from "@/app/hooks/useUser";
 
-export default function DistrictPage() {
+export default function FoundationPage() {
   const params = useParams();
   const { id } = params;
   const { user, loading: userLoading, error: userError } = useUser();

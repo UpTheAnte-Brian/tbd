@@ -1,10 +1,13 @@
+export const revalidate = 3600; // cache this route for 1 hour
+export const dynamic = "force-static";
+import { NextResponse } from "next/server";
 // The client you created from the Server-Side Auth instructions
 // import { supabaseServiceClient } from "@/utils/supabase/service-worker";
 import { createClient } from "../../../utils/supabase/server";
 
 export async function GET() {
     const supabase = await createClient();
-
+    console.log("API: /api/districts -> executed at", new Date().toISOString());
     console.time("sb fetch districts and foundations");
     const [foundationRes, districtRes] = await Promise.all([
         supabase.from("foundations").select("*"),
@@ -20,7 +23,7 @@ export async function GET() {
     const { data: foundations, error: foundationError } = foundationRes;
     const { data: districts, error: districtError } = districtRes;
 
-    // await supabaseServiceClient.auth.admin.updateUserById(
+    // await supabaseServiceClieµnt.auth.admin.updateUserById(
     //     "002c3f9d-91ba-4792-b1e3-581d3a19fce5",
     //     {
     //         app_metadata: { role: "admin" },
@@ -66,7 +69,7 @@ export async function GET() {
     });
     console.timeEnd("combine districts and foundations");
 
-    return Response.json({
+    return NextResponse.json({
         type: "FeatureCollection",
         features,
     });

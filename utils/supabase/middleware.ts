@@ -10,7 +10,7 @@ export async function updateSession(request: NextRequest) {
         pathname.startsWith("/auth") || pathname.startsWith("/api") ||
         pathname.startsWith("/districts") || pathname.startsWith("/donate") ||
         pathname.startsWith("/info") || pathname.startsWith("/businesses") ||
-        pathname.startsWith("/foundations")
+        pathname.startsWith("/foundations") || pathname.startsWith("/users")
     ) {
         return NextResponse.next();
     }
