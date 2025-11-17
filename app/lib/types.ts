@@ -204,7 +204,12 @@ export type PlaceDetailsType = {
     types?: string[];
 };
 
-export type BusinessStatus = "pending" | "active" | "inactive";
+export type BusinessStatus =
+    | "pending"
+    | "active"
+    | "inactive"
+    | "verified"
+    | "rejected";
 export type BusinessUserRole = "owner" | "rep" | "viewer";
 export type CampaignType = "round_up" | "percent" | "flat";
 export type CampaignStatus = "pending" | "active" | "ended";

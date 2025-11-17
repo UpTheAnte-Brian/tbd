@@ -94,3 +94,29 @@ export async function registerBusiness(
 
     return newBusiness;
 }
+
+export async function approveBusiness(businessId: string) {
+    const supabase = await createClient();
+
+    const { error } = await supabase
+        .from("businesses")
+        .update({ status: "active" })
+        .eq("id", businessId);
+
+    if (error) throw error;
+
+    return { success: true };
+}
+
+export async function rejectBusiness(businessId: string) {
+    const supabase = await createClient();
+
+    const { error } = await supabase
+        .from("businesses")
+        .update({ status: "inactive" })
+        .eq("id", businessId);
+
+    if (error) throw error;
+
+    return { success: true };
+}
