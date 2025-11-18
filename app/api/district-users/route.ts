@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import {
+    DELETE as entityUsersDELETE,
+    POST as entityUsersPOST,
+} from "@/app/api/entity-users/route";
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
@@ -24,35 +28,34 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-    try {
-        const { districtId, userId, role } = await req.json();
+    // Force entityType to "district"
+    const body = await req.json();
+    const forwardedRequest = new Request(req.url, {
+        method: req.method,
+        headers: req.headers,
+        body: JSON.stringify({
+            entityType: "district",
+            entityId: body.entityId,
+            userId: body.userId,
+            role: body.role,
+        }),
+    });
 
-        if (!districtId || !userId || !role) {
-            return NextResponse.json(
-                { error: "Missing districtId, userId, or role" },
-                { status: 400 },
-            );
-        }
+    return entityUsersPOST(forwardedRequest);
+}
 
-        const supabase = await createClient();
+export async function DELETE(req: Request) {
+    // Force entityType to "district"
+    const body = await req.json();
+    const forwardedRequest = new Request(req.url, {
+        method: req.method,
+        headers: req.headers,
+        body: JSON.stringify({
+            entityType: "district",
+            entityId: body.entityId,
+            userId: body.userId,
+        }),
+    });
 
-        const { data, error } = await supabase
-            .from("district_users")
-            .upsert(
-                [{ district_id: districtId, user_id: userId, role }],
-                { onConflict: "district_id,user_id" },
-            )
-            .select();
-
-        if (error) throw error;
-
-        return NextResponse.json({ success: true, data });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-        console.error("Error in POST /api/district-users:", err);
-        return NextResponse.json(
-            { error: err.message || "Internal Server Error" },
-            { status: 500 },
-        );
-    }
+    return entityUsersDELETE(forwardedRequest);
 }

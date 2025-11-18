@@ -7,9 +7,11 @@ import React, { useState } from "react";
 export default function BusinessPanels({
   user,
   business,
+  reloadBusiness,
 }: {
   user: Profile | null;
   business: Business;
+  reloadBusiness: () => void;
 }) {
   const tabs = ["Overview", "Admin", "Calendar"];
   const [activeTab, setActiveTab] = useState(tabs[0]);
@@ -33,7 +35,11 @@ export default function BusinessPanels({
       </div>
       <div className="p-4 bg-white border border-t-0 border-gray-300">
         {activeTab === "Admin" && user ? (
-          <BusinessAdmin user={user} business={business}></BusinessAdmin>
+          <BusinessAdmin
+            user={user}
+            business={business}
+            reloadBusiness={reloadBusiness}
+          ></BusinessAdmin>
         ) : activeTab === "Overview" ? (
           <BusinessOverview business={business} />
         ) : (

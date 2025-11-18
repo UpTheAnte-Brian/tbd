@@ -34,7 +34,7 @@ export default function DistrictAdmin({
 
   return (
     <div className="flex flex-row sm:flex-col">
-      <div className="flex-1 border-r border-gray-300 p-4">
+      <div className="flex-1 border-gray-300 p-4">
         <div className="text-2xl font-bold text-black mb-4">
           Welcome {user.first_name}. This is where we can manage users for the
           district.
@@ -49,72 +49,17 @@ export default function DistrictAdmin({
         <p className="text-black">
           The list below should be updated for changes.{" "}
         </p>
-
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const form = e.target as HTMLFormElement;
-            const userId = (
-              form.elements.namedItem("userId") as HTMLSelectElement
-            ).value;
-            const role = (form.elements.namedItem("role") as HTMLSelectElement)
-              .value;
-
-            const response = await fetch("/api/district-users", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ districtId: district.id, userId, role }),
-            });
-
-            const result = await response.json();
-            if (!response.ok) {
-              alert(`Error: ${result.error || "Failed to add user"}`);
-              return;
-            }
-
-            form.reset();
-            // alert(`Added user with ID ${userId} as ${role}`);
-            await reloadDistrict();
-          }}
-          className="flex flex-col gap-2 mb-4"
-        >
-          <select
-            name="userId"
-            className="border border-gray-400 rounded px-2 py-1 text-black"
-            required
-          >
-            <option value="">Select a user</option>
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.first_name} {u.last_name} ({u.username})
-              </option>
-            ))}
-          </select>
-
-          <select
-            name="role"
-            className="border border-gray-400 rounded px-2 py-1 text-black"
-            required
-          >
-            <option value="viewer">Viewer</option>
-            <option value="editor">Editor</option>
-            <option value="admin">Admin</option>
-          </select>
-
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-          >
-            Add User
-          </button>
-        </form>
       </div>
-      <div className="w-64 p-4">
-        <UserRolesAssignments
-          profiles={assignedUsers}
-          districtId={district.id}
-        />
-      </div>
+      <UserRolesAssignments
+        profiles={assignedUsers}
+        entityType="district"
+        entityId={district.id}
+        entityName={district.shortname}
+        reload={reloadDistrict}
+        availableUsers={users.filter(
+          (u) => !assignedUsers.some((assigned) => assigned.user_id === u.id)
+        )}
+      />
     </div>
   );
 }

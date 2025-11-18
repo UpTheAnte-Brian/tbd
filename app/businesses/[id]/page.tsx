@@ -16,6 +16,7 @@ export default function BusinessPage() {
     business,
     loading: businessLoading,
     error: businessError,
+    reload: reloadBusiness,
   } = useBusiness(id as string);
 
   if (userError) {
@@ -36,7 +37,11 @@ export default function BusinessPage() {
           },
         ]}
       />
-      <BusinessPanels business={business} user={user}></BusinessPanels>
+      <BusinessPanels
+        business={business}
+        user={user}
+        reloadBusiness={reloadBusiness}
+      ></BusinessPanels>
     </main>
   );
 }

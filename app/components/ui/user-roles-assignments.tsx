@@ -1,28 +1,50 @@
-import { BusinessUserJoined } from "@/app/lib/types";
-import React from "react";
+import {
+  BusinessUserJoined,
+  DistrictUserJoined,
+  Profile,
+  RoleOptions,
+} from "@/app/lib/types";
+import React, { useState } from "react";
 
 type UserRolesAssignmentsProps = {
   profiles: BusinessUserJoined[];
-  districtId: string;
+  entityType: string;
+  entityId: string;
+  entityName: string;
+  reload: () => void;
+  availableUsers: Profile[];
 };
-
-const makeKey = (row: BusinessUserJoined) =>
-  `${row.business_id}:${row.user_id}`;
 
 const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
   profiles,
-  districtId,
+  entityType,
+  entityId,
+  entityName,
+  reload,
+  availableUsers,
 }) => {
+  const roles: string[] = (RoleOptions[
+    entityType as keyof typeof RoleOptions
+  ] || []) as unknown as string[];
+  const defaultRole = roles[0] || "";
+
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [selectedRole, setSelectedRole] = useState<string>(defaultRole);
+  const [adding, setAdding] = useState(false);
+
+  const makeKey = (row: BusinessUserJoined | DistrictUserJoined) =>
+    `${entityType}:${row.user.id}:${entityId}`;
+
   const handleRoleChange = async (
     userId: string,
     newRole: string,
     userName: string
   ) => {
     try {
-      const response = await fetch("/api/district-users", {
+      const response = await fetch(`/api/${entityType}-users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ districtId, userId, role: newRole }),
+        body: JSON.stringify({ entityType, entityId, userId, role: newRole }),
       });
 
       const result = await response.json();
@@ -31,42 +53,171 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
         return;
       }
       alert(`${userName}'s role updated to ${newRole}`);
+      reload();
     } catch (err) {
       console.error("Error updating role:", err);
       alert("An error occurred while updating the role.");
     }
   };
 
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUserId) {
+      alert("Please select a user to add.");
+      return;
+    }
+    setAdding(true);
+    try {
+      const response = await fetch(`/api/${entityType}-users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entityType,
+          entityId,
+          userId: selectedUserId,
+          role: selectedRole,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        alert(`Error adding user: ${result.error || "Failed to add user"}`);
+        setAdding(false);
+        return;
+      }
+
+      setSelectedUserId("");
+      setSelectedRole(defaultRole);
+      reload();
+    } catch (err) {
+      console.error("Error adding user:", err);
+      alert("An error occurred while adding the user.");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  // Filter availableUsers to exclude those already assigned
+  const assignedUserIds = new Set(profiles.map((p) => p.user.id));
+  const filteredAvailableUsers = availableUsers.filter(
+    (user) => !assignedUserIds.has(user.id)
+  );
+
   return (
-    <ul className="p-4 border border-gray-300 space-y-2">
-      {profiles.map((assignment) => (
-        <li
-          key={makeKey(assignment)}
-          className="p-2 border border-gray-200 rounded text-black flex items-center justify-between"
-        >
-          <div>
-            <div className="font-semibold text-black">
-              {assignment.user.username ?? "Unnamed user"}
-            </div>
-          </div>
+    <div className="p-4 border border-gray-300 space-y-4 rounded">
+      <div className="flex flex-col text-black">
+        <div className="text-lg font-bold">{entityName}</div>
+        <div className="text-sm text-gray-600 capitalize">
+          Managing roles for {entityType}
+        </div>
+      </div>
+
+      {/* Add User Form */}
+      <form
+        onSubmit={handleAddUser}
+        className="p-2 border border-gray-200 rounded space-y-2 bg-gray-50"
+      >
+        <div className="flex flex-col gap-2">
+          <label htmlFor="user-select" className="font-semibold text-black">
+            Add User
+          </label>
           <select
-            defaultValue={assignment.role}
-            onChange={(e) =>
-              handleRoleChange(
-                assignment.user_id,
-                e.target.value,
-                assignment.user.username ?? "User"
-              )
-            }
+            id="user-select"
+            value={selectedUserId}
+            onChange={(e) => setSelectedUserId(e.target.value)}
             className="border border-gray-400 rounded px-2 py-1 text-black"
           >
-            <option value="viewer">Viewer</option>
-            <option value="editor">Editor</option>
-            <option value="admin">Admin</option>
+            <option value="">Select a user</option>
+            {filteredAvailableUsers.map((user) => (
+              <option key={user.id} value={user.id}>
+                {user.username ?? "Unnamed user"}
+              </option>
+            ))}
           </select>
-        </li>
-      ))}
-    </ul>
+          <select
+            value={selectedRole}
+            onChange={(e) => setSelectedRole(e.target.value)}
+            className="border border-gray-400 rounded px-2 py-1 text-black"
+          >
+            {roles.map((role) => (
+              <option key={role} value={role}>
+                {role.charAt(0).toUpperCase() + role.slice(1)}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            disabled={adding}
+            className="bg-blue-600 text-white px-3 py-1 rounded disabled:opacity-50"
+          >
+            {adding ? "Adding..." : "Add User"}
+          </button>
+        </div>
+      </form>
+
+      <ul className="space-y-2">
+        {profiles.map((assignment) => (
+          <li
+            key={makeKey(assignment)}
+            className="p-2 border border-gray-200 rounded text-black flex items-center justify-between"
+          >
+            <div>
+              <div className="font-semibold text-black">
+                {assignment.user.username ?? "Unnamed user"}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                defaultValue={assignment.role}
+                onChange={(e) =>
+                  handleRoleChange(
+                    assignment.user.id,
+                    e.target.value,
+                    assignment.user.username ?? "User"
+                  )
+                }
+                className="border border-gray-400 rounded px-2 py-1 text-black"
+              >
+                {roles.map((role) => (
+                  <option key={role} value={role}>
+                    {role.charAt(0).toUpperCase() + role.slice(1)}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={async () => {
+                  if (!confirm(`Remove ${assignment.user.username}'s role?`))
+                    return;
+                  const payload = {
+                    entityType,
+                    entityId,
+                    userId: assignment.user.id,
+                  };
+                  try {
+                    const response = await fetch(`/api/${entityType}-users`, {
+                      method: "DELETE",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(payload),
+                    });
+                    const result = await response.json();
+                    if (!response.ok) {
+                      alert(`Error deleting role: ${result.error || "Failed"}`);
+                      return;
+                    }
+                    reload();
+                  } catch (err) {
+                    console.error("Error deleting role:", err);
+                    alert("An error occurred while deleting the role.");
+                  }
+                }}
+                className="bg-red-500 text-white px-2 py-1 rounded"
+              >
+                Delete
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 };
 

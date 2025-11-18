@@ -88,7 +88,7 @@ export interface UserWithDistricts {
 export interface DistrictUserRow {
     district_id: string;
     user_id: string;
-    role: string;
+    role: DistrictUserRole;
 }
 
 export interface DistrictUserJoined extends DistrictUserRow {
@@ -99,7 +99,7 @@ export interface DistrictUserJoined extends DistrictUserRow {
 export interface BusinessUserRow {
     business_id: string;
     user_id: string;
-    role: string;
+    role: BusinessUserRole;
 }
 
 export interface BusinessUserJoined extends BusinessUserRow {
@@ -119,6 +119,8 @@ export interface Profile {
     district_users: (DistrictUserRow | DistrictUserJoined)[];
     business_users: (BusinessUserRow | BusinessUserJoined)[];
     global_role: string | null;
+    address: string | null;
+    phone_number: string | null;
 }
 
 export type ApiDistrict = {
@@ -203,16 +205,57 @@ export type PlaceDetailsType = {
     };
     types?: string[];
 };
+export interface BusinessUser {
+    id: string;
+    business_id: string;
+    user_id: string;
+    role: BusinessUserRole;
+    created_at: string;
+}
 
+export interface DistrictUser {
+    id: string;
+    district_id: string;
+    user_id: string;
+    role: DistrictUserRole;
+    created_at: string;
+}
+
+export interface FoundationUser {
+    id: string;
+    foundation_id: string;
+    user_id: string;
+    role: FoundationUserRole;
+    created_at: string;
+}
+
+export interface Campaign {
+    id: string;
+    business_id?: string;
+    district_id?: string;
+    campaign_type: CampaignType;
+    status: "pending" | "active" | "ended";
+    created_at: string;
+    updated_at: string;
+}
 export type BusinessStatus =
     | "pending"
     | "active"
     | "inactive"
     | "verified"
     | "rejected";
-export type BusinessUserRole = "owner" | "rep" | "viewer";
+export type BusinessUserRole = "owner" | "employee" | "patron";
+export type DistrictUserRole =
+    | "superintendent"
+    | "athletic director"
+    | "admin"
+    | "teacher";
+export type FoundationUserRole =
+    | "President"
+    | "board member"
+    | "Patron";
 export type CampaignType = "round_up" | "percent" | "flat";
-export type CampaignStatus = "pending" | "active" | "ended";
+export type CampaignStatus = "pending" | "scheduled" | "active" | "ended";
 
 export interface Business {
     id: string;
@@ -247,3 +290,15 @@ export interface BusinessCampaign {
     created_at: string;
     updated_at: string;
 }
+
+// Added UserRolesAssignments with arrays of strings for each entity type to avoid runtime error
+export const RoleOptions = {
+    business: ["owner", "employee", "patron"] as const,
+    district: [
+        "superintendent",
+        "athletic director",
+        "admin",
+        "teacher",
+    ] as const,
+    foundation: ["President", "board member", "Patron"] as const,
+};

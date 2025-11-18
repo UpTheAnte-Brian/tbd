@@ -48,6 +48,8 @@ export async function getAllUsers(): Promise<Profile[]> {
     district_users: u.district_users,
     business_users: u.business_users,
     global_role: u.role ?? null,
+    address: u.address ?? null,
+    phone_number: u.phone_number ?? null,
   }));
 }
 
@@ -88,6 +90,8 @@ export async function getUser(id: string): Promise<Profile> {
     district_users: data.district_users,
     business_users: data.business_users,
     global_role: data.role ?? null,
+    address: data.address ?? null,
+    phone_number: data.phone_number ?? null,
   };
   return user;
 }

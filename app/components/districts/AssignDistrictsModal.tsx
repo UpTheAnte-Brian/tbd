@@ -1,6 +1,6 @@
 import DistrictMultiSelectSearch from "@/app/components/districts/district-multi-select-search";
 import {
-  DistrictUserRow,
+  DistrictUserJoined,
   DistrictWithFoundation,
   Profile,
 } from "@/app/lib/types";
@@ -59,8 +59,10 @@ const AssignDistrictsModal: React.FC<AssignDistrictsModalProps> = ({
             selectedIds={
               localUsers
                 .find((u) => u.id === assignToId)
-                ?.district_users.map((d: DistrictUserRow) => d.district_id) ||
-              []
+                ?.district_users.filter(
+                  (d): d is DistrictUserJoined => "district" in d
+                )
+                .map((d) => d.district_id) || []
             }
             onChange={(newSelectedIds) => {
               setLocalUsers((prev) =>
@@ -73,12 +75,13 @@ const AssignDistrictsModal: React.FC<AssignDistrictsModalProps> = ({
                           return {
                             district_id: id,
                             user_id: u.id,
-                            role: "member",
+                            role: "teacher",
                             district: {
                               id: id,
                               sdorgid: id,
                               shortname: f ? f.shortname : "Unknown",
                             },
+                            user: u,
                           };
                         }),
                       }

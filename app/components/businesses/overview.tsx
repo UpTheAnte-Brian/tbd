@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { Business } from "@/app/lib/types";
+import PlaceMap from "@/app/components/places/place-map";
 
 export default function BusinessOverview({
   business,
@@ -11,9 +11,9 @@ export default function BusinessOverview({
   return (
     <div>
       {/* Flex container for two-column layout */}
-      <div className="flex gap-4 w-full">
+      <div className="flex flex-col md:flex-row gap-4 w-full">
         {/* Left content: 3/4 width */}
-        <div className="w-3/4 [&>*]:text-black">
+        <div className="w-full md:w-3/4 [&>*]:text-black">
           <p>-</p>
           <p>- </p>
           <h3 className="text-lg font-semibold mb-2"> Data:</h3>
@@ -29,13 +29,8 @@ export default function BusinessOverview({
         </div>
 
         {/* Right sidebar: 1/4 width, sticky */}
-        <div className="w-1/4 sticky top-4 self-start">
-          <Link
-            href={`/donate`}
-            className="inline-block px-4 py-2 bg-blue-600 text-white justify-center text-center rounded hover:bg-blue-700 hover:underline hover:decoration-blue-700"
-          >
-            Donate
-          </Link>
+        <div className="w-full md:w-1/4">
+          <PlaceMap placeId={business.place_id!} />
         </div>
       </div>
     </div>
