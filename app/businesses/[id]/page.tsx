@@ -1,5 +1,5 @@
 "use client";
-import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
+import Breadcrumbs from "@/app/components/nav/breadcrumbs";
 import { useBusiness } from "@/app/hooks/useBusiness";
 import LoadingSpinner from "@/app/components/loading-spinner";
 import { useParams } from "next/navigation";

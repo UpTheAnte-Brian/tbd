@@ -8,7 +8,7 @@ import {
 } from "@/app/lib/types";
 import { getBoundsFromGeoJSON } from "@/app/lib/getBoundsFromGeoJSON";
 import PlaceDetails from "@/app/components/places/PlaceDetails";
-import PlaceSearch from "@/app/ui/maps/place-search";
+import PlaceSearch from "@/app/components/places/place-search";
 
 type PlaceClickEvent = google.maps.MapMouseEvent & { placeId?: string };
 
