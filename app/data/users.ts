@@ -10,6 +10,7 @@
 //   // Privacy rules
 //   return viewer.isAdmin || team === viewer.team
 // }
+import { getCurrentUser } from "@/app/data/auth";
 import { Profile } from "@/app/lib/types";
 import { createClient } from "@/utils/supabase/server";
 
@@ -96,15 +97,10 @@ export async function getUser(id: string): Promise<Profile> {
   return user;
 }
 
-export async function getCurrentUser(): Promise<Profile | null> {
-  const supabase = await createClient();
+export async function getCurrentProfile(): Promise<Profile | null> {
+  const user = await getCurrentUser();
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) return null;
+  if (!user) return null;
 
   return await getUser(user.id); // reuse existing getUser(id)
 }

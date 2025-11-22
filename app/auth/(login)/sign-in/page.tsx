@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
-import { getUser } from "@/app/lib/user";
 import { Login } from "@/app/auth/(login)/login";
+import { getCurrentUser } from "@/app/data/auth";
 
 export default async function SignInPage() {
-  const user = await getUser();
+  const user = await getCurrentUser();
   if (user) {
     return redirect("/");
   }

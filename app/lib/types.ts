@@ -151,13 +151,13 @@ export interface Menu {
     roles?: string[];
 }
 
-export interface User {
-    // instance_id: string; // uuid
-    id: string; // uuid
-    // aud: string;
-    role?: string;
-    email?: string;
-}
+// export interface User {
+//     // instance_id: string; // uuid
+//     id: string; // uuid
+//     // aud: string;
+//     role?: string;
+//     email?: string;
+// }
 
 export interface KmlFeatureData {
     author: {

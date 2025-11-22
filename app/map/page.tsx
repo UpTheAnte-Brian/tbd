@@ -1,6 +1,6 @@
 "use client";
 // import { useMemo } from "react";
-import MapComponent from "./components/map";
+import MapComponent from "../components/maps/map";
 
 // type LatLngLiteral = google.maps.LatLngLiteral;
 // const center = useMemo<LatLngLiteral>(() => ({ lat: 46.3, lng: -94.2 }), []);

@@ -1,9 +1,9 @@
-import { getUser } from "@/app/lib/user";
+import { getCurrentUser } from "@/app/data/auth";
 import { Login } from "../login";
 import { redirect } from "next/navigation";
 
 export default async function SignUpPage() {
-  const user = await getUser();
+  const user = await getCurrentUser();
   if (user) {
     return redirect("/");
   }

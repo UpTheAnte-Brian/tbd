@@ -1,7 +1,7 @@
 "use server";
 
 import "@/app/lib/styles/style.css";
-import { inter } from "./components/ui/fonts";
+import { inter } from "./lib/styles/fonts";
 import { StyledEngineProvider } from "@mui/material";
 import NavBarComponent from "@/app/components/nav/NavBar";
 import GoogleMapsProvider from "@/app/lib/providers/GoogleMapsProvider";
