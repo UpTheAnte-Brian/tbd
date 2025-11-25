@@ -55,7 +55,7 @@ async function Menus() {
           name: "Non-Profits",
           desc: "Foundations and other Local Charities",
           icon: "users",
-          path: "/foundations",
+          path: "/nonprofits",
           method: "GET",
         },
       ],
