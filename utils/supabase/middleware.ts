@@ -1,4 +1,4 @@
-import { CookieOptions, createServerClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function updateSession(request: NextRequest) {
@@ -9,45 +9,34 @@ export async function updateSession(request: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
             cookies: {
-                get(name: string): string | undefined {
-                    return request.cookies.get(name)?.value;
-                },
-                set(
-                    name: string,
-                    value: string,
-                    options: CookieOptions,
-                ): void {
-                    response.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    });
-                },
-                remove(name: string, options: CookieOptions): void {
-                    response.cookies.set({
-                        name,
-                        value: "",
-                        ...options,
+                getAll: () =>
+                    request.cookies.getAll().map((c) => ({
+                        name: c.name,
+                        value: c.value,
+                    })),
+                setAll: (cookies) => {
+                    cookies.forEach(({ name, value, options }) => {
+                        response.cookies.set(name, value, options);
                     });
                 },
             },
         },
     );
 
-    await supabase.auth.getSession();
-
     // Admin route enforcement
     const {
-        data: { session },
-    } = await supabase.auth.getSession();
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    const userId = user?.id;
 
     // Load full role & permissions from combined security view
     const { data: sec } = await supabase
         .from("user_security_roles")
         .select("*")
-        .eq("id", session?.user?.id)
+        .eq("id", userId)
         .single();
-
+    console.log("sec: ", sec);
     const globalRole: string | null = sec?.global_role ?? null;
     const districtAdminOf: string[] = sec?.district_admin_of ?? [];
     const businessAdminOf: string[] = sec?.business_admin_of ?? [];
@@ -106,7 +95,7 @@ export async function updateSession(request: NextRequest) {
 
         // Nonprofit admin tab
         {
-            match: (p) => /^\/foundations\/[\w-]+\/manage/.test(p),
+            match: (p) => /^\/nonprofits\/[\w-]+$/.test(p),
             allow: ({ globalRole, nonprofitAdminOf, path }) => {
                 const url = request.nextUrl;
                 const tab = url.searchParams.get("tab");
