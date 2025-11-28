@@ -1,6 +1,7 @@
 // app/data/nonprofit-dto.ts
 import "server-only";
 import { createApiClient } from "@/utils/supabase/route";
+import { supabaseServiceClient } from "@/utils/supabase/service-worker";
 import {
     FoundationMetadata,
     Nonprofit,
@@ -136,7 +137,8 @@ export async function getDistrictFoundationDTO(
 export async function createNonprofitDTO(
     payload: Partial<Nonprofit>,
 ): Promise<NonprofitDTO> {
-    const supabase = await createApiClient();
+    // writes require admin; use service client server-side
+    const supabase = supabaseServiceClient;
 
     const { data, error } = await supabase
         .from("nonprofits")
@@ -163,7 +165,7 @@ export async function updateNonprofitDTO(
     id: string,
     payload: Partial<Nonprofit>,
 ): Promise<NonprofitDTO> {
-    const supabase = await createApiClient();
+    const supabase = supabaseServiceClient;
 
     const { error } = await supabase
         .from("nonprofits")
@@ -205,7 +207,7 @@ export async function upsertDistrictFoundationDTO(
  * Makes sure metadata exists for district foundations
  */
 async function ensureFoundationMetadataRow(nonprofitId: string) {
-    const supabase = await createApiClient();
+    const supabase = supabaseServiceClient;
 
     const { data } = await supabase
         .from("foundation_metadata")
