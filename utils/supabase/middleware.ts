@@ -1,6 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+type SecurityRoles = {
+    id: string;
+    global_role: string | null;
+    district_admin_of: string[];
+    business_admin_of: string[];
+    nonprofit_admin_of: string[];
+};
+
 export async function updateSession(request: NextRequest) {
     // Clone request headers so we can forward any updated cookies
     const requestHeaders = new Headers(request.headers);
@@ -53,16 +61,14 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Load full role & permissions from combined security view
-    const { data: sec, error: secError } = await supabase
-        .from("user_security_roles")
-        .select("*")
-        .eq("id", userId)
-        .single();
+    const { data: secData, error: secError } = await supabase
+        .rpc("get_user_security_roles", { uid: userId })
+        .maybeSingle();
     if (secError) {
-        console.error("user_security_roles fetch failed:", secError);
+        console.error("get_user_security_roles failed:", secError);
         return response;
     }
-    console.log("sec: ", sec);
+    const sec = (secData ?? null) as SecurityRoles | null;
     const globalRole: string | null = sec?.global_role ?? null;
     const districtAdminOf: string[] = sec?.district_admin_of ?? [];
     const businessAdminOf: string[] = sec?.business_admin_of ?? [];
