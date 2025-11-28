@@ -2,7 +2,13 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function updateSession(request: NextRequest) {
-    const response = NextResponse.next();
+    // Clone request headers so we can forward any updated cookies
+    const requestHeaders = new Headers(request.headers);
+    const response = NextResponse.next({
+        request: {
+            headers: requestHeaders,
+        },
+    });
 
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,6 +24,18 @@ export async function updateSession(request: NextRequest) {
                     cookies.forEach(({ name, value, options }) => {
                         response.cookies.set(name, value, options);
                     });
+
+                    // keep request headers in sync for downstream middleware/handlers
+                    const forwarded = new Map(
+                        request.cookies.getAll().map((c) => [c.name, c.value]),
+                    );
+                    cookies.forEach(({ name, value }) => {
+                        forwarded.set(name, value);
+                    });
+                    const cookieString = Array.from(forwarded.entries()).map((
+                        [name, value],
+                    ) => `${name}=${value}`).join("; ");
+                    requestHeaders.set("cookie", cookieString);
                 },
             },
         },
@@ -30,12 +48,20 @@ export async function updateSession(request: NextRequest) {
 
     const userId = user?.id;
 
+    if (!userId) {
+        return response;
+    }
+
     // Load full role & permissions from combined security view
-    const { data: sec } = await supabase
+    const { data: sec, error: secError } = await supabase
         .from("user_security_roles")
         .select("*")
         .eq("id", userId)
         .single();
+    if (secError) {
+        console.error("user_security_roles fetch failed:", secError);
+        return response;
+    }
     console.log("sec: ", sec);
     const globalRole: string | null = sec?.global_role ?? null;
     const districtAdminOf: string[] = sec?.district_admin_of ?? [];
