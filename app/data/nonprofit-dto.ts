@@ -1,6 +1,6 @@
 // app/data/nonprofit-dto.ts
 
-import { createClient } from "@/utils/supabase/server";
+import { createApiClient } from "@/utils/supabase/route";
 import {
     FoundationMetadata,
     Nonprofit,
@@ -20,7 +20,7 @@ export interface NonprofitDTO extends Nonprofit {
  * Fetch a nonprofit by ID.
  */
 export async function getNonprofitDTO(id: string): Promise<NonprofitDTO> {
-    const supabase = await createClient();
+    const supabase = await createApiClient();
 
     const { data: nonprofit, error: nonprofitError } = await supabase
         .from("nonprofits")
@@ -54,7 +54,7 @@ export async function listNonprofitDTO(filters?: {
     district_id?: string;
     active?: boolean;
 }): Promise<NonprofitDTO[]> {
-    const supabase = await createClient();
+    const supabase = await createApiClient();
 
     let query = supabase.from("nonprofits").select("*");
 
@@ -106,7 +106,7 @@ export async function listNonprofitDTO(filters?: {
 export async function getDistrictFoundationDTO(
     districtId: string,
 ): Promise<NonprofitDTO | null> {
-    const supabase = await createClient();
+    const supabase = await createApiClient();
 
     const { data: nonprofit, error } = await supabase
         .from("nonprofits")
@@ -136,7 +136,7 @@ export async function getDistrictFoundationDTO(
 export async function createNonprofitDTO(
     payload: Partial<Nonprofit>,
 ): Promise<NonprofitDTO> {
-    const supabase = await createClient();
+    const supabase = await createApiClient();
 
     const { data, error } = await supabase
         .from("nonprofits")
@@ -163,7 +163,7 @@ export async function updateNonprofitDTO(
     id: string,
     payload: Partial<Nonprofit>,
 ): Promise<NonprofitDTO> {
-    const supabase = await createClient();
+    const supabase = await createApiClient();
 
     const { error } = await supabase
         .from("nonprofits")
@@ -205,7 +205,7 @@ export async function upsertDistrictFoundationDTO(
  * Makes sure metadata exists for district foundations
  */
 async function ensureFoundationMetadataRow(nonprofitId: string) {
-    const supabase = await createClient();
+    const supabase = await createApiClient();
 
     const { data } = await supabase
         .from("foundation_metadata")
