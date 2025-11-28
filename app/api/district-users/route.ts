@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createApiClient } from "@/utils/supabase/route";
 import {
     DELETE as entityUsersDELETE,
     POST as entityUsersPOST,
@@ -13,7 +13,7 @@ export async function GET(req: Request) {
             status: 400,
         });
     }
-    const supabase = await createClient();
+    const supabase = await createApiClient();
 
     const { data, error } = await supabase
         .from("district_users")

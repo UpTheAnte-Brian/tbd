@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { safeRoute } from "@/app/lib/api/handler";
-import { createClient } from "@/utils/supabase/server";
+import { createApiClient } from "@/utils/supabase/route";
 
 export async function GET(req: NextRequest) {
     return safeRoute(async () => {
-        const supabase = await createClient();
+        const supabase = await createApiClient();
         const { searchParams } = new URL(req.url);
         const q = searchParams.get("q");
 

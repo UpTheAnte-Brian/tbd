@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/app/data/users";
-import { createClient } from "@/utils/supabase/server";
+import { createApiClient } from "@/utils/supabase/route";
 export async function GET(
     request: NextRequest,
     context: { params: Promise<{ id: string }> },
 ) {
     const { id } = await context.params;
-    const supabase = await createClient();
+    const supabase = await createApiClient();
     // ✅ secure: validated against Supabase Auth server
     const {
         data: { user },

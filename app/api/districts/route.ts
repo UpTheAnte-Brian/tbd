@@ -3,10 +3,10 @@ export const dynamic = "force-static";
 import { NextResponse } from "next/server";
 // The client you created from the Server-Side Auth instructions
 // import { supabaseServiceClient } from "@/utils/supabase/service-worker";
-import { createClient } from "../../../utils/supabase/server";
+import { createApiClient } from "@/utils/supabase/route";
 
 export async function GET() {
-    const supabase = await createClient();
+    const supabase = await createApiClient();
     console.log("API: /api/districts -> executed at", new Date().toISOString());
     console.time("sb fetch districts and foundations");
     const [foundationRes, districtRes] = await Promise.all([

@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { safeRoute } from "@/app/lib/api/handler";
-import { createClient } from "@/utils/supabase/server";
+import { createApiClient } from "@/utils/supabase/route";
 
 interface RouteParams {
     params: { id: string };
@@ -9,7 +9,7 @@ interface RouteParams {
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
     return safeRoute(async () => {
         const body = await req.json();
-        const supabase = await createClient();
+        const supabase = await createApiClient();
 
         const { error } = await supabase
             .from("foundation_metadata")

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assignUserToDistrict } from "@/app/data/users";
-import { createClient } from "@/utils/supabase/server";
+import { createApiClient } from "@/utils/supabase/route";
 
 export async function POST(
     request: NextRequest,
@@ -8,7 +8,7 @@ export async function POST(
 ) {
     const { id } = await context.params;
 
-    const supabase = await createClient();
+    const supabase = await createApiClient();
     const {
         data: { session },
     } = await supabase.auth.getSession();

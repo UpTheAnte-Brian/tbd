@@ -1,4 +1,4 @@
-// import 'server-only'
+import "server-only";
 // import { getCurrentUser } from './auth'
 
 // function canSeeUsername(viewer: User) {

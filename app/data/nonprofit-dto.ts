@@ -1,5 +1,5 @@
 // app/data/nonprofit-dto.ts
-
+import "server-only";
 import { createApiClient } from "@/utils/supabase/route";
 import {
     FoundationMetadata,

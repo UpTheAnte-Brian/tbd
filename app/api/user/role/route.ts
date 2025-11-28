@@ -1,11 +1,10 @@
 // app/api/user/role/route.ts
 import { cookies } from "next/headers";
-// The client you created from the Server-Side Auth instructions
-import { createClient } from "../../../../utils/supabase/server";
+import { createApiClient } from "@/utils/supabase/route";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-    const supabase = await createClient();
+    const supabase = await createApiClient();
     const cookieStore = await cookies();
     const access_token = cookieStore.get("sb-access-token")?.value;
 

@@ -1,3 +1,4 @@
+import "server-only";
 import type { Business, BusinessUserJoined } from "@/app/lib/types";
 import { createClient } from "@/utils/supabase/server";
 

@@ -1,6 +1,6 @@
-import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { createApiClient } from "@/utils/supabase/route";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2025-08-27.basil",
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
         metadata.anonymous = anonymous.toString();
     }
     if (!anonymous) {
-        const supabase = await createClient();
+        const supabase = await createApiClient();
         const {
             data: { user },
             error: authError,

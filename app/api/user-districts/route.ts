@@ -1,6 +1,6 @@
 // app/api/user-districts/route.ts
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server"; // adjust import if needed
+import { createApiClient } from "@/utils/supabase/route"; // adjust import if needed
 
 export async function POST(req: Request) {
     try {
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
             );
         }
 
-        const supabase = await createClient();
+        const supabase = await createApiClient();
 
         // First clear existing assignments for that user
         const { error: deleteError } = await supabase

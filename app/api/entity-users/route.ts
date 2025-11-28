@@ -1,9 +1,9 @@
 // app/api/entity-users/route.ts
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createApiClient } from "@/utils/supabase/route";
 
 export async function POST(req: Request) {
-    const supabase = await createClient();
+    const supabase = await createApiClient();
 
     try {
         const { entityType, entityId, userId, role } = await req.json();
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-    const supabase = await createClient();
+    const supabase = await createApiClient();
 
     try {
         // Read the body once

@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseClient } from "@/utils/supabase/client";
 
 type DistrictDonationsSummaryProps = {
   districtId: string;
 };
 
 // You may want to move these to env vars in production
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export default function DistrictDonationsSummary({
   districtId,
@@ -19,7 +17,7 @@ export default function DistrictDonationsSummary({
   const [activeSubsCount, setActiveSubsCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const supabase = getSupabaseClient();
 
   const fetchData = async () => {
     // Fetch donations

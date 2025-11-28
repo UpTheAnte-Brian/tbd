@@ -1,6 +1,6 @@
-import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { createApiClient } from "@/utils/supabase/route";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2025-08-27.basil",
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
         metadata.district_id = districtId;
 
         // Fetch the district natural key (sdorgid)
-        const supabase = await createClient();
+        const supabase = await createApiClient();
         const { data: district } = await supabase
             .from("districts")
             .select("sdorgid")
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     }
 
     if (!anonymous) {
-        const supabase = await createClient();
+        const supabase = await createApiClient();
         const {
             data: { user },
             error: authError,
