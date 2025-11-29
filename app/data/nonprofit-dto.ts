@@ -138,10 +138,17 @@ export async function createNonprofitDTO(
 ): Promise<NonprofitDTO> {
     // use authenticated client so RLS enforces admin checks
     const supabase = await createApiClient();
+    const sanitized: Record<string, unknown> = {};
+    Object.entries(payload).forEach(([key, value]) => {
+        if (value === undefined) return;
+        if (value === "") return;
+        if (["id", "created_at", "updated_at"].includes(key)) return;
+        sanitized[key] = value;
+    });
 
     const { data, error } = await supabase
         .from("nonprofits")
-        .insert(payload)
+        .insert(sanitized)
         .select()
         .single();
 
@@ -165,10 +172,17 @@ export async function updateNonprofitDTO(
     payload: Partial<Nonprofit>,
 ): Promise<NonprofitDTO> {
     const supabase = await createApiClient();
+    const sanitized: Record<string, unknown> = {};
+    Object.entries(payload).forEach(([key, value]) => {
+        if (value === undefined) return;
+        if (value === "") return;
+        if (["id", "created_at", "updated_at"].includes(key)) return;
+        sanitized[key] = value;
+    });
 
     const { error } = await supabase
         .from("nonprofits")
-        .update(payload)
+        .update(sanitized)
         .eq("id", id);
 
     if (error) {

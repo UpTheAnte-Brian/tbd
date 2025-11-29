@@ -31,21 +31,14 @@ export default function NonprofitCreateDrawer({
     setError(null);
 
     try {
-      const body: Nonprofit = {
+      const body: Partial<Nonprofit> = {
         name,
         org_type: orgType,
         website_url: website || null,
         mission_statement: mission || null,
         ein: ein || null,
-        id: "",
-        logo_url: null,
         district_id: null,
-        address: null,
-        contact_email: null,
-        contact_phone: null,
         active: false,
-        created_at: "",
-        updated_at: "",
       };
 
       if (isDistrictFoundation) {
