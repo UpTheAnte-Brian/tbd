@@ -86,38 +86,38 @@ async function Menus() {
       gridCols: 1,
       path: "/donate",
     },
-    {
-      name: "Account",
-      authRequired: true,
-      subMenu: [
-        {
-          name: "Profile",
-          desc: "View your profile",
-          icon: "user-pen",
-          path: "/account",
-          method: "GET",
-          authRequired: true,
-        },
-        {
-          name: "Users",
-          desc: "TBD",
-          icon: "users",
-          path: "/users",
-          method: "GET",
-          authRequired: true,
-        },
-        {
-          name: "Logout",
-          desc: "sign out",
-          icon: "users",
-          path: "/auth/signout",
-          method: "POST",
-          authRequired: true,
-        },
-      ],
-      gridCols: 1,
-      path: "/account",
-    },
+    // {
+    //   name: "Account",
+    //   authRequired: true,
+    //   subMenu: [
+    //     {
+    //       name: "Profile",
+    //       desc: "View your profile",
+    //       icon: "user-pen",
+    //       path: "/account",
+    //       method: "GET",
+    //       authRequired: true,
+    //     },
+    //     {
+    //       name: "Users",
+    //       desc: "TBD",
+    //       icon: "users",
+    //       path: "/users",
+    //       method: "GET",
+    //       authRequired: true,
+    //     },
+    //     {
+    //       name: "Logout",
+    //       desc: "sign out",
+    //       icon: "users",
+    //       path: "/auth/signout",
+    //       method: "POST",
+    //       authRequired: true,
+    //     },
+    //   ],
+    //   gridCols: 1,
+    //   path: "/account",
+    // },
   ];
 
   return res;

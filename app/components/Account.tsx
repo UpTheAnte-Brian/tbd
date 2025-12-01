@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getSupabaseClient } from "@/utils/supabase/client";
 import Avatar from "./ui/avatar";
 import { Profile } from "@/app/lib/types";
@@ -8,20 +8,59 @@ import { useUser } from "@/app/hooks/useUser";
 export default function AccountForm({ user }: { user: Profile | null }) {
   const supabase = getSupabaseClient();
   const [loading, setLoading] = useState(false);
-  const [fullname, setFullname] = useState<string>(user?.full_name || "");
+  const [fullname, setFullname] = useState<string>(user?.full_name ?? "");
   const [firstName, setFirstName] = useState<string | null>(
-    user?.first_name || ""
+    user?.first_name ?? ""
   );
   const [lastName, setLastName] = useState<string | null>(
-    user?.last_name || ""
+    user?.last_name ?? ""
   );
-  const [username, setUsername] = useState<string | null>(user?.username || "");
-  const [website, setWebsite] = useState<string | null>(user?.website || "");
+  const [username, setUsername] = useState<string | null>(user?.username ?? "");
+  const [website, setWebsite] = useState<string | null>(user?.website ?? "");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
-    user?.avatar_url || ""
+    user?.avatar_url ?? ""
   );
   const { claimedBusinesses } = useUser();
-  console.log("claimedBusinesses: ", claimedBusinesses);
+
+  const initialValuesRef = useRef({
+    full_name: user?.full_name ?? "",
+    first_name: user?.first_name ?? "",
+    last_name: user?.last_name ?? "",
+    username: user?.username ?? "",
+    website: user?.website ?? "",
+    avatar_url: user?.avatar_url ?? "",
+  });
+
+  useEffect(() => {
+    const snapshot = {
+      full_name: user?.full_name ?? "",
+      first_name: user?.first_name ?? "",
+      last_name: user?.last_name ?? "",
+      username: user?.username ?? "",
+      website: user?.website ?? "",
+      avatar_url: user?.avatar_url ?? "",
+    };
+    initialValuesRef.current = snapshot;
+    setFullname(snapshot.full_name);
+    setFirstName(snapshot.first_name);
+    setLastName(snapshot.last_name);
+    setUsername(snapshot.username);
+    setWebsite(snapshot.website);
+    setAvatarUrl(snapshot.avatar_url);
+  }, [user]);
+
+  const hasChanges = (() => {
+    if (!user) return false;
+    const initial = initialValuesRef.current;
+    return (
+      (fullname ?? "") !== initial.full_name ||
+      (firstName ?? "") !== initial.first_name ||
+      (lastName ?? "") !== initial.last_name ||
+      (username ?? "") !== initial.username ||
+      (website ?? "") !== initial.website
+      // avatar upload triggers its own save; exclude avatarUrl here
+    );
+  })();
 
   async function updateProfile({
     username,
@@ -66,6 +105,23 @@ export default function AccountForm({ user }: { user: Profile | null }) {
     }
   }
 
+  async function updateAvatarUrl(url: string | null) {
+    if (!user) return;
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ avatar_url: url, updated_at: new Date().toISOString() })
+        .eq("id", user.id);
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating avatar:", error);
+      alert("Error updating avatar");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="flex-initial place-self-center mt-12 w-64">
       <div className="form-widget">
@@ -75,14 +131,7 @@ export default function AccountForm({ user }: { user: Profile | null }) {
           size={256}
           onUpload={(url) => {
             setAvatarUrl(url);
-            updateProfile({
-              username,
-              fullname,
-              website,
-              avatar_url: url,
-              firstName,
-              lastName,
-            });
+            updateAvatarUrl(url);
           }}
         />
 
@@ -137,7 +186,7 @@ export default function AccountForm({ user }: { user: Profile | null }) {
 
           <div>
             <button
-              className="button primary block"
+              className="button primary block disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-gray-500"
               onClick={() =>
                 updateProfile({
                   username,
@@ -148,7 +197,7 @@ export default function AccountForm({ user }: { user: Profile | null }) {
                   lastName,
                 })
               }
-              disabled={loading}
+              disabled={loading || !hasChanges}
             >
               {loading ? "Loading ..." : "Update"}
             </button>

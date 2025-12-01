@@ -9,7 +9,7 @@ import MobMenu from "@/app/components/MobMenu";
 import { useUser } from "@/app/hooks/useUser";
 import { SmallAvatar } from "@/app/components/ui/avatar";
 import { User as UserIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function NavBarComponent() {
   const [menus, setMenus] = useState<Menu[]>([]);
@@ -25,20 +25,19 @@ export default function NavBarComponent() {
   const { user, logout, refreshUser } = useUser();
   const isLoggedIn = !!user;
 
-  const filteredMenus = menus
-    .filter((menu: Menu) => {
-      return (
-        !menu.authRequired ||
-        (isLoggedIn &&
-          (!menu.roles || menu.roles.includes(user?.global_role || "")))
-      );
-    })
-    .map((menu: Menu) => {
-      if (menu.name === "Account" && user?.username) {
-        return { ...menu, name: user.username };
-      }
-      return menu;
-    });
+  const filteredMenus = menus.filter((menu: Menu) => {
+    return (
+      !menu.authRequired ||
+      (isLoggedIn &&
+        (!menu.roles || menu.roles.includes(user?.global_role || "")))
+    );
+  });
+  // .map((menu: Menu) => {
+  //   if (menu.name === "Account" && user?.username) {
+  //     return { ...menu, name: user.username };
+  //   }
+  //   return menu;
+  // });
 
   return (
     <nav className="w-full bg-gray-900 text-white border-b border-gray-800">
@@ -83,6 +82,7 @@ function UserPopover({
   refreshUser: () => Promise<void>;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const label = user?.full_name ?? user?.username ?? "Account";
 
@@ -95,8 +95,27 @@ function UserPopover({
     router.push("/auth/sign-in");
   };
 
+  React.useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  const popoverRef = React.useRef<HTMLDivElement | null>(null);
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        open &&
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={popoverRef}>
       <button
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-gray-800 transition-colors"

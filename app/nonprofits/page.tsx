@@ -44,6 +44,10 @@ export default function NonprofitsPage() {
 
   useEffect(() => {
     fetchNonProfits();
+    return () => {
+      // clean up grid API to avoid stale refs
+      gridApiRef.current = null;
+    };
   }, [fetchNonProfits]);
 
   const onGridReady = useCallback((params: GridReadyEvent<Nonprofit>) => {
@@ -53,7 +57,10 @@ export default function NonprofitsPage() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchText(value);
-    gridApiRef.current?.setQuickFilter(value);
+    const api = gridApiRef.current as Partial<FullGridApi<Nonprofit>> | null;
+    if (api && typeof api.setQuickFilter === "function") {
+      api.setQuickFilter(value);
+    }
   };
 
   const columnDefs: ColDef<Nonprofit>[] = useMemo(
@@ -118,12 +125,14 @@ export default function NonprofitsPage() {
 
   return (
     <div style={{ width: "100%" }}>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-between items-center mb-4 gap-3">
+        <h1 className="text-lg font-semibold text-white">Nonprofits</h1>
         <button
           onClick={() => setDrawerOpen(true)}
-          className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-sm font-semibold rounded-full hover:bg-blue-500 shadow-sm"
         >
-          + Add Nonprofit
+          <span className="text-base leading-none">＋</span>
+          <span>Add Nonprofit</span>
         </button>
       </div>
       {/* 🔍 Search bar */}

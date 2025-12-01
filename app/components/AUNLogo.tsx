@@ -11,11 +11,11 @@ export default function AUNLogo({
   return (
     <>
       <Link className="flex-center-center gap-x-1 relative" href={"/"}>
-        <Image src={Logo} alt="Logo" className="size-4 md:size-8" />
+        <Image src={Logo} alt="Logo" className="size-6 md:size-8" />
         <h3
           className={`${
             backgroundWhite ? "text-black" : "text-white"
-          } text-sm font-semibold md:text-md lg:text-lg`}
+          } text-md font-semibold md:text-md lg:text-lg`}
         >
           Ante Up Nation
         </h3>
