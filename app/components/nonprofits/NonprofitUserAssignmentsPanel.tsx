@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import LoadingSpinner from "@/app/components/loading-spinner";
+import { SmallAvatar } from "@/app/components/ui/avatar";
 import { toast } from "react-hot-toast";
 
 interface NonprofitUser {
@@ -14,6 +15,7 @@ interface NonprofitUser {
     id: string;
     full_name: string | null;
     email: string | null;
+    avatar_url: string | null;
   };
 }
 
@@ -34,9 +36,16 @@ export default function NonprofitUserAssignmentsPanel({
   const [newBoardRole, setNewBoardRole] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState<
-    { id: string; full_name: string | null }[]
+    { id: string; full_name: string | null; avatar_url: string | null }[]
   >([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const DEBOUNCE_MS = 250;
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(
+    null
+  );
+
+  const [highlightIndex, setHighlightIndex] = useState(-1);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   async function fetchUsers() {
     try {
@@ -163,8 +172,45 @@ export default function NonprofitUserAssignmentsPanel({
           <input
             value={searchText}
             onChange={(e) => {
-              setSearchText(e.target.value);
-              searchProfiles(e.target.value);
+              const value = e.target.value;
+              setSearchText(value);
+
+              if (debounceTimer) clearTimeout(debounceTimer);
+
+              const timer = setTimeout(() => {
+                searchProfiles(value);
+              }, DEBOUNCE_MS);
+
+              setDebounceTimer(timer);
+            }}
+            onFocus={() => setDropdownOpen(true)}
+            onKeyDown={(e) => {
+              if (!dropdownOpen || searchResults.length === 0) return;
+
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setHighlightIndex((prev) =>
+                  prev < searchResults.length - 1 ? prev + 1 : 0
+                );
+              } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setHighlightIndex((prev) =>
+                  prev > 0 ? prev - 1 : searchResults.length - 1
+                );
+              } else if (e.key === "Enter") {
+                e.preventDefault();
+                const sel = searchResults[highlightIndex];
+                if (sel) {
+                  setNewUserId(sel.id);
+                  setSearchText(sel.full_name ?? "");
+                  setSearchResults([]);
+                  setDropdownOpen(false);
+                  setHighlightIndex(-1);
+                }
+              } else if (e.key === "Escape") {
+                setDropdownOpen(false);
+                setHighlightIndex(-1);
+              }
             }}
             className="w-full p-2 rounded bg-gray-800 border border-gray-700"
             placeholder="Search users by name..."
@@ -176,9 +222,9 @@ export default function NonprofitUserAssignmentsPanel({
             </div>
           )}
 
-          {searchResults.length > 0 && (
+          {dropdownOpen && searchResults.length > 0 && (
             <div className="absolute z-10 w-full bg-gray-800 border border-gray-700 rounded mt-1 max-h-60 overflow-y-auto">
-              {searchResults.map((u) => {
+              {searchResults.map((u, index) => {
                 const alreadyAssigned = users.some(
                   (usr) => usr.user_id === u.id
                 );
@@ -187,7 +233,9 @@ export default function NonprofitUserAssignmentsPanel({
                   <div
                     key={u.id}
                     className={`px-3 py-2 cursor-pointer ${
-                      alreadyAssigned
+                      highlightIndex === index
+                        ? "bg-gray-600"
+                        : alreadyAssigned
                         ? "opacity-60 bg-gray-800"
                         : "hover:bg-gray-700"
                     }`}
@@ -196,12 +244,21 @@ export default function NonprofitUserAssignmentsPanel({
                       setNewUserId(u.id);
                       setSearchText(u.full_name ?? "");
                       setSearchResults([]);
+                      setDropdownOpen(false);
+                      setHighlightIndex(-1);
                     }}
                   >
-                    <div className="flex justify-between items-center">
-                      <p className="font-medium">
-                        {u.full_name ?? "Unnamed User"}
-                      </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <SmallAvatar
+                          name={u.full_name}
+                          url={u.avatar_url}
+                          size={28}
+                        />
+                        <p className="font-medium">
+                          {u.full_name ?? "Unnamed User"}
+                        </p>
+                      </div>
                       {alreadyAssigned && (
                         <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">
                           Assigned
@@ -268,11 +325,17 @@ export default function NonprofitUserAssignmentsPanel({
               className="p-4 border rounded bg-gray-900 flex flex-col gap-3"
             >
               <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-semibold">
-                    {u.profiles?.full_name ?? u.user_id}
-                  </p>
-                  <p className="text-gray-400 text-sm">{u.profiles?.email}</p>
+                <div className="flex items-center gap-3">
+                  <SmallAvatar
+                    name={u.profiles?.full_name ?? null}
+                    url={u.profiles?.avatar_url ?? null}
+                    size={32}
+                  />
+                  <div>
+                    <p className="font-semibold">
+                      {u.profiles?.full_name ?? u.user_id}
+                    </p>
+                  </div>
                 </div>
 
                 <button

@@ -5,9 +5,11 @@ import AUNLogo from "@/app/components/AUNLogo";
 import Menus from "@/app/lib/menus";
 import DesktopMenu from "@/app/components/DesktopMenu";
 import { Menu } from "@/app/lib/types";
-import SignInButton from "@/app/components/SignInButton";
 import MobMenu from "@/app/components/MobMenu";
 import { useUser } from "@/app/hooks/useUser";
+import { SmallAvatar } from "@/app/components/ui/avatar";
+import { User as UserIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function NavBarComponent() {
   const [menus, setMenus] = useState<Menu[]>([]);
@@ -20,7 +22,7 @@ export default function NavBarComponent() {
     fetchMenus();
   }, []);
 
-  const { user } = useUser();
+  const { user, logout, refreshUser } = useUser();
   const isLoggedIn = !!user;
 
   const filteredMenus = menus
@@ -39,21 +41,16 @@ export default function NavBarComponent() {
     });
 
   return (
-    <nav className="w-full bg-gray-900 text-white">
-      {/* center container with fixed max width */}
-      <div
-        className="max-w-7xl mx-0 px-4 h-16
-                      grid items-center
-                      grid-cols-[auto_1fr_auto]"
-      >
+    <nav className="w-full bg-gray-900 text-white border-b border-gray-800">
+      <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-4 lg:px-8 h-16 flex items-center gap-4">
         {/* Left: Logo */}
-        <div className="flex items-center justify-start">
+        <div className="flex items-center justify-start shrink-0">
           <AUNLogo />
         </div>
 
         {/* Center: Desktop Menu (truly centered between left & right) */}
-        <div className="hidden lg:flex justify-center">
-          <ul className="flex gap-x-6">
+        <div className="flex-1 hidden lg:flex justify-center">
+          <ul className="flex items-center gap-x-7">
             {filteredMenus.map((menu: Menu) => (
               <DesktopMenu
                 menu={JSON.stringify(menu)}
@@ -64,14 +61,93 @@ export default function NavBarComponent() {
           </ul>
         </div>
 
-        {/* Right: Sign In / Mobile Menu */}
-        <div className="flex items-center justify-end gap-x-3">
-          {!user && <SignInButton />}
+        {/* Right: Profile / Mobile */}
+        <div className="flex items-center justify-end gap-x-2 sm:gap-x-3 shrink-0 ml-auto">
+          <UserPopover user={user} logout={logout} refreshUser={refreshUser} />
           <div className="lg:hidden">
             <MobMenu Menus={filteredMenus} />
           </div>
         </div>
       </div>
     </nav>
+  );
+}
+
+function UserPopover({
+  user,
+  logout,
+  refreshUser,
+}: {
+  user: ReturnType<typeof useUser>["user"];
+  logout: () => void;
+  refreshUser: () => Promise<void>;
+}) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const label = user?.full_name ?? user?.username ?? "Account";
+
+  const handleSignOut = async () => {
+    setOpen(false);
+    await fetch("/auth/signout", { method: "POST" });
+    logout();
+    await refreshUser();
+    router.refresh();
+    router.push("/auth/sign-in");
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-gray-800 transition-colors"
+      >
+        {user ? (
+          <SmallAvatar name={label} url={user.avatar_url ?? null} size={30} />
+        ) : (
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-800">
+            <UserIcon className="w-4 h-4 text-gray-200" />
+          </div>
+        )}
+        <span className="hidden sm:inline text-sm font-medium">{label}</span>
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-2 w-52 rounded-md border border-gray-800 bg-[#0f1116] shadow-xl z-50">
+          <ul className="py-2 text-sm">
+            {user ? (
+              <>
+                <li>
+                  <a
+                    href="/account"
+                    className="flex items-center gap-2 px-3 py-2 hover:bg-gray-800"
+                    onClick={() => setOpen(false)}
+                  >
+                    Profile
+                  </a>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    className="w-full text-left px-3 py-2 hover:bg-gray-800"
+                    onClick={handleSignOut}
+                  >
+                    Log out
+                  </button>
+                </li>
+              </>
+            ) : (
+              <li>
+                <a
+                  href="/auth/sign-in"
+                  className="flex items-center gap-2 px-3 py-2 hover:bg-gray-800"
+                  onClick={() => setOpen(false)}
+                >
+                  Sign in
+                </a>
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }

@@ -92,3 +92,53 @@ export default function Avatar({
     </div>
   );
 }
+
+/**
+ * SmallAvatar — lightweight display-only avatar
+ * Uses the same Supabase public URL resolution but with no upload UI.
+ * Ideal for lists, autocomplete dropdowns, role assignments, etc.
+ */
+export function SmallAvatar({
+  name,
+  url,
+  size = 32,
+}: {
+  name: string | null;
+  url: string | null;
+  size?: number;
+}) {
+  const supabase = getSupabaseClient();
+  const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null);
+
+  // Resolve storage path → public URL
+  React.useEffect(() => {
+    if (url) {
+      const { data } = supabase.storage.from("avatars").getPublicUrl(url);
+      setAvatarUrl(data.publicUrl);
+    } else {
+      setAvatarUrl(null);
+    }
+  }, [url, supabase]);
+
+  // fallback: initial letter avatar
+  const letter = name?.charAt(0)?.toUpperCase() ?? "?";
+
+  return (
+    <div
+      className="flex items-center justify-center rounded-full bg-blue-700 text-white font-semibold overflow-hidden"
+      style={{ width: size, height: size }}
+    >
+      {avatarUrl ? (
+        <Image
+          src={avatarUrl}
+          width={size}
+          height={size}
+          alt={name ?? "avatar"}
+          style={{ width: size, height: size }}
+        />
+      ) : (
+        letter
+      )}
+    </div>
+  );
+}

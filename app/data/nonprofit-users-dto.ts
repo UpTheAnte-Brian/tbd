@@ -12,6 +12,7 @@ export interface NonprofitUserDTO {
     profiles?: {
         id: string;
         full_name: string | null;
+        avatar_url?: string | null;
     };
 }
 
@@ -43,7 +44,8 @@ export async function listNonprofitUsersDTO(): Promise<NonprofitUserDTO[]> {
       created_by,
       profiles:user_id (
         id,
-        full_name
+        full_name,
+        avatar_url
       )
     `,
         )
@@ -73,7 +75,8 @@ export async function getNonprofitUserDTO(
       created_by,
       profiles:user_id (
         id,
-        full_name
+        full_name,
+        avatar_url
       )
     `,
         )
@@ -114,7 +117,8 @@ export async function createNonprofitUserDTO(
       created_by,
       profiles:user_id (
         id,
-        full_name
+        full_name,
+        avatar_url
       )
     `,
         )
@@ -150,7 +154,9 @@ export async function updateNonprofitUserDTO(
       created_by,
       profiles:user_id (
         id,
-        full_name
+        full_name,
+        email,
+        avatar_url
       )
     `,
         )

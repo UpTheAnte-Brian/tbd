@@ -17,6 +17,8 @@ type UserContextValue = {
   error: Error | null;
   claimedBusinesses: Business[] | undefined;
   claimedLoading: boolean;
+  refreshUser: () => Promise<void>;
+  logout: () => void;
 };
 
 export const UserContext = createContext<UserContextValue | undefined>(
@@ -35,35 +37,36 @@ export function UserProvider({ children }: UserProviderProps) {
   const { data: claimedBusinesses, isLoading: claimedLoading } =
     useClaimedBusinesses(user?.id);
 
+  const refreshUser = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/users/me");
+      if (!res.ok) {
+        setUser(null);
+        throw new Error(`Failed to load user: ${res.status}`);
+      }
+      const data = await res.json();
+      setUser(data);
+    } catch (err) {
+      setUser(null);
+      setError(err instanceof Error ? err : new Error("Unknown error"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+  };
+
   useEffect(() => {
     let ignore = false;
-
-    const fetchUser = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch("/api/users/me");
-        if (!res.ok) {
-          setUser(null); // user is not logged in
-          throw new Error(`Failed to load user: ${res.status}`);
-        } else {
-          const data = await res.json();
-          if (!ignore) {
-            setUser(data);
-          }
-        }
-      } catch (err) {
-        if (!ignore) {
-          setUser(null);
-          setError(err instanceof Error ? err : new Error("Unknown error"));
-        }
-      } finally {
-        if (!ignore) setLoading(false);
-      }
+    const run = async () => {
+      await refreshUser();
+      if (ignore) return;
     };
-
-    fetchUser();
-
+    run();
     return () => {
       ignore = true;
     };
@@ -74,13 +77,15 @@ export function UserProvider({ children }: UserProviderProps) {
       value={{
         user,
         loading,
-        error,
-        claimedBusinesses,
-        claimedLoading,
-      }}
-    >
-      {children}
-    </UserContext.Provider>
+      error,
+      claimedBusinesses,
+      claimedLoading,
+      refreshUser,
+      logout,
+    }}
+  >
+    {children}
+  </UserContext.Provider>
   );
 }
 

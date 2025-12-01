@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
         const { data, error } = await supabase
             .from("profiles")
-            .select("id, full_name")
+            .select("id, full_name, avatar_url")
             .ilike("full_name", `%${q}%`)
             .not("full_name", "is", null)
             .limit(15);

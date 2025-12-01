@@ -13,6 +13,11 @@ export const getCurrentUser = cache(async () => {
 
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error) {
+        // Supabase returns "Auth session missing" when there is simply no session;
+        // treat that as an anonymous user without logging noise.
+        if (error.message?.toLowerCase().includes("auth session missing")) {
+            return null;
+        }
         console.error("Error fetching user server-side:", error.message);
         return null;
     }
