@@ -5,9 +5,10 @@ import { inter } from "./lib/styles/fonts";
 import { StyledEngineProvider } from "@mui/material";
 import NavBarComponent from "@/app/components/nav/NavBar";
 import GoogleMapsProvider from "@/app/lib/providers/GoogleMapsProvider";
-import { UserProvider } from "@/app/hooks/useUser";
 import { HydrationBoundary, DehydratedState } from "@tanstack/react-query";
 import ReactQueryProvider from "@/app/lib/providers/ReactQueryProvider";
+import { getCurrentProfile } from "@/app/data/users";
+import UserProviderClient from "@/app/providers/UserProviderClient";
 
 // This sets the title on your browser tab.
 // export const metadata = {
@@ -21,6 +22,8 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const serverUser = await getCurrentProfile();
+
   return (
     <html lang="en">
       <head></head>
@@ -40,7 +43,7 @@ export default async function RootLayout({
               <StyledEngineProvider injectFirst>
                 <main className="relative">
                   {/* Header: Fixed position, ensure content flows below it */}
-                  <UserProvider>
+                  <UserProviderClient initialUser={serverUser}>
                     <header className="h-16 text-[15px] fixed top-0 w-full bg-[#18181A] z-[999]">
                       <NavBarComponent></NavBarComponent>
                     </header>
@@ -56,7 +59,7 @@ export default async function RootLayout({
                     {/* <div className="min-h-10vh bg-[#18181A]">
                     <Footer />
                   </div> */}
-                  </UserProvider>
+                  </UserProviderClient>
                 </main>
               </StyledEngineProvider>
             </GoogleMapsProvider>

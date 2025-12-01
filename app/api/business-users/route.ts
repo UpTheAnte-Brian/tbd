@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
     // Force entityType to "business"
     const body = await req.json();
-    console.log("body: ", body);
+
     const forwardedRequest = new Request(req.url, {
         method: req.method,
         headers: req.headers,

@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { getSupabaseClient } from "@/utils/supabase/client";
 import Avatar from "./ui/avatar";
 import { Profile } from "@/app/lib/types";
-import { useUser } from "@/app/hooks/useUser";
+import MyDistricts from "@/app/components/user/MyDistricts";
+import MyBusinesses from "@/app/components/user/MyBusinesses";
+import MyNonprofits from "@/app/components/user/MyNonprofits";
 
 export default function AccountForm({ user }: { user: Profile | null }) {
   const supabase = getSupabaseClient();
@@ -20,7 +22,6 @@ export default function AccountForm({ user }: { user: Profile | null }) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
     user?.avatar_url ?? ""
   );
-  const { claimedBusinesses } = useUser();
 
   const initialValuesRef = useRef({
     full_name: user?.full_name ?? "",
@@ -202,6 +203,9 @@ export default function AccountForm({ user }: { user: Profile | null }) {
               {loading ? "Loading ..." : "Update"}
             </button>
           </div>
+          <MyDistricts />
+          <MyBusinesses />
+          <MyNonprofits />
 
           <div>
             <form action="/auth/signout" method="post">
@@ -209,17 +213,6 @@ export default function AccountForm({ user }: { user: Profile | null }) {
                 Sign out
               </button>
             </form>
-          </div>
-
-          <div>
-            {claimedBusinesses?.map((b) => (
-              <div
-                key={b.id}
-                className="border border-blue-600 bg-blue-50 text-black"
-              >
-                {b.name}
-              </div>
-            ))}
           </div>
         </div>
       </div>

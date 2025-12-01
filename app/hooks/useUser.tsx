@@ -8,15 +8,12 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { Business, Profile } from "@/app/lib/types";
-import { useClaimedBusinesses } from "@/app/hooks/useClaimedBusinesses";
+import { Profile } from "@/app/lib/types";
 
 type UserContextValue = {
   user: Profile | null;
   loading: boolean;
   error: Error | null;
-  claimedBusinesses: Business[] | undefined;
-  claimedLoading: boolean;
   refreshUser: () => Promise<void>;
   logout: () => void;
 };
@@ -27,18 +24,17 @@ export const UserContext = createContext<UserContextValue | undefined>(
 
 type UserProviderProps = {
   children: ReactNode;
+  initialUser?: Profile | null;
 };
 
-export function UserProvider({ children }: UserProviderProps) {
-  const [user, setUser] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+export function UserProvider({ children, initialUser }: UserProviderProps) {
+  const [user, setUser] = useState<Profile | null>(initialUser ?? null);
+  const [loading, setLoading] = useState(!initialUser);
   const [error, setError] = useState<Error | null>(null);
 
-  const { data: claimedBusinesses, isLoading: claimedLoading } =
-    useClaimedBusinesses(user?.id);
-
   const refreshUser = async () => {
-    setLoading(true);
+    // if we already have an initial user, don't block UI while refreshing
+    if (!initialUser) setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/users/me");
@@ -52,7 +48,7 @@ export function UserProvider({ children }: UserProviderProps) {
       setUser(null);
       setError(err instanceof Error ? err : new Error("Unknown error"));
     } finally {
-      setLoading(false);
+      if (!initialUser) setLoading(false);
     }
   };
 
@@ -61,6 +57,11 @@ export function UserProvider({ children }: UserProviderProps) {
   };
 
   useEffect(() => {
+    // if no initial user provided, fetch on mount
+    if (initialUser) {
+      setLoading(false);
+      return;
+    }
     let ignore = false;
     const run = async () => {
       await refreshUser();
@@ -70,22 +71,20 @@ export function UserProvider({ children }: UserProviderProps) {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [initialUser]);
 
   return (
     <UserContext.Provider
       value={{
         user,
         loading,
-      error,
-      claimedBusinesses,
-      claimedLoading,
-      refreshUser,
-      logout,
-    }}
-  >
-    {children}
-  </UserContext.Provider>
+        error,
+        refreshUser,
+        logout,
+      }}
+    >
+      {children}
+    </UserContext.Provider>
   );
 }
 

@@ -32,6 +32,12 @@ export async function getAllUsers(): Promise<Profile[]> {
       business_id,
       user_id,
       business:businesses ( id, place_id, name )
+    ),
+    nonprofit_users (
+      role,
+      nonprofit_id,
+      user_id,
+      nonprofit:nonprofits ( id, name )
     )
   `);
 
@@ -48,6 +54,7 @@ export async function getAllUsers(): Promise<Profile[]> {
     updated_at: u.updated_at,
     district_users: u.district_users,
     business_users: u.business_users,
+    nonprofit_users: u.nonprofit_users,
     global_role: u.role ?? null,
     address: u.address ?? null,
     phone_number: u.phone_number ?? null,
@@ -72,6 +79,12 @@ export async function getUser(id: string): Promise<Profile> {
       business_id,
       user_id,
       business:businesses ( id, place_id, name )
+    ),
+    nonprofit_users (
+      role,
+      nonprofit_id,
+      user_id,
+      nonprofit:nonprofits ( id, name )
     )
     `)
     .eq("id", id)
@@ -90,6 +103,7 @@ export async function getUser(id: string): Promise<Profile> {
     updated_at: data.updated_at,
     district_users: data.district_users,
     business_users: data.business_users,
+    nonprofit_users: data.nonprofit_users,
     global_role: data.role ?? null,
     address: data.address ?? null,
     phone_number: data.phone_number ?? null,

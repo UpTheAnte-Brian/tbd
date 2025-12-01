@@ -1,3 +1,4 @@
+import { Nonprofit } from "@/app/lib/types/nonprofits";
 import type { Feature, Geometry, MultiPolygon, Polygon } from "geojson";
 
 // export type DistrictFeature = Feature<
@@ -107,6 +108,18 @@ export interface BusinessUserJoined extends BusinessUserRow {
     user: Profile;
 }
 
+// nonprofit users
+export interface NonprofitUserRow {
+    nonprofit_id: string;
+    user_id: string;
+    role: string; // tighten to a union if you have known roles
+}
+
+export interface NonprofitUserJoined extends NonprofitUserRow {
+    nonprofit: Nonprofit;
+    user: Profile;
+}
+
 export interface Profile {
     id: string;
     full_name: string | null;
@@ -118,6 +131,7 @@ export interface Profile {
     website: string | null;
     district_users: (DistrictUserRow | DistrictUserJoined)[];
     business_users: (BusinessUserRow | BusinessUserJoined)[];
+    nonprofit_users: (NonprofitUserRow | NonprofitUserJoined)[];
     global_role: string | null;
     address: string | null;
     phone_number: string | null;
