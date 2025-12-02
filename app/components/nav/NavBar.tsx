@@ -41,7 +41,7 @@ export default function NavBarComponent() {
 
   return (
     <nav className="w-full bg-gray-900 text-white border-b border-gray-800">
-      <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-4 lg:px-8 h-16 flex items-center gap-4">
+      <div className="mx-auto w-full max-w-[1600px] px-4 md:px-6 h-16 flex items-center gap-4">
         {/* Left: Logo */}
         <div className="flex items-center justify-start shrink-0">
           <AUNLogo />
