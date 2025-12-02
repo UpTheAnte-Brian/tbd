@@ -1,6 +1,6 @@
 import DistrictMultiSelectSearch from "@/app/components/districts/district-multi-select-search";
 import {
-  DistrictUserJoined,
+  DistrictUserRow,
   DistrictWithFoundation,
   Profile,
 } from "@/app/lib/types";
@@ -60,7 +60,7 @@ const AssignDistrictsModal: React.FC<AssignDistrictsModalProps> = ({
               localUsers
                 .find((u) => u.id === assignToId)
                 ?.district_users.filter(
-                  (d): d is DistrictUserJoined => "district" in d
+                  (d): d is DistrictUserRow => "district" in d
                 )
                 .map((d) => d.district_id) || []
             }
@@ -106,7 +106,7 @@ const AssignDistrictsModal: React.FC<AssignDistrictsModalProps> = ({
                     ?.district_users.map((d) =>
                       "district" in d ? (
                         <li className="text-gray-900" key={d.district_id}>
-                          {d.district.shortname}
+                          {d.district!.shortname}
                         </li>
                       ) : null
                     )}

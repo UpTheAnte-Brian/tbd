@@ -25,7 +25,7 @@ export interface Foundation {
     balance_sheet: number | null;
     // inserted_at: string; // ISO timestamp
     // updated_at: string; // ISO timestamp
-    users?: BusinessUserJoined[]; // optional list of related users
+    users?: BusinessUserRow[]; // optional list of related users
 }
 
 export interface ExtendedFeature<
@@ -58,7 +58,7 @@ export interface DistrictWithFoundation
     id: string; // <-- UUID from Supabase
     foundation?: Foundation | null;
     metadata: DistrictMetadata | null;
-    users?: BusinessUserJoined[]; // optional list of related users
+    users?: BusinessUserRow[]; // optional list of related users
 }
 
 export interface DistrictMetadata {
@@ -90,22 +90,16 @@ export interface DistrictUserRow {
     district_id: string;
     user_id: string;
     role: DistrictUserRole;
-}
-
-export interface DistrictUserJoined extends DistrictUserRow {
-    district: District;
-    user: Profile;
+    district?: District;
+    user?: Profile;
 }
 // each district_user row
 export interface BusinessUserRow {
     business_id: string;
     user_id: string;
     role: BusinessUserRole;
-}
-
-export interface BusinessUserJoined extends BusinessUserRow {
-    business: Business;
-    user: Profile;
+    business?: Business;
+    user?: Profile;
 }
 
 // nonprofit users
@@ -113,11 +107,8 @@ export interface NonprofitUserRow {
     nonprofit_id: string;
     user_id: string;
     role: string; // tighten to a union if you have known roles
-}
-
-export interface NonprofitUserJoined extends NonprofitUserRow {
-    nonprofit: Nonprofit;
-    user: Profile;
+    nonprofit?: Nonprofit;
+    user?: Profile;
 }
 
 export interface Profile {
@@ -129,9 +120,9 @@ export interface Profile {
     username: string | null;
     avatar_url: string | null;
     website: string | null;
-    district_users: (DistrictUserRow | DistrictUserJoined)[];
-    business_users: (BusinessUserRow | BusinessUserJoined)[];
-    nonprofit_users: (NonprofitUserRow | NonprofitUserJoined)[];
+    district_users: (DistrictUserRow | DistrictUserRow)[];
+    business_users: (BusinessUserRow | BusinessUserRow)[];
+    nonprofit_users: (NonprofitUserRow | NonprofitUserRow)[];
     global_role: string | null;
     address: string | null;
     phone_number: string | null;
@@ -284,7 +275,7 @@ export interface Business {
     status: BusinessStatus;
     created_at: string;
     updated_at: string;
-    users?: BusinessUserJoined[]; // optional list of related users
+    users?: BusinessUserRow[]; // optional list of related users
 }
 
 export interface BusinessUser {

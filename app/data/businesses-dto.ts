@@ -1,5 +1,5 @@
 import "server-only";
-import type { Business, BusinessUserJoined } from "@/app/lib/types";
+import type { Business, BusinessUserRow } from "@/app/lib/types";
 import { createClient } from "@/utils/supabase/server";
 
 export async function getBusinesses(): Promise<Business[]> {
@@ -46,7 +46,7 @@ export async function getBusiness(id: string): Promise<Business> {
 
     // Map business_users to users for the Business interface
     const businessUsers = Array.isArray(data.business_users)
-        ? data.business_users.map((bu: BusinessUserJoined) => ({
+        ? data.business_users.map((bu: BusinessUserRow) => ({
             role: bu.role,
             user: bu.user,
         }))

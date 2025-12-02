@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@/utils/supabase/server";
-import { DistrictUserJoined } from "@/app/lib/types";
+import { DistrictUserRow } from "@/app/lib/types";
 
 export async function getDistrictDTO(id: string) {
   const supabase = await createClient();
@@ -48,7 +48,7 @@ export async function getDistrictDTO(id: string) {
     },
     geometry: district.geometry_simplified,
     metadata: district.district_metadata,
-    users: users as DistrictUserJoined[] | undefined,
+    users: users as DistrictUserRow[] | undefined,
   };
 
   return feature;

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import {
-  DistrictUserJoined,
+  DistrictUserRow,
   DistrictWithFoundation,
   Profile,
 } from "@/app/lib/types";
@@ -137,9 +137,9 @@ export default function UsersPage() {
                 {u.district_users && u.district_users.length > 0 ? (
                   <ul className="list-disc pl-4 text-white">
                     {u.district_users
-                      .filter((d): d is DistrictUserJoined => "district" in d)
+                      .filter((d): d is DistrictUserRow => "district" in d)
                       .map((d) => (
-                        <li key={d.district_id}>{d.district.shortname}</li>
+                        <li key={d.district_id}>{d.district!.shortname}</li>
                       ))}
                   </ul>
                 ) : (

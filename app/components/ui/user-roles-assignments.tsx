@@ -1,13 +1,8 @@
-import {
-  BusinessUserJoined,
-  DistrictUserJoined,
-  Profile,
-  RoleOptions,
-} from "@/app/lib/types";
+import { BusinessUserRow, Profile, RoleOptions } from "@/app/lib/types";
 import React, { useState } from "react";
 
 type UserRolesAssignmentsProps = {
-  profiles: BusinessUserJoined[];
+  profiles: BusinessUserRow[];
   entityType: string;
   entityId: string;
   entityName: string;
@@ -32,8 +27,8 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
   const [selectedRole, setSelectedRole] = useState<string>(defaultRole);
   const [adding, setAdding] = useState(false);
 
-  const makeKey = (row: BusinessUserJoined | DistrictUserJoined) =>
-    `${entityType}:${row.user.id}:${entityId}`;
+  const makeKey = (row: BusinessUserRow) =>
+    `${entityType}:${row.user?.id ?? row.user_id}:${entityId}`;
 
   const handleRoleChange = async (
     userId: string,
@@ -97,7 +92,7 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
   };
 
   // Filter availableUsers to exclude those already assigned
-  const assignedUserIds = new Set(profiles.map((p) => p.user.id));
+  const assignedUserIds = new Set(profiles.map((p) => p.user?.id ?? p.user_id));
   const filteredAvailableUsers = availableUsers.filter(
     (user) => !assignedUserIds.has(user.id)
   );
@@ -162,7 +157,7 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
           >
             <div>
               <div className="font-semibold text-black">
-                {assignment.user.username ?? "Unnamed user"}
+                {assignment.user?.username ?? "Unnamed user"}
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -170,9 +165,9 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
                 defaultValue={assignment.role}
                 onChange={(e) =>
                   handleRoleChange(
-                    assignment.user.id,
+                    assignment.user?.id ?? assignment.user_id,
                     e.target.value,
-                    assignment.user.username ?? "User"
+                    assignment.user?.username ?? "User"
                   )
                 }
                 className="border border-gray-400 rounded px-2 py-1 text-black"
@@ -185,12 +180,12 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
               </select>
               <button
                 onClick={async () => {
-                  if (!confirm(`Remove ${assignment.user.username}'s role?`))
+                  if (!confirm(`Remove ${assignment.user!.username}'s role?`))
                     return;
                   const payload = {
                     entityType,
                     entityId,
-                    userId: assignment.user.id,
+                    userId: assignment.user?.id ?? assignment.user_id,
                   };
                   try {
                     const response = await fetch(`/api/${entityType}-users`, {
