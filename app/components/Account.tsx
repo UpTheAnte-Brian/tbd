@@ -12,11 +12,11 @@ export default function AccountForm({ user }: { user: Profile | null }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-4">
           <MyProfile />
-          <MyDistricts />
         </div>
         <div className="space-y-4">
           <MyBusinesses />
           <MyNonprofits />
+          <MyDistricts />
         </div>
       </div>
     </div>
