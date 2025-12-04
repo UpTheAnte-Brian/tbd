@@ -3,7 +3,7 @@
 import Link from "next/link";
 // import { useState } from "react";
 import { Input } from "../../components/ui/input";
-import { DistrictWithFoundation } from "../../lib/types";
+import { DistrictWithFoundation } from "../../lib/types/types";
 import FoundationEditor from "@/app/components/districts/foundation-editor";
 import React from "react";
 

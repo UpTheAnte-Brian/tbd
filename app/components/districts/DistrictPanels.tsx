@@ -4,7 +4,7 @@ import DistrictAdmin from "@/app/components/districts/panels/admin";
 import DistrictMap from "@/app/components/districts/panels/DistrictMap";
 import DistrictFoundation from "@/app/components/districts/panels/foundation";
 import DistrictOverview from "@/app/components/districts/panels/overview";
-import { DistrictWithFoundation, Profile } from "@/app/lib/types";
+import { DistrictWithFoundation, Profile } from "@/app/lib/types/types";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 

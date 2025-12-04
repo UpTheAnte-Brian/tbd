@@ -1,7 +1,7 @@
 // app/hooks/useUser.ts
 "use client";
 
-import { DistrictWithFoundation } from "@/app/lib/types";
+import { DistrictWithFoundation } from "@/app/lib/types/types";
 import { useCallback, useEffect, useState } from "react";
 
 export function useDistrict(id: string) {

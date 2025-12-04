@@ -4,7 +4,7 @@ import {
   DistrictUserRow,
   DistrictWithFoundation,
   Profile,
-} from "@/app/lib/types";
+} from "@/app/lib/types/types";
 import Link from "next/link";
 import AssignDistrictsModal from "@/app/components/districts/AssignDistrictsModal";
 

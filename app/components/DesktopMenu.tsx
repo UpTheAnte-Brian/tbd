@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Menu, Profile } from "../lib/types";
+import { Menu, Profile } from "../lib/types/types";
 import DynamicIcon from "./DynamicIcon";
 import { buildColumns } from "../lib/menuUtils";
 

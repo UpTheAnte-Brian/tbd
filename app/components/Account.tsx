@@ -1,5 +1,5 @@
 "use client";
-import { Profile } from "@/app/lib/types";
+import { Profile } from "@/app/lib/types/types";
 import MyProfile from "@/app/components/user/MyProfile";
 import MyDistricts from "@/app/components/user/MyDistricts";
 import MyBusinesses from "@/app/components/user/MyBusinesses";

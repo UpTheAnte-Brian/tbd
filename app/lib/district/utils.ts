@@ -1,5 +1,5 @@
 import { Feature, Geometry } from "geojson";
-import { DistrictProperties, ExtendedFeature } from "../types";
+import { DistrictProperties, ExtendedFeature } from "../types/types";
 
 export function getLabel(
     feature: Feature<Geometry, DistrictProperties>,

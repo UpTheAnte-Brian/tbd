@@ -2,14 +2,14 @@
 
 import { ReactNode } from "react";
 import { UserProvider } from "@/app/hooks/useUser";
-import { Profile } from "@/app/lib/types";
+import { Profile } from "@/app/lib/types/types";
 
 export default function UserProviderClient({
-    initialUser,
-    children,
+  initialUser,
+  children,
 }: {
-    initialUser: Profile | null;
-    children: ReactNode;
+  initialUser: Profile | null;
+  children: ReactNode;
 }) {
-    return <UserProvider initialUser={initialUser}>{children}</UserProvider>;
+  return <UserProvider initialUser={initialUser}>{children}</UserProvider>;
 }

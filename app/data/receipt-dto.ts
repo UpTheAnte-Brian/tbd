@@ -1,5 +1,5 @@
 import "server-only";
-import type { Receipt } from "@/app/lib/types";
+import type { Receipt } from "@/app/lib/types/types";
 import { createClient } from "@/utils/supabase/server";
 
 type DonationRow = {

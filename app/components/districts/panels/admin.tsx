@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Profile, DistrictWithFoundation } from "@/app/lib/types";
+import { Profile, DistrictWithFoundation } from "@/app/lib/types/types";
 import UserRolesAssignments from "@/app/components/ui/user-roles-assignments";
 
 export default function DistrictAdmin({

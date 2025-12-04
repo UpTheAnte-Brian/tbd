@@ -1,6 +1,6 @@
 "use client";
 
-import { PlaceDetailsType, Profile } from "@/app/lib/types";
+import { PlaceDetailsType, Profile } from "@/app/lib/types/types";
 import React, { useState } from "react";
 
 interface PlaceDetailsProps {

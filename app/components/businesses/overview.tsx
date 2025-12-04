@@ -1,4 +1,4 @@
-import { Business } from "@/app/lib/types";
+import { Business } from "@/app/lib/types/types";
 import PlaceMap from "@/app/components/places/place-map";
 
 export default function BusinessOverview({

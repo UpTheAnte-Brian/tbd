@@ -307,3 +307,77 @@ export const RoleOptions = {
     ] as const,
     foundation: ["President", "board member", "Patron"] as const,
 };
+
+// =========================
+// Branding Summary Response
+// =========================
+
+export interface BrandingLogo {
+    id: string;
+    district_id: string;
+    school_id?: string | null;
+    category: string;
+    subcategory?: string | null;
+    name: string;
+    description?: string | null;
+    file_png?: string | null;
+    file_jpg?: string | null;
+    file_svg?: string | null;
+    file_eps?: string | null;
+    created_at: string;
+    updated_at?: string | null;
+}
+
+export interface BrandingPattern {
+    id: string;
+    district_id: string;
+    pattern_type: "small" | "large";
+    allowed_colors?: string[] | null;
+    file_png?: string | null;
+    file_svg?: string | null;
+    notes?: string | null;
+    created_at: string;
+    updated_at?: string | null;
+}
+
+export interface BrandingFont {
+    id: string;
+    district_id: string;
+    family: string;
+    weight?: string | null;
+    style?: string | null;
+    file_ttf?: string | null;
+    file_otf?: string | null;
+    file_woff?: string | null;
+    file_woff2?: string | null;
+    created_at: string;
+    updated_at?: string | null;
+}
+
+export interface BrandingPalette {
+    id: string;
+    district_id: string;
+    name: string;
+    colors: string[]; // HEX values
+    created_at: string;
+    updated_at?: string | null;
+}
+
+export interface BrandingTypography {
+    id: string;
+    district_id: string;
+    heading_font?: string | null;
+    body_font?: string | null;
+    accent_font?: string | null;
+    notes?: string | null;
+    created_at: string;
+    updated_at?: string | null;
+}
+
+export interface BrandingSummary {
+    logos: BrandingLogo[];
+    patterns: BrandingPattern[];
+    fonts: BrandingFont[];
+    palettes: BrandingPalette[];
+    typography: BrandingTypography[];
+}

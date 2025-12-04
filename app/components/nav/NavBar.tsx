@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import AUNLogo from "@/app/components/AUNLogo";
 import Menus from "@/app/lib/menus";
 import DesktopMenu from "@/app/components/DesktopMenu";
-import { Menu } from "@/app/lib/types";
+import { Menu } from "@/app/lib/types/types";
 import MobMenu from "@/app/components/MobMenu";
 import { useUser } from "@/app/hooks/useUser";
 import { SmallAvatar } from "@/app/components/ui/avatar";

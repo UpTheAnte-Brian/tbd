@@ -1,7 +1,7 @@
 // app/hooks/useUserById.ts
 "use client";
 
-import { Business } from "@/app/lib/types";
+import { Business } from "@/app/lib/types/types";
 import { useCallback, useEffect, useState } from "react";
 
 export function useBusiness(id?: string) {

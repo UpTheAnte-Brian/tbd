@@ -2,7 +2,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
-import { DistrictWithFoundation } from "@/app/lib/types";
+import { DistrictWithFoundation } from "@/app/lib/types/types";
 import Canvas from "react-canvas-confetti/dist/presets/snow";
 import { useUser } from "@/app/hooks/useUser";
 import DistrictSearch from "@/app/components/districts/district-search";

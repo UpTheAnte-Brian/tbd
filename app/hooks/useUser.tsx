@@ -8,7 +8,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { Profile } from "@/app/lib/types";
+import { Profile } from "@/app/lib/types/types";
 
 type UserContextValue = {
   user: Profile | null;

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useMemo } from "react";
-import { DistrictWithFoundation } from "@/app/lib/types";
+import { DistrictWithFoundation } from "@/app/lib/types/types";
 import { getLabel } from "@/app/lib/district/utils";
 
 type Props = {

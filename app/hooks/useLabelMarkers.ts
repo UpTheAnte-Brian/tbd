@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { getLabel, getLabelPosition } from "../lib/district/utils";
-import { ExtendedFeature } from "../lib/types";
+import { ExtendedFeature } from "../lib/types/types";
 
 interface UseLabelMarkersProps {
     mapRef: React.RefObject<google.maps.Map | null>;

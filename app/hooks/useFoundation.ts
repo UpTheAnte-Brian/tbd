@@ -1,7 +1,7 @@
 // app/hooks/useUserById.ts
 "use client";
 
-import { Foundation } from "@/app/lib/types";
+import { Foundation } from "@/app/lib/types/types";
 import { useEffect, useState } from "react";
 
 export function useFoundation(district_sdorgid?: string) {

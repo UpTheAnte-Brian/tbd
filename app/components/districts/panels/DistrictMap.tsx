@@ -5,7 +5,7 @@ import {
   DistrictWithFoundation,
   PlaceDetailsType,
   Profile,
-} from "@/app/lib/types";
+} from "@/app/lib/types/types";
 import { getBoundsFromGeoJSON } from "@/app/lib/getBoundsFromGeoJSON";
 import PlaceDetails from "@/app/components/places/PlaceDetails";
 import PlaceSearch from "@/app/components/places/place-search";

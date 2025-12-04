@@ -1,7 +1,7 @@
 "use client";
 
 import DonationsTable from "@/app/components/DonationsTable";
-import { Receipt } from "@/app/lib/types";
+import { Receipt } from "@/app/lib/types/types";
 import { useEffect, useState } from "react";
 
 export default function ReceiptsPage() {

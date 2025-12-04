@@ -1,4 +1,4 @@
-import { Foundation } from "@/app/lib/types";
+import { Foundation } from "@/app/lib/types/types";
 import Link from "next/link";
 import { useState } from "react";
 

@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "../../utils/supabase/server";
-import { Foundation } from "@/app/lib/types";
+import { Foundation } from "@/app/lib/types/types";
 
 export async function getFoundationDTO(id: string) {
     const supabase = await createClient();

@@ -1,4 +1,4 @@
-import { BusinessUserRow, Profile, RoleOptions } from "@/app/lib/types";
+import { BusinessUserRow, Profile, RoleOptions } from "@/app/lib/types/types";
 import React, { useState } from "react";
 
 type UserRolesAssignmentsProps = {

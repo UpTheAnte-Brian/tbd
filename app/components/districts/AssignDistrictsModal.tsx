@@ -3,7 +3,7 @@ import {
   DistrictUserRow,
   DistrictWithFoundation,
   Profile,
-} from "@/app/lib/types";
+} from "@/app/lib/types/types";
 import React, { useEffect, useState } from "react";
 
 type Feature = DistrictWithFoundation; // Replace with actual Feature type

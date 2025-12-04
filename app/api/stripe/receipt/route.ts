@@ -1,5 +1,5 @@
 import { getReceiptBySessionId } from "@/app/data/receipt-dto";
-import { Receipt } from "@/app/lib/types";
+import { Receipt } from "@/app/lib/types/types";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 

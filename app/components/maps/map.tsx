@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getBoundsFromGeoJSON } from "../../lib/getBoundsFromGeoJSON";
 import React from "react";
-import { DistrictProperties, DistrictWithFoundation } from "../../lib/types";
+import {
+  DistrictProperties,
+  DistrictWithFoundation,
+} from "../../lib/types/types";
 import { getSupabaseClient } from "../../../utils/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import DistrictPopUp from "@/app/components/districts/district-pop-up";

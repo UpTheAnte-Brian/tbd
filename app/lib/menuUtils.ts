@@ -1,4 +1,4 @@
-import { Menu, Profile } from "./types";
+import { Menu, Profile } from "./types/types";
 
 export function buildColumns(
     menuObj: Menu,

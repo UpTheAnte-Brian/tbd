@@ -4,7 +4,7 @@ import "@/app/lib/agGridSetup";
 import React, { useState, useEffect, useMemo } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { themeQuartz } from "ag-grid-community";
-import { Business } from "@/app/lib/types";
+import { Business } from "@/app/lib/types/types";
 import { ColDef } from "ag-grid-community";
 import Link from "next/link";
 import type { ICellRendererParams } from "ag-grid-community";

@@ -1,6 +1,6 @@
 "use server";
 
-import { Menu } from "./types";
+import { Menu } from "./types/types";
 
 async function Menus() {
   const res: Menu[] = [

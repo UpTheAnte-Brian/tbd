@@ -11,7 +11,7 @@ import React, {
 import type { GridApi, IClientSideRowModel } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { themeQuartz } from "ag-grid-community";
-import { Foundation } from "@/app/lib/types";
+import { Foundation } from "@/app/lib/types/types";
 import { ColDef, GridReadyEvent } from "ag-grid-community";
 import Link from "next/link";
 import type { ICellRendererParams } from "ag-grid-community";

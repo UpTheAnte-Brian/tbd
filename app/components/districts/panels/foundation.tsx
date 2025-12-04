@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import FoundationEditor from "@/app/components/districts/foundation-editor";
-import { DistrictWithFoundation, Profile } from "@/app/lib/types";
+import { DistrictWithFoundation, Profile } from "@/app/lib/types/types";
 
 export default function DistrictFoundation({
   user,

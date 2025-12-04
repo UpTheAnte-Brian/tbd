@@ -4,7 +4,7 @@ import "@/app/lib/agGridSetup";
 import { AgGridReact } from "ag-grid-react";
 import { themeQuartz } from "ag-grid-community";
 import { useEffect, useMemo, useState } from "react";
-import type { Receipt } from "@/app/lib/types";
+import type { Receipt } from "@/app/lib/types/types";
 import type {
   ColDef,
   ValueFormatterParams,

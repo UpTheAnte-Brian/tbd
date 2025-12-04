@@ -1,5 +1,5 @@
 import React from "react";
-import { DistrictWithFoundation } from "../../lib/types";
+import { DistrictWithFoundation } from "../../lib/types/types";
 import DistrictExtWebLinkHeader from "@/app/components/ui/district-ext-weblink-header";
 
 const DistrictSideBar = React.memo(

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Input } from "../../components/ui/input";
-import { DistrictWithFoundation, Profile } from "../../lib/types";
+import { DistrictWithFoundation, Profile } from "../../lib/types/types";
 import React, { useEffect, useRef, useState } from "react";
 
 const DistrictPopUp = React.memo(

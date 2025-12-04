@@ -1,7 +1,7 @@
 // app/hooks/useUserById.ts
 "use client";
 
-import { Profile } from "@/app/lib/types";
+import { Profile } from "@/app/lib/types/types";
 import { useEffect, useState } from "react";
 
 export function useUserById(id?: string) {

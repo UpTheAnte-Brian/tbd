@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Business } from "@/app/lib/types";
+import { Business } from "@/app/lib/types/types";
 
 export function useClaimedBusinesses(userId?: string) {
     return useQuery<Business[]>({

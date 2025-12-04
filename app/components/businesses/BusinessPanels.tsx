@@ -1,7 +1,7 @@
 "use client";
 import BusinessAdmin from "@/app/components/businesses/admin";
 import BusinessOverview from "@/app/components/businesses/overview";
-import { Business, Profile } from "@/app/lib/types";
+import { Business, Profile } from "@/app/lib/types/types";
 import React, { useState } from "react";
 
 export default function BusinessPanels({

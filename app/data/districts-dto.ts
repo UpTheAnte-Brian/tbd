@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@/utils/supabase/server";
-import { DistrictUserRow } from "@/app/lib/types";
+import { DistrictUserRow } from "@/app/lib/types/types";
 
 export async function getDistrictDTO(id: string) {
   const supabase = await createClient();

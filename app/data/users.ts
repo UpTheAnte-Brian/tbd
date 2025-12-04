@@ -11,7 +11,7 @@ import "server-only";
 //   return viewer.isAdmin || team === viewer.team
 // }
 import { getCurrentUser } from "@/app/data/auth";
-import { Profile } from "@/app/lib/types";
+import { Profile } from "@/app/lib/types/types";
 import { createClient } from "@/utils/supabase/server";
 
 export async function getAllUsers(): Promise<Profile[]> {

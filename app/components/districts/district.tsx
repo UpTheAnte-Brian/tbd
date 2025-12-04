@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { DistrictWithFoundation } from "../../lib/types";
+import { DistrictWithFoundation } from "../../lib/types/types";
 import { Button } from "@/app/components/ui/button";
 import FoundationEditor from "./foundation-editor";
 // import DebugJWT from "./debug-jwt";

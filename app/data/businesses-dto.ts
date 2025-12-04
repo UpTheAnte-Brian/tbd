@@ -1,5 +1,5 @@
 import "server-only";
-import type { Business, BusinessUserRow } from "@/app/lib/types";
+import type { Business, BusinessUserRow } from "@/app/lib/types/types";
 import { createClient } from "@/utils/supabase/server";
 
 export async function getBusinesses(): Promise<Business[]> {

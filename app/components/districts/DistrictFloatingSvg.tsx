@@ -1,5 +1,5 @@
 "use client";
-import { DistrictWithFoundation } from "@/app/lib/types";
+import { DistrictWithFoundation } from "@/app/lib/types/types";
 import { geoPath, geoMercator } from "d3-geo";
 
 export default function DistrictSvgMap({ d }: { d: DistrictWithFoundation }) {

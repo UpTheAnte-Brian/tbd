@@ -1,4 +1,4 @@
-import { Profile, Business } from "@/app/lib/types";
+import { Profile, Business } from "@/app/lib/types/types";
 import UserRolesAssignments from "@/app/components/ui/user-roles-assignments";
 import { useEffect, useState } from "react";
 
