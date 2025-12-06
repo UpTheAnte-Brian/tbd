@@ -4,14 +4,15 @@ import { createApiClient } from "@/utils/supabase/route";
 // GET /api/districts/[id]/branding/summary
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } },
+    context: { params: Promise<{ id: string }> },
 ) {
     const supabase = await createApiClient();
-    const districtId = params.id;
+    const { id: districtId } = await context.params;
 
     // Fetch all logos
     const { data: logos, error: logosErr } = await supabase
-        .from("branding.logos")
+        .schema("branding")
+        .from("logos")
         .select("*")
         .eq("district_id", districtId)
         .order("created_at", { ascending: false });
@@ -22,7 +23,8 @@ export async function GET(
 
     // Fetch all patterns
     const { data: patterns, error: patternsErr } = await supabase
-        .from("branding.patterns")
+        .schema("branding")
+        .from("patterns")
         .select("*")
         .eq("district_id", districtId)
         .order("created_at", { ascending: false });
@@ -35,7 +37,8 @@ export async function GET(
 
     // Fetch all font definitions
     const { data: fonts, error: fontsErr } = await supabase
-        .from("branding.typography")
+        .schema("branding")
+        .from("typography")
         .select("*")
         .eq("district_id", districtId)
         .order("created_at", { ascending: false });
@@ -46,7 +49,8 @@ export async function GET(
 
     // Fetch color palettes
     const { data: palettes, error: palettesErr } = await supabase
-        .from("branding.palettes")
+        .schema("branding")
+        .from("palettes")
         .select("*")
         .eq("district_id", districtId)
         .order("created_at", { ascending: true });
@@ -59,13 +63,28 @@ export async function GET(
 
     // Fetch typography (top-level font family rules, not individual font files)
     const { data: typography, error: typographyErr } = await supabase
-        .from("branding.typography")
+        .schema("branding")
+        .from("typography")
         .select("*")
         .eq("district_id", districtId)
         .order("created_at", { ascending: true });
 
     if (typographyErr) {
         return NextResponse.json({ error: typographyErr.message }, {
+            status: 500,
+        });
+    }
+
+    // Fetch schools for this district (used for school-logo uploads)
+    const { data: schools, error: schoolsErr } = await supabase
+        .schema("branding")
+        .from("schools")
+        .select("*")
+        .eq("district_id", districtId)
+        .order("created_at", { ascending: true });
+
+    if (schoolsErr) {
+        return NextResponse.json({ error: schoolsErr.message }, {
             status: 500,
         });
     }
@@ -77,6 +96,7 @@ export async function GET(
             fonts,
             palettes,
             typography,
+            schools,
         }),
         {
             status: 200,

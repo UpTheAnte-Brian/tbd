@@ -1,16 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { BrandingSummary } from "@/app/lib/types/types";
 
-type BrandingSummary = {
-    logos: unknown[];
-    patterns: unknown[];
-    fonts: unknown[];
-    palettes: unknown[];
-    typography: unknown[];
-};
-
-export function useBrandingSummary(districtId: string | null) {
+export function useBrandingSummary(
+    districtId: string | null,
+    refreshKey: number = 0,
+) {
     const [data, setData] = useState<BrandingSummary | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -24,6 +20,7 @@ export function useBrandingSummary(districtId: string | null) {
             try {
                 const res = await fetch(
                     `/api/districts/${districtId}/branding/summary`,
+                    { cache: "no-store" },
                 );
                 if (!res.ok) {
                     const body = await res.json().catch(() => ({}));
@@ -46,7 +43,7 @@ export function useBrandingSummary(districtId: string | null) {
         return () => {
             cancelled = true;
         };
-    }, [districtId]);
+    }, [districtId, refreshKey]);
 
     return { data, loading, error } as const;
 }

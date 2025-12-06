@@ -1,6 +1,7 @@
 "use client";
 import { Calendar } from "@/app/components/calendar/calendar";
 import DistrictAdmin from "@/app/components/districts/panels/admin";
+import { BrandingPanel } from "@/app/components/districts/panels/branding";
 import DistrictMap from "@/app/components/districts/panels/DistrictMap";
 import DistrictFoundation from "@/app/components/districts/panels/foundation";
 import DistrictOverview from "@/app/components/districts/panels/overview";
@@ -46,7 +47,7 @@ export default function DistrictPanels({
     "Overview",
     "Map",
     "Foundation",
-    "Other Charities",
+    "Branding",
     "Businesses",
     "Admin",
     "Calendar",
@@ -93,6 +94,8 @@ export default function DistrictPanels({
           <DistrictMap district={district} user={user} />
         ) : activeTab === "Overview" ? (
           <DistrictOverview district={district} />
+        ) : activeTab === "Branding" ? (
+          <BrandingPanel districtId={district.id} />
         ) : activeTab === "Admin" && user && (admin || districtAdmin) ? (
           <DistrictAdmin
             user={user}
