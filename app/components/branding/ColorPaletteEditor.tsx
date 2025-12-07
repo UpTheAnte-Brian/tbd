@@ -63,17 +63,17 @@ export default function ColorPaletteEditor({
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 border rounded-lg bg-white max-w-lg">
-      <h2 className="text-xl font-semibold">
+    <div className="flex flex-col gap-4 p-4 border rounded-lg bg-white max-w-lg text-slate-900">
+      <h2 className="text-xl font-semibold text-slate-900">
         {initial.id ? "Edit Color Palette" : "Create Color Palette"}
       </h2>
 
       {error && <div className="text-red-600 text-sm">{error}</div>}
 
       <div className="flex flex-col gap-2">
-        <label className="font-medium">Palette Name</label>
+        <label className="font-medium text-slate-800">Palette Name</label>
         <input
-          className="border rounded px-3 py-2"
+          className="border border-slate-300 rounded px-3 py-2 text-slate-900 placeholder:text-slate-500 bg-white"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Primary Colors"
@@ -81,9 +81,9 @@ export default function ColorPaletteEditor({
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="font-medium">Role</label>
+        <label className="font-medium text-slate-800">Role</label>
         <select
-          className="border rounded px-3 py-2"
+          className="border border-slate-300 rounded px-3 py-2 text-slate-900 bg-white"
           value={role}
           onChange={(e) => setRole(e.target.value)}
         >
@@ -96,16 +96,16 @@ export default function ColorPaletteEditor({
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="font-medium">Colors</label>
+        <label className="font-medium text-slate-800">Colors</label>
 
         <div className="flex flex-wrap gap-2">
           {colors.map((c, i) => (
             <div
               key={i}
-              className="flex items-center gap-2 border px-2 py-1 rounded"
+              className="flex items-center gap-2 border border-slate-300 px-2 py-1 rounded bg-white"
             >
               <div className="w-6 h-6 rounded" style={{ backgroundColor: c }} />
-              <span className="text-sm">{c}</span>
+              <span className="text-sm text-slate-900">{c}</span>
               <button
                 onClick={() => removeColor(i)}
                 className="text-xs text-red-600 hover:underline"
@@ -121,11 +121,11 @@ export default function ColorPaletteEditor({
             type="color"
             value={newColor}
             onChange={(e) => setNewColor(e.target.value)}
-            className="w-10 h-10 border rounded"
+            className="w-10 h-10 border border-slate-300 rounded bg-white"
           />
           <input
             type="text"
-            className="border rounded px-2 py-1 w-32"
+            className="border border-slate-300 rounded px-2 py-1 w-32 text-slate-900 bg-white"
             value={newColor}
             onChange={(e) => setNewColor(e.target.value)}
           />

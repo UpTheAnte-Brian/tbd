@@ -14,6 +14,7 @@ import {
   Layers as LayersIcon,
 } from "lucide-react";
 import ColorPaletteEditor from "@/app/components/branding/ColorPaletteEditor";
+import AccordionCard from "@/app/components/user/AccordionCard";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -75,7 +76,7 @@ export function BrandingPanel({ districtId }: Props) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-slate-900">
       {/* Edit Drawer */}
       {selectedLogo && districtId && (
         <div className="fixed inset-0 z-50 bg-black/50 flex justify-end">
@@ -157,15 +158,19 @@ export function BrandingPanel({ districtId }: Props) {
       )}
 
       {/* LOGOS */}
-      <section>
-        <h2 className="flex items-center gap-2 text-xl font-semibold">
-          <ImageIcon size={20} className="text-blue-500" />
-          Logos
-        </h2>
-        <div className="mt-4 space-y-6">
+      <AccordionCard
+        title={
+          <span className="flex items-center gap-2 text-slate-50">
+            <ImageIcon size={18} className="text-blue-300" />
+            Logos
+          </span>
+        }
+        defaultOpen
+      >
+        <div className="space-y-6">
           {Object.entries(logosGrouped).map(([category, items]) => (
             <div key={category}>
-              <h3 className="text-md font-medium capitalize text-gray-700">
+              <h3 className="text-md font-semibold uppercase tracking-wide text-white mb-2">
                 {category.replace("_", " ")}
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
@@ -190,6 +195,9 @@ export function BrandingPanel({ districtId }: Props) {
                     >
                       {file ? (
                         <>
+                          <div className="text-sm font-medium text-slate-800 text-center mb-2">
+                            {logo.name}
+                          </div>
                           <Image
                             src={`${SUPABASE_URL}/storage/v1/object/public/branding-logos/${file}?v=${
                               logo.updated_at ?? ""
@@ -199,22 +207,19 @@ export function BrandingPanel({ districtId }: Props) {
                             height={150}
                             className="object-contain max-h-32"
                           />
-                          <div className="text-sm mt-2 text-center text-gray-700">
-                            {logo.name}
-                          </div>
-                          <div className="mt-1 text-xs text-blue-600 underline">
+                          <div className="mt-2 text-xs text-blue-700 underline">
                             Replace
                           </div>
                         </>
                       ) : (
                         <>
+                          <div className="text-sm font-medium text-slate-800 text-center mb-2">
+                            {logo.name} - {logo.id}
+                          </div>
                           <div className="w-full h-24 flex items-center justify-center border rounded bg-gray-50 text-gray-400">
                             No file uploaded
                           </div>
-                          <div className="text-sm mt-2 text-center text-gray-700">
-                            {logo.name} - {logo.id}
-                          </div>
-                          <div className="mt-1 text-xs text-blue-600 underline">
+                          <div className="mt-2 text-xs text-blue-700 underline">
                             Upload
                           </div>
                         </>
@@ -226,17 +231,19 @@ export function BrandingPanel({ districtId }: Props) {
             </div>
           ))}
         </div>
-      </section>
+      </AccordionCard>
 
       {/* PATTERNS */}
-      <section>
-        <h2 className="flex items-center gap-2 text-xl font-semibold">
-          <LayersIcon size={20} className="text-green-500" />
-          Brand Patterns
-        </h2>
-
+      <AccordionCard
+        title={
+          <span className="flex items-center gap-2 text-slate-50">
+            <LayersIcon size={18} className="text-green-300" />
+            Brand Patterns
+          </span>
+        }
+      >
         {data.patterns.length === 0 ? (
-          <div className="text-gray-500 mt-2">No patterns defined.</div>
+          <div className="text-slate-700 mt-2">No patterns defined.</div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
             {data.patterns.map((pattern) => {
@@ -267,23 +274,31 @@ export function BrandingPanel({ districtId }: Props) {
             })}
           </div>
         )}
-      </section>
+      </AccordionCard>
 
       {/* PALETTES */}
-      <section>
-        <h2 className="flex items-center gap-2 text-xl font-semibold">
-          <PaletteIcon size={20} className="text-purple-500" />
-          Color Palettes
-        </h2>
+      <AccordionCard
+        title={
+          <span className="flex items-center gap-2 text-slate-50">
+            <PaletteIcon size={18} className="text-gray-300" />
+            Color Palettes
+          </span>
+        }
+      >
         {data.palettes.length === 0 ? (
-          <div className="text-gray-500">No color palettes defined.</div>
+          <div className="text-slate-700">No color palettes defined.</div>
         ) : (
           data.palettes.map((palette) => (
-            <div key={palette.id} className="mt-4">
+            <div
+              key={palette.id}
+              className="mt-2 w-36 flex flex-row rounded border-white"
+            >
               <div className="flex items-center justify-between">
-                <h3 className="text-md font-medium">{palette.name}</h3>
+                <h3 className="w-12 text-md mx-4 font-medium text-white">
+                  {palette.name}
+                </h3>
                 <button
-                  className="text-blue-600 text-sm underline"
+                  className="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-800"
                   onClick={() =>
                     setEditingPalette({
                       id: palette.id,
@@ -321,60 +336,71 @@ export function BrandingPanel({ districtId }: Props) {
         >
           + Add Palette
         </button>
-      </section>
+      </AccordionCard>
 
       {/* TYPOGRAPHY */}
-      <section>
-        <h2 className="flex items-center gap-2 text-xl font-semibold">
-          <TypeIcon size={20} className="text-red-500" />
-          Typography
-        </h2>
+      <AccordionCard
+        title={
+          <span className="flex items-center gap-2 text-slate-50">
+            <TypeIcon size={18} className="text-red-300" />
+            Typography
+          </span>
+        }
+      >
         {data.typography.length === 0 ? (
-          <div className="text-gray-500 mt-2">No typography rules defined.</div>
+          <div className="text-slate-700 mt-2">
+            No typography rules defined.
+          </div>
         ) : (
           data.typography.map((t) => (
             <div
               key={t.id}
-              className="mt-3 p-3 border rounded bg-white shadow-sm"
+              className="mt-3 p-3 border rounded bg-white shadow-sm text-slate-900"
             >
               <div>
-                <span className="font-medium">Heading:</span> {t.heading_font}
+                <span className="font-medium text-slate-800">Heading:</span>{" "}
+                <span className="text-slate-900">{t.heading_font}</span>
               </div>
               <div>
-                <span className="font-medium">Body:</span> {t.body_font}
+                <span className="font-medium text-slate-800">Body:</span>{" "}
+                <span className="text-slate-900">{t.body_font}</span>
               </div>
               <div>
-                <span className="font-medium">Accent:</span> {t.accent_font}
+                <span className="font-medium text-slate-800">Accent:</span>{" "}
+                <span className="text-slate-900">{t.accent_font}</span>
               </div>
               {t.notes && (
-                <div className="mt-1 text-sm text-gray-600 italic">
+                <div className="mt-1 text-sm text-slate-700 italic">
                   {t.notes}
                 </div>
               )}
             </div>
           ))
         )}
-      </section>
+      </AccordionCard>
 
       {/* FONT FILES */}
-      <section>
-        <h2 className="flex items-center gap-2 text-xl font-semibold">
-          <TypeIcon size={20} className="text-orange-500" />
-          Font Files
-        </h2>
+      <AccordionCard
+        title={
+          <span className="flex items-center gap-2 text-slate-50">
+            <TypeIcon size={18} className="text-orange-300" />
+            Font Files
+          </span>
+        }
+      >
         {data.fonts.length === 0 ? (
-          <div className="text-gray-500">No font files uploaded.</div>
+          <div className="text-slate-700">No font files uploaded.</div>
         ) : (
           <ul className="mt-3 space-y-2">
             {data.fonts.map((font) => (
-              <li key={font.id} className="text-gray-700">
+              <li key={font.id} className="text-slate-800">
                 {font.family} — {font.weight ?? "regular"}{" "}
-                <span className="text-gray-500 text-sm">(uploaded)</span>
+                <span className="text-slate-600 text-sm">(uploaded)</span>
               </li>
             ))}
           </ul>
         )}
-      </section>
+      </AccordionCard>
     </div>
   );
 }
