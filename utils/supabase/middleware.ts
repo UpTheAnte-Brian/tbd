@@ -28,17 +28,29 @@ export async function updateSession(request: NextRequest) {
                         name: c.name,
                         value: c.value,
                     })),
-                setAll: (cookies) => {
-                    cookies.forEach(({ name, value, options }) => {
-                        response.cookies.set(name, value, options);
+                setAll: (
+                    cookies: Array<{
+                        name: string;
+                        value: string;
+                        options?: Parameters<
+                            typeof response.cookies.set
+                        >[2];
+                    }>,
+                ) => {
+                    cookies.forEach((cookie) => {
+                        response.cookies.set(
+                            cookie.name,
+                            cookie.value,
+                            cookie.options,
+                        );
                     });
 
                     // keep request headers in sync for downstream middleware/handlers
                     const forwarded = new Map(
                         request.cookies.getAll().map((c) => [c.name, c.value]),
                     );
-                    cookies.forEach(({ name, value }) => {
-                        forwarded.set(name, value);
+                    cookies.forEach((cookie) => {
+                        forwarded.set(cookie.name, cookie.value);
                     });
                     const cookieString = Array.from(forwarded.entries()).map((
                         [name, value],
