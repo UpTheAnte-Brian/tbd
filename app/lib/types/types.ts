@@ -304,6 +304,7 @@ export const RoleOptions = {
         "athletic director",
         "admin",
         "teacher",
+        "branding_admin",
     ] as const,
     foundation: ["President", "board member", "Patron"] as const,
 };

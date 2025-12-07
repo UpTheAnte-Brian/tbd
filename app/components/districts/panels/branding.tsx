@@ -13,6 +13,7 @@ import {
   Palette as PaletteIcon,
   Layers as LayersIcon,
 } from "lucide-react";
+import ColorPaletteEditor from "@/app/components/branding/ColorPaletteEditor";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -26,6 +27,11 @@ export function BrandingPanel({ districtId }: Props) {
     id: string;
     category?: string;
     subcategory?: string;
+  } | null>(null);
+  const [editingPalette, setEditingPalette] = useState<{
+    id?: string;
+    name: string;
+    colors: string[];
   } | null>(null);
   const { data, loading, error } = useBrandingSummary(districtId, refreshKey);
 
@@ -96,6 +102,54 @@ export function BrandingPanel({ districtId }: Props) {
               onUploaded={() => {
                 setRefreshKey((k) => k + 1);
                 setSelectedLogo(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {editingPalette && districtId && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex justify-end">
+          <div className="w-full max-w-md h-full bg-white shadow-xl p-4 overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">
+                {editingPalette.id ? "Edit Palette" : "Create Palette"}
+              </h3>
+              <button
+                className="text-gray-500 hover:text-gray-800"
+                onClick={() => setEditingPalette(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <ColorPaletteEditor
+              initial={editingPalette}
+              onCancel={() => setEditingPalette(null)}
+              onSave={async (palette) => {
+                const method = palette.id ? "PATCH" : "POST";
+                const url = palette.id
+                  ? `/api/districts/${districtId}/branding/palettes/${palette.id}`
+                  : `/api/districts/${districtId}/branding/palettes`;
+
+                const res = await fetch(url, {
+                  method,
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    name: palette.name,
+                    role: palette.role,
+                    colors: palette.colors,
+                  }),
+                });
+
+                if (!res.ok) {
+                  const err = await res.json().catch(() => null);
+                  alert(err?.error || "Failed to save palette");
+                  return;
+                }
+
+                setEditingPalette(null);
+                setRefreshKey((k) => k + 1);
               }}
             />
           </div>
@@ -226,7 +280,22 @@ export function BrandingPanel({ districtId }: Props) {
         ) : (
           data.palettes.map((palette) => (
             <div key={palette.id} className="mt-4">
-              <h3 className="text-md font-medium">{palette.name}</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-md font-medium">{palette.name}</h3>
+                <button
+                  className="text-blue-600 text-sm underline"
+                  onClick={() =>
+                    setEditingPalette({
+                      id: palette.id,
+                      name: palette.name,
+                      colors: palette.colors,
+                    })
+                  }
+                >
+                  Edit
+                </button>
+              </div>
+
               <div className="flex gap-2 mt-2">
                 {palette.colors.map((color) => (
                   <div
@@ -239,6 +308,19 @@ export function BrandingPanel({ districtId }: Props) {
             </div>
           ))
         )}
+
+        <button
+          className="mt-4 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          onClick={() =>
+            setEditingPalette({
+              id: undefined,
+              name: "",
+              colors: [],
+            })
+          }
+        >
+          + Add Palette
+        </button>
       </section>
 
       {/* TYPOGRAPHY */}
