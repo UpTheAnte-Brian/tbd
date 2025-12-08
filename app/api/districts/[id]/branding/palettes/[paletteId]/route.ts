@@ -25,13 +25,11 @@ export async function PATCH(
         .from("district_users")
         .select("role")
         .eq("district_id", districtId)
-        .eq("user_id", userId)
-        .single();
+        .eq("user_id", userId);
 
-    if (!roleCheck || roleCheck.role !== "branding_admin") {
-        return NextResponse.json({
-            error: "Forbidden: branding_admin required",
-        }, { status: 403 });
+    const allowedRoles = ["admin", "superintendent", "branding_admin"];
+    if (!roleCheck || !roleCheck.some((r) => allowedRoles.includes(r.role))) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     type PaletteUpdate = {

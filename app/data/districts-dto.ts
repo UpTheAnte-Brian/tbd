@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { createClient } from "@/utils/supabase/server";
 import { DistrictUserRow } from "@/app/lib/types/types";
 
@@ -53,3 +54,8 @@ export async function getDistrictDTO(id: string) {
 
   return feature;
 }
+
+// Cache district lookups by logical id (sdorgid) to avoid repeated DB hits
+export const getDistrictDTOCached = cache(async (id: string) =>
+  getDistrictDTO(id)
+);

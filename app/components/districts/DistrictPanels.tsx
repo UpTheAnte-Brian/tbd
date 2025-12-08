@@ -57,7 +57,7 @@ export default function DistrictPanels({
     (_, i) => new Date(2025, 10, i + 1)
   );
   return (
-    <div>
+    <div className="bg-district-primary-0 text-district-primary-2 min-h-screen">
       {/* Desktop Tabs */}
       <div className="hidden md:flex border-b border-gray-300 overflow-x-auto">
         {tabs.map((tab) => (
@@ -89,7 +89,7 @@ export default function DistrictPanels({
           ))}
         </select>
       </div>
-      <div className="p-4 bg-white border border-t-0 border-gray-300">
+      <div className="p-4 border border-t-0 border-gray-300">
         {activeTab === "Map" ? (
           <DistrictMap district={district} user={user} />
         ) : activeTab === "Overview" ? (

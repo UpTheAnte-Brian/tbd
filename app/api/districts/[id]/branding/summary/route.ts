@@ -35,18 +35,6 @@ export async function GET(
         });
     }
 
-    // Fetch all font definitions
-    const { data: fonts, error: fontsErr } = await supabase
-        .schema("branding")
-        .from("typography")
-        .select("*")
-        .eq("district_id", districtId)
-        .order("created_at", { ascending: false });
-
-    if (fontsErr) {
-        return NextResponse.json({ error: fontsErr.message }, { status: 500 });
-    }
-
     // Fetch color palettes
     const { data: palettes, error: palettesErr } = await supabase
         .schema("branding")
@@ -74,6 +62,9 @@ export async function GET(
             status: 500,
         });
     }
+
+    // `fonts` is kept for compatibility; we only need one typography query.
+    const fonts = typography;
 
     // Fetch schools for this district (used for school-logo uploads)
     const { data: schools, error: schoolsErr } = await supabase

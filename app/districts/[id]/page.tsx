@@ -43,7 +43,7 @@ export default function DistrictPage() {
   const isLoading = userLoading || foundationLoading;
 
   return (
-    <main className="p-4">
+    <main className="p-4 bg-district-primary-2 text-district-primary-1">
       <Breadcrumbs
         breadcrumbs={[
           { label: "Districts", href: "/districts" },
@@ -61,7 +61,7 @@ export default function DistrictPage() {
         <div>
           <DistrictPanels
             district={{ ...district, foundation }}
-            user={user} // can be null if logged out
+            user={user}
             reloadFoundation={reload}
             reloadDistrict={reloadDistrict}
           />

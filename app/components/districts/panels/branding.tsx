@@ -76,13 +76,46 @@ export function BrandingPanel({ districtId }: Props) {
   }
 
   return (
-    <div className="space-y-8 text-slate-900">
+    <div className="space-y-8 bg-district-primary-0 text-district-primary-2 p-6 rounded">
+      {/* Branding preview of applied tokens */}
+      <div className="rounded-lg border border-district-primary-1 bg-district-primary-1/40 p-4 text-sm">
+        <div className="font-semibold mb-2">Preview</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="rounded border border-district-primary-1 bg-district-primary-0 p-3">
+            <div className="text-xs uppercase text-district-primary-2/80 mb-1">
+              Background: primary-0
+            </div>
+            <div className="text-district-primary-2 font-medium">
+              Text: primary-2
+            </div>
+          </div>
+          <div className="rounded border border-district-primary-1 bg-white p-3">
+            <div className="text-xs uppercase text-district-primary-1/80 mb-1">
+              Surface: white
+            </div>
+            <div className="text-district-primary-1 font-medium">
+              Text: primary-1
+            </div>
+          </div>
+          <div className="rounded border border-district-primary-1 bg-district-accent-0 p-3">
+            <div className="text-xs uppercase text-district-primary-2/80 mb-1">
+              Accent: accent-0
+            </div>
+            <div className="text-district-primary-2 font-medium">
+              Button/link text
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Edit Drawer */}
       {selectedLogo && districtId && (
         <div className="fixed inset-0 z-50 bg-black/50 flex justify-end">
           <div className="w-full max-w-md h-full bg-white shadow-xl p-4 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Upload / Replace Logo</h3>
+              <h3 className="text-lg font-semibold text-district-primary-2">
+                Upload / Replace Logo
+              </h3>
               <button
                 className="text-gray-500 hover:text-gray-800"
                 onClick={() => setSelectedLogo(null)}
@@ -358,20 +391,20 @@ export function BrandingPanel({ districtId }: Props) {
               className="mt-3 p-3 border rounded bg-white shadow-sm text-slate-900"
             >
               <div>
-                <span className="font-medium text-slate-800">Heading:</span>{" "}
-                <span className="text-slate-900">{t.heading_font}</span>
+                <span className="font-medium text-slate-800">Font Name:</span>{" "}
+                <span className="text-slate-900">{t.font_name}</span>
               </div>
-              <div>
+              {/* <div>
                 <span className="font-medium text-slate-800">Body:</span>{" "}
                 <span className="text-slate-900">{t.body_font}</span>
               </div>
               <div>
                 <span className="font-medium text-slate-800">Accent:</span>{" "}
                 <span className="text-slate-900">{t.accent_font}</span>
-              </div>
-              {t.notes && (
+              </div> */}
+              {t.usage_rules && (
                 <div className="mt-1 text-sm text-slate-700 italic">
-                  {t.notes}
+                  {t.usage_rules}
                 </div>
               )}
             </div>

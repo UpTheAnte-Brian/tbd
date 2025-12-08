@@ -13,7 +13,7 @@ export default function DistrictOverview({
   return (
     <div className="flex flex-col md:flex-row gap-4 w-full">
       {/* Left / Main content */}
-      <div className="md:w-3/4 mb-4 md:mb-0 bg-white p-4 rounded-lg shadow-sm md:shadow-none md:bg-transparent md:p-0">
+      <div className="md:w-3/4 mb-4 md:mb-0 bg-district-primary-0 text-district-primary-1 p-4 rounded-lg shadow-sm md:shadow-none md:bg-transparent md:p-0">
         <div className="[&>*]:text-black space-y-2">
           <p>Main content goes here</p>
           <p>Ideas:</p>

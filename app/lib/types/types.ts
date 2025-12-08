@@ -359,6 +359,7 @@ export interface BrandingPalette {
     id: string;
     district_id: string;
     name: string;
+    role: string;
     colors: string[]; // HEX values
     created_at: string;
     updated_at?: string | null;
@@ -367,10 +368,11 @@ export interface BrandingPalette {
 export interface BrandingTypography {
     id: string;
     district_id: string;
+    font_name: string;
     heading_font?: string | null;
     body_font?: string | null;
     accent_font?: string | null;
-    notes?: string | null;
+    usage_rules?: string | null;
     created_at: string;
     updated_at?: string | null;
 }

@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import type { BrandingSummary } from "@/app/lib/types/types";
 
+// simple in-memory cache per district
+const summaryCache = new Map<string, BrandingSummary>();
+
 export function useBrandingSummary(
     districtId: string | null,
     refreshKey: number = 0,
@@ -14,6 +17,16 @@ export function useBrandingSummary(
     useEffect(() => {
         if (!districtId) return;
         let cancelled = false;
+
+        // serve from cache unless a refresh is explicitly requested
+        if (refreshKey === 0 && districtId && summaryCache.has(districtId)) {
+            setData(summaryCache.get(districtId) ?? null);
+            setLoading(false);
+            return () => {
+                cancelled = true;
+            };
+        }
+
         const fetchData = async () => {
             setLoading(true);
             setError(null);
@@ -28,6 +41,7 @@ export function useBrandingSummary(
                 }
                 const json = await res.json();
                 if (!cancelled) {
+                    summaryCache.set(districtId, json);
                     setData(json);
                 }
             } catch (err) {

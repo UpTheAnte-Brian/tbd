@@ -9,27 +9,18 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+        "district-primary-0": "var(--district-primary-0)",
+        "district-primary-1": "var(--district-primary-1)",
+        "district-primary-2": "var(--district-primary-2)",
+        "district-secondary-0": "var(--district-secondary-0)",
+        "district-secondary-1": "var(--district-secondary-1)",
+        "district-secondary-2": "var(--district-secondary-2)",
+      },
       fontFamily: {
         satoshi: ["Satoshi", "sans-serif"],
         inter: ["Inter", "sans-serif"],
       },
-      //   gridTemplateColumns: {
-      //     "13": "repeat(13, minmax(0, 1fr))",
-      //   },
-      //   colors: {
-      //     blue: {
-      //       400: "#2589FE",
-      //       500: "#0070F3",
-      //       600: "#2F6FEB",
-      //     },
-      //   },
-      // },
-      // keyframes: {
-      //   shimmer: {
-      //     "100%": {
-      //       transform: "translateX(100%)",
-      //     },
-      //   },
     },
   },
   plugins: [],

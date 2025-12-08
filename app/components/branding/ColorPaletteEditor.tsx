@@ -27,8 +27,11 @@ export default function ColorPaletteEditor({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isValidHex = (value: string) =>
+    /^#([0-9A-Fa-f]{6})$/.test(value.trim());
+
   const addColor = () => {
-    if (!newColor || !/^#([0-9A-Fa-f]{6})$/.test(newColor)) {
+    if (!newColor || !isValidHex(newColor)) {
       setError("Color must be a valid hex value like #RRGGBB");
       return;
     }
@@ -41,9 +44,28 @@ export default function ColorPaletteEditor({
     setColors((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const updateColor = (index: number, value: string) => {
+    const candidate = value.trim();
+    setColors((prev) =>
+      prev.map((c, i) => (i === index ? candidate : c)),
+    );
+    // Only show error when attempting to persist invalid hex
+    if (!isValidHex(candidate)) {
+      setError("Color must be a valid hex value like #RRGGBB");
+    } else {
+      setError(null);
+    }
+  };
+
   const handleSave = async () => {
     if (!name.trim()) {
       setError("Palette name is required.");
+      return;
+    }
+    // validate all colors before save
+    const invalidColor = colors.find((c) => !isValidHex(c));
+    if (invalidColor) {
+      setError("All colors must be valid hex values like #RRGGBB");
       return;
     }
     setSaving(true);
@@ -104,8 +126,19 @@ export default function ColorPaletteEditor({
               key={i}
               className="flex items-center gap-2 border border-slate-300 px-2 py-1 rounded bg-white"
             >
-              <div className="w-6 h-6 rounded" style={{ backgroundColor: c }} />
-              <span className="text-sm text-slate-900">{c}</span>
+              <input
+                type="color"
+                value={isValidHex(c) ? c : "#000000"}
+                onChange={(e) => updateColor(i, e.target.value)}
+                className="w-8 h-8 border border-slate-300 rounded bg-white"
+              />
+              <input
+                type="text"
+                value={c}
+                onChange={(e) => updateColor(i, e.target.value)}
+                className="border border-slate-300 rounded px-2 py-1 w-28 text-slate-900 bg-white"
+                placeholder="#RRGGBB"
+              />
               <button
                 onClick={() => removeColor(i)}
                 className="text-xs text-red-600 hover:underline"
