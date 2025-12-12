@@ -69,7 +69,7 @@ export default function DistrictPanelsSidebar({
 
   return (
     <div className="flex flex-col md:flex-row gap-4">
-      <aside className="w-40 lg:w-48 rounded-lg bg-district-primary-1 text-district-secondary-0 border border-district-primary-1/30 p-2 shadow-sm flex flex-col gap-3 md:sticky md:top-24 self-start">
+      <aside className="w-48 rounded-lg bg-district-primary-0 text-district-secondary-0 border border-district-primary-1/30 p-2 shadow-sm flex flex-col gap-3 md:sticky md:top-24 self-start">
         <DistrictPrimaryLogo
           districtId={district.id}
           districtName={district.shortname}
@@ -83,8 +83,8 @@ export default function DistrictPanelsSidebar({
                 onClick={() => handleTabChange(tab)}
                 className={`w-full text-left px-3 py-2 rounded border transition text-sm ${
                   active
-                    ? "bg-district-secondary-1 text-white border-district-primary-1 shadow-sm"
-                    : "bg-district-primary-0 text-white/80 border-district-primary-1/30 hover:bg-district-primary-1/20"
+                    ? "bg-district-accent-0 text-white border-district-accent-0 shadow-sm"
+                    : "bg-district-primary-0 text-district-primary-1 border-district-primary-0 hover:bg-district-primary-0/80"
                 }`}
               >
                 {tab}

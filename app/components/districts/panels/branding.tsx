@@ -467,8 +467,8 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
               Text: secondary-0
             </div>
           </div>
-          <div className="rounded border border-district-primary-1 bg-white p-3">
-            <div className="text-xs uppercase text-district-primary-1/80 mb-1">
+          <div className="rounded border border-district-primary-1 bg-district-accent-2 p-3">
+            <div className="text-xs uppercase text-district-primary-0 mb-1">
               Surface: white
             </div>
             <div className="text-district-primary-1 font-medium">

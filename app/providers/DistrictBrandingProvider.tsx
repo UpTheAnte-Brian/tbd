@@ -79,6 +79,9 @@ export function DistrictBrandingProvider({
 }: Props) {
   const { data } = useBrandingSummary(districtId, 0);
   const summary = data ?? initialData ?? null;
+  const debugBranding =
+    typeof window !== "undefined" &&
+    process.env.NEXT_PUBLIC_BRANDING_DEBUG === "true";
 
   // Extract colors from palettes into a flat CSS variable map
   const colorVars = useMemo(() => buildColorVars(summary), [summary]);
@@ -116,6 +119,30 @@ export function DistrictBrandingProvider({
       Object.keys(colorVars).forEach((key) => root.style.removeProperty(key));
     };
   }, [colorVars]);
+
+  // Debug logging: snapshot applied vars and watch for style mutations
+  useEffect(() => {
+    if (!debugBranding) return;
+    if (!colorVars || Object.keys(colorVars).length === 0) return;
+    if (typeof window === "undefined") return;
+
+    const root = document.documentElement;
+    const snapshot: Record<string, string> = {};
+    Object.keys(colorVars).forEach((k) => {
+      snapshot[k] = getComputedStyle(root).getPropertyValue(k).trim();
+    });
+    console.log("[branding] applied vars snapshot", snapshot);
+
+    const observer = new MutationObserver(() => {
+      const current: Record<string, string> = {};
+      Object.keys(colorVars).forEach((k) => {
+        current[k] = getComputedStyle(root).getPropertyValue(k).trim();
+      });
+      console.log("[branding] mutation detected", current);
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ["style"] });
+    return () => observer.disconnect();
+  }, [colorVars, debugBranding]);
 
   const value: DistrictBrandingContextValue = {
     districtId,

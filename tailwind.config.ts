@@ -7,6 +7,17 @@ const config: Config = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  safelist: [
+    "bg-district-accent-0",
+    "bg-district-accent-1",
+    "bg-district-accent-2",
+    "text-district-accent-0",
+    "text-district-accent-1",
+    "text-district-accent-2",
+    "border-district-accent-0",
+    "border-district-accent-1",
+    "border-district-accent-2",
+  ],
   theme: {
     extend: {
       colors: {

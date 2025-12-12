@@ -86,7 +86,7 @@ export default function DistrictPrimaryLogo({
   }
 
   return logoUrl ? (
-    <div className="w-full h-20 max-h-24 min-h-16 bg-white flex items-center justify-center rounded">
+    <div className="w-full h-20 max-h-24 min-h-16 bg-white flex items-center justify-center rounded p-2">
       <img
         src={logoUrl}
         alt={`${districtName ?? "District"} primary logo`}
