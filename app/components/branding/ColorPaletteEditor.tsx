@@ -11,16 +11,17 @@ export type ColorPalette = {
 
 type Props = {
   initial: ColorPalette;
+  districtShortname: string;
   onSave: (palette: ColorPalette) => Promise<void>;
   onCancel: () => void;
 };
 
 export default function ColorPaletteEditor({
   initial,
+  districtShortname,
   onSave,
   onCancel,
 }: Props) {
-  const [name, setName] = useState(initial.name || "");
   const [colors, setColors] = useState<string[]>(initial.colors || []);
   const [newColor, setNewColor] = useState("#000000");
   const [role, setRole] = useState(initial.role || "");
@@ -58,8 +59,8 @@ export default function ColorPaletteEditor({
   };
 
   const handleSave = async () => {
-    if (!name.trim()) {
-      setError("Palette name is required.");
+    if (!role.trim()) {
+      setError("Role is required.");
       return;
     }
     // validate all colors before save
@@ -68,11 +69,25 @@ export default function ColorPaletteEditor({
       setError("All colors must be valid hex values like #RRGGBB");
       return;
     }
+
+    const cleanShortname = districtShortname?.trim() || "Palette";
+    const roleLabel =
+      role === "primary"
+        ? "Primary"
+        : role === "secondary"
+          ? "Secondary"
+          : role === "tertiary"
+            ? "Tertiary"
+            : role === "accent"
+              ? "Accent"
+              : role;
+    const nameToSave = `${cleanShortname} ${roleLabel}`.trim();
+
     setSaving(true);
     setError(null);
 
     try {
-      await onSave({ id: initial.id, name: name.trim(), colors, role });
+      await onSave({ id: initial.id, name: nameToSave, colors, role });
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -93,21 +108,11 @@ export default function ColorPaletteEditor({
       {error && <div className="text-red-600 text-sm">{error}</div>}
 
       <div className="flex flex-col gap-2">
-        <label className="font-medium text-slate-800">Palette Name</label>
-        <input
-          className="border border-slate-300 rounded px-3 py-2 text-slate-900 placeholder:text-slate-500 bg-white"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Primary Colors"
-        />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <label className="font-medium text-slate-800">Role</label>
         <select
           className="border border-slate-300 rounded px-3 py-2 text-slate-900 bg-white"
           value={role}
           onChange={(e) => setRole(e.target.value)}
+          aria-label="Palette role"
         >
           <option value="">Select a role</option>
           <option value="primary">Primary</option>
@@ -115,6 +120,21 @@ export default function ColorPaletteEditor({
           <option value="tertiary">Tertiary</option>
           <option value="accent">Accent</option>
         </select>
+        <div className="text-xs text-slate-600">
+          Palette name will be:{" "}
+          <span className="font-semibold text-slate-800">
+            {role
+              ? `${districtShortname} ${
+                  {
+                    primary: "Primary",
+                    secondary: "Secondary",
+                    tertiary: "Tertiary",
+                    accent: "Accent",
+                  }[role] ?? role
+                }`
+              : "Select a role to generate the name"}
+          </span>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">

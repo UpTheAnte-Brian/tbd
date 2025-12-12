@@ -16,6 +16,11 @@ const config: Config = {
         "district-secondary-0": "var(--district-secondary-0)",
         "district-secondary-1": "var(--district-secondary-1)",
         "district-secondary-2": "var(--district-secondary-2)",
+        "district-accent-0": "var(--district-accent-0)",
+        "district-accent-1": "var(--district-accent-1)",
+        "district-accent-2": "var(--district-accent-2)",
+        "uta-primary-dark": "var(--uta-primary-dark)",
+        "uta-primary-light": "var(--uta-primary-light)",
       },
       fontFamily: {
         satoshi: ["Satoshi", "sans-serif"],

@@ -20,9 +20,10 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 interface Props {
   districtId: string | null;
+  districtShortname: string;
 }
 
-export function BrandingPanel({ districtId }: Props) {
+export function BrandingPanel({ districtId, districtShortname }: Props) {
   const [refreshKey, setRefreshKey] = useState(0);
   const [selectedLogo, setSelectedLogo] = useState<{
     id: string;
@@ -33,6 +34,7 @@ export function BrandingPanel({ districtId }: Props) {
     id?: string;
     name: string;
     colors: string[];
+    role?: string;
   } | null>(null);
   const { data, loading, error } = useBrandingSummary(districtId, refreshKey);
 
@@ -48,6 +50,13 @@ export function BrandingPanel({ districtId }: Props) {
       return acc;
     }, {} as Record<string, Logo[]>);
   }, [data]);
+
+  const maxPaletteColors = useMemo(() => {
+    if (!data?.palettes?.length) return 0;
+    return Math.max(0, ...data.palettes.map((p) => p.colors?.length ?? 0));
+  }, [data]);
+  const colorColumns = Math.max(1, maxPaletteColors);
+  const paletteGridTemplate = `minmax(220px, 2fr) 90px repeat(${colorColumns}, minmax(52px, 1fr))`;
 
   if (!districtId) {
     return <div className="text-gray-500 italic">Select a district…</div>;
@@ -76,44 +85,13 @@ export function BrandingPanel({ districtId }: Props) {
   }
 
   return (
-    <div className="space-y-8 bg-district-primary-0 text-district-primary-2 p-6 rounded">
-      {/* Branding preview of applied tokens */}
-      <div className="rounded-lg border border-district-primary-1 bg-district-primary-1/40 p-4 text-sm">
-        <div className="font-semibold mb-2">Preview</div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="rounded border border-district-primary-1 bg-district-primary-0 p-3">
-            <div className="text-xs uppercase text-district-primary-2/80 mb-1">
-              Background: primary-0
-            </div>
-            <div className="text-district-primary-2 font-medium">
-              Text: primary-2
-            </div>
-          </div>
-          <div className="rounded border border-district-primary-1 bg-white p-3">
-            <div className="text-xs uppercase text-district-primary-1/80 mb-1">
-              Surface: white
-            </div>
-            <div className="text-district-primary-1 font-medium">
-              Text: primary-1
-            </div>
-          </div>
-          <div className="rounded border border-district-primary-1 bg-district-accent-0 p-3">
-            <div className="text-xs uppercase text-district-primary-2/80 mb-1">
-              Accent: accent-0
-            </div>
-            <div className="text-district-primary-2 font-medium">
-              Button/link text
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="space-y-8 bg-district-primary-1 text-district-secondary-0 p-6 rounded">
       {/* Edit Drawer */}
       {selectedLogo && districtId && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex justify-end">
-          <div className="w-full max-w-md h-full bg-white shadow-xl p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/50 flex justify-end items-center">
+          <div className="w-full max-w-md max-h-[calc(100vh-2rem)] bg-white shadow-xl p-4 overflow-y-auto rounded-lg mr-2">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-district-primary-2">
+              <h3 className="text-lg font-semibold text-district-secondary-0">
                 Upload / Replace Logo
               </h3>
               <button
@@ -143,8 +121,8 @@ export function BrandingPanel({ districtId }: Props) {
       )}
 
       {editingPalette && districtId && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex justify-end">
-          <div className="w-full max-w-md h-full bg-white shadow-xl p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/50 flex justify-end items-center">
+          <div className="w-full max-w-md max-h-[calc(100vh-2rem)] bg-white shadow-xl p-4 overflow-y-auto rounded-lg mr-2">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">
                 {editingPalette.id ? "Edit Palette" : "Create Palette"}
@@ -159,6 +137,7 @@ export function BrandingPanel({ districtId }: Props) {
 
             <ColorPaletteEditor
               initial={editingPalette}
+              districtShortname={districtShortname}
               onCancel={() => setEditingPalette(null)}
               onSave={async (palette) => {
                 const method = palette.id ? "PATCH" : "POST";
@@ -192,13 +171,14 @@ export function BrandingPanel({ districtId }: Props) {
 
       {/* LOGOS */}
       <AccordionCard
+        variant="district"
         title={
           <span className="flex items-center gap-2 text-slate-50">
             <ImageIcon size={18} className="text-blue-300" />
             Logos
           </span>
         }
-        defaultOpen
+        defaultOpen={false}
       >
         <div className="space-y-6">
           {Object.entries(logosGrouped).map(([category, items]) => (
@@ -268,6 +248,7 @@ export function BrandingPanel({ districtId }: Props) {
 
       {/* PATTERNS */}
       <AccordionCard
+        variant="district"
         title={
           <span className="flex items-center gap-2 text-slate-50">
             <LayersIcon size={18} className="text-green-300" />
@@ -311,6 +292,7 @@ export function BrandingPanel({ districtId }: Props) {
 
       {/* PALETTES */}
       <AccordionCard
+        variant="district"
         title={
           <span className="flex items-center gap-2 text-slate-50">
             <PaletteIcon size={18} className="text-gray-300" />
@@ -321,40 +303,75 @@ export function BrandingPanel({ districtId }: Props) {
         {data.palettes.length === 0 ? (
           <div className="text-slate-700">No color palettes defined.</div>
         ) : (
-          data.palettes.map((palette) => (
-            <div
-              key={palette.id}
-              className="mt-2 w-36 flex flex-row rounded border-white"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="w-12 text-md mx-4 font-medium text-white">
-                  {palette.name}
-                </h3>
-                <button
-                  className="px-3 py-1 rounded bg-slate-700 text-white text-sm hover:bg-slate-800"
-                  onClick={() =>
-                    setEditingPalette({
-                      id: palette.id,
-                      name: palette.name,
-                      colors: palette.colors,
-                    })
-                  }
-                >
-                  Edit
-                </button>
-              </div>
-
-              <div className="flex gap-2 mt-2">
-                {palette.colors.map((color) => (
+          <div className="mt-2 overflow-x-auto">
+            <div className="grid gap-2 min-w-max text-sm">
+              <div
+                className="grid items-center gap-3 px-2 py-1 text-xs uppercase tracking-wide text-slate-300 border-b border-white/10"
+                style={{ gridTemplateColumns: paletteGridTemplate }}
+              >
+                <div>Name</div>
+                <div className="text-center">Edit</div>
+                {Array.from({ length: colorColumns }).map((_, idx) => (
                   <div
-                    key={color}
-                    className="w-10 h-10 rounded border shadow-sm"
-                    style={{ backgroundColor: color }}
-                  ></div>
+                    key={`header-${idx}`}
+                    className="text-center text-xs uppercase tracking-wide"
+                  >
+                    {idx}
+                  </div>
                 ))}
               </div>
+
+              {data.palettes.map((palette) => (
+                <div
+                  key={palette.id}
+                  className="grid items-center gap-3 px-2 py-2 border-b border-white/5"
+                  style={{ gridTemplateColumns: paletteGridTemplate }}
+                >
+                  <div className="flex items-center">
+                    <h3 className="text-md font-medium text-white">
+                      {palette.name}
+                    </h3>
+                  </div>
+                  <div className="flex justify-center">
+                    <button
+                      className="px-3 py-1 rounded bg-slate-700 text-white text-xs hover:bg-slate-800"
+                      onClick={() =>
+                        setEditingPalette({
+                          id: palette.id,
+                          name: palette.name,
+                          colors: palette.colors,
+                          role: palette.role,
+                        })
+                      }
+                    >
+                      Edit
+                    </button>
+                  </div>
+                  {Array.from({ length: colorColumns }).map((_, idx) => {
+                    const color = palette.colors[idx];
+                    return (
+                      <div
+                        key={`${palette.id}-color-${idx}`}
+                        className="flex items-center justify-center"
+                      >
+                        {color ? (
+                          <div
+                            className="w-12 h-12 rounded border shadow-sm"
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded border border-dashed border-white/20 flex items-center justify-center text-xs text-white/60">
+                            —
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
-          ))
+          </div>
         )}
 
         <button
@@ -364,6 +381,7 @@ export function BrandingPanel({ districtId }: Props) {
               id: undefined,
               name: "",
               colors: [],
+              role: undefined,
             })
           }
         >
@@ -373,6 +391,7 @@ export function BrandingPanel({ districtId }: Props) {
 
       {/* TYPOGRAPHY */}
       <AccordionCard
+        variant="district"
         title={
           <span className="flex items-center gap-2 text-slate-50">
             <TypeIcon size={18} className="text-red-300" />
@@ -414,6 +433,7 @@ export function BrandingPanel({ districtId }: Props) {
 
       {/* FONT FILES */}
       <AccordionCard
+        variant="district"
         title={
           <span className="flex items-center gap-2 text-slate-50">
             <TypeIcon size={18} className="text-orange-300" />
@@ -434,6 +454,37 @@ export function BrandingPanel({ districtId }: Props) {
           </ul>
         )}
       </AccordionCard>
+
+      {/* Branding preview of applied tokens */}
+      <div className="rounded-lg border border-district-primary-1 bg-district-primary-1/40 p-4 text-sm">
+        <div className="font-semibold mb-2">Preview</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="rounded border border-district-primary-1 bg-district-primary-0 p-3">
+            <div className="text-xs uppercase text-district-secondary-0/80 mb-1">
+              Background: primary-0
+            </div>
+            <div className="text-district-secondary-0 font-medium">
+              Text: secondary-0
+            </div>
+          </div>
+          <div className="rounded border border-district-primary-1 bg-white p-3">
+            <div className="text-xs uppercase text-district-primary-1/80 mb-1">
+              Surface: white
+            </div>
+            <div className="text-district-primary-1 font-medium">
+              Text: primary-1
+            </div>
+          </div>
+          <div className="rounded border border-district-primary-1 bg-district-accent-0 p-3">
+            <div className="text-xs uppercase text-district-secondary-0/80 mb-1">
+              Accent: accent-0
+            </div>
+            <div className="text-district-secondary-0 font-medium">
+              Button/link text
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

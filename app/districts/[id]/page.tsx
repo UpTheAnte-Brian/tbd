@@ -1,10 +1,10 @@
 "use client";
-import Breadcrumbs from "@/app/components/nav/breadcrumbs";
 import { useDistrict } from "@/app/hooks/useDistrict";
 import { useFoundation } from "@/app/hooks/useFoundation";
 import LoadingSpinner from "@/app/components/loading-spinner";
 import { useParams } from "next/navigation";
 import DistrictPanels from "@/app/components/districts/DistrictPanels";
+import DistrictPanelsSidebar from "@/app/components/districts/DistrictPanelsSidebar";
 import { useUser } from "@/app/hooks/useUser";
 
 export default function DistrictPage() {
@@ -43,29 +43,36 @@ export default function DistrictPage() {
   const isLoading = userLoading || foundationLoading;
 
   return (
-    <main className="p-4 bg-district-primary-2 text-district-primary-1">
-      <Breadcrumbs
-        breadcrumbs={[
-          { label: "Districts", href: "/districts" },
-          {
-            label: district.sdorgid,
-            href: `/districts/${district.sdorgid}`,
-            active: true,
-          },
-        ]}
-      />
+    <main className="p-4 bg-district-primary-0">
+      {/* <DistrictPrimaryLogo
+        districtId={district.id}
+        districtName={district.shortname}
+        subtitle="Primary logo"
+      /> */}
 
       {isLoading ? (
         <LoadingSpinner />
       ) : (
-        <div>
-          <DistrictPanels
-            district={{ ...district, foundation }}
-            user={user}
-            reloadFoundation={reload}
-            reloadDistrict={reloadDistrict}
-          />
-        </div>
+        <>
+          {/* Desktop/medium+: sidebar layout with logo */}
+          <div className="hidden md:block">
+            <DistrictPanelsSidebar
+              district={{ ...district, foundation }}
+              user={user}
+              reloadFoundation={reload}
+              reloadDistrict={reloadDistrict}
+            />
+          </div>
+          {/* Mobile: keep existing top tabs */}
+          <div className="md:hidden">
+            <DistrictPanels
+              district={{ ...district, foundation }}
+              user={user}
+              reloadFoundation={reload}
+              reloadDistrict={reloadDistrict}
+            />
+          </div>
+        </>
       )}
     </main>
   );

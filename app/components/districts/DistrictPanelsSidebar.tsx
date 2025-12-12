@@ -1,37 +1,41 @@
 "use client";
+
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Calendar } from "@/app/components/calendar/calendar";
 import DistrictAdmin from "@/app/components/districts/panels/admin";
 import { BrandingPanel } from "@/app/components/districts/panels/branding";
 import DistrictMap from "@/app/components/districts/panels/DistrictMap";
 import DistrictFoundation from "@/app/components/districts/panels/foundation";
 import DistrictOverview from "@/app/components/districts/panels/overview";
+import DistrictPrimaryLogo from "@/app/components/districts/branding/DistrictPrimaryLogo";
 import { DistrictWithFoundation, Profile } from "@/app/lib/types/types";
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
 
-export default function DistrictPanels({
-  user,
-  district,
-  reloadFoundation,
-  reloadDistrict,
-}: {
+type Props = {
   user: Profile | null;
   district: DistrictWithFoundation;
   reloadFoundation: () => void;
   reloadDistrict: () => void;
-}) {
+};
+
+export default function DistrictPanelsSidebar({
+  user,
+  district,
+  reloadFoundation,
+  reloadDistrict,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const initialTab = searchParams.get("tab") || "Overview";
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
   const admin = user?.global_role === "admin";
   const districtAdmin = user?.district_users?.some((u) => u.role === "admin");
 
-  // Keep internal state in sync with URL changes (e.g. back/forward)
   useEffect(() => {
+    setHydrated(true);
     const current = searchParams.get("tab") || "Overview";
     setActiveTab(current);
   }, [searchParams]);
@@ -52,44 +56,59 @@ export default function DistrictPanels({
     "Admin",
     "Calendar",
   ];
+
   const campaignDays = Array.from(
     { length: 30 },
     (_, i) => new Date(2025, 10, i + 1)
   );
-  return (
-    <div className="bg-district-accent-0 text-district-secondary-0 min-h-screen">
-      {/* Desktop Tabs */}
-      <div className="hidden md:flex border-b border-gray-300 overflow-x-auto">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            className={`px-4 py-2 -mb-px border-b-2 font-medium whitespace-nowrap ${
-              activeTab === tab
-                ? "border-blue-500 bg-white text-blue-600"
-                : "border-transparent text-gray-300 hover:text-white hover:border-gray-300"
-            }`}
-            onClick={() => handleTabChange(tab)}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
 
-      {/* Mobile Dropdown */}
-      <div className="md:hidden relative border-b border-gray-300">
-        <select
-          value={activeTab}
-          onChange={(e) => handleTabChange(e.target.value)}
-          className="w-full p-2 bg-white text-gray-800 border-none focus:ring-0 focus:outline-none"
-        >
-          {tabs.map((tab) => (
-            <option className="text-black" key={tab} value={tab}>
-              {tab}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="p-4 border border-t-0 border-gray-300">
+  // Avoid rendering mismatched markup before hydration resolves the tab value.
+  if (!hydrated) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col md:flex-row gap-4">
+      <aside className="w-40 lg:w-48 rounded-lg bg-district-primary-1 text-district-secondary-0 border border-district-primary-1/30 p-2 shadow-sm flex flex-col gap-3 md:sticky md:top-24 self-start">
+        <DistrictPrimaryLogo
+          districtId={district.id}
+          districtName={district.shortname}
+        />
+        <div className="mt-4 space-y-2 hidden md:block">
+          {tabs.map((tab) => {
+            const active = hydrated && activeTab === tab;
+            return (
+              <button
+                key={tab}
+                onClick={() => handleTabChange(tab)}
+                className={`w-full text-left px-3 py-2 rounded border transition text-sm ${
+                  active
+                    ? "bg-district-secondary-1 text-white border-district-primary-1 shadow-sm"
+                    : "bg-district-primary-0 text-white/80 border-district-primary-1/30 hover:bg-district-primary-1/20"
+                }`}
+              >
+                {tab}
+              </button>
+            );
+          })}
+        </div>
+        {/* Mobile dropdown */}
+        <div className="md:hidden mt-3">
+          <select
+            value={activeTab ?? "Overview"}
+            onChange={(e) => handleTabChange(e.target.value)}
+            className="w-full p-2 bg-white text-gray-800 border border-district-primary-1/40 rounded focus:outline-none"
+          >
+            {tabs.map((tab) => (
+              <option key={tab} value={tab}>
+                {tab}
+              </option>
+            ))}
+          </select>
+        </div>
+      </aside>
+
+      <div className="flex-1 min-w-0">
         {activeTab === "Map" ? (
           <DistrictMap district={district} user={user} />
         ) : activeTab === "Overview" ? (
@@ -104,7 +123,7 @@ export default function DistrictPanels({
             user={user}
             district={district}
             reloadDistrict={reloadDistrict}
-          ></DistrictAdmin>
+          />
         ) : activeTab === "Calendar" && user ? (
           <Calendar
             month={10} // November
