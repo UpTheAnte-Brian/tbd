@@ -459,7 +459,7 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
       <div className="rounded-lg border border-district-primary-1 bg-district-primary-1/40 p-4 text-sm">
         <div className="font-semibold mb-2">Preview</div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="rounded border border-district-primary-1 bg-district-primary-0 p-3">
+          <div className="rounded border border-district-secondary-1 bg-district-accent-0 p-3">
             <div className="text-xs uppercase text-district-secondary-0/80 mb-1">
               Background: primary-0
             </div>
@@ -467,15 +467,15 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
               Text: secondary-0
             </div>
           </div>
-          <div className="rounded border border-district-primary-1 bg-district-accent-2 p-3">
-            <div className="text-xs uppercase text-district-primary-0 mb-1">
+          <div className="rounded border border-district-accent-1 bg-district-secondary-1 p-3">
+            <div className="text-xs uppercase text-district-secondary-2 mb-1">
               Surface: white
             </div>
-            <div className="text-district-primary-1 font-medium">
+            <div className="text-district-secondary-1 font-medium">
               Text: primary-1
             </div>
           </div>
-          <div className="rounded border border-district-primary-1 bg-district-accent-0 p-3">
+          <div className="rounded border border-district-accent-1 bg-district-accent-0 p-3">
             <div className="text-xs uppercase text-district-secondary-0/80 mb-1">
               Accent: accent-0
             </div>

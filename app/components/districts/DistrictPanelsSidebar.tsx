@@ -9,6 +9,7 @@ import DistrictMap from "@/app/components/districts/panels/DistrictMap";
 import DistrictFoundation from "@/app/components/districts/panels/foundation";
 import DistrictOverview from "@/app/components/districts/panels/overview";
 import DistrictPrimaryLogo from "@/app/components/districts/branding/DistrictPrimaryLogo";
+import DistrictPaletteCube from "@/app/components/branding/DistrictPaletteCube";
 import { DistrictWithFoundation, Profile } from "@/app/lib/types/types";
 
 type Props = {
@@ -91,6 +92,9 @@ export default function DistrictPanelsSidebar({
               </button>
             );
           })}
+          <div className="mt-6">
+            <DistrictPaletteCube />
+          </div>
         </div>
         {/* Mobile dropdown */}
         <div className="md:hidden mt-3">

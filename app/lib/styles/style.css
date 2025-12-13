@@ -907,6 +907,10 @@ video {
   display: none;
 }
 
+.aspect-square {
+  aspect-ratio: 1 / 1;
+}
+
 .size-16 {
   width: 4rem;
   height: 4rem;
@@ -1330,6 +1334,10 @@ video {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.grid-rows-3 {
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+
 .flex-row {
   flex-direction: row;
 }
@@ -1372,6 +1380,10 @@ video {
 
 .justify-between {
   justify-content: space-between;
+}
+
+.gap-0 {
+  gap: 0px;
 }
 
 .gap-1 {
@@ -1643,6 +1655,22 @@ video {
   border-color: var(--district-primary-1);
 }
 
+.border-district-primary-2 {
+  border-color: var(--district-primary-2);
+}
+
+.border-district-secondary-0 {
+  border-color: var(--district-secondary-0);
+}
+
+.border-district-secondary-1 {
+  border-color: var(--district-secondary-1);
+}
+
+.border-district-secondary-2 {
+  border-color: var(--district-secondary-2);
+}
+
 .border-gray-100 {
   --tw-border-opacity: 1;
   border-color: rgb(243 244 246 / var(--tw-border-opacity, 1));
@@ -1791,6 +1819,22 @@ video {
 
 .bg-district-primary-1 {
   background-color: var(--district-primary-1);
+}
+
+.bg-district-primary-2 {
+  background-color: var(--district-primary-2);
+}
+
+.bg-district-secondary-0 {
+  background-color: var(--district-secondary-0);
+}
+
+.bg-district-secondary-1 {
+  background-color: var(--district-secondary-1);
+}
+
+.bg-district-secondary-2 {
+  background-color: var(--district-secondary-2);
 }
 
 .bg-emerald-600 {
@@ -1985,8 +2029,80 @@ video {
   --tw-gradient-to: #fde047 var(--tw-gradient-to-position);
 }
 
+.fill-district-accent-0 {
+  fill: var(--district-accent-0);
+}
+
+.fill-district-accent-1 {
+  fill: var(--district-accent-1);
+}
+
+.fill-district-accent-2 {
+  fill: var(--district-accent-2);
+}
+
+.fill-district-primary-0 {
+  fill: var(--district-primary-0);
+}
+
+.fill-district-primary-1 {
+  fill: var(--district-primary-1);
+}
+
+.fill-district-primary-2 {
+  fill: var(--district-primary-2);
+}
+
+.fill-district-secondary-0 {
+  fill: var(--district-secondary-0);
+}
+
+.fill-district-secondary-1 {
+  fill: var(--district-secondary-1);
+}
+
+.fill-district-secondary-2 {
+  fill: var(--district-secondary-2);
+}
+
 .stroke-blue-700 {
   stroke: #1d4ed8;
+}
+
+.stroke-district-accent-0 {
+  stroke: var(--district-accent-0);
+}
+
+.stroke-district-accent-1 {
+  stroke: var(--district-accent-1);
+}
+
+.stroke-district-accent-2 {
+  stroke: var(--district-accent-2);
+}
+
+.stroke-district-primary-0 {
+  stroke: var(--district-primary-0);
+}
+
+.stroke-district-primary-1 {
+  stroke: var(--district-primary-1);
+}
+
+.stroke-district-primary-2 {
+  stroke: var(--district-primary-2);
+}
+
+.stroke-district-secondary-0 {
+  stroke: var(--district-secondary-0);
+}
+
+.stroke-district-secondary-1 {
+  stroke: var(--district-secondary-1);
+}
+
+.stroke-district-secondary-2 {
+  stroke: var(--district-secondary-2);
 }
 
 .stroke-gray-300 {
@@ -2284,8 +2400,20 @@ video {
   color: var(--district-primary-1);
 }
 
+.text-district-primary-2 {
+  color: var(--district-primary-2);
+}
+
 .text-district-secondary-0 {
   color: var(--district-secondary-0);
+}
+
+.text-district-secondary-1 {
+  color: var(--district-secondary-1);
+}
+
+.text-district-secondary-2 {
+  color: var(--district-secondary-2);
 }
 
 .text-gray-100 {
@@ -2511,6 +2639,42 @@ video {
 
 .outline-2 {
   outline-width: 2px;
+}
+
+.ring-district-accent-0 {
+  --tw-ring-color: var(--district-accent-0);
+}
+
+.ring-district-accent-1 {
+  --tw-ring-color: var(--district-accent-1);
+}
+
+.ring-district-accent-2 {
+  --tw-ring-color: var(--district-accent-2);
+}
+
+.ring-district-primary-0 {
+  --tw-ring-color: var(--district-primary-0);
+}
+
+.ring-district-primary-1 {
+  --tw-ring-color: var(--district-primary-1);
+}
+
+.ring-district-primary-2 {
+  --tw-ring-color: var(--district-primary-2);
+}
+
+.ring-district-secondary-0 {
+  --tw-ring-color: var(--district-secondary-0);
+}
+
+.ring-district-secondary-1 {
+  --tw-ring-color: var(--district-secondary-1);
+}
+
+.ring-district-secondary-2 {
+  --tw-ring-color: var(--district-secondary-2);
 }
 
 .blur-sm {

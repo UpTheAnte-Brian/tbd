@@ -37,6 +37,8 @@ function buildColorVars(data: BrandingSummary | null) {
   const primaryPalette =
     data.palettes.find((p) => p.role === "primary")?.colors ??
     data.palettes[0]?.colors;
+  const secondaryPalette =
+    data.palettes.find((p) => p.role === "secondary")?.colors ?? null;
 
   if (primaryPalette && primaryPalette.length > 0) {
     const primary0 = primaryPalette[0];
@@ -48,9 +50,15 @@ function buildColorVars(data: BrandingSummary | null) {
     vars["--district-primary-2"] = primary2;
 
     // Secondary tokens map to lighter text defaults.
-    vars["--district-secondary-0"] = primary1;
-    vars["--district-secondary-1"] = primary0;
-    vars["--district-secondary-2"] = primary1;
+    if (secondaryPalette && secondaryPalette.length > 0) {
+      vars["--district-secondary-0"] = secondaryPalette[0] ?? primary1;
+      vars["--district-secondary-1"] = secondaryPalette[1] ?? primary0;
+      vars["--district-secondary-2"] = secondaryPalette[2] ?? primary1;
+    } else {
+      vars["--district-secondary-0"] = primary1;
+      vars["--district-secondary-1"] = primary0;
+      vars["--district-secondary-2"] = primary1;
+    }
 
     // Resolve accent palette (role=accent else fallback to primary)
     const accentPalette =
