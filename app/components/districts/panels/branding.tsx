@@ -15,8 +15,71 @@ import {
 } from "lucide-react";
 import ColorPaletteEditor from "@/app/components/branding/ColorPaletteEditor";
 import AccordionCard from "@/app/components/user/AccordionCard";
+import TypographyEditor from "@/app/components/branding/TypographyEditor";
+import type { BrandingTypography, FontRole } from "@/app/lib/types/types";
+import { TypographyShowcase } from "@/app/components/branding/TypographyShowcase";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const FONT_ROLES: FontRole[] = [
+  "header1",
+  "header2",
+  "subheader",
+  "body",
+  "logo",
+  "display",
+];
+const FONT_ROLE_LABELS: Record<string, string> = {
+  header1: "Header One",
+  header2: "Header Two",
+  subheader: "Subheader",
+  body: "Body / Paragraph",
+  logo: "Logo (reference)",
+  display: "Display / Accent",
+};
+const DEFAULT_TYPOGRAPHY: Record<
+  FontRole,
+  Pick<
+    BrandingTypography,
+    "font_name" | "availability" | "weights" | "usage_rules"
+  >
+> = {
+  body: {
+    font_name: "Inter",
+    availability: "system",
+    weights: [],
+    usage_rules: "",
+  },
+  display: {
+    font_name: "Inter",
+    availability: "system",
+    weights: [],
+    usage_rules: "",
+  },
+  logo: {
+    font_name: "Inter",
+    availability: "system",
+    weights: [],
+    usage_rules: "",
+  },
+  header1: {
+    font_name: "Inter",
+    availability: "system",
+    weights: [],
+    usage_rules: "",
+  },
+  header2: {
+    font_name: "Inter",
+    availability: "system",
+    weights: [],
+    usage_rules: "",
+  },
+  subheader: {
+    font_name: "Inter",
+    availability: "system",
+    weights: [],
+    usage_rules: "",
+  },
+};
 
 interface Props {
   districtId: string | null;
@@ -37,6 +100,36 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
     role?: string;
   } | null>(null);
   const { data, loading, error } = useBrandingSummary(districtId, refreshKey);
+  const [showTypographyEditor, setShowTypographyEditor] = useState(false);
+  const [selectedTypographyRole, setSelectedTypographyRole] =
+    useState<string>("body");
+  const typographyWithDefaults = useMemo(() => {
+    if (!districtId) return [];
+    return FONT_ROLES.map((role) => {
+      const row =
+        data?.typography.find((t) => t.role === role) ||
+        (role === "body"
+          ? data?.typography.find((t) => t.role === "body")
+          : null);
+      if (row) return row;
+      const defaults = DEFAULT_TYPOGRAPHY[role];
+      return {
+        id: `default-${role}`,
+        district_id: districtId,
+        role,
+        font_name: defaults.font_name,
+        availability: defaults.availability,
+        weights: defaults.weights,
+        usage_rules: defaults.usage_rules,
+        download_url: null,
+        heading_font: null,
+        body_font: null,
+        accent_font: null,
+        created_at: "",
+        updated_at: "",
+      } as BrandingTypography;
+    });
+  }, [data?.typography, districtId]);
 
   const logosGrouped = useMemo(() => {
     if (!data) return {};
@@ -85,7 +178,7 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
   }
 
   return (
-    <div className="space-y-8 bg-district-primary-1 text-district-secondary-0 p-6 rounded">
+    <div className="space-y-8 bg-district-secondary-1 text-district-secondary-0 p-6 rounded">
       {/* Edit Drawer */}
       {selectedLogo && districtId && (
         <div className="fixed inset-0 z-50 bg-black/50 flex justify-end items-center">
@@ -164,6 +257,23 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
                 setEditingPalette(null);
                 setRefreshKey((k) => k + 1);
               }}
+            />
+          </div>
+        </div>
+      )}
+
+      {showTypographyEditor && districtId && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex justify-end items-center">
+          <div className="w-full max-w-md max-h-[calc(100vh-2rem)] bg-white shadow-xl p-4 overflow-y-auto rounded-lg mr-2">
+            <TypographyEditor
+              districtId={districtId}
+              typography={typographyWithDefaults}
+              role={selectedTypographyRole}
+              onSaved={() => {
+                setRefreshKey((k) => k + 1);
+                setShowTypographyEditor(false);
+              }}
+              onClose={() => setShowTypographyEditor(false)}
             />
           </div>
         </div>
@@ -294,8 +404,8 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
       <AccordionCard
         variant="district"
         title={
-          <span className="flex items-center gap-2 text-slate-50">
-            <PaletteIcon size={18} className="text-gray-300" />
+          <span className="flex items-center gap-2 text-district-primary-1">
+            <PaletteIcon size={18} className="text-district-primary-0" />
             Color Palettes
           </span>
         }
@@ -394,45 +504,66 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
         variant="district"
         title={
           <span className="flex items-center gap-2 text-slate-50">
-            <TypeIcon size={18} className="text-red-300" />
+            <TypeIcon size={18} className="text-red-700" />
             Typography
           </span>
         }
       >
-        {data.typography.length === 0 ? (
-          <div className="text-slate-700 mt-2">
-            No typography rules defined.
+        <div className="flex flex-col gap-2">
+          <div className="text-sm text-district-accent-1">
+            Customize district typography by role.
           </div>
-        ) : (
-          data.typography.map((t) => (
-            <div
-              key={t.id}
-              className="mt-3 p-3 border rounded bg-white shadow-sm text-slate-900"
-            >
-              <div>
-                <span className="font-medium text-slate-800">Font Name:</span>{" "}
-                <span className="text-slate-900">{t.font_name}</span>
-              </div>
-              {/* <div>
-                <span className="font-medium text-slate-800">Body:</span>{" "}
-                <span className="text-slate-900">{t.body_font}</span>
-              </div>
-              <div>
-                <span className="font-medium text-slate-800">Accent:</span>{" "}
-                <span className="text-slate-900">{t.accent_font}</span>
-              </div> */}
-              {t.usage_rules && (
-                <div className="mt-1 text-sm text-slate-700 italic">
-                  {t.usage_rules}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {typographyWithDefaults.map((t) => (
+              <div
+                key={t.role ?? t.id}
+                className="border rounded bg-white p-3 shadow-sm text-slate-900 space-y-2"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-xs uppercase text-slate-500 mb-1">
+                      {t.role
+                        ? FONT_ROLE_LABELS[t.role as FontRole]
+                        : "Typography"}
+                    </div>
+                    <div className="font-semibold text-slate-900">
+                      {t.font_name || "Not set"}
+                    </div>
+                    <div className="text-xs text-slate-600 capitalize">
+                      Availability: {t.availability ?? "system"}
+                    </div>
+                  </div>
+                  {t.role && (
+                    <button
+                      onClick={() => {
+                        setSelectedTypographyRole(t.role as string);
+                        setShowTypographyEditor(true);
+                      }}
+                      className="px-2 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      Edit
+                    </button>
+                  )}
                 </div>
-              )}
-            </div>
-          ))
-        )}
+                {t.usage_rules && (
+                  <div className="text-sm text-slate-700 italic">
+                    {t.usage_rules}
+                  </div>
+                )}
+                <div className="text-xs text-slate-600">
+                  Weights:{" "}
+                  {Array.isArray(t.weights) && t.weights.length > 0
+                    ? t.weights.join(", ")
+                    : "None"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </AccordionCard>
 
       {/* FONT FILES */}
-      <AccordionCard
+      {/* <AccordionCard
         variant="district"
         title={
           <span className="flex items-center gap-2 text-slate-50">
@@ -453,10 +584,10 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
             ))}
           </ul>
         )}
-      </AccordionCard>
+      </AccordionCard> */}
 
       {/* Branding preview of applied tokens */}
-      <div className="rounded-lg border border-district-primary-1 bg-district-primary-1/40 p-4 text-sm">
+      {/* <div className="rounded-lg border border-district-primary-1 bg-district-primary-1/40 p-4 text-sm">
         <div className="font-semibold mb-2">Preview</div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="rounded border border-district-secondary-1 bg-district-accent-0 p-3">
@@ -484,7 +615,10 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
+
+      {/* Typography visual showcase */}
+      <TypographyShowcase />
     </div>
   );
 }

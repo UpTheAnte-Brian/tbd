@@ -32,15 +32,17 @@ export function useUserById(id?: string) {
                     throw new Error("Failed to load user");
                 }
 
-                const data = await res.json();
+                const data = (await res.json()) as Profile;
                 if (!ignore) {
                     setUser(data);
                 }
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } catch (err: any) {
+                 
+            } catch (err) {
+                const message =
+                    err instanceof Error ? err.message : "Unknown error";
                 if (!ignore) {
                     setUser(null);
-                    setError(err.message ?? "Unknown error");
+                    setError(message);
                 }
             } finally {
                 if (!ignore) {

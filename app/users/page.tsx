@@ -27,14 +27,18 @@ export default function UsersPage() {
         if (!usersRes.ok) throw new Error("Failed to load users");
         if (!districtsRes.ok) throw new Error("Failed to load districts");
 
-        const usersData = await usersRes.json();
-        const geojson = await districtsRes.json();
+        const usersData = (await usersRes.json()) as Profile[];
+        const geojson = (await districtsRes.json()) as {
+          features: DistrictWithFoundation[];
+        };
 
         setUsers(usersData);
         setFeatures(geojson.features);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        setError(err.message);
+         
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to load data";
+        setError(message);
       } finally {
         setLoading(false);
       }

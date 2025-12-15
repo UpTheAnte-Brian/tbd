@@ -1,6 +1,6 @@
 export default function UpTheAntePage() {
   return (
-    <div className="prose mx-auto p-6  bg-red-500">
+    <div className="prose m-4">
       <h1>Up The Ante – Local Giving Made Simple</h1>
       <p>
         <strong>Up The Ante</strong> is a charitable nonprofit that helps local

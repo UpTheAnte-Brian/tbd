@@ -365,10 +365,25 @@ export interface BrandingPalette {
     updated_at?: string | null;
 }
 
+export type FontRole =
+    | "body"
+    | "header1"
+    | "header2"
+    | "subheader"
+    | "logo"
+    // legacy/compat
+    // | "heading"
+    | "display";
+export type FontAvailability = "system" | "google" | "licensed";
+
 export interface BrandingTypography {
     id: string;
     district_id: string;
     font_name: string;
+    role?: FontRole | null;
+    availability?: FontAvailability | null;
+    weights?: string[] | null;
+    download_url?: string | null;
     heading_font?: string | null;
     body_font?: string | null;
     accent_font?: string | null;

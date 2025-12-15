@@ -10,9 +10,15 @@ interface DistrictBrandingContextValue {
   districtId: string | null;
   colors: Record<string, string>;
   fonts: {
-    heading?: string;
+    header1?: string;
+    header2?: string;
+    subheader?: string;
     body?: string;
+    logo?: string;
+    // legacy fallback keys
+    heading?: string;
     accent?: string;
+    display?: string;
   };
 }
 
@@ -97,18 +103,38 @@ export function DistrictBrandingProvider({
   const typography = useMemo(() => {
     if (!summary?.typography || summary.typography.length === 0) {
       return {
-        heading: FALLBACK_FONT,
+        header1: FALLBACK_FONT,
+        header2: FALLBACK_FONT,
+        subheader: FALLBACK_FONT,
         body: FALLBACK_FONT,
+        logo: FALLBACK_FONT,
+        heading: FALLBACK_FONT,
         accent: FALLBACK_FONT,
+        display: FALLBACK_FONT,
       };
     }
 
-    const t = summary.typography[0] as BrandingTypography; // primary typeface for the district
+    const byRole = (role: string) =>
+      summary.typography.find((t) => t.role === role)?.font_name ?? null;
+
+    const fallback = summary.typography[0] as BrandingTypography; // fallback primary typeface
+    const body = byRole("body") ?? fallback.font_name ?? FALLBACK_FONT;
+    const header1 = byRole("header1") ?? fallback.font_name ?? body;
+    const header2 = byRole("header2") ?? header1;
+    const subheader = byRole("subheader") ?? header2;
+    const display = byRole("display") ?? header1;
+    const logo = byRole("logo") ?? display;
+    const accent = byRole("accent") ?? header2;
 
     return {
-      heading: t.font_name || FALLBACK_FONT,
-      body: t.font_name || FALLBACK_FONT,
-      accent: t.font_name || FALLBACK_FONT,
+      body: body || FALLBACK_FONT,
+      header1: header1 || FALLBACK_FONT,
+      header2: header2 || FALLBACK_FONT,
+      subheader: subheader || FALLBACK_FONT,
+      display: display || FALLBACK_FONT,
+      heading: header1 || FALLBACK_FONT, // legacy alias
+      accent: accent || FALLBACK_FONT,
+      logo: logo || FALLBACK_FONT,
     };
   }, [summary]);
 
@@ -127,6 +153,44 @@ export function DistrictBrandingProvider({
       Object.keys(colorVars).forEach((key) => root.style.removeProperty(key));
     };
   }, [colorVars]);
+
+  // Apply font variables to :root/body
+  useEffect(() => {
+    if (!typography) return;
+    const root = document.documentElement;
+    const body = document.body;
+    const font = typography.body || FALLBACK_FONT;
+
+    root.style.setProperty("--district-font-family", font);
+    if (typography.header1) {
+      root.style.setProperty("--district-font-header1", typography.header1);
+      root.style.setProperty("--district-font-heading", typography.header1);
+    }
+    if (typography.header2) {
+      root.style.setProperty("--district-font-header2", typography.header2);
+    }
+    if (typography.subheader) {
+      root.style.setProperty("--district-font-subheader", typography.subheader);
+    }
+    if (typography.display) {
+      root.style.setProperty("--district-font-display", typography.display);
+    }
+    if (typography.logo) {
+      root.style.setProperty("--district-font-logo", typography.logo);
+    }
+    body.style.fontFamily = font;
+
+    return () => {
+      root.style.removeProperty("--district-font-family");
+      root.style.removeProperty("--district-font-header1");
+      root.style.removeProperty("--district-font-header2");
+      root.style.removeProperty("--district-font-subheader");
+      root.style.removeProperty("--district-font-display");
+      root.style.removeProperty("--district-font-logo");
+      root.style.removeProperty("--district-font-heading");
+      body.style.fontFamily = "";
+    };
+  }, [typography]);
 
   // Debug logging: snapshot applied vars and watch for style mutations
   useEffect(() => {

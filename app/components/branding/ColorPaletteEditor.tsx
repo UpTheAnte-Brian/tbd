@@ -27,6 +27,7 @@ export default function ColorPaletteEditor({
   const [role, setRole] = useState(initial.role || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   const isValidHex = (value: string) =>
     /^#([0-9A-Fa-f]{6})$/.test(value.trim());
@@ -99,6 +100,25 @@ export default function ColorPaletteEditor({
     }
   };
 
+  const reorder = (from: number, to: number) => {
+    if (from === to || from < 0 || to < 0 || from >= colors.length || to >= colors.length) return;
+    setColors((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  };
+
+  const handleDragStart = (index: number) => setDragIndex(index);
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === index) return;
+    reorder(dragIndex, index);
+    setDragIndex(index);
+  };
+  const handleDragEnd = () => setDragIndex(null);
+
   return (
     <div className="flex flex-col gap-4 p-4 border rounded-lg bg-white max-w-lg text-slate-900">
       <h2 className="text-xl font-semibold text-slate-900">
@@ -144,7 +164,13 @@ export default function ColorPaletteEditor({
           {colors.map((c, i) => (
             <div
               key={i}
-              className="flex items-center gap-2 border border-slate-300 px-2 py-1 rounded bg-white"
+              className={`flex items-center gap-2 border border-slate-300 px-2 py-1 rounded bg-white ${
+                dragIndex === i ? "ring-2 ring-blue-300" : ""
+              }`}
+              draggable
+              onDragStart={() => handleDragStart(i)}
+              onDragOver={(e) => handleDragOver(e, i)}
+              onDragEnd={handleDragEnd}
             >
               <input
                 type="color"

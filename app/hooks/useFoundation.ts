@@ -31,16 +31,18 @@ export function useFoundation(district_sdorgid?: string) {
                 throw new Error("Failed to load foundation");
             }
 
-            const data = await res.json();
+            const data = (await res.json()) as Foundation;
 
             if (!ignore) {
                 setFoundation(data);
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (err: any) {
+             
+        } catch (err) {
+            const message =
+                err instanceof Error ? err.message : "Unknown error";
             if (!ignore) {
                 setFoundation(null);
-                setError(err.message ?? "Unknown error");
+                setError(message);
             }
         } finally {
             if (!ignore) {

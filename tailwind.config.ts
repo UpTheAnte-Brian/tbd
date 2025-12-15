@@ -31,6 +31,24 @@ const config: Config = {
         "uta-primary-light": "var(--uta-primary-light)",
       },
       fontFamily: {
+        district: ["var(--district-font-family, Inter)"],
+        "district-body": ["var(--district-font-family, Inter)"],
+        "district-header1": [
+          "var(--district-font-header1, var(--district-font-heading, var(--district-font-family, Inter)))",
+        ],
+        "district-header2": [
+          "var(--district-font-header2, var(--district-font-header1, var(--district-font-heading, var(--district-font-family, Inter))))",
+        ],
+        "district-subheader": [
+          "var(--district-font-subheader, var(--district-font-header2, var(--district-font-header1, var(--district-font-heading, var(--district-font-family, Inter)))))",
+        ],
+        "district-heading": ["var(--district-font-heading, var(--district-font-family, Inter))"],
+        "district-display": [
+          "var(--district-font-display, var(--district-font-header1, var(--district-font-heading, var(--district-font-family, Inter))))",
+        ],
+        "district-logo": [
+          "var(--district-font-logo, var(--district-font-display, var(--district-font-header1, var(--district-font-heading, var(--district-font-family, Inter)))))",
+        ],
         satoshi: ["Satoshi", "sans-serif"],
         inter: ["Inter", "sans-serif"],
       },

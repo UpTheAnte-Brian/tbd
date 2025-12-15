@@ -1,10 +1,13 @@
 // app/api/user-districts/route.ts
 import { NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route"; // adjust import if needed
+import type { PostgrestError } from "@supabase/supabase-js";
+
+type PostJson = { userId?: string; districtIds?: string[] };
 
 export async function POST(req: Request) {
     try {
-        const { userId, districtIds } = await req.json();
+        const { userId, districtIds } = (await req.json()) as PostJson;
 
         if (!userId || !Array.isArray(districtIds)) {
             return NextResponse.json(
@@ -37,11 +40,15 @@ export async function POST(req: Request) {
         if (insertError) throw insertError;
 
         return NextResponse.json({ success: true, data });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
+         
+    } catch (err) {
+        const message =
+            err && typeof err === "object" && "message" in err
+                ? String((err as PostgrestError | Error).message)
+                : "Internal Server Error";
         console.error("Error in POST /api/user-districts:", err);
         return NextResponse.json(
-            { error: err.message || "Internal Server Error" },
+            { error: message },
             { status: 500 },
         );
     }

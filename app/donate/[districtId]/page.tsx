@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 "use client";
 import React, { useState, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
@@ -59,20 +59,30 @@ export function DonatePageContent({
   );
 
   const handleDonate = async () => {
+    const amount = donationAmount === "" ? 0 : donationAmount;
+    if (!amount || amount <= 0) {
+      console.error("Invalid donation amount");
+      return;
+    }
     const isRecurring =
       subscriptionType === "month" || subscriptionType === "year";
     const apiUrl = isRecurring
       ? "/api/stripe/create-subscription-session"
       : "/api/stripe/create-checkout-session";
-    const body: any = {
-      amount: donationAmount,
+    const body: {
+      amount: number;
+      anonymous: boolean;
+      districtId?: string;
+      interval?: "month" | "year";
+    } = {
+      amount,
       anonymous,
       ...(selectedDistrictId && {
         districtId: selectedDistrictId,
       }),
-      ...(subscriptionType !== "none" && {
-        interval: subscriptionType,
-      }),
+      ...(subscriptionType === "month" || subscriptionType === "year"
+        ? { interval: subscriptionType }
+        : {}),
     };
     // For one-time donations, interval may not be needed, but API can ignore it.
     try {

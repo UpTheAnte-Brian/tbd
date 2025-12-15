@@ -13,7 +13,8 @@ export async function GET(
     const patternType = searchParams.get("patternType"); // optional
 
     let query = supabase
-        .from("branding.patterns")
+        .schema("branding")
+        .from("patterns")
         .select("*")
         .eq("district_id", districtId)
         .order("created_at", { ascending: false });

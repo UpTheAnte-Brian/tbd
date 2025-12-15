@@ -16,7 +16,8 @@ export async function GET(
 
     // Build the query
     let query = supabase
-        .from("branding.logos")
+        .schema("branding")
+        .from("logos")
         .select("*")
         .eq("district_id", districtId)
         .order("created_at", { ascending: false });
