@@ -1,10 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import {
-  DistrictUserRow,
-  DistrictWithFoundation,
-  Profile,
-} from "@/app/lib/types/types";
+import { DistrictWithFoundation, EntityUser, Profile } from "@/app/lib/types/types";
 import Link from "next/link";
 import AssignDistrictsModal from "@/app/components/districts/AssignDistrictsModal";
 
@@ -72,12 +68,13 @@ export default function UsersPage() {
     if (!user) return;
 
     try {
-      const res = await fetch("/api/user-districts", {
+      const res = await fetch(`/api/users/${user.id}/districts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user.id,
-          districtIds: user.district_users.map((d) => d.district_id),
+          districtIds: (user.entity_users ?? [])
+            .filter((eu) => eu.entity_type === "district")
+            .map((eu) => eu.entity_id),
         }),
       });
 
@@ -138,12 +135,13 @@ export default function UsersPage() {
               </td>
 
               <td className="border border-gray-300 px-2 py-1">
-                {u.district_users && u.district_users.length > 0 ? (
+                {(u.entity_users ?? []).filter((eu) => eu.entity_type === "district").length >
+                0 ? (
                   <ul className="list-disc pl-4 text-white">
-                    {u.district_users
-                      .filter((d): d is DistrictUserRow => "district" in d)
-                      .map((d) => (
-                        <li key={d.district_id}>{d.district!.shortname}</li>
+                    {(u.entity_users as EntityUser[] | undefined)
+                      ?.filter((eu) => eu.entity_type === "district")
+                      .map((eu) => (
+                        <li key={eu.entity_id}>{eu.entity_id}</li>
                       ))}
                   </ul>
                 ) : (

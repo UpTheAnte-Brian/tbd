@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
+import { isEntityAdmin } from "@/app/lib/auth/entityRoles";
 
 // POST /api/districts/[id]/branding/palettes
 export async function POST(
@@ -9,21 +10,21 @@ export async function POST(
     const supabase = await createApiClient();
     const { id: districtId } = await context.params;
 
-    // Authorization: user must be branding_admin
+    // Authorization: user must be admin for this district
     const { data: userData, error: userErr } = await supabase.auth.getUser();
     if (userErr || !userData?.user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const userId: string = userData.user.id;
 
-    const { data: roleCheck } = await supabase
-        .from("district_users")
-        .select("role")
-        .eq("district_id", districtId)
+    const { data: entityRoles } = await supabase
+        .from("entity_users")
+        .select("entity_type, entity_id, role, user_id")
+        .eq("entity_type", "district")
+        .eq("entity_id", districtId)
         .eq("user_id", userId);
 
-    const allowedRoles = ["admin", "superintendent", "branding_admin"];
-    if (!roleCheck || !roleCheck.some((r) => allowedRoles.includes(r.role))) {
+    if (!isEntityAdmin(entityRoles ?? [], "district", districtId)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

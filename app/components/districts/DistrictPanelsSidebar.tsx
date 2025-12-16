@@ -10,7 +10,8 @@ import DistrictFoundation from "@/app/components/districts/panels/foundation";
 import DistrictOverview from "@/app/components/districts/panels/overview";
 import DistrictPrimaryLogo from "@/app/components/districts/branding/DistrictPrimaryLogo";
 import DistrictPaletteCube from "@/app/components/branding/DistrictPaletteCube";
-import { DistrictWithFoundation, Profile } from "@/app/lib/types/types";
+import { DistrictWithFoundation, EntityUser, Profile } from "@/app/lib/types/types";
+import { hasEntityRole } from "@/app/lib/auth/entityRoles";
 
 type Props = {
   user: Profile | null;
@@ -32,8 +33,9 @@ export default function DistrictPanelsSidebar({
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
-  const admin = user?.global_role === "admin";
-  const districtAdmin = user?.district_users?.some((u) => u.role === "admin");
+  const entityUsers = (user?.entity_users ?? []) as EntityUser[];
+  const platformAdmin = user?.global_role === "admin";
+  const districtAdmin = hasEntityRole(entityUsers, "district", district.id, ["admin"]);
 
   useEffect(() => {
     setHydrated(true);
@@ -122,7 +124,7 @@ export default function DistrictPanelsSidebar({
             districtId={district.id}
             districtShortname={district.shortname}
           />
-        ) : activeTab === "Admin" && user && (admin || districtAdmin) ? (
+        ) : activeTab === "Admin" && user && (platformAdmin || districtAdmin) ? (
           <DistrictAdmin
             user={user}
             district={district}

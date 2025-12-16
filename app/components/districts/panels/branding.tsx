@@ -323,7 +323,7 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
                           </div>
                           <Image
                             src={`${SUPABASE_URL}/storage/v1/object/public/branding-logos/${file}?v=${
-                              logo.updated_at ?? ""
+                              logo.updated_at ?? logo.created_at ?? ""
                             }`}
                             alt={logo.name}
                             width={150}

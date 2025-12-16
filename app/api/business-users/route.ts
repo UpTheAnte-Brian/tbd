@@ -2,11 +2,17 @@ import {
     DELETE as entityUsersDelete,
     POST as entityUsersPOST,
 } from "@/app/api/entity-users/route";
+import { NextRequest } from "next/server";
 
-export async function POST(req: Request) {
-    // Force entityType to "business"
-    const body = await req.json();
-    const forwardedRequest = new Request(req.url, {
+type Payload = {
+    entityId?: string;
+    userId?: string;
+    role?: "admin" | "editor" | "viewer" | "employee";
+};
+
+export async function POST(req: NextRequest) {
+    const body = (await req.json()) as Payload;
+    const forwardedRequest = new NextRequest(req.url, {
         method: req.method,
         headers: req.headers,
         body: JSON.stringify({
@@ -20,11 +26,10 @@ export async function POST(req: Request) {
     return entityUsersPOST(forwardedRequest);
 }
 
-export async function DELETE(req: Request) {
-    // Force entityType to "business"
-    const body = await req.json();
+export async function DELETE(req: NextRequest) {
+    const body = (await req.json()) as Payload;
 
-    const forwardedRequest = new Request(req.url, {
+    const forwardedRequest = new NextRequest(req.url, {
         method: req.method,
         headers: req.headers,
         body: JSON.stringify({

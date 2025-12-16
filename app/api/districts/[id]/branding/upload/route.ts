@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createApiClient } from "@/utils/supabase/route";
+import { isEntityAdmin } from "@/app/lib/auth/entityRoles";
 import {
     athleticsLogoPath,
     communityEdLogoPath,
@@ -95,13 +96,13 @@ export async function POST(
     const userId = userData.user.id;
 
     const { data: roleRows } = await supabase
-        .from("district_users")
-        .select("role")
-        .eq("district_id", data.districtId)
+        .from("entity_users")
+        .select("entity_type, entity_id, role, user_id")
+        .eq("entity_type", "district")
+        .eq("entity_id", data.districtId)
         .eq("user_id", userId);
 
-    const allowedRoles = ["admin", "superintendent", "branding_admin"];
-    if (!roleRows || !roleRows.some((r) => allowedRoles.includes(r.role))) {
+    if (!isEntityAdmin(roleRows ?? [], "district", data.districtId)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

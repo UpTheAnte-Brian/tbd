@@ -1,5 +1,9 @@
 import "server-only";
-import type { Business, BusinessUserRow } from "@/app/lib/types/types";
+import type {
+    Business,
+    EntityUser,
+    EntityUserRole,
+} from "@/app/lib/types/types";
 import { createClient } from "@/utils/supabase/server";
 
 export async function getBusinesses(): Promise<Business[]> {
@@ -32,27 +36,68 @@ export async function getBusiness(id: string): Promise<Business> {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from("businesses")
-        .select(`
+        .select(
+            `
             *,
-            business_users (
+            entity_users:entity_users (
+                id,
+                entity_type,
+                entity_id,
+                user_id,
                 role,
-                user:profiles (*)
+                status,
+                created_at,
+                profile:profiles ( id, full_name, username, first_name, last_name, avatar_url, website )
             )
-        `)
+        `,
+        )
         .eq("id", id)
         .maybeSingle();
 
     if (error || !data) throw error;
 
-    // Map business_users to users for the Business interface
-    const businessUsers = Array.isArray(data.business_users)
-        ? data.business_users.map((bu: BusinessUserRow) => ({
-            role: bu.role,
-            user: bu.user,
-        }))
-        : [];
+    const entityUsers: EntityUser[] =
+        Array.isArray((data as { entity_users?: unknown }).entity_users)
+            ? (data as { entity_users: EntityUser[] }).entity_users.map((u) => {
+                const profileRaw = Array.isArray(u.profile)
+                    ? u.profile[0]
+                    : u.profile;
+                return {
+                    id: String(u.id),
+                    entity_type: "business",
+                    entity_id: String(u.entity_id),
+                    user_id: String(u.user_id),
+                    role: (u.role as EntityUserRole) ?? "viewer",
+                    status: (u.status as EntityUser["status"]) ?? null,
+                    created_at: u.created_at ?? null,
+                    updated_at: null,
+                    profile: profileRaw
+                        ? {
+                            id: String((profileRaw as { id: string }).id ?? ""),
+                            full_name:
+                                (profileRaw as { full_name?: string | null })
+                                    .full_name ?? null,
+                            username:
+                                (profileRaw as { username?: string | null })
+                                    .username ?? null,
+                            first_name:
+                                (profileRaw as { first_name?: string | null })
+                                    .first_name ?? null,
+                            last_name:
+                                (profileRaw as { last_name?: string | null })
+                                    .last_name ?? null,
+                            avatar_url:
+                                (profileRaw as { avatar_url?: string | null })
+                                    .avatar_url ?? null,
+                            website: (profileRaw as { website?: string | null })
+                                .website ?? null,
+                            entity_users: undefined,
+                        }
+                        : null,
+                };
+            })
+            : [];
 
-    // Return the hydrated Business object
     return {
         id: data.id,
         place_id: data.place_id,
@@ -66,14 +111,16 @@ export async function getBusiness(id: string): Promise<Business> {
         status: data.status,
         created_at: data.created_at,
         updated_at: data.updated_at,
-        users: businessUsers,
+        users: entityUsers,
     } as Business;
 }
 
-// Insert a new business + associate the current user as owner
 export async function registerBusiness(
     userId: string,
-    business: Omit<Business, "id" | "created_at" | "updated_at" | "status">,
+    business: Omit<
+        Business,
+        "id" | "created_at" | "updated_at" | "status" | "users"
+    >,
 ) {
     const supabase = await createClient();
     const { data: newBusiness, error } = await supabase
@@ -87,10 +134,11 @@ export async function registerBusiness(
 
     if (error) throw error;
 
-    await supabase.from("business_users").insert({
-        business_id: newBusiness.id,
+    await supabase.from("entity_users").insert({
+        entity_id: newBusiness.id,
+        entity_type: "business",
         user_id: userId,
-        role: "owner",
+        role: "admin",
     });
 
     return newBusiness;

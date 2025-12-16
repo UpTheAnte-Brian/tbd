@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
+import { isEntityAdmin } from "@/app/lib/auth/entityRoles";
 
 // PATCH /api/districts/[id]/branding/palettes/[paletteId]
 export async function PATCH(
@@ -9,7 +10,7 @@ export async function PATCH(
     const supabase = await createApiClient();
     const { id: districtId, paletteId } = await context.params;
 
-    // Authorization: user must be branding_admin for this district
+    // Authorization: user must be admin for this district
     const {
         data: userData,
         error: userErr,
@@ -22,13 +23,13 @@ export async function PATCH(
     const userId = userData.user.id;
 
     const { data: roleCheck } = await supabase
-        .from("district_users")
-        .select("role")
-        .eq("district_id", districtId)
+        .from("entity_users")
+        .select("entity_type, entity_id, role, user_id")
+        .eq("entity_type", "district")
+        .eq("entity_id", districtId)
         .eq("user_id", userId);
 
-    const allowedRoles = ["admin", "superintendent", "branding_admin"];
-    if (!roleCheck || !roleCheck.some((r) => allowedRoles.includes(r.role))) {
+    if (!isEntityAdmin(roleCheck ?? [], "district", districtId)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -125,7 +126,7 @@ export async function DELETE(
     const supabase = await createApiClient();
     const { id: districtId, paletteId } = params;
 
-    // Authorization: user must be branding_admin
+    // Authorization: user must be admin
     const {
         data: userData,
         error: userErr,
@@ -138,16 +139,14 @@ export async function DELETE(
     const userId = userData.user.id;
 
     const { data: roleCheck } = await supabase
-        .from("district_users")
-        .select("role")
-        .eq("district_id", districtId)
-        .eq("user_id", userId)
-        .single();
+        .from("entity_users")
+        .select("entity_type, entity_id, role, user_id")
+        .eq("entity_type", "district")
+        .eq("entity_id", districtId)
+        .eq("user_id", userId);
 
-    if (!roleCheck || roleCheck.role !== "branding_admin") {
-        return NextResponse.json({
-            error: "Forbidden: branding_admin required",
-        }, { status: 403 });
+    if (!isEntityAdmin(roleCheck ?? [], "district", districtId)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { error } = await supabase

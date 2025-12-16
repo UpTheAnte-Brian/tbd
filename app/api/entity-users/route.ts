@@ -1,124 +1,68 @@
-// app/api/entity-users/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
 
-export async function POST(req: Request) {
-    const supabase = await createApiClient();
+type Payload = {
+  entityType?: "district" | "business" | "nonprofit";
+  entityId?: string;
+  userId?: string;
+  role?: "admin" | "editor" | "viewer" | "employee";
+};
 
-    try {
-        const { entityType, entityId, userId, role } = await req.json();
-        if (!entityType || !entityId || !userId || !role) {
-            return NextResponse.json(
-                { error: "Missing required fields" },
-                { status: 400 },
-            );
-        }
+// Upsert/update role
+export async function POST(req: NextRequest) {
+  const supabase = await createApiClient();
+  const body = (await req.json()) as Payload;
+  const { entityType, entityId, userId, role } = body;
 
-        let tableName = null;
+  if (!entityType || !entityId || !userId || !role) {
+    return NextResponse.json(
+      { error: "entityType, entityId, userId, and role are required" },
+      { status: 400 },
+    );
+  }
 
-        // Map entityType → table
-        switch (entityType) {
-            case "district":
-                tableName = "district_users";
-                break;
-            case "business":
-                tableName = "business_users";
-                break;
-            case "foundation":
-                tableName = "foundation_users";
-                break;
-            case "campaign":
-                tableName = "campaign_users";
-                break;
-            default:
-                return NextResponse.json(
-                    { error: `Unsupported entityType: ${entityType}` },
-                    { status: 400 },
-                );
-        }
+  const { error } = await supabase
+    .from("entity_users")
+    .upsert(
+      {
+        entity_type: entityType,
+        entity_id: entityId,
+        user_id: userId,
+        role,
+      },
+      { onConflict: "entity_id,user_id,entity_type" },
+    );
 
-        // Insert or update
-        const { data, error } = await supabase
-            .from(tableName)
-            .upsert(
-                {
-                    [`${entityType}_id`]: entityId,
-                    user_id: userId,
-                    role,
-                },
-                {
-                    onConflict: `${entityType}_id,user_id`, // <-- important!
-                },
-            )
-            .select()
-            .single();
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
-        if (error) throw error;
-
-        return NextResponse.json({ success: true, data });
-    } catch (e: unknown) {
-        let errorMessage = "Internal server error";
-        if (e instanceof Error) {
-            errorMessage = e.message;
-        }
-        console.error("Error in /api/entity-users:", e);
-        return NextResponse.json(
-            { error: errorMessage },
-            { status: 500 },
-        );
-    }
+  return NextResponse.json({ success: true });
 }
 
-export async function DELETE(req: Request) {
-    const supabase = await createApiClient();
+// Delete role
+export async function DELETE(req: NextRequest) {
+  const supabase = await createApiClient();
+  const body = (await req.json()) as Payload;
+  const { entityType, entityId, userId } = body;
 
-    try {
-        // Read the body once
-        const { entityType, entityId, userId } = await req.json();
+  if (!entityType || !entityId || !userId) {
+    return NextResponse.json(
+      { error: "entityType, entityId, and userId are required" },
+      { status: 400 },
+    );
+  }
 
-        // Destructure and validate in one line
-        console.log("delete props: ", entityType, entityId, userId);
-        if (!entityType || !entityId || !userId) {
-            return NextResponse.json(
-                { error: "Missing required fields" },
-                { status: 400 },
-            );
-        }
+  const { error } = await supabase
+    .from("entity_users")
+    .delete()
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId)
+    .eq("user_id", userId);
 
-        // Map entityType → table
-        const tableMap: Record<string, string> = {
-            district: "district_users",
-            business: "business_users",
-            foundation: "foundation_users",
-            campaign: "campaign_users",
-        };
-        const tableName = tableMap[entityType];
-        if (!tableName) {
-            return NextResponse.json(
-                { error: `Unsupported entityType: ${entityType}` },
-                { status: 400 },
-            );
-        }
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
-        // Delete the record
-        const { error } = await supabase
-            .from(tableName)
-            .delete()
-            .eq(`${entityType}_id`, entityId)
-            .eq("user_id", userId);
-
-        if (error) throw error;
-
-        return NextResponse.json({ success: true });
-    } catch (e: unknown) {
-        let errorMessage = "Internal server error";
-        if (e instanceof Error) {
-            errorMessage = e.message;
-        }
-        console.error("Error in DELETE /api/entity-users:", e);
-        return NextResponse.json(
-            { error: errorMessage },
-            { status: 500 },
-        );
-    }
+  return NextResponse.json({ success: true });
 }

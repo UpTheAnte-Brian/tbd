@@ -52,7 +52,7 @@ export default function DistrictPrimaryLogo({
       null;
     if (!file) return null;
 
-    const version = chosen.updated_at ?? "";
+    const version = chosen.updated_at ?? chosen.created_at ?? "";
     const hasPath = file.includes("/");
     const inferredPath = hasPath
       ? file

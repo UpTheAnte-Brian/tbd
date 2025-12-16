@@ -1,14 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-type SecurityRoles = {
-    id: string;
-    global_role: string | null;
-    district_admin_of: string[];
-    business_admin_of: string[];
-    nonprofit_admin_of: string[];
-};
-
 export async function updateSession(request: NextRequest) {
     // Clone request headers so we can forward any updated cookies
     const requestHeaders = new Headers(request.headers);
@@ -72,19 +64,46 @@ export async function updateSession(request: NextRequest) {
         return response;
     }
 
-    // Load full role & permissions from combined security view
-    const { data: secData, error: secError } = await supabase
-        .rpc("get_user_security_roles", { uid: userId })
-        .maybeSingle();
-    if (secError) {
-        console.error("get_user_security_roles failed:", secError);
+    type EntityUserRow = {
+        entity_type: string;
+        entity_id: string;
+        role: string;
+    };
+    type ProfileRow = {
+        role: string | null;
+        entity_users: EntityUserRow[] | null;
+    } | null;
+
+    const { data: profile, error: profileErr } = await supabase
+        .from("profiles")
+        .select(
+            `
+        role,
+        entity_users:entity_users (
+          entity_type,
+          entity_id,
+          role
+        )
+      `,
+        )
+        .eq("id", userId)
+        .maybeSingle<ProfileRow>();
+    if (profileErr) {
+        console.error("load profile roles failed:", profileErr);
         return response;
     }
-    const sec = (secData ?? null) as SecurityRoles | null;
-    const globalRole: string | null = sec?.global_role ?? null;
-    const districtAdminOf: string[] = sec?.district_admin_of ?? [];
-    const businessAdminOf: string[] = sec?.business_admin_of ?? [];
-    const nonprofitAdminOf: string[] = sec?.nonprofit_admin_of ?? [];
+
+    const globalRole: string | null = profile?.role ?? null;
+    const entityUsers: EntityUserRow[] = profile?.entity_users ?? [];
+    const districtAdminOf: string[] = entityUsers
+        .filter((eu) => eu.entity_type === "district" && eu.role === "admin")
+        .map((eu) => eu.entity_id);
+    const businessAdminOf: string[] = entityUsers
+        .filter((eu) => eu.entity_type === "business" && eu.role === "admin")
+        .map((eu) => eu.entity_id);
+    const nonprofitAdminOf: string[] = entityUsers
+        .filter((eu) => eu.entity_type === "nonprofit" && eu.role === "admin")
+        .map((eu) => eu.entity_id);
 
     const pathname = request.nextUrl.pathname;
 
@@ -175,16 +194,10 @@ export async function updateSession(request: NextRequest) {
                 const businessMatch = pathname.match(
                     /^\/admin\/businesses\/([\w-]+)/,
                 );
-                const foundationMatch = pathname.match(
-                    /^\/admin\/foundations\/([\w-]+)/,
-                );
-
                 if (districtMatch) {
                     url.pathname = `/districts/${districtMatch[1]}`;
                 } else if (businessMatch) {
                     url.pathname = `/businesses/${businessMatch[1]}`;
-                } else if (foundationMatch) {
-                    url.pathname = `/foundations/${foundationMatch[1]}`;
                 } else {
                     url.pathname = "/";
                 }

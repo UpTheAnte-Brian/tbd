@@ -1,4 +1,4 @@
-import { Nonprofit } from "@/app/lib/types/nonprofits";
+// import { Nonprofit } from "@/app/lib/types/nonprofits";
 import type { Feature, Geometry, MultiPolygon, Polygon } from "geojson";
 
 // export type DistrictFeature = Feature<
@@ -25,7 +25,7 @@ export interface Foundation {
     balance_sheet: number | null;
     // inserted_at: string; // ISO timestamp
     // updated_at: string; // ISO timestamp
-    users?: BusinessUserRow[]; // optional list of related users
+    users?: EntityUser[]; // optional list of related users
 }
 
 export interface ExtendedFeature<
@@ -58,7 +58,7 @@ export interface DistrictWithFoundation
     id: string; // <-- UUID from Supabase
     foundation?: Foundation | null;
     metadata: DistrictMetadata | null;
-    users?: BusinessUserRow[]; // optional list of related users
+    users?: EntityUser[]; // optional list of related users
 }
 
 export interface DistrictMetadata {
@@ -86,30 +86,22 @@ export interface UserWithDistricts {
     districts: District[];
 }
 
-export interface DistrictUserRow {
-    district_id: string;
+export type EntityType = "district" | "nonprofit" | "business";
+export type EntityUserRole = "admin" | "editor" | "viewer" | "employee";
+
+export interface EntityUser {
+    id: string;
+    entity_type: EntityType;
+    entity_id: string;
     user_id: string;
-    role: DistrictUserRole;
-    district?: District;
-    user?: Profile;
-}
-// each district_user row
-export interface BusinessUserRow {
-    business_id: string;
-    user_id: string;
-    role: BusinessUserRole;
-    business?: Business;
-    user?: Profile;
+    role: EntityUserRole;
+    status?: "active" | "invited" | "removed" | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+    profile?: ProfilePreview | null;
 }
 
-// nonprofit users
-export interface NonprofitUserRow {
-    nonprofit_id: string;
-    user_id: string;
-    role: string; // tighten to a union if you have known roles
-    nonprofit?: Nonprofit;
-    user?: Profile;
-}
+export type ProfilePreview = Partial<Profile> & { id: string };
 
 export interface Profile {
     id: string;
@@ -120,9 +112,7 @@ export interface Profile {
     username: string | null;
     avatar_url: string | null;
     website: string | null;
-    district_users: (DistrictUserRow | DistrictUserRow)[];
-    business_users: (BusinessUserRow | BusinessUserRow)[];
-    nonprofit_users: (NonprofitUserRow | NonprofitUserRow)[];
+    entity_users?: EntityUser[];
     global_role: string | null;
     address: string | null;
     phone_number: string | null;
@@ -210,29 +200,7 @@ export type PlaceDetailsType = {
     };
     types?: string[];
 };
-export interface BusinessUser {
-    id: string;
-    business_id: string;
-    user_id: string;
-    role: BusinessUserRole;
-    created_at: string;
-}
-
-export interface DistrictUser {
-    id: string;
-    district_id: string;
-    user_id: string;
-    role: DistrictUserRole;
-    created_at: string;
-}
-
-export interface FoundationUser {
-    id: string;
-    foundation_id: string;
-    user_id: string;
-    role: FoundationUserRole;
-    created_at: string;
-}
+// Legacy user role interfaces removed in favor of EntityUser
 
 export interface Campaign {
     id: string;
@@ -249,16 +217,7 @@ export type BusinessStatus =
     | "inactive"
     | "verified"
     | "rejected";
-export type BusinessUserRole = "owner" | "employee" | "patron";
-export type DistrictUserRole =
-    | "superintendent"
-    | "athletic director"
-    | "admin"
-    | "teacher";
-export type FoundationUserRole =
-    | "President"
-    | "board member"
-    | "Patron";
+// Legacy role types removed in favor of EntityUserRole
 export type CampaignType = "round_up" | "percent" | "flat";
 export type CampaignStatus = "pending" | "scheduled" | "active" | "ended";
 
@@ -275,15 +234,7 @@ export interface Business {
     status: BusinessStatus;
     created_at: string;
     updated_at: string;
-    users?: BusinessUserRow[]; // optional list of related users
-}
-
-export interface BusinessUser {
-    id: string;
-    business_id: string;
-    user_id: string;
-    role: BusinessUserRole;
-    created_at: string;
+    users?: EntityUser[]; // optional list of related users
 }
 
 export interface BusinessCampaign {
@@ -298,15 +249,9 @@ export interface BusinessCampaign {
 
 // Added UserRolesAssignments with arrays of strings for each entity type to avoid runtime error
 export const RoleOptions = {
-    business: ["owner", "employee", "patron"] as const,
-    district: [
-        "superintendent",
-        "athletic director",
-        "admin",
-        "teacher",
-        "branding_admin",
-    ] as const,
-    foundation: ["President", "board member", "Patron"] as const,
+    business: [] as const,
+    district: [] as const,
+    foundation: [] as const,
 };
 
 // =========================

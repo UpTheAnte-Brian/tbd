@@ -5,7 +5,8 @@ import { BrandingPanel } from "@/app/components/districts/panels/branding";
 import DistrictMap from "@/app/components/districts/panels/DistrictMap";
 import DistrictFoundation from "@/app/components/districts/panels/foundation";
 import DistrictOverview from "@/app/components/districts/panels/overview";
-import { DistrictWithFoundation, Profile } from "@/app/lib/types/types";
+import { DistrictWithFoundation, EntityUser, Profile } from "@/app/lib/types/types";
+import { hasEntityRole } from "@/app/lib/auth/entityRoles";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -27,8 +28,9 @@ export default function DistrictPanels({
   const initialTab = searchParams.get("tab") || "Overview";
   const [activeTab, setActiveTab] = useState(initialTab);
 
-  const admin = user?.global_role === "admin";
-  const districtAdmin = user?.district_users?.some((u) => u.role === "admin");
+  const entityUsers = (user?.entity_users ?? []) as EntityUser[];
+  const platformAdmin = user?.global_role === "admin";
+  const districtAdmin = hasEntityRole(entityUsers, "district", district.id, ["admin"]);
 
   // Keep internal state in sync with URL changes (e.g. back/forward)
   useEffect(() => {
@@ -99,7 +101,7 @@ export default function DistrictPanels({
             districtId={district.id}
             districtShortname={district.shortname}
           />
-        ) : activeTab === "Admin" && user && (admin || districtAdmin) ? (
+        ) : activeTab === "Admin" && user && (platformAdmin || districtAdmin) ? (
           <DistrictAdmin
             user={user}
             district={district}

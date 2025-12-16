@@ -1,95 +1,117 @@
 import "server-only";
 import { createClient } from "@/utils/supabase/server";
+import type {
+    EntityUser,
+    EntityUserRole,
+    ProfilePreview,
+} from "@/app/lib/types/types";
 
-export interface NonprofitUserDTO {
-    id: string;
-    nonprofit_id: string;
-    user_id: string;
-    role: string;
-    board_role: string | null;
-    created_at: string;
-    created_by: string | null;
-    profiles?: {
-        id: string;
-        full_name: string | null;
-        avatar_url?: string | null;
-    };
-}
+export type NonprofitUserDTO = EntityUser & { nonprofit_id: string };
 
-/**
- * Used for inserts and updates
- */
 export interface NonprofitUserInput {
     nonprofit_id?: string;
     user_id?: string;
-    role?: string;
-    board_role?: string | null;
+    role?: EntityUserRole;
 }
 
-/**
- * Fetch all nonprofit-user assignments.
- */
+const PROFILE_FIELDS =
+    "id, full_name, username, first_name, last_name, avatar_url, website";
+
+function mapProfile(profileRaw: unknown): ProfilePreview | null {
+    if (!profileRaw) return null;
+    const profile = Array.isArray(profileRaw) ? profileRaw[0] : profileRaw;
+    if (!profile || typeof profile !== "object") return null;
+
+    const {
+        id,
+        full_name = null,
+        username = null,
+        first_name = null,
+        last_name = null,
+        avatar_url = null,
+        website = null,
+    } = profile as {
+        id?: string;
+        full_name?: string | null;
+        username?: string | null;
+        first_name?: string | null;
+        last_name?: string | null;
+        avatar_url?: string | null;
+        website?: string | null;
+    };
+
+    if (!id) return null;
+
+    return {
+        id: String(id),
+        full_name,
+        username,
+        first_name,
+        last_name,
+        avatar_url,
+        website,
+        entity_users: undefined,
+    };
+}
+
+function mapEntityUser(
+    eu: Record<string, unknown>,
+): NonprofitUserDTO | null {
+    if (!eu.id || !eu.entity_id || !eu.user_id) return null;
+    return {
+        id: String(eu.id),
+        entity_type: "nonprofit",
+        entity_id: String(eu.entity_id),
+        user_id: String(eu.user_id),
+        role: (eu.role as EntityUserRole) ?? "viewer",
+        status: (eu.status as EntityUser["status"]) ?? null,
+        created_at: (eu.created_at as string | null | undefined) ?? null,
+        updated_at: null,
+        profile: mapProfile(eu.profile),
+        nonprofit_id: String(eu.entity_id),
+    };
+}
+
 export async function listNonprofitUsersDTO(): Promise<NonprofitUserDTO[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from("nonprofit_users")
+        .from("entity_users")
         .select(
             `
-      id,
-      nonprofit_id,
-      user_id,
-      role,
-      board_role,
-      created_at,
-      created_by,
-      profiles:user_id (
-        id,
-        full_name,
-        avatar_url
-      )
+      id, entity_type, entity_id, user_id, role, status, created_at,
+      profile:profiles ( ${PROFILE_FIELDS} )
     `,
         )
+        .eq("entity_type", "nonprofit")
         .order("created_at", { ascending: false });
 
     if (error) throw error;
-    return data as unknown as NonprofitUserDTO[];
+    return (data ?? [])
+        .map((eu) => mapEntityUser(eu as Record<string, unknown>))
+        .filter((u): u is NonprofitUserDTO => Boolean(u));
 }
 
-/**
- * Get a single nonprofit-user assignment by ID.
- */
 export async function getNonprofitUserDTO(
     id: string,
 ): Promise<NonprofitUserDTO | null> {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from("nonprofit_users")
+        .from("entity_users")
         .select(
             `
-      id,
-      nonprofit_id,
-      user_id,
-      role,
-      board_role,
-      created_at,
-      created_by,
-      profiles:user_id (
-        id,
-        full_name,
-        avatar_url
-      )
+      id, entity_type, entity_id, user_id, role, status, created_at,
+      profile:profiles ( ${PROFILE_FIELDS} )
     `,
         )
         .eq("id", id)
-        .single();
+        .eq("entity_type", "nonprofit")
+        .maybeSingle();
 
     if (error) throw error;
-    return data as unknown as NonprofitUserDTO;
+    if (!data) return null;
+    return mapEntityUser(data as Record<string, unknown>);
 }
 
-/**
- * Create a new nonprofit-user assignment.
- */
 export async function createNonprofitUserDTO(
     input: NonprofitUserInput,
 ): Promise<NonprofitUserDTO> {
@@ -99,81 +121,63 @@ export async function createNonprofitUserDTO(
 
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from("nonprofit_users")
+        .from("entity_users")
         .insert({
-            nonprofit_id: input.nonprofit_id,
+            entity_type: "nonprofit",
+            entity_id: input.nonprofit_id,
             user_id: input.user_id,
             role: input.role ?? "viewer",
-            board_role: input.board_role ?? null,
         })
         .select(
             `
-      id,
-      nonprofit_id,
-      user_id,
-      role,
-      board_role,
-      created_at,
-      created_by,
-      profiles:user_id (
-        id,
-        full_name,
-        avatar_url
-      )
+      id, entity_type, entity_id, user_id, role, status, created_at,
+      profile:profiles ( ${PROFILE_FIELDS} )
     `,
         )
         .single();
 
     if (error) throw error;
-    return data as unknown as NonprofitUserDTO;
+    const mapped = mapEntityUser(data as Record<string, unknown>);
+    if (!mapped) {
+        throw new Error("Failed to map created nonprofit user");
+    }
+    return mapped;
 }
 
-/**
- * Update nonprofit-user assignment (role, board_role)
- */
 export async function updateNonprofitUserDTO(
     id: string,
     input: NonprofitUserInput,
 ): Promise<NonprofitUserDTO> {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from("nonprofit_users")
+        .from("entity_users")
         .update({
             role: input.role ?? undefined,
-            board_role: input.board_role ?? undefined,
         })
         .eq("id", id)
+        .eq("entity_type", "nonprofit")
         .select(
             `
-      id,
-      nonprofit_id,
-      user_id,
-      role,
-      board_role,
-      created_at,
-      created_by,
-      profiles:user_id (
-        id,
-        full_name,
-        email,
-        avatar_url
-      )
+      id, entity_type, entity_id, user_id, role, status, created_at,
+      profile:profiles ( ${PROFILE_FIELDS} )
     `,
         )
         .single();
 
     if (error) throw error;
-    return data as unknown as NonprofitUserDTO;
+    const mapped = mapEntityUser(data as Record<string, unknown>);
+    if (!mapped) {
+        throw new Error("Failed to map updated nonprofit user");
+    }
+    return mapped;
 }
 
-/**
- * Delete a nonprofit-user assignment.
- */
 export async function deleteNonprofitUserDTO(id: string): Promise<void> {
     const supabase = await createClient();
-    const { error } = await supabase.from("nonprofit_users").delete().eq(
-        "id",
-        id,
-    );
+    const { error } = await supabase
+        .from("entity_users")
+        .delete()
+        .eq("id", id)
+        .eq("entity_type", "nonprofit");
     if (error) throw error;
 }

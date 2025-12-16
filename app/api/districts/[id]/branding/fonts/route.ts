@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
+import { isEntityAdmin } from "@/app/lib/auth/entityRoles";
 
 // GET /api/districts/[id]/branding/fonts
 export async function GET(
@@ -30,6 +31,21 @@ export async function PUT(
 ) {
     const { id: districtId } = await params;
     const supabase = await createApiClient();
+    // auth: must be admin on district
+    const { data: userData, error: userErr } = await supabase.auth.getUser();
+    if (userErr || !userData?.user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const userId = userData.user.id;
+    const { data: roleRows } = await supabase
+        .from("entity_users")
+        .select("entity_type, entity_id, role, user_id")
+        .eq("entity_type", "district")
+        .eq("entity_id", districtId)
+        .eq("user_id", userId);
+    if (!isEntityAdmin(roleRows ?? [], "district", districtId)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const body = await req.json().catch(() => ({}));
     const { role, font_name, availability, weights, usage_rules } = body;
     const validAvailability = ["system", "google", "licensed"];
@@ -68,7 +84,6 @@ export async function PUT(
                     availability,
                     weights,
                     usage_rules,
-                    updated_at: new Date().toISOString(),
                 },
             ],
             { onConflict: "district_id,role" },

@@ -1,9 +1,5 @@
 import DistrictMultiSelectSearch from "@/app/components/districts/district-multi-select-search";
-import {
-  DistrictUserRow,
-  DistrictWithFoundation,
-  Profile,
-} from "@/app/lib/types/types";
+import { DistrictWithFoundation, EntityUser, Profile } from "@/app/lib/types/types";
 import React, { useEffect, useState } from "react";
 
 type Feature = DistrictWithFoundation; // Replace with actual Feature type
@@ -57,12 +53,9 @@ const AssignDistrictsModal: React.FC<AssignDistrictsModalProps> = ({
           <DistrictMultiSelectSearch
             features={features}
             selectedIds={
-              localUsers
-                .find((u) => u.id === assignToId)
-                ?.district_users.filter(
-                  (d): d is DistrictUserRow => "district" in d
-                )
-                .map((d) => d.district_id) || []
+              (localUsers.find((u) => u.id === assignToId)?.entity_users ?? [])
+                .filter((eu) => eu.entity_type === "district")
+                .map((eu) => eu.entity_id) || []
             }
             onChange={(newSelectedIds) => {
               setLocalUsers((prev) =>
@@ -70,20 +63,15 @@ const AssignDistrictsModal: React.FC<AssignDistrictsModalProps> = ({
                   u.id === assignToId
                     ? {
                         ...u,
-                        district_users: newSelectedIds.map((id) => {
-                          const f = features.find((ft) => ft.id === id);
-                          return {
-                            district_id: id,
+                        entity_users: newSelectedIds.map(
+                          (id): EntityUser => ({
+                            id: `${u.id}-${id}`,
                             user_id: u.id,
-                            role: "teacher",
-                            district: {
-                              id: id,
-                              sdorgid: id,
-                              shortname: f ? f.shortname : "Unknown",
-                            },
-                            user: u,
-                          };
-                        }),
+                            entity_id: id,
+                            entity_type: "district",
+                            role: "editor",
+                          }),
+                        ),
                       }
                     : u
                 )
@@ -94,8 +82,8 @@ const AssignDistrictsModal: React.FC<AssignDistrictsModalProps> = ({
 
         <div className="flex w-full mt-4">
           <div className="w-4/5">
-            {localUsers.find((u) => u.id === assignToId)?.district_users
-              .length ? (
+            {(localUsers.find((u) => u.id === assignToId)?.entity_users ?? [])
+              .filter((eu) => eu.entity_type === "district").length ? (
               <div>
                 <h3 className="font-semibold text-sm text-gray-700">
                   Currently Assigned:
@@ -103,13 +91,15 @@ const AssignDistrictsModal: React.FC<AssignDistrictsModalProps> = ({
                 <ul className="list-disc list-inside text-sm text-gray-900">
                   {localUsers
                     .find((u) => u.id === assignToId)
-                    ?.district_users.map((d) =>
-                      "district" in d ? (
-                        <li className="text-gray-900" key={d.district_id}>
-                          {d.district!.shortname}
+                    ?.entity_users?.filter((eu) => eu.entity_type === "district")
+                    .map((eu) => {
+                      const f = features.find((ft) => ft.id === eu.entity_id);
+                      return (
+                        <li className="text-gray-900" key={eu.entity_id}>
+                          {f?.shortname ?? eu.entity_id}
                         </li>
-                      ) : null
-                    )}
+                      );
+                    })}
                 </ul>
               </div>
             ) : (

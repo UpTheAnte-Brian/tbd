@@ -41,15 +41,20 @@ export default function BusinessAdmin({
             </p>
 
             <ul className="list-disc ml-6 text-black mb-4">
-              {(business.users || []).map((u) => (
-                <li
-                  className="text-black"
-                  key={u.user_id ?? u.user?.id ?? `${u.role}-${Math.random()}`}
-                >
-                  {u.user?.first_name ?? "Unknown"} {u.user?.last_name ?? ""} -{" "}
-                  {u.role}
-                </li>
-              ))}
+              {(business.users || []).map((u) => {
+                const displayName =
+                  u.profile?.full_name ??
+                  u.profile?.username ??
+                  u.user_id;
+                return (
+                  <li
+                    className="text-black"
+                    key={u.user_id ?? `${u.role}-${Math.random()}`}
+                  >
+                    {displayName} - {u.role}
+                  </li>
+                );
+              })}
             </ul>
 
             <button

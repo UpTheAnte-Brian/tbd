@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Profile, DistrictWithFoundation } from "@/app/lib/types/types";
 import UserRolesAssignments from "@/app/components/ui/user-roles-assignments";
 
@@ -41,14 +41,11 @@ export default function DistrictAdmin({
         </div>
         <ul className="list-disc list-inside space-y-1 [&>*]:text-black">
           <li>This tab should be restricted to authenticated at a minimum. </li>
-          <li>Role=Admin on the Profile table or </li>
-          <li>Role=admin on the district_users table. </li>
+          <li>Admin on the Profile table or entity admin for the district.</li>
           <li>Get rid of the alerts. </li>
           <li>Fix the look of the User Role Assignments. </li>
         </ul>
-        <p className="text-black">
-          The list below should be updated for changes.{" "}
-        </p>
+        <p className="text-black">The list below should be updated for changes. </p>
       </div>
       <UserRolesAssignments
         profiles={assignedUsers}
@@ -57,7 +54,7 @@ export default function DistrictAdmin({
         entityName={district.shortname}
         reload={reloadDistrict}
         availableUsers={users.filter(
-          (u) => !assignedUsers.some((assigned) => assigned.user_id === u.id)
+          (u) => !assignedUsers.some((assigned) => assigned.user_id === u.id),
         )}
       />
     </div>

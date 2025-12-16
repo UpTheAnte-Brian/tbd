@@ -11,7 +11,9 @@ export async function POST(
     const userId = id;
 
     try {
-        const { districtIds } = await request.json();
+        const { districtIds } = (await request.json()) as {
+            districtIds?: string[];
+        };
 
         if (!Array.isArray(districtIds)) {
             return NextResponse.json(
@@ -20,23 +22,24 @@ export async function POST(
             );
         }
 
-        // 1️⃣ Clear out old assignments
         const { error: delError } = await supabase
-            .from("district_users")
+            .from("entity_users")
             .delete()
-            .eq("user_id", userId);
+            .eq("user_id", userId)
+            .eq("entity_type", "district");
 
         if (delError) throw delError;
 
         if (districtIds.length > 0) {
-            // 2️⃣ Insert new assignments
             const rows = districtIds.map((districtId: string) => ({
                 user_id: userId,
-                district_id: districtId,
+                entity_id: districtId,
+                entity_type: "district",
+                role: "admin",
             }));
 
             const { error: insertError } = await supabase
-                .from("district_users")
+                .from("entity_users")
                 .insert(rows);
 
             if (insertError) throw insertError;

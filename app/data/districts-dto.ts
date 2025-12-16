@@ -1,12 +1,11 @@
 import "server-only";
 import { cache } from "react";
 import { createClient } from "@/utils/supabase/server";
-import { DistrictUserRow } from "@/app/lib/types/types";
+import { EntityUser, EntityUserRole } from "@/app/lib/types/types";
 
 export async function getDistrictDTO(id: string) {
   const supabase = await createClient();
 
-  // Fetch the district
   const { data: district, error: districtError } = await supabase
     .from("districts")
     .select(
@@ -19,7 +18,6 @@ export async function getDistrictDTO(id: string) {
     throw new Error("District not found");
   }
 
-  // Parse properties
   const rawProps = typeof district.properties === "string"
     ? JSON.parse(district.properties)
     : district.properties;
@@ -28,11 +26,53 @@ export async function getDistrictDTO(id: string) {
     Object.entries(rawProps).map(([k, v]) => [k.toLowerCase(), v]),
   );
 
-  // Optionally fetch related users
   const { data: users } = await supabase
-    .from("district_users")
-    .select("*, user:profiles(*), district:districts(*)")
-    .eq("district_id", district.id);
+    .from("entity_users")
+    .select(
+      `
+      id,
+      entity_type,
+      entity_id,
+      user_id,
+      role,
+      status,
+      created_at,
+      profile:profiles ( id, full_name, username, first_name, last_name, avatar_url, website )
+    `,
+    )
+    .eq("entity_type", "district")
+    .eq("entity_id", district.id);
+
+  const mappedUsers = (users ?? []).map((u) => {
+    const profileRaw = Array.isArray(u.profile) ? u.profile[0] : u.profile;
+    return {
+      id: String(u.id),
+      entity_type: "district" as const,
+      entity_id: String(u.entity_id),
+      user_id: String(u.user_id),
+      role: (u.role as EntityUserRole) ?? "viewer",
+      status: (u.status as EntityUser["status"]) ?? null,
+      created_at: u.created_at ?? null,
+      updated_at: null,
+      profile: profileRaw
+        ? {
+          id: String((profileRaw as { id: string }).id ?? ""),
+          full_name: (profileRaw as { full_name?: string | null }).full_name ??
+            null,
+          username: (profileRaw as { username?: string | null }).username ??
+            null,
+          first_name:
+            (profileRaw as { first_name?: string | null }).first_name ?? null,
+          last_name: (profileRaw as { last_name?: string | null }).last_name ??
+            null,
+          avatar_url:
+            (profileRaw as { avatar_url?: string | null }).avatar_url ?? null,
+          website: (profileRaw as { website?: string | null }).website ?? null,
+          entity_users: undefined,
+        }
+        : null,
+    };
+  }) ?? [];
 
   const feature = {
     type: "Feature",
@@ -49,13 +89,12 @@ export async function getDistrictDTO(id: string) {
     },
     geometry: district.geometry_simplified,
     metadata: district.district_metadata,
-    users: users as DistrictUserRow[] | undefined,
+    users: mappedUsers,
   };
 
   return feature;
 }
 
-// Cache district lookups by logical id (sdorgid) to avoid repeated DB hits
 export const getDistrictDTOCached = cache(async (id: string) =>
   getDistrictDTO(id)
 );

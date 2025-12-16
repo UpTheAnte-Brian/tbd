@@ -21,23 +21,14 @@ export async function getAllUsers(): Promise<Profile[]> {
     .from("profiles")
     .select(`
     *,
-    district_users (
-      role,
-      district_id,
+    entity_users:entity_users (
+      id,
+      entity_type,
+      entity_id,
       user_id,
-      district:districts ( id, sdorgid, shortname )
-    ),
-    business_users (
       role,
-      business_id,
-      user_id,
-      business:businesses ( id, place_id, name )
-    ),
-    nonprofit_users (
-      role,
-      nonprofit_id,
-      user_id,
-      nonprofit:nonprofits ( id, name )
+      status,
+      created_at
     )
   `);
 
@@ -52,9 +43,7 @@ export async function getAllUsers(): Promise<Profile[]> {
     avatar_url: u.avatar_url,
     full_name: u.full_name,
     updated_at: u.updated_at,
-    district_users: u.district_users,
-    business_users: u.business_users,
-    nonprofit_users: u.nonprofit_users,
+    entity_users: u.entity_users ?? [],
     global_role: u.role ?? null,
     address: u.address ?? null,
     phone_number: u.phone_number ?? null,
@@ -68,25 +57,16 @@ export async function getUser(id: string): Promise<Profile> {
     .from("profiles")
     .select(`
       *,
-    district_users (
-      role,
-      district_id,
+      entity_users:entity_users (
+        id,
+      entity_type,
+      entity_id,
       user_id,
-      district:districts ( id, sdorgid, shortname )
-    ),
-    business_users (
       role,
-      business_id,
-      user_id,
-      business:businesses ( id, place_id, name )
-    ),
-    nonprofit_users (
-      role,
-      nonprofit_id,
-      user_id,
-      nonprofit:nonprofits ( id, name )
+      status,
+      created_at
     )
-    `)
+  `)
     .eq("id", id)
     .maybeSingle();
 
@@ -101,9 +81,7 @@ export async function getUser(id: string): Promise<Profile> {
     avatar_url: data.avatar_url,
     full_name: data.full_name,
     updated_at: data.updated_at,
-    district_users: data.district_users,
-    business_users: data.business_users,
-    nonprofit_users: data.nonprofit_users,
+    entity_users: data.entity_users ?? [],
     global_role: data.role ?? null,
     address: data.address ?? null,
     phone_number: data.phone_number ?? null,
@@ -121,12 +99,13 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 
 export async function assignUserToDistrict(userId: string, districtId: string) {
   const supabase = await createClient();
-  const { error } = await supabase.from("district_users").upsert({
+  const { error } = await supabase.from("entity_users").upsert({
     user_id: userId,
-    district_id: districtId,
-    role: "board_member",
+    entity_id: districtId,
+    entity_type: "district",
+    role: "admin",
   }, {
-    onConflict: "district_id,user_id", // 👈 use your unique key here
+    onConflict: "entity_id,user_id,entity_type",
   });
   if (error) throw error;
   return { success: true };
