@@ -24,7 +24,7 @@ export async function GET(req: NextRequest, context: RouteParams) {
 
 /**
  * PATCH /api/nonprofit-users/[id]
- * Body: { role?, board_role? }
+ * Body: { role? }
  */
 export async function PATCH(req: NextRequest, context: RouteParams) {
     return safeRoute(async () => {

@@ -2,19 +2,10 @@
 
 import { useEffect, useState } from "react";
 import LoadingSpinner from "@/app/components/loading-spinner";
-
-interface BoardMember {
-  id: string;
-  nonprofit_id: string;
-  user_id: string;
-  role: string;
-  board_role: string | null;
-  profiles?: {
-    id: string;
-    full_name: string | null;
-    email: string | null;
-  };
-}
+import type {
+  BoardMember,
+  GovernanceSnapshot,
+} from "@/app/lib/types/governance";
 
 interface BoardOfDirectorsProps {
   nonprofitId: string;
@@ -32,26 +23,26 @@ export default function BoardOfDirectors({
   const [loading, setLoading] = useState(true);
 
   const ROLE_ORDER: Record<string, number> = {
-    president: 1,
-    vice_president: 2,
-    treasurer: 3,
-    secretary: 4,
-    board_member: 5,
+    chair: 1,
+    vice_chair: 2,
+    secretary: 3,
+    treasurer: 4,
+    director: 5,
   };
 
   async function fetchBoard() {
     try {
       setLoading(true);
 
-      const res = await fetch(`/api/nonprofit-users`);
-      if (!res.ok) throw new Error("Failed to fetch nonprofit users");
-      const allUsers: BoardMember[] = await res.json();
+      const res = await fetch(`/api/nonprofits/${nonprofitId}/governance`);
+      if (!res.ok) throw new Error("Failed to load board");
+      const snapshot: GovernanceSnapshot = await res.json();
 
-      const boardMembers = allUsers
-        .filter((u) => u.nonprofit_id === nonprofitId && u.board_role !== null)
+      const boardMembers = (snapshot.members ?? [])
+        .filter((m) => m.status === "active")
         .sort((a, b) => {
-          const aOrder = a.board_role ? ROLE_ORDER[a.board_role] ?? 99 : 99;
-          const bOrder = b.board_role ? ROLE_ORDER[b.board_role] ?? 99 : 99;
+          const aOrder = a.role ? ROLE_ORDER[a.role] ?? 99 : 99;
+          const bOrder = b.role ? ROLE_ORDER[b.role] ?? 99 : 99;
           return aOrder - bOrder;
         });
 
@@ -81,16 +72,13 @@ export default function BoardOfDirectors({
               className="p-4 border rounded bg-gray-900 shadow-sm flex flex-col gap-2"
             >
               <p className="font-semibold text-lg">
-                {m.profiles?.full_name ?? "Unnamed User"}
+                {m.profile?.full_name ?? "Unnamed User"}
               </p>
 
               <p className="text-sm text-gray-400 capitalize">
-                {m.board_role?.replace("_", " ") ?? ""}
+                {m.role?.replace("_", " ") ?? ""}
               </p>
 
-              {m.profiles?.email && (
-                <p className="text-sm text-gray-400">{m.profiles.email}</p>
-              )}
             </div>
           ))}
         </div>

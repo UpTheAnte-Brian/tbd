@@ -16,7 +16,7 @@ export async function GET() {
 
 // POST /api/nonprofit-users
 // Body:
-// { nonprofit_id, user_id, role?, board_role? }
+// { nonprofit_id, user_id, role? }
 export async function POST(req: NextRequest) {
     return safeRoute(async () => {
         const body = await req.json();

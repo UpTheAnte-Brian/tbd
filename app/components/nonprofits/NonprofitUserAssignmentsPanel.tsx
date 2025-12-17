@@ -10,7 +10,6 @@ interface NonprofitUser {
   nonprofit_id: string;
   user_id: string;
   role: string;
-  board_role: string | null;
   profiles?: {
     id: string;
     full_name: string | null;
@@ -33,7 +32,6 @@ export default function NonprofitUserAssignmentsPanel({
   // New user fields
   const [newUserId, setNewUserId] = useState("");
   const [newRole, setNewRole] = useState("viewer");
-  const [newBoardRole, setNewBoardRole] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState<
     { id: string; full_name: string | null; avatar_url: string | null }[]
@@ -87,7 +85,6 @@ export default function NonprofitUserAssignmentsPanel({
           nonprofit_id: nonprofitId,
           user_id: newUserId,
           role: newRole,
-          board_role: newBoardRole,
         }),
       });
 
@@ -95,7 +92,6 @@ export default function NonprofitUserAssignmentsPanel({
       toast.success("User added");
       setNewUserId("");
       setNewRole("viewer");
-      setNewBoardRole(null);
       setSearchText("");
       await fetchUsers();
     } catch (err: unknown) {
@@ -162,7 +158,11 @@ export default function NonprofitUserAssignmentsPanel({
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Board & User Assignments</h2>
+      <h2 className="text-xl font-semibold">User Assignments</h2>
+      <p className="text-sm text-gray-400">
+        Governance roles are managed separately in the Board tab. Use this list
+        for operational access (admin, editor, viewer, employee).
+      </p>
 
       {/* ADD USER */}
       <div className="p-4 border rounded bg-gray-900 space-y-4">
@@ -282,24 +282,7 @@ export default function NonprofitUserAssignmentsPanel({
             <option value="viewer">Viewer</option>
             <option value="editor">Editor</option>
             <option value="admin">Admin</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block mb-1">Board Role (optional)</label>
-          <select
-            value={newBoardRole ?? ""}
-            onChange={(e) =>
-              setNewBoardRole(e.target.value === "" ? null : e.target.value)
-            }
-            className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-          >
-            <option value="">None</option>
-            <option value="president">President</option>
-            <option value="vice_president">Vice President</option>
-            <option value="treasurer">Treasurer</option>
-            <option value="secretary">Secretary</option>
-            <option value="board_member">Board Member</option>
+            <option value="employee">Employee</option>
           </select>
         </div>
 
@@ -356,26 +339,7 @@ export default function NonprofitUserAssignmentsPanel({
                   <option value="viewer">Viewer</option>
                   <option value="editor">Editor</option>
                   <option value="admin">Admin</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm mb-1">Board Role</label>
-                <select
-                  value={u.board_role ?? ""}
-                  onChange={(e) =>
-                    updateUser(u.id, {
-                      board_role: e.target.value === "" ? null : e.target.value,
-                    })
-                  }
-                  className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                >
-                  <option value="">None</option>
-                  <option value="president">President</option>
-                  <option value="vice_president">Vice President</option>
-                  <option value="treasurer">Treasurer</option>
-                  <option value="secretary">Secretary</option>
-                  <option value="board_member">Board Member</option>
+                  <option value="employee">Employee</option>
                 </select>
               </div>
             </div>

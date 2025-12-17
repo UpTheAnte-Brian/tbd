@@ -6,6 +6,7 @@ import NonprofitMetadataEditor from "@/app/components/nonprofits/NonprofitMetada
 import NonprofitDetailsEditor from "@/app/components/nonprofits/NonprofitDetailsEditor";
 import DistrictFoundationSection from "@/app/components/nonprofits/DistrictFoundationSection";
 import NonprofitUserAssignmentsPanel from "@/app/components/nonprofits/NonprofitUserAssignmentsPanel";
+import GovernancePanel from "@/app/components/nonprofits/GovernancePanel";
 
 interface NonprofitPanelsProps {
   nonprofit: NonprofitDTO;
@@ -19,7 +20,7 @@ export default function NonprofitPanels({
   reloadNonprofit,
 }: NonprofitPanelsProps) {
   const [activeTab, setActiveTab] = useState<
-    "overview" | "details" | "metadata" | "users"
+    "overview" | "details" | "metadata" | "users" | "governance"
   >("overview");
 
   const isDistrictFoundation = nonprofit.org_type === "district_foundation";
@@ -62,7 +63,15 @@ export default function NonprofitPanels({
           }`}
           onClick={() => setActiveTab("users")}
         >
-          Board & Users
+          Users
+        </button>
+        <button
+          className={`pb-2 ${
+            activeTab === "governance" ? "font-semibold border-b-2" : ""
+          }`}
+          onClick={() => setActiveTab("governance")}
+        >
+          Governance
         </button>
       </div>
 
@@ -78,6 +87,9 @@ export default function NonprofitPanels({
       )}
       {activeTab === "users" && (
         <NonprofitUserAssignmentsPanel nonprofitId={nonprofit.id} />
+      )}
+      {activeTab === "governance" && (
+        <GovernancePanel nonprofitId={nonprofit.id} />
       )}
       {isDistrictFoundation && (
         <DistrictFoundationSection
