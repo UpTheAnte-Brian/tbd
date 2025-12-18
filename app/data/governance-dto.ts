@@ -11,7 +11,6 @@ import {
 } from "@/app/lib/types/governance";
 import type { ProfilePreview } from "@/app/lib/types/types";
 import { createApiClient } from "@/utils/supabase/route";
-import { supabaseServiceClient } from "@/utils/supabase/service-worker";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface GovernanceClientOptions {
@@ -19,11 +18,9 @@ export interface GovernanceClientOptions {
 }
 
 async function getGovernanceClient(
-    options?: GovernanceClientOptions,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _options?: GovernanceClientOptions,
 ): Promise<SupabaseClient> {
-    if (options?.elevated && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        return supabaseServiceClient;
-    }
     return createApiClient();
 }
 
@@ -47,6 +44,7 @@ export interface MeetingInput {
     scheduled_start?: string | null;
     scheduled_end?: string | null;
     status?: string | null;
+    title: string;
 }
 
 export interface MotionInput {
@@ -186,8 +184,8 @@ function mapMeeting(
         id: String(row.id),
         board_id: String(row.board_id),
         meeting_type: (row.meeting_type as string | null | undefined) ?? null,
-        scheduled_start:
-            (row.scheduled_start as string | null | undefined) ?? null,
+        scheduled_start: (row.scheduled_start as string | null | undefined) ??
+            null,
         scheduled_end: (row.scheduled_end as string | null | undefined) ?? null,
         status: (row.status as string | null | undefined) ?? null,
         created_at: (row.created_at as string | null | undefined) ?? null,
@@ -246,7 +244,8 @@ function mapApproval(
         entity_type: row.entity_type as GovernanceApproval["entity_type"],
         entity_id: String(row.entity_id),
         board_member_id: String(row.board_member_id),
-        signature_hash: (row.signature_hash as string | null | undefined) ?? null,
+        signature_hash: (row.signature_hash as string | null | undefined) ??
+            null,
         created_at: (row.created_at as string | null | undefined) ?? null,
     };
 }
@@ -420,8 +419,17 @@ export async function createBoardMeeting(
     options?: GovernanceClientOptions,
 ): Promise<BoardMeeting> {
     const supabase = await getGovernanceClient(options);
+    const {
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user?.id) {
+        throw new Error("You must be signed in to create a meeting");
+    }
     const payload: Record<string, unknown> = {
         board_id: boardId,
+        created_by: user.id,
+        title: input.title,
         meeting_type: input.meeting_type ?? null,
         scheduled_start: input.scheduled_start ?? null,
         scheduled_end: input.scheduled_end ?? null,
@@ -445,11 +453,15 @@ export async function updateBoardMeeting(
 ): Promise<BoardMeeting> {
     const supabase = await getGovernanceClient(options);
     const payload: Record<string, unknown> = {};
-    if (updates.meeting_type !== undefined) payload.meeting_type = updates.meeting_type;
+    if (updates.meeting_type !== undefined) {
+        payload.meeting_type = updates.meeting_type;
+    }
     if (updates.scheduled_start !== undefined) {
         payload.scheduled_start = updates.scheduled_start;
     }
-    if (updates.scheduled_end !== undefined) payload.scheduled_end = updates.scheduled_end;
+    if (updates.scheduled_end !== undefined) {
+        payload.scheduled_end = updates.scheduled_end;
+    }
     if (updates.status !== undefined) payload.status = updates.status;
     const { data, error } = await governanceTable(supabase, "board_meetings")
         .update(payload)
@@ -537,10 +549,16 @@ export async function updateMotion(
     const supabase = await getGovernanceClient(options);
     const payload: Record<string, unknown> = {};
     if (updates.title !== undefined) payload.title = updates.title;
-    if (updates.description !== undefined) payload.description = updates.description;
+    if (updates.description !== undefined) {
+        payload.description = updates.description;
+    }
     if (updates.moved_by !== undefined) payload.moved_by = updates.moved_by;
-    if (updates.seconded_by !== undefined) payload.seconded_by = updates.seconded_by;
-    if (updates.finalized_at !== undefined) payload.finalized_at = updates.finalized_at;
+    if (updates.seconded_by !== undefined) {
+        payload.seconded_by = updates.seconded_by;
+    }
+    if (updates.finalized_at !== undefined) {
+        payload.finalized_at = updates.finalized_at;
+    }
     if (updates.status !== undefined) payload.status = updates.status;
     const { data, error } = await governanceTable(supabase, "motions")
         .update(payload)
@@ -600,8 +618,7 @@ export async function listMinutesByMeetingIds(
     const supabase = await getGovernanceClient(options);
     const { data, error } = await governanceTable(supabase, "meeting_minutes")
         .select("*")
-        .in("meeting_id", meetingIds)
-        .order("created_at", { ascending: true });
+        .in("meeting_id", meetingIds);
 
     if (error) throw error;
     return (data ?? [])
@@ -623,10 +640,10 @@ export async function saveMinutes(
             })
             .eq("id", id)
         : governanceTable(supabase, "meeting_minutes").insert({
-              meeting_id: rest.meeting_id,
-              content: rest.content ?? null,
-              approved_at: rest.approved_at ?? null,
-          });
+            meeting_id: rest.meeting_id,
+            content: rest.content ?? null,
+            approved_at: rest.approved_at ?? null,
+        });
 
     const { data, error } = await mutation.select("*").single();
     if (error) throw error;
@@ -643,8 +660,7 @@ export async function listApprovalsByEntityIds(
     const supabase = await getGovernanceClient(options);
     const { data, error } = await governanceTable(supabase, "approvals")
         .select("*")
-        .in("entity_id", entityIds)
-        .order("created_at", { ascending: true });
+        .in("entity_id", entityIds);
 
     if (error) throw error;
     return (data ?? [])

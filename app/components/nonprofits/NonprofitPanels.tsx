@@ -6,7 +6,7 @@ import NonprofitMetadataEditor from "@/app/components/nonprofits/NonprofitMetada
 import NonprofitDetailsEditor from "@/app/components/nonprofits/NonprofitDetailsEditor";
 import DistrictFoundationSection from "@/app/components/nonprofits/DistrictFoundationSection";
 import NonprofitUserAssignmentsPanel from "@/app/components/nonprofits/NonprofitUserAssignmentsPanel";
-import GovernancePanel from "@/app/components/nonprofits/GovernancePanel";
+import GovernancePanel from "@/app/components/nonprofits/panels/GovernancePanel";
 
 interface NonprofitPanelsProps {
   nonprofit: NonprofitDTO;
