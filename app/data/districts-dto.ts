@@ -1,15 +1,19 @@
 import "server-only";
 import { cache } from "react";
 import { createClient } from "@/utils/supabase/server";
-import { EntityUser, EntityUserRole } from "@/app/lib/types/types";
+import {
+  DistrictFeature,
+  EntityUser,
+  EntityUserRole,
+} from "@/app/lib/types/types";
 
-export async function getDistrictDTO(id: string) {
+export async function getDistrictDTO(id: string): Promise<DistrictFeature> {
   const supabase = await createClient();
 
   const { data: district, error: districtError } = await supabase
     .from("districts")
     .select(
-      "id, sdorgid, shortname, properties, geometry_simplified, centroid_lat, centroid_lng, district_metadata(logo_path)",
+      "id, sdorgid, shortname, properties, geometry_simplified, centroid_lat, centroid_lng",
     )
     .eq("sdorgid", id)
     .maybeSingle();
@@ -17,14 +21,6 @@ export async function getDistrictDTO(id: string) {
   if (districtError || !district) {
     throw new Error("District not found");
   }
-
-  const rawProps = typeof district.properties === "string"
-    ? JSON.parse(district.properties)
-    : district.properties;
-
-  const props = Object.fromEntries(
-    Object.entries(rawProps).map(([k, v]) => [k.toLowerCase(), v]),
-  );
 
   const { data: users } = await supabase
     .from("entity_users")
@@ -74,21 +70,53 @@ export async function getDistrictDTO(id: string) {
     };
   }) ?? [];
 
-  const feature = {
-    type: "Feature",
-    id: district.id,
+  const rawProps = (() => {
+    if (!district.properties) return {};
+    if (typeof district.properties === "string") {
+      try {
+        return JSON.parse(district.properties);
+      } catch {
+        return {};
+      }
+    }
+    return district.properties ?? {};
+  })() as Record<string, unknown>;
+  const props = Object.fromEntries(
+    Object.entries(rawProps).map(([k, v]) => [k.toLowerCase(), v]),
+  ) as Record<string, unknown>;
+
+  const asNumber = (val: unknown): number | null => {
+    if (val === null || val === undefined || val === "") return null;
+    const num = Number(val);
+    return Number.isFinite(num) ? num : null;
+  };
+
+  const asString = (
+    val: unknown,
+    fallback: string | null = "",
+  ): string | null => (typeof val === "string" ? val : fallback);
+
+  const baseProps: DistrictFeature["properties"] = {
     sdorgid: district.sdorgid,
     shortname: district.shortname,
+    prefname: asString(props.prefname, district.shortname) ?? "",
+    sdnumber: asString(props.sdnumber, "") ?? "",
+    web_url: asString(props.web_url, "") ?? "",
+    acres: asNumber(props.acres),
+    formid: asString(props.formid, null),
+    sdtype: asString(props.sdtype, null),
+    sqmiles: asNumber(props.sqmiles),
+    shape_area: asNumber(props.shape_area),
+    shape_leng: asNumber(props.shape_leng),
     centroid_lat: district.centroid_lat,
     centroid_lng: district.centroid_lng,
-    properties: {
-      sdorgid: district.sdorgid,
-      centroid_lat: district.centroid_lat,
-      centroid_lng: district.centroid_lng,
-      ...props,
-    },
+  };
+
+  const feature: DistrictFeature = {
+    type: "Feature",
+    id: district.id,
+    properties: baseProps,
     geometry: district.geometry_simplified,
-    metadata: district.district_metadata,
     users: mappedUsers,
   };
 

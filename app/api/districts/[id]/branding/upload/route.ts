@@ -30,6 +30,7 @@ export async function POST(
 ) {
     const supabase = await createApiClient();
     const { id: districtId } = await context.params;
+    const entityType = "district";
     const formData = await req.formData();
 
     const file = formData.get("file") as File;
@@ -67,7 +68,8 @@ export async function POST(
             .from("logos")
             .select("category, subcategory")
             .eq("id", data.logoId)
-            .eq("district_id", districtId)
+            .eq("entity_id", districtId)
+            .eq("entity_type", entityType)
             .maybeSingle();
         if (lookupErr) {
             return NextResponse.json({ error: lookupErr.message }, {
@@ -98,7 +100,7 @@ export async function POST(
     const { data: roleRows } = await supabase
         .from("entity_users")
         .select("entity_type, entity_id, role, user_id")
-        .eq("entity_type", "district")
+        .eq("entity_type", entityType)
         .eq("entity_id", data.districtId)
         .eq("user_id", userId);
 

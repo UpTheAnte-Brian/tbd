@@ -2,19 +2,26 @@
 
 import { useMemo } from "react";
 import { useBrandingSummary } from "@/app/hooks/useBrandingSummary";
+import { EntityType } from "@/app/lib/types/types";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 type Props = {
-  districtId: string | null;
+  entityId: string | null;
+  entityType?: EntityType;
   districtName?: string;
 };
 
 export default function DistrictPrimaryLogo({
-  districtId,
+  entityId,
+  entityType = "district",
   districtName,
 }: Props) {
-  const { data, loading, error } = useBrandingSummary(districtId, 0);
+  const { data, loading, error } = useBrandingSummary(
+    entityId,
+    0,
+    entityType
+  );
 
   const logoUrl = useMemo(() => {
     if (!data?.logos?.length || !SUPABASE_URL) return null;
@@ -56,12 +63,12 @@ export default function DistrictPrimaryLogo({
     const hasPath = file.includes("/");
     const inferredPath = hasPath
       ? file
-      : `${chosen.district_id}/district/${chosen.id}/${file}`;
+      : `${chosen.entity_id}/${chosen.entity_type}/${chosen.id}/${file}`;
 
     return `${SUPABASE_URL}/storage/v1/object/public/branding-logos/${inferredPath}?v=${version}`;
   }, [data]);
 
-  if (!districtId) {
+  if (!entityId) {
     return (
       <div className="rounded-lg border border-gray-300 bg-white p-4 text-sm text-gray-600">
         Select a district to view its primary logo.

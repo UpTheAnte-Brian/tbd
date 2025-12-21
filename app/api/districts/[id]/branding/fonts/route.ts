@@ -8,13 +8,15 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> },
 ) {
     const { id: districtId } = await params;
+    const entityType = "district";
     const supabase = await createApiClient();
 
     const { data, error } = await supabase
         .schema("branding")
         .from("typography")
         .select("*")
-        .eq("district_id", districtId)
+        .eq("entity_id", districtId)
+        .eq("entity_type", entityType)
         .order("created_at", { ascending: false });
 
     if (error) {
@@ -31,6 +33,7 @@ export async function PUT(
 ) {
     const { id: districtId } = await params;
     const supabase = await createApiClient();
+    const entityType = "district";
     // auth: must be admin on district
     const { data: userData, error: userErr } = await supabase.auth.getUser();
     if (userErr || !userData?.user) {
@@ -40,7 +43,7 @@ export async function PUT(
     const { data: roleRows } = await supabase
         .from("entity_users")
         .select("entity_type, entity_id, role, user_id")
-        .eq("entity_type", "district")
+        .eq("entity_type", entityType)
         .eq("entity_id", districtId)
         .eq("user_id", userId);
     if (!isEntityAdmin(roleRows ?? [], "district", districtId)) {
@@ -78,7 +81,8 @@ export async function PUT(
         .upsert(
             [
                 {
-                    district_id: districtId,
+                    entity_id: districtId,
+                    entity_type: entityType,
                     role,
                     font_name: trimmedName,
                     availability,
@@ -86,7 +90,7 @@ export async function PUT(
                     usage_rules,
                 },
             ],
-            { onConflict: "district_id,role" },
+            { onConflict: "entity_id,role,entity_type" },
         )
         .select("*");
 

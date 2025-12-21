@@ -1,8 +1,8 @@
 import DistrictMultiSelectSearch from "@/app/components/districts/district-multi-select-search";
-import { DistrictWithFoundation, EntityUser, Profile } from "@/app/lib/types/types";
+import { DistrictFeature, EntityUser, Profile } from "@/app/lib/types/types";
 import React, { useEffect, useState } from "react";
 
-type Feature = DistrictWithFoundation; // Replace with actual Feature type
+type Feature = DistrictFeature; // Replace with actual Feature type
 
 interface AssignDistrictsModalProps {
   setAssignToId: (assignToId: string | null) => void;
@@ -96,7 +96,7 @@ const AssignDistrictsModal: React.FC<AssignDistrictsModalProps> = ({
                       const f = features.find((ft) => ft.id === eu.entity_id);
                       return (
                         <li className="text-gray-900" key={eu.entity_id}>
-                          {f?.shortname ?? eu.entity_id}
+                          {f?.properties?.shortname ?? eu.entity_id}
                         </li>
                       );
                     })}

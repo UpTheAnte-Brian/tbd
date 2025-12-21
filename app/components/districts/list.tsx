@@ -1,13 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import { DistrictWithFoundation } from "../../lib/types/types";
+import { DistrictFeature } from "../../lib/types/types";
 import { Button } from "@/app/components/ui/button";
-import FoundationEditor from "./foundation-editor";
 
 type DistrictsPanelProps = {
   selectedId: string | null;
   setSelectedId: (id: string | null) => void;
-  districts: DistrictWithFoundation[];
+  districts: DistrictFeature[];
   mapRef: React.RefObject<google.maps.Map | null>;
   panToMinnesota: () => void;
 };
@@ -22,7 +21,7 @@ export function DistrictList({
 }: DistrictsPanelProps) {
   // WRAP IN USE EFFECT WITH selectedId dependency
   const [selectedFeature, setSelectedFeature] =
-    useState<DistrictWithFoundation>();
+    useState<DistrictFeature>();
 
   useEffect(() => {
     const fetchDistrict = async () => {
@@ -64,43 +63,29 @@ export function DistrictList({
       {/* Selected feature details */}
       <div className="flex-1 p-4 border-t border-gray-600 overflow-y-auto">
         {selectedFeature?.properties?.sdorgid && (
-          <FoundationEditor
-            onCancel={() => {}}
-            foundation={{
-              district_id: selectedFeature.properties.sdorgid,
-              name: "",
-              contact: "",
-              website: selectedFeature.properties.web_url,
-              founding_year: null,
-              average_class_size: null,
-              balance_sheet: null,
-              ...(selectedFeature.foundation ?? {}),
-            }}
-            onSave={async (updated) => {
-              try {
-                if (!updated.district_id) {
-                  throw new Error("Missing district_id for foundation update");
-                }
-
-                const response = await fetch(
-                  `/api/foundations/${updated.district_id}`,
-                  {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(updated),
-                  }
-                );
-
-                if (!response.ok) {
-                  throw new Error(
-                    `Failed to save foundation: ${response.statusText}`
-                  );
-                }
-              } catch (error) {
-                console.error("Error saving foundation data:", error);
-              }
-            }}
-          />
+          <div className="space-y-2 text-black">
+            <h3 className="text-lg font-semibold">
+              {selectedFeature.properties?.shortname}
+            </h3>
+            <p className="text-sm">
+              District ID: {selectedFeature.properties?.sdorgid}
+            </p>
+            <p className="text-sm">
+              Website:{" "}
+              {selectedFeature.properties?.web_url ? (
+                <a
+                  href={selectedFeature.properties.web_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  {selectedFeature.properties.web_url}
+                </a>
+              ) : (
+                "Not provided"
+              )}
+            </p>
+          </div>
         )}
       </div>
     </aside>

@@ -1,11 +1,11 @@
 "use client";
 import { useState, useMemo } from "react";
-import { DistrictWithFoundation } from "@/app/lib/types/types";
+import { DistrictFeature } from "@/app/lib/types/types";
 import { getLabel } from "@/app/lib/district/utils";
 
 type Props = {
-  features: DistrictWithFoundation[];
-  onSelect: (feature: DistrictWithFoundation) => void;
+  features: DistrictFeature[];
+  onSelect: (feature: DistrictFeature) => void;
 };
 
 export default function DistrictSearch({ features, onSelect }: Props) {
@@ -20,8 +20,8 @@ export default function DistrictSearch({ features, onSelect }: Props) {
         const id = f.id;
         const label =
           getLabel(f) ||
-          (f.properties?.shortname as string) ||
-          (f.properties?.prefname as string) ||
+          f.properties?.shortname ||
+          f.properties?.prefname ||
           "";
         return { id, label };
       })

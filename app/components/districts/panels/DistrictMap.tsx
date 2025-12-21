@@ -2,7 +2,7 @@
 import { GoogleMap, Polygon } from "@react-google-maps/api";
 import { useEffect, useRef, useState } from "react";
 import {
-  DistrictWithFoundation,
+  DistrictFeature,
   PlaceDetailsType,
   Profile,
 } from "@/app/lib/types/types";
@@ -21,7 +21,7 @@ export default function DistrictMap({
   district,
   user,
 }: {
-  district: DistrictWithFoundation;
+  district: DistrictFeature;
   user: Profile | null;
 }) {
   const mapRef = useRef<google.maps.Map | null>(null);

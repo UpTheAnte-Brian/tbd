@@ -38,6 +38,47 @@ const STATUS_OPTIONS: { value: BoardMember["status"]; label: string }[] = [
   { value: "removed", label: "Removed" },
 ];
 
+const MINUTES_TEMPLATE = `## Meeting Information
+- **Date:** {{meeting_date}}
+- **Time:** {{start_time}} - {{end_time}}
+- **Type:** {{regular | special}}
+- **Location / Medium:** {{in person | virtual | hybrid}}
+
+## Attendance
+The following board members were present:
+- {{Name}}
+
+The following board members were absent:
+- {{Name}}
+
+A quorum was [ ] present [ ] not present.
+
+## Call to Order
+The meeting was called to order by {{Chair Name}} at {{time}}.
+
+## Approval of Previous Minutes
+The minutes of the previous meeting were [ ] approved [ ] approved as amended.
+
+## Motions and Actions
+1. **Motion:** {{Motion title or description}}
+   - Moved by: {{Name}}
+   - Seconded by: {{Name}}
+   - Vote: {{Approved | Rejected | Tabled}}
+   - Result: {{# Yes}} Yes, {{# No}} No, {{# Abstain}} Abstain
+
+## Reports (if any)
+- {{Treasurer's report accepted}}
+- {{Committee updates}}
+
+## New Business
+- {{Brief summary of actions taken}}
+
+## Adjournment
+The meeting was adjourned at {{time}}.
+
+---
+
+**Submitted by:** {{Secretary Name}}`;
 export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   const [snapshot, setSnapshot] = useState<GovernanceSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
@@ -850,6 +891,36 @@ function MeetingsSection({
   activeMembers,
   onAddMinutesApproval,
 }: MeetingsSectionProps) {
+  const [approvalModal, setApprovalModal] = useState<{
+    entityId: string;
+    meetingTitle: string;
+  } | null>(null);
+  const [acknowledged, setAcknowledged] = useState(false);
+
+  const applyTemplate = (meetingId: string, meeting: BoardMeeting) => {
+    const date = meeting.scheduled_start
+      ? new Date(meeting.scheduled_start).toLocaleDateString()
+      : "{{meeting_date}}";
+    const start = meeting.scheduled_start
+      ? new Date(meeting.scheduled_start).toLocaleTimeString()
+      : "{{start_time}}";
+    const end = meeting.scheduled_end
+      ? new Date(meeting.scheduled_end).toLocaleTimeString()
+      : "{{end_time}}";
+
+    const templated = MINUTES_TEMPLATE.replace("{{meeting_date}}", date)
+      .replace("{{start_time}}", start)
+      .replace("{{end_time}}", end)
+      .replace("{{regular | special}}", meeting.meeting_type ?? "regular");
+
+    onMinutesChange(meetingId, templated);
+  };
+
+  const closeModal = () => {
+    setApprovalModal(null);
+    setAcknowledged(false);
+  };
+
   return (
     <div className="space-y-4">
       <div className="p-4 border-2 border-gray-600 rounded space-y-3 bg-gray-900/70 shadow-sm">
@@ -956,53 +1027,121 @@ function MeetingsSection({
 
             <div className="space-y-2">
               <h4 className="font-semibold">Minutes</h4>
-              <textarea
-                value={minutesDrafts[meeting.id] ?? ""}
-                onChange={(e) => onMinutesChange(meeting.id, e.target.value)}
-                className="w-full p-2 rounded bg-gray-950 border border-gray-700 text-gray-100 placeholder:text-gray-400"
-                placeholder="Meeting minutes..."
-                rows={4}
-              />
-              <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                <button
-                  onClick={() => onSaveMinutes(meeting.id)}
-                  className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-500"
-                >
-                  Save Minutes
-                </button>
+              {minutes?.approved_at ? (
+                <div className="space-y-2">
+                  <div className="text-xs text-green-300">
+                    Approved on {new Date(minutes.approved_at).toLocaleString()}
+                  </div>
+                  <div className="rounded border border-gray-700 bg-gray-950/70 p-3 whitespace-pre-line text-gray-100">
+                    {minutes.content ?? "No minutes content."}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                    <button
+                      onClick={() => applyTemplate(meeting.id, meeting)}
+                      className="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700 text-sm"
+                    >
+                      Insert Standard Minutes Template
+                    </button>
+                  </div>
+                  <textarea
+                    value={minutesDrafts[meeting.id] ?? ""}
+                    onChange={(e) => onMinutesChange(meeting.id, e.target.value)}
+                    className="w-full p-2 rounded bg-gray-950 border border-gray-700 text-gray-100 placeholder:text-gray-400"
+                    placeholder="Meeting minutes..."
+                    rows={8}
+                  />
+                  <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                    <button
+                      onClick={() => onSaveMinutes(meeting.id)}
+                      className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-500"
+                    >
+                      Save Minutes
+                    </button>
 
-                <select
-                  value={minutes?.id ? approvalDrafts[minutes.id]?.board_member_id ?? "" : ""}
-                  onChange={(e) =>
-                    minutes?.id && onApprovalDraftChange(minutes.id, e.target.value)
-                  }
-                  className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100 disabled:opacity-50"
-                  disabled={!minutes}
-                >
-                  <option value="">Chair/Admin signer</option>
-                  {activeMembers.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.profile?.full_name ?? member.user_id}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={() => minutes?.id && onAddMinutesApproval(minutes.id)}
-                  className="px-3 py-1 bg-purple-600 rounded text-sm hover:bg-purple-500 disabled:opacity-50"
-                  disabled={!minutes}
-                >
-                  Record Minutes Approval
-                </button>
-                {!minutes && (
-                  <span className="text-xs text-gray-400">
-                    Save minutes before recording approvals.
-                  </span>
-                )}
-              </div>
+                    <select
+                      value={minutes?.id ? approvalDrafts[minutes.id]?.board_member_id ?? "" : ""}
+                      onChange={(e) =>
+                        minutes?.id && onApprovalDraftChange(minutes.id, e.target.value)
+                      }
+                      className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100 disabled:opacity-50"
+                      disabled={!minutes}
+                    >
+                      <option value="">Chair/Admin signer</option>
+                      {activeMembers.map((member) => (
+                        <option key={member.id} value={member.id}>
+                          {member.profile?.full_name ?? member.user_id}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() =>
+                        minutes?.id && setApprovalModal({
+                          entityId: minutes.id,
+                          meetingTitle: meeting.meeting_type ?? "Meeting",
+                        })
+                      }
+                      className="px-3 py-1 bg-purple-600 rounded text-sm hover:bg-purple-500 disabled:opacity-50"
+                      disabled={!minutes}
+                    >
+                      Record Minutes Approval
+                    </button>
+                    {!minutes && (
+                      <span className="text-xs text-gray-400">
+                        Save minutes before recording approvals.
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         );
       })}
+
+      {approvalModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="max-w-md w-full bg-gray-900 border border-gray-700 rounded p-5 space-y-4">
+            <h4 className="text-lg font-semibold text-gray-100">Approval is Final</h4>
+            <p className="text-sm text-gray-300">
+              Once approved, these minutes become the official and permanent record of the
+              organization and cannot be edited.
+            </p>
+            <p className="text-sm text-gray-300">
+              Meeting: {approvalModal.meetingTitle}
+            </p>
+            <label className="flex items-center gap-2 text-sm text-gray-100">
+              <input
+                type="checkbox"
+                checked={acknowledged}
+                onChange={(e) => setAcknowledged(e.target.checked)}
+              />
+              I understand and approve these minutes as final.
+            </label>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={closeModal}
+                className="px-3 py-1 rounded border border-gray-600 text-gray-200 hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (!acknowledged) return;
+                  onAddMinutesApproval(approvalModal.entityId);
+                  closeModal();
+                }}
+                disabled={!acknowledged}
+                className="px-3 py-1 rounded bg-purple-600 text-white disabled:bg-gray-700"
+              >
+                Approve Minutes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

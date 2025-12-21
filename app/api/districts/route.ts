@@ -8,20 +8,14 @@ import { createApiClient } from "@/utils/supabase/route";
 export async function GET() {
     const supabase = await createApiClient();
     console.log("API: /api/districts -> executed at", new Date().toISOString());
-    console.time("sb fetch districts and foundations");
-    const [foundationRes, districtRes] = await Promise.all([
-        supabase.from("foundations").select("*"),
-        supabase
-            .from("districts")
-            .select(
-                "id, sdorgid, shortname, properties, geometry_simplified, centroid_lat, centroid_lng, district_metadata(logo_path)",
-            ),
-    ]);
-    console.timeEnd("sb fetch districts and foundations");
-    console.time("combine districts and foundations");
-
-    const { data: foundations, error: foundationError } = foundationRes;
-    const { data: districts, error: districtError } = districtRes;
+    console.time("sb fetch districts");
+    const { data: districts, error: districtError } = await supabase
+        .from("districts")
+        .select(
+            "id, sdorgid, shortname, properties, geometry_simplified, centroid_lat, centroid_lng",
+        );
+    console.timeEnd("sb fetch districts");
+    console.time("combine districts");
 
     // await supabaseServiceClieµnt.auth.admin.updateUserById(
     //     "002c3f9d-91ba-4792-b1e3-581d3a19fce5",
@@ -30,44 +24,59 @@ export async function GET() {
     //     },
     // );
 
-    if (districtError || foundationError) {
+    if (districtError) {
         return new Response("Failed to fetch data", { status: 500 });
     }
 
-    const enriched = districts?.map((d) => ({
-        ...d,
-        foundation: foundations?.find((f) => f.district_id === d.sdorgid) ??
-            null,
-    }));
+    const asNumber = (val: unknown): number | null => {
+        if (val === null || val === undefined || val === "") return null;
+        const num = Number(val);
+        return Number.isFinite(num) ? num : null;
+    };
 
-    const features = enriched?.map((row) => {
-        const rawProps = typeof row.properties === "string"
-            ? JSON.parse(row.properties)
-            : row.properties;
+    const asString = (val: unknown, fallback: string | null = ""): string | null =>
+        typeof val === "string" ? val : fallback;
 
-        const props = Object.fromEntries(
+    const features = districts?.map((row) => {
+        const rawProps = (() => {
+            if (!row.properties) return {};
+            if (typeof row.properties === "string") {
+                try {
+                    return JSON.parse(row.properties);
+                } catch {
+                    return {};
+                }
+            }
+            return row.properties;
+        })() as Record<string, unknown>;
+        const propsLower = Object.fromEntries(
             Object.entries(rawProps).map(([k, v]) => [k.toLowerCase(), v]),
-        );
+        ) as Record<string, unknown>;
+
+        const props = {
+            sdorgid: row.sdorgid,
+            shortname: row.shortname,
+            prefname: asString(propsLower.prefname, row.shortname) ?? "",
+            sdnumber: asString(propsLower.sdnumber, "") ?? "",
+            web_url: asString(propsLower.web_url, "") ?? "",
+            acres: asNumber(propsLower.acres),
+            formid: asString(propsLower.formid, null),
+            sdtype: asString(propsLower.sdtype, null),
+            sqmiles: asNumber(propsLower.sqmiles),
+            shape_area: asNumber(propsLower.shape_area),
+            shape_leng: asNumber(propsLower.shape_leng),
+            centroid_lat: row.centroid_lat,
+            centroid_lng: row.centroid_lng,
+        };
 
         return {
             type: "Feature",
-            sdorgid: row.sdorgid,
             id: row.id,
-            shortname: row.shortname,
-            centroid_lat: row.centroid_lat,
-            centroid_lng: row.centroid_lng,
-            properties: {
-                sdorgid: row.sdorgid,
-                centroid_lat: row.centroid_lat,
-                centroid_lng: row.centroid_lng,
-                ...props,
-            },
+            properties: props,
             geometry: row.geometry_simplified,
-            foundation: row.foundation,
-            metadata: row.district_metadata,
         };
     });
-    console.timeEnd("combine districts and foundations");
+    console.timeEnd("combine districts");
 
     return NextResponse.json({
         type: "FeatureCollection",

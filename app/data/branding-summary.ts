@@ -1,8 +1,9 @@
 import { createApiClient } from "@/utils/supabase/route";
-import type { BrandingSummary } from "@/app/lib/types/types";
+import type { BrandingSummary, EntityType } from "@/app/lib/types/types";
 
 export async function getBrandingSummary(
-    districtId: string,
+    entityId: string,
+    entityType: EntityType = "district",
 ): Promise<BrandingSummary | null> {
     const supabase = await createApiClient();
 
@@ -10,7 +11,8 @@ export async function getBrandingSummary(
         .schema("branding")
         .from("logos")
         .select("*")
-        .eq("district_id", districtId)
+        .eq("entity_id", entityId)
+        .eq("entity_type", entityType)
         .order("created_at", { ascending: false });
     if (logosErr) {
         console.error("Failed to fetch logos", logosErr);
@@ -21,7 +23,8 @@ export async function getBrandingSummary(
         .schema("branding")
         .from("patterns")
         .select("*")
-        .eq("district_id", districtId)
+        .eq("entity_id", entityId)
+        .eq("entity_type", entityType)
         .order("created_at", { ascending: false });
     if (patternsErr) {
         console.error("Failed to fetch patterns", patternsErr);
@@ -32,7 +35,8 @@ export async function getBrandingSummary(
         .schema("branding")
         .from("palettes")
         .select("*")
-        .eq("district_id", districtId)
+        .eq("entity_id", entityId)
+        .eq("entity_type", entityType)
         .order("created_at", { ascending: true });
     if (palettesErr) {
         console.error("Failed to fetch palettes", palettesErr);
@@ -43,7 +47,8 @@ export async function getBrandingSummary(
         .schema("branding")
         .from("typography")
         .select("*")
-        .eq("district_id", districtId)
+        .eq("entity_id", entityId)
+        .eq("entity_type", entityType)
         .order("created_at", { ascending: true });
     if (typographyErr) {
         console.error("Failed to fetch typography", typographyErr);
@@ -56,7 +61,8 @@ export async function getBrandingSummary(
         .schema("branding")
         .from("schools")
         .select("*")
-        .eq("district_id", districtId)
+        .eq("entity_id", entityId)
+        .eq("entity_type", entityType)
         .order("created_at", { ascending: true });
     if (schoolsErr) {
         console.error("Failed to fetch schools", schoolsErr);

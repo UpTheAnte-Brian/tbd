@@ -32,17 +32,7 @@ export async function getNonprofitDTO(id: string): Promise<NonprofitDTO> {
         throw new Error(nonprofitError?.message ?? "Nonprofit not found");
     }
 
-    const { data: metadata, error: metadataError } = await supabase
-        .from("foundation_metadata")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-
-    if (metadataError) {
-        throw new Error(metadataError.message);
-    }
-
-    return { ...nonprofit, foundation_metadata: metadata };
+    return { ...nonprofit, foundation_metadata: null };
 }
 
 /**
@@ -78,24 +68,9 @@ export async function listNonprofitDTO(filters?: {
 
     if (!nonprofits) return [];
 
-    // Fetch metadata for all nonprofits
-    const ids = nonprofits.map((n) => n.id);
-
-    const { data: metadataRows, error: mdError } = await supabase
-        .from("foundation_metadata")
-        .select("*")
-        .in("id", ids);
-
-    if (mdError) {
-        throw new Error(mdError.message);
-    }
-
-    const metadataMap = new Map<string, FoundationMetadata>();
-    metadataRows?.forEach((m: FoundationMetadata) => metadataMap.set(m.id, m));
-
     return nonprofits.map((np) => ({
         ...np,
-        foundation_metadata: metadataMap.get(np.id) ?? null,
+        foundation_metadata: null,
     }));
 }
 
@@ -121,13 +96,7 @@ export async function getDistrictFoundationDTO(
 
     if (!nonprofit) return null;
 
-    const { data: metadata } = await supabase
-        .from("foundation_metadata")
-        .select("*")
-        .eq("id", nonprofit.id)
-        .maybeSingle();
-
-    return { ...nonprofit, foundation_metadata: metadata ?? null };
+    return { ...nonprofit, foundation_metadata: null };
 }
 
 /**
@@ -157,9 +126,6 @@ export async function createNonprofitDTO(
     }
 
     // Create an empty metadata row if needed
-    if (data.org_type === "district_foundation") {
-        await ensureFoundationMetadataRow(data.id);
-    }
 
     return getNonprofitDTO(data.id);
 }
@@ -214,27 +180,4 @@ export async function upsertDistrictFoundationDTO(
     });
 
     return created;
-}
-
-/**
- * Makes sure metadata exists for district foundations
- */
-async function ensureFoundationMetadataRow(nonprofitId: string) {
-    const supabase = await createApiClient();
-
-    const { data } = await supabase
-        .from("foundation_metadata")
-        .select("id")
-        .eq("id", nonprofitId)
-        .maybeSingle();
-
-    if (!data) {
-        await supabase.from("foundation_metadata").insert({
-            id: nonprofitId,
-            director: null,
-            endowment_amount: null,
-            grantmaking_focus: null,
-            additional_info: null,
-        });
-    }
 }

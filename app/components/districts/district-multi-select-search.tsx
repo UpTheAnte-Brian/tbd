@@ -1,10 +1,10 @@
 "use client";
 import { useState, useMemo } from "react";
-import { DistrictWithFoundation } from "@/app/lib/types/types";
+import { DistrictFeature } from "@/app/lib/types/types";
 import { getLabel } from "@/app/lib/district/utils";
 
 type Props = {
-  features: DistrictWithFoundation[];
+  features: DistrictFeature[];
   selectedIds: string[]; // 🔑 new
   onChange: (ids: string[]) => void; // 🔑 replaces onSelect
 };

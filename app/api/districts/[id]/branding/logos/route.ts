@@ -8,6 +8,7 @@ export async function GET(
 ) {
     const supabase = await createApiClient();
     const districtId = params.id;
+    const entityType = "district";
 
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
@@ -19,7 +20,8 @@ export async function GET(
         .schema("branding")
         .from("logos")
         .select("*")
-        .eq("district_id", districtId)
+        .eq("entity_id", districtId)
+        .eq("entity_type", entityType)
         .order("created_at", { ascending: false });
 
     if (category) {

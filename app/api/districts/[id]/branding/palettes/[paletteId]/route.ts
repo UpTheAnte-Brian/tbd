@@ -9,6 +9,7 @@ export async function PATCH(
 ) {
     const supabase = await createApiClient();
     const { id: districtId, paletteId } = await context.params;
+    const entityType = "district";
 
     // Authorization: user must be admin for this district
     const {
@@ -25,7 +26,7 @@ export async function PATCH(
     const { data: roleCheck } = await supabase
         .from("entity_users")
         .select("entity_type, entity_id, role, user_id")
-        .eq("entity_type", "district")
+        .eq("entity_type", entityType)
         .eq("entity_id", districtId)
         .eq("user_id", userId);
 
@@ -101,7 +102,8 @@ export async function PATCH(
         .from("palettes")
         .update(update)
         .eq("id", paletteId)
-        .eq("district_id", districtId)
+        .eq("entity_id", districtId)
+        .eq("entity_type", entityType)
         .select("*")
         .single();
 

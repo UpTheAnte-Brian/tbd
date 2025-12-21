@@ -3,9 +3,8 @@ import { Calendar } from "@/app/components/calendar/calendar";
 import DistrictAdmin from "@/app/components/districts/panels/admin";
 import { BrandingPanel } from "@/app/components/districts/panels/branding";
 import DistrictMap from "@/app/components/districts/panels/DistrictMap";
-import DistrictFoundation from "@/app/components/districts/panels/foundation";
 import DistrictOverview from "@/app/components/districts/panels/overview";
-import { DistrictWithFoundation, EntityUser, Profile } from "@/app/lib/types/types";
+import { DistrictFeature, EntityUser, Profile } from "@/app/lib/types/types";
 import { hasEntityRole } from "@/app/lib/auth/entityRoles";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -13,14 +12,13 @@ import React, { useEffect, useState } from "react";
 export default function DistrictPanels({
   user,
   district,
-  reloadFoundation,
   reloadDistrict,
 }: {
   user: Profile | null;
-  district: DistrictWithFoundation;
-  reloadFoundation: () => void;
+  district: DistrictFeature;
   reloadDistrict: () => void;
 }) {
+  const props = district.properties;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -99,7 +97,7 @@ export default function DistrictPanels({
         ) : activeTab === "Branding" ? (
           <BrandingPanel
             districtId={district.id}
-            districtShortname={district.shortname}
+            districtShortname={props?.shortname ?? ""}
           />
         ) : activeTab === "Admin" && user && (platformAdmin || districtAdmin) ? (
           <DistrictAdmin
@@ -118,11 +116,15 @@ export default function DistrictPanels({
             }
           />
         ) : activeTab === "Foundation" ? (
-          <DistrictFoundation
-            user={user}
-            reloadFoundation={reloadFoundation}
-            district={district}
-          />
+          <>
+            <h2 className="text-xl font-semibold text-black">
+              Foundation Panel
+            </h2>
+            <p className="text-black">
+              This space is reserved for the upcoming nonprofit foundation
+              experience.
+            </p>
+          </>
         ) : (
           <>
             <h2 className="text-xl font-semibold text-black">

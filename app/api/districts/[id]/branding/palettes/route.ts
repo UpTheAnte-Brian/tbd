@@ -9,6 +9,7 @@ export async function POST(
 ) {
     const supabase = await createApiClient();
     const { id: districtId } = await context.params;
+    const entityType = "district";
 
     // Authorization: user must be admin for this district
     const { data: userData, error: userErr } = await supabase.auth.getUser();
@@ -20,7 +21,7 @@ export async function POST(
     const { data: entityRoles } = await supabase
         .from("entity_users")
         .select("entity_type, entity_id, role, user_id")
-        .eq("entity_type", "district")
+        .eq("entity_type", entityType)
         .eq("entity_id", districtId)
         .eq("user_id", userId);
 
@@ -67,7 +68,8 @@ export async function POST(
         .schema("branding")
         .from("palettes")
         .insert({
-            district_id: districtId,
+            entity_id: districtId,
+            entity_type: entityType,
             name,
             colors,
             role,

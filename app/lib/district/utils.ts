@@ -1,5 +1,5 @@
 import { Feature, Geometry } from "geojson";
-import { DistrictProperties, ExtendedFeature } from "../types/types";
+import { DistrictFeature, DistrictProperties } from "../types/types";
 
 export function getLabel(
     feature: Feature<Geometry, DistrictProperties>,
@@ -9,7 +9,7 @@ export function getLabel(
 }
 
 export function getLabelPosition(
-    feature: ExtendedFeature,
+    feature: DistrictFeature,
 ): google.maps.LatLng | null {
     const geom = feature.geometry;
 
@@ -25,8 +25,8 @@ export function getLabelPosition(
 
     // fallback
     return new google.maps.LatLng(
-        feature.centroid_lat || 45,
-        feature.centroid_lng || -93,
+        feature.properties?.centroid_lat || 45,
+        feature.properties?.centroid_lng || -93,
     );
 }
 

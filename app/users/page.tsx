@@ -1,12 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
-import { DistrictWithFoundation, EntityUser, Profile } from "@/app/lib/types/types";
+import { DistrictFeature, EntityUser, Profile } from "@/app/lib/types/types";
 import Link from "next/link";
 import AssignDistrictsModal from "@/app/components/districts/AssignDistrictsModal";
 
 export default function UsersPage() {
   const [users, setUsers] = useState<Profile[]>([]);
-  const [features, setFeatures] = useState<DistrictWithFoundation[]>([]);
+  const [features, setFeatures] = useState<DistrictFeature[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [assignToId, setAssignToId] = useState<string | null>(null);
@@ -25,7 +25,7 @@ export default function UsersPage() {
 
         const usersData = (await usersRes.json()) as Profile[];
         const geojson = (await districtsRes.json()) as {
-          features: DistrictWithFoundation[];
+          features: DistrictFeature[];
         };
 
         setUsers(usersData);

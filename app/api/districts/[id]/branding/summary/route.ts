@@ -8,13 +8,15 @@ export async function GET(
 ) {
     const supabase = await createApiClient();
     const { id: districtId } = await context.params;
+    const entityType = "district";
 
     // Fetch all logos
     const { data: logos, error: logosErr } = await supabase
         .schema("branding")
         .from("logos")
         .select("*")
-        .eq("district_id", districtId)
+        .eq("entity_id", districtId)
+        .eq("entity_type", entityType)
         .order("created_at", { ascending: false });
 
     if (logosErr) {
@@ -26,7 +28,8 @@ export async function GET(
         .schema("branding")
         .from("patterns")
         .select("*")
-        .eq("district_id", districtId)
+        .eq("entity_id", districtId)
+        .eq("entity_type", "district")
         .order("created_at", { ascending: false });
 
     if (patternsErr) {
@@ -40,7 +43,8 @@ export async function GET(
         .schema("branding")
         .from("palettes")
         .select("*")
-        .eq("district_id", districtId)
+        .eq("entity_id", districtId)
+        .eq("entity_type", "district")
         .order("created_at", { ascending: true });
 
     if (palettesErr) {
@@ -54,7 +58,8 @@ export async function GET(
         .schema("branding")
         .from("typography")
         .select("*")
-        .eq("district_id", districtId)
+        .eq("entity_id", districtId)
+        .eq("entity_type", "district")
         .order("created_at", { ascending: true });
 
     if (typographyErr) {
@@ -71,7 +76,8 @@ export async function GET(
         .schema("branding")
         .from("schools")
         .select("*")
-        .eq("district_id", districtId)
+        .eq("entity_id", districtId)
+        .eq("entity_type", "district")
         .order("created_at", { ascending: true });
 
     if (schoolsErr) {

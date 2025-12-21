@@ -1,26 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { BrandingSummary } from "@/app/lib/types/types";
+import type { BrandingSummary, EntityType } from "@/app/lib/types/types";
 
 // simple in-memory cache per district
 const summaryCache = new Map<string, BrandingSummary>();
 
 export function useBrandingSummary(
-    districtId: string | null,
+    entityId: string | null,
     refreshKey: number = 0,
+    entityType: EntityType = "district",
 ) {
     const [data, setData] = useState<BrandingSummary | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!districtId) return;
+        if (!entityId) return;
         let cancelled = false;
 
         // serve from cache unless a refresh is explicitly requested
-        if (refreshKey === 0 && districtId && summaryCache.has(districtId)) {
-            setData(summaryCache.get(districtId) ?? null);
+        if (refreshKey === 0 && entityId && summaryCache.has(entityId)) {
+            setData(summaryCache.get(entityId) ?? null);
             setLoading(false);
             return () => {
                 cancelled = true;
@@ -32,7 +33,7 @@ export function useBrandingSummary(
             setError(null);
             try {
                 const res = await fetch(
-                    `/api/districts/${districtId}/branding/summary`,
+                    `/api/districts/${entityId}/branding/summary?entityType=${entityType}`,
                     { cache: "no-store" },
                 );
                 if (!res.ok) {
@@ -41,7 +42,7 @@ export function useBrandingSummary(
                 }
                 const json = await res.json();
                 if (!cancelled) {
-                    summaryCache.set(districtId, json);
+                    summaryCache.set(entityId, json);
                     setData(json);
                 }
             } catch (err) {
@@ -57,7 +58,7 @@ export function useBrandingSummary(
         return () => {
             cancelled = true;
         };
-    }, [districtId, refreshKey]);
+    }, [entityId, entityType, refreshKey]);
 
     return { data, loading, error } as const;
 }

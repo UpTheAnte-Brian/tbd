@@ -1,0 +1,236 @@
+This is a great moment to pause and do this review — your UI is already structurally sound. What you need now is governance correctness, not more features.
+
+I’ll do this in two parts:
+	1.	Review your current minutes UI against Robert’s Rules / nonprofit best practices
+	2.	Propose a structured minutes template that fits your schema + UI perfectly
+
+No fluff, no academic theory — this is practical board governance.
+
+⸻
+
+1️⃣ Review of Your Minutes UI (Against Best Practices)
+
+✅ What You’re Doing Right (Very Right)
+
+1. Draft vs Approval Is Explicit
+You have:
+	•	A minutes editor
+	•	A Save Minutes action
+	•	A separate approval action
+	•	A signer selector
+	•	A post-save approval requirement
+
+This matches real governance exactly.
+
+❗ Many systems get this wrong by auto-approving on save. You did not.
+
+⸻
+
+2. Approval Is an Affirmative Act
+Your UI requires:
+	•	Selecting a signer
+	•	Clicking “Record Minutes Approval”
+
+This is critical because minutes approval is a board action, not a document edit.
+
+✔️ Correct under Robert’s Rules
+✔️ Legally defensible
+
+⸻
+
+3. Immutability Is Enforced Conceptually
+Even before RLS/triggers:
+	•	Your UI clearly implies “this locks the record”
+	•	Approval is a terminal state
+
+This aligns with:
+	•	IRS expectations
+	•	State nonprofit statutes
+	•	Audit norms
+
+⸻
+
+⚠️ Where You Should Tighten Things
+
+These are not criticisms — they’re refinements.
+
+⸻
+
+A) The Minutes Text Area Is Too Open-Ended (For Long-Term Use)
+
+Right now, users can type anything:
+
+test
+then we did something
+
+That’s fine technically — but governance best practice is to guide behavior.
+
+Robert’s Rules strongly recommend structured minutes, not freeform narrative.
+
+Risk if left as-is
+	•	Overly verbose minutes
+	•	Inclusion of debate or opinions
+	•	Increased legal exposure
+
+⸻
+
+B) Approval Language Needs a Warning
+
+Before approval, boards are typically warned:
+
+“Once approved, these minutes become the official and permanent record of the organization.”
+
+You should surface this explicitly (modal or inline warning).
+
+⸻
+
+C) Attendance / Quorum Is Missing (Conceptually)
+
+Robert’s Rules expect minutes to reflect:
+	•	Who was present
+	•	Whether quorum was met
+
+You don’t need full attendance tracking yet, but your minutes template should acknowledge quorum.
+
+⸻
+
+2️⃣ Proposed Structured Minutes Template (Recommended)
+
+This template is:
+	•	Robert’s Rules–aligned
+	•	Minimal (not bureaucratic)
+	•	Fits your single content column
+	•	Future-proof (you can parse it later if you want)
+
+🧾 Canonical Board Minutes Template
+
+## Meeting Information
+- **Date:** {{meeting_date}}
+- **Time:** {{start_time}} – {{end_time}}
+- **Type:** {{regular | special}}
+- **Location / Medium:** {{in person | virtual | hybrid}}
+
+## Attendance
+The following board members were present:
+- {{Name}}
+- {{Name}}
+
+The following board members were absent:
+- {{Name}}
+
+A quorum was ☐ present ☐ not present.
+
+## Call to Order
+The meeting was called to order by {{Chair Name}} at {{time}}.
+
+## Approval of Previous Minutes
+The minutes of the previous meeting were ☐ approved ☐ approved as amended.
+
+## Motions and Actions
+1. **Motion:** {{Motion title or description}}  
+   - Moved by: {{Name}}  
+   - Seconded by: {{Name}}  
+   - Vote: {{Approved | Rejected | Tabled}}  
+   - Result: {{# Yes}} Yes, {{# No}} No, {{# Abstain}} Abstain  
+
+## Reports (if any)
+- {{Treasurer’s report accepted}}
+- {{Committee updates}}
+
+## New Business
+- {{Brief summary of actions taken}}
+
+## Adjournment
+The meeting was adjourned at {{time}}.
+
+---
+
+**Submitted by:** {{Secretary Name}}  
+
+
+⸻
+
+3️⃣ How This Maps Cleanly to Your System
+
+Draft Phase
+	•	User pastes or edits this template
+	•	Content is editable
+	•	No approvals exist yet
+
+Approval Phase
+	•	Chair/Admin selects signer
+	•	Approval is recorded
+	•	approved_at is set
+	•	Trigger enforces immutability
+
+Legal Interpretation
+
+Once approved, this record:
+	•	Proves quorum
+	•	Proves authority
+	•	Documents votes
+	•	Shows procedural compliance
+
+⸻
+
+4️⃣ UI Improvements I’d Recommend (Small but High Impact)
+
+A) “Insert Template” Button
+
+Add a button above the textarea:
+
+Insert Standard Minutes Template
+
+This:
+	•	Teaches users good governance
+	•	Reduces bad data
+	•	Doesn’t constrain advanced users
+
+⸻
+
+B) Approval Warning (Modal)
+
+Before recording approval:
+
+⚠️ Approval is Final
+Once approved, these minutes become the official and permanent record of the organization and cannot be edited.
+
+Required checkbox:
+
+☐ I understand and approve these minutes as final.
+
+⸻
+
+C) Read-Only View After Approval
+
+Once approved:
+	•	Render markdown
+	•	Remove textarea
+	•	Show approval metadata
+
+This reinforces immutability visually.
+
+⸻
+
+5️⃣ One Important Governance Principle to Keep
+
+Minutes record what was done, not what was said.
+
+Your system already supports this — the template simply nudges users in the right direction.
+
+⸻
+
+Summary (Straight Talk)
+	•	✅ Your minutes workflow is correct
+	•	✅ Your approval model is legally sound
+	•	⚠️ Add structure to guide users
+	•	⚠️ Add explicit approval warnings
+	•	🚀 You’re building this better than many commercial board portals
+
+If you want next, I can:
+	•	Draft the approval warning language
+	•	Propose a readonly “approved minutes” UI
+	•	Suggest how to auto-inject motion/vote summaries into minutes
+	•	Review motions/voting UI against Robert’s Rules next
+
+Just say the word.

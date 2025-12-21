@@ -6,26 +6,24 @@ import { Calendar } from "@/app/components/calendar/calendar";
 import DistrictAdmin from "@/app/components/districts/panels/admin";
 import { BrandingPanel } from "@/app/components/districts/panels/branding";
 import DistrictMap from "@/app/components/districts/panels/DistrictMap";
-import DistrictFoundation from "@/app/components/districts/panels/foundation";
 import DistrictOverview from "@/app/components/districts/panels/overview";
 import DistrictPrimaryLogo from "@/app/components/districts/branding/DistrictPrimaryLogo";
 import DistrictPaletteCube from "@/app/components/branding/DistrictPaletteCube";
-import { DistrictWithFoundation, EntityUser, Profile } from "@/app/lib/types/types";
+import { DistrictFeature, EntityUser, Profile } from "@/app/lib/types/types";
 import { hasEntityRole } from "@/app/lib/auth/entityRoles";
 
 type Props = {
   user: Profile | null;
-  district: DistrictWithFoundation;
-  reloadFoundation: () => void;
+  district: DistrictFeature;
   reloadDistrict: () => void;
 };
 
 export default function DistrictPanelsSidebar({
   user,
   district,
-  reloadFoundation,
   reloadDistrict,
 }: Props) {
+  const props = district.properties;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -74,8 +72,9 @@ export default function DistrictPanelsSidebar({
     <div className="flex flex-col md:flex-row gap-4">
       <aside className="w-48 rounded-lg bg-district-primary-0 text-district-secondary-0 border border-district-primary-1/30 p-2 shadow-sm flex flex-col gap-3 md:sticky md:top-24 self-start">
         <DistrictPrimaryLogo
-          districtId={district.id}
-          districtName={district.shortname}
+          entityId={district.id}
+          entityType="district"
+          districtName={props?.shortname ?? ""}
         />
         <div className="mt-4 space-y-2 hidden md:block">
           {tabs.map((tab) => {
@@ -122,7 +121,7 @@ export default function DistrictPanelsSidebar({
         ) : activeTab === "Branding" ? (
           <BrandingPanel
             districtId={district.id}
-            districtShortname={district.shortname}
+            districtShortname={props?.shortname ?? ""}
           />
         ) : activeTab === "Admin" && user && (platformAdmin || districtAdmin) ? (
           <DistrictAdmin
@@ -141,11 +140,14 @@ export default function DistrictPanelsSidebar({
             }
           />
         ) : activeTab === "Foundation" ? (
-          <DistrictFoundation
-            user={user}
-            reloadFoundation={reloadFoundation}
-            district={district}
-          />
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-black">
+              Foundation Panel
+            </h2>
+            <p className="text-black">
+              Nonprofit foundation content will live here once it is rebuilt.
+            </p>
+          </div>
         ) : (
           <>
             <h2 className="text-xl font-semibold text-black">

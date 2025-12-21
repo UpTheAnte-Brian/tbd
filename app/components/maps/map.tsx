@@ -4,25 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getBoundsFromGeoJSON } from "../../lib/getBoundsFromGeoJSON";
 import React from "react";
-import {
-  DistrictProperties,
-  DistrictWithFoundation,
-} from "../../lib/types/types";
-import { getSupabaseClient } from "../../../utils/supabase/client";
-import { SupabaseClient } from "@supabase/supabase-js";
+import { DistrictProperties, DistrictFeature } from "../../lib/types/types";
 import DistrictPopUp from "@/app/components/districts/district-pop-up";
 import DistrictSearch from "@/app/components/districts/district-search";
-import { useUser } from "@/app/hooks/useUser";
 import LoadingSpinner from "@/app/components/loading-spinner";
 // import { pointOnFeature } from "@turf/turf";
-
-const getPublicImageUrl = (
-  path: string,
-  supabase: SupabaseClient
-): string | null => {
-  const { data } = supabase.storage.from("logos").getPublicUrl(path);
-  return data?.publicUrl ?? null;
-};
 
 const mapContainerStyle = {
   width: "100%",
@@ -30,14 +16,12 @@ const mapContainerStyle = {
 };
 
 function panToFeature(
-  feature: DistrictWithFoundation | google.maps.Data.Feature,
+  feature: DistrictFeature | google.maps.Data.Feature,
   map: google.maps.Map
 ) {
   if ("getGeometry" in feature) {
     feature.toGeoJson((geoJsonFeature) => {
-      map.fitBounds(
-        getBoundsFromGeoJSON(geoJsonFeature as DistrictWithFoundation)
-      );
+      map.fitBounds(getBoundsFromGeoJSON(geoJsonFeature as DistrictFeature));
     });
   } else {
     const bounds = getBoundsFromGeoJSON(feature);
@@ -47,26 +31,40 @@ function panToFeature(
 
 const MapComponent = React.memo(() => {
   const mapRef = useRef<google.maps.Map | null>(null);
-  const [features, setFeatures] = useState<DistrictWithFoundation[]>([]);
+  const [features, setFeatures] = useState<DistrictFeature[]>([]);
   const [selectedFeature, setSelectedFeature] =
-    useState<DistrictWithFoundation | null>(null);
+    useState<DistrictFeature | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   // Remove hovered state, use refs for tooltip content and id
   const hoveredFeaturePropsRef = useRef<DistrictProperties | null>(null);
   // const [mouseLatLng, setMouseLatLng] =
   //   useState<google.maps.LatLngLiteral | null>(null);
   const hoveredIdRef = useRef<string | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number>(6);
-  const [showPopup, setShowPopup] = useState<boolean>(true);
+  const [showPopup, setShowPopup] = useState<boolean>(false);
   // Remove hoverPosition state; use a ref to track mouse position for the tooltip.
   const hoverRef = useRef<{ x: number; y: number; visible: boolean }>({
     x: 0,
     y: 0,
     visible: false,
   });
-  // const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const { user, loading } = useUser();
-  const supabase = getSupabaseClient();
+  const hasFitInitialBounds = useRef(false);
+  const applyStyle = (map: google.maps.Map | null, selected?: string) => {
+    if (!map) return;
+    const selectedVal = selected ?? selectedId;
+    map.data.setStyle((feature) => {
+      const id = feature.getProperty("sdorgid");
+      const isSelected = id === selectedVal;
+      const isHovered = id === hoveredIdRef.current;
+      return {
+        fillColor: isSelected ? "#FFEB3B" : isHovered ? "#FFF176" : "#2196F3",
+        fillOpacity: 0.5,
+        strokeColor: isSelected || isHovered ? "#FBC02D" : "#1976D2",
+        strokeWeight: 2,
+      };
+    });
+  };
   const labelMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>(
     []
   );
@@ -81,50 +79,12 @@ const MapComponent = React.memo(() => {
   //   }
   // }, [user]);
 
-  // handleLogoUpload implementation
-  const handleLogoUpload = async (file: File, sdorgid: string) => {
-    if (!file || !sdorgid) return;
-    // Get extension
-    const ext = file.name.split(".").pop();
-    const path = `district-logos/${sdorgid}/logo.${ext}`;
-    // Upload to Supabase storage
-    const { error: uploadError } = await supabase.storage
-      .from("logos")
-      .upload(path, file, { upsert: true, contentType: file.type });
-    if (uploadError) {
-      console.error("Logo upload error:", uploadError);
-      return;
-    }
-    // Upsert district_metadata with logo_path
-    const { error: upsertError } = await supabase
-      .from("district_metadata")
-      .upsert({ sdorgid, logo_path: path }, { onConflict: "sdorgid" });
-    if (upsertError) {
-      console.error("Metadata upsert error:", upsertError);
-      return;
-    }
-    // Update features state with new logo_path for the affected district
-    setFeatures((prev) =>
-      prev.map((d) =>
-        (d.sdorgid ?? d.properties?.sdorgid) === sdorgid
-          ? {
-              ...d,
-              metadata: {
-                ...(d.metadata || {}),
-                logo_path: path,
-              },
-            }
-          : d
-      )
-    );
-  };
-
   const onUnMount = () => {
     mapRef.current = null;
   };
 
   async function createLabelMarkers(
-    features: DistrictWithFoundation[],
+    features: DistrictFeature[],
     map: google.maps.Map
   ) {
     // Clear existing markers
@@ -133,6 +93,10 @@ const MapComponent = React.memo(() => {
 
     const newMarkers = await Promise.all(
       features.map(async (feature) => {
+        const props = feature.properties ?? {};
+        if (props.centroid_lat == null || props.centroid_lng == null) {
+          return null;
+        }
         const markerContent = document.createElement("div");
         const size = Math.max(20, zoomLevel * 5);
         markerContent.style.width = `${size}px`;
@@ -142,34 +106,15 @@ const MapComponent = React.memo(() => {
         markerContent.style.justifyContent = "center";
         markerContent.style.transform = "translate(-50%, -50%)"; // centers the div
         markerContent.style.position = "absolute";
-
-        if (feature.metadata?.logo_path) {
-          const publicUrl = getPublicImageUrl(
-            feature.metadata.logo_path,
-            supabase
-          );
-          const img = document.createElement("img");
-          img.src = publicUrl || "";
-          img.alt = "Logo";
-          img.style.width = "100%";
-          img.style.height = "100%";
-          img.style.objectFit = "contain";
-          img.onerror = () => {
-            img.remove();
-            markerContent.textContent = "📍";
-          };
-          markerContent.appendChild(img);
-        } else {
-          markerContent.textContent = "📍";
-        }
+        markerContent.textContent = "📍";
 
         // 👇 set anchor at center of content
         return new google.maps.marker.AdvancedMarkerElement({
           position: {
-            lat: feature.centroid_lat!,
-            lng: feature.centroid_lng!,
+            lat: props.centroid_lat as number,
+            lng: props.centroid_lng as number,
           },
-          title: feature.shortname,
+          title: props.shortname ?? undefined,
           content: markerContent,
           zIndex: 1000,
           map,
@@ -177,135 +122,144 @@ const MapComponent = React.memo(() => {
       })
     );
 
-    labelMarkersRef.current = newMarkers;
+    labelMarkersRef.current = newMarkers.filter(
+      (m): m is google.maps.marker.AdvancedMarkerElement => Boolean(m)
+    );
   }
-  const onLoad = async (map: google.maps.Map) => {
-    // console.time("onload");
+  const onLoad = (map: google.maps.Map) => {
     mapRef.current = map;
-
-    // console.time("districtsFetch");
-    await fetch("/api/districts")
-      .then((res) => res.json())
-      .then(async (geojson: { features: DistrictWithFoundation[] }) => {
-        // console.timeEnd("districtsFetch");
-        map.data.addGeoJson(geojson);
-        map.data.setStyle({
-          visible: true,
-          icon: undefined,
-        });
-        setFeatures(geojson.features);
-
-        // Markers: create and attach once
-        await createLabelMarkers(geojson.features, map);
-
-        // Marker visibility on zoom (always show markers)
-        // map.addListener("zoom_changed", function () {
-        //   const currentZoom = map.getZoom() ?? 6;
-        //   const size = Math.max(20, currentZoom * 5);
-        //   labelMarkersRef.current.forEach((mark) => {
-        //     const container = mark.content as HTMLDivElement;
-        //     container.style.width = `${size}px`;
-        //     container.style.height = `${size}px`;
-        //     mark.map = map;
-        //   });
-        // });
-
-        // Fit map to bounds
-        const bounds = new google.maps.LatLngBounds();
-        geojson.features.forEach((feature) => {
-          const { centroid_lat, centroid_lng } = feature;
-          if (centroid_lat && centroid_lng) {
-            bounds.extend({ lat: centroid_lat, lng: centroid_lng });
-          }
-        });
-        if (!bounds.isEmpty()) map.fitBounds(bounds);
-
-        // Tooltip hover logic using refs and animation frame (no React state)
-        let tooltipFrame: number | null = null;
-        let tooltipVisible = false;
-
-        function updateTooltipPosition() {
-          // This function triggers a rerender of the tooltip by updating a dummy state
-          setTooltipTick((tick) => tick + 1);
-        }
-
-        map.data.addListener(
-          "mouseover",
-          (event: google.maps.Data.MouseEvent) => {
-            const id = event.feature.getProperty("sdorgid") as string;
-            hoveredIdRef.current = id;
-            hoveredFeaturePropsRef.current = {
-              sdorgid: id,
-              acres: event.feature.getProperty("acres") as string,
-              formid: event.feature.getProperty("formid") as string,
-              sdtype: event.feature.getProperty("sdtype") as string,
-              sqmiles: event.feature.getProperty("sqmiles") as string,
-              web_url: event.feature.getProperty("web_url") as string,
-              prefname: event.feature.getProperty("prefname") as string,
-              sdnumber: event.feature.getProperty("sdnumber") as string,
-              shortname: event.feature.getProperty("shortname") as string,
-              shape_area: event.feature.getProperty("shape_area") as string,
-              shape_leng: event.feature.getProperty("shape_leng") as string,
-            };
-            if (
-              event.domEvent &&
-              typeof (event.domEvent as MouseEvent).clientX === "number" &&
-              typeof (event.domEvent as MouseEvent).clientY === "number"
-            ) {
-              hoverRef.current.x = (event.domEvent as MouseEvent).clientX;
-              hoverRef.current.y = (event.domEvent as MouseEvent).clientY;
-              hoverRef.current.visible = true;
-              tooltipVisible = true;
-              if (tooltipFrame === null) {
-                tooltipFrame = requestAnimationFrame(function tick() {
-                  if (tooltipVisible) {
-                    updateTooltipPosition();
-                    tooltipFrame = requestAnimationFrame(tick);
-                  } else {
-                    tooltipFrame = null;
-                  }
-                });
-              }
-            }
-            // Mousemove to update tooltip position
-            map.data.addListener(
-              "mousemove",
-              (moveEvent: google.maps.Data.MouseEvent) => {
-                if (
-                  moveEvent.domEvent &&
-                  typeof (moveEvent.domEvent as MouseEvent).clientX ===
-                    "number" &&
-                  typeof (moveEvent.domEvent as MouseEvent).clientY === "number"
-                ) {
-                  hoverRef.current.x = (
-                    moveEvent.domEvent as MouseEvent
-                  ).clientX;
-                  hoverRef.current.y = (
-                    moveEvent.domEvent as MouseEvent
-                  ).clientY;
-                  hoverRef.current.visible = true;
-                }
-              }
-            );
-          }
-        );
-
-        map.data.addListener("mouseout", () => {
-          hoveredIdRef.current = null;
-          hoveredFeaturePropsRef.current = null;
-          hoverRef.current.visible = false;
-          tooltipVisible = false;
-          updateTooltipPosition();
-        });
-        // map.addListener("mousemove", (e: google.maps.MapMouseEvent) => {
-        //   if (e.latLng) {
-        //     setMouseLatLng(e.latLng.toJSON());
-        //   }
-        // });
-
-        // console.timeEnd("onload");
-      });
   };
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/districts");
+        if (!res.ok) throw new Error("Failed to load districts");
+        const geojson = (await res.json()) as { features: DistrictFeature[] };
+        setFeatures(geojson.features ?? []);
+      } catch (err) {
+        console.error("Failed to load districts for map", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  useEffect(() => {
+    if (!mapRef.current || !features.length) return;
+    const map = mapRef.current;
+
+    // clear existing data to avoid duplicates
+    map.data.forEach((f) => map.data.remove(f));
+
+    map.data.addGeoJson({ type: "FeatureCollection", features });
+    applyStyle(map);
+
+    createLabelMarkers(features, map);
+
+    if (!hasFitInitialBounds.current) {
+      const bounds = new google.maps.LatLngBounds();
+      features.forEach((feature) => {
+        const { centroid_lat, centroid_lng } = feature.properties || {};
+        if (centroid_lat && centroid_lng) {
+          bounds.extend({
+            lat: centroid_lat as number,
+            lng: centroid_lng as number,
+          });
+        }
+      });
+      if (!bounds.isEmpty()) {
+        map.fitBounds(bounds);
+        hasFitInitialBounds.current = true;
+      }
+    }
+  }, [features]);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current;
+
+    // Tooltip hover logic using refs and animation frame (no React state)
+    let tooltipFrame: number | null = null;
+    let tooltipVisible = false;
+
+    function updateTooltipPosition() {
+      setTooltipTick((tick) => tick + 1);
+    }
+
+    const mouseOver = map.data.addListener(
+      "mouseover",
+      (event: google.maps.Data.MouseEvent) => {
+        const id = event.feature.getProperty("sdorgid") as string;
+        hoveredIdRef.current = id;
+        hoveredFeaturePropsRef.current = {
+          sdorgid: id,
+          acres: event.feature.getProperty("acres") as string,
+          formid: event.feature.getProperty("formid") as string,
+          sdtype: event.feature.getProperty("sdtype") as string,
+          sqmiles: event.feature.getProperty("sqmiles") as string,
+          web_url: event.feature.getProperty("web_url") as string,
+          prefname: event.feature.getProperty("prefname") as string,
+          sdnumber: event.feature.getProperty("sdnumber") as string,
+          shortname: event.feature.getProperty("shortname") as string,
+          shape_area: event.feature.getProperty("shape_area") as string,
+          shape_leng: event.feature.getProperty("shape_leng") as string,
+        };
+        if (
+          event.domEvent &&
+          typeof (event.domEvent as MouseEvent).clientX === "number" &&
+          typeof (event.domEvent as MouseEvent).clientY === "number"
+        ) {
+          hoverRef.current.x = (event.domEvent as MouseEvent).clientX;
+          hoverRef.current.y = (event.domEvent as MouseEvent).clientY;
+          hoverRef.current.visible = true;
+          tooltipVisible = true;
+          if (tooltipFrame === null) {
+            tooltipFrame = requestAnimationFrame(function tick() {
+              if (tooltipVisible) {
+                updateTooltipPosition();
+                tooltipFrame = requestAnimationFrame(tick);
+              } else {
+                tooltipFrame = null;
+              }
+            });
+          }
+        }
+        applyStyle(map);
+      }
+    );
+
+    const mouseOut = map.data.addListener("mouseout", () => {
+      hoveredIdRef.current = null;
+      hoveredFeaturePropsRef.current = null;
+      hoverRef.current.visible = false;
+      tooltipVisible = false;
+      updateTooltipPosition();
+      applyStyle(map);
+    });
+
+    const mouseMove = map.data.addListener(
+      "mousemove",
+      (moveEvent: google.maps.Data.MouseEvent) => {
+        if (
+          moveEvent.domEvent &&
+          typeof (moveEvent.domEvent as MouseEvent).clientX === "number" &&
+          typeof (moveEvent.domEvent as MouseEvent).clientY === "number"
+        ) {
+          hoverRef.current.x = (moveEvent.domEvent as MouseEvent).clientX;
+          hoverRef.current.y = (moveEvent.domEvent as MouseEvent).clientY;
+          hoverRef.current.visible = true;
+        }
+      }
+    );
+
+    return () => {
+      mouseOver.remove();
+      mouseOut.remove();
+      mouseMove.remove();
+    };
+  }, [selectedId]);
+
   useEffect(() => {
     if (!mapRef.current || !selectedId) return;
 
@@ -316,7 +270,7 @@ const MapComponent = React.memo(() => {
     if (findFeature) {
       setSelectedFeature(findFeature);
       panToFeature(findFeature, mapRef.current);
-      // optionally update label styling, etc.
+      setShowPopup(true);
     }
   }, [selectedId, mapRef, features]);
   useEffect(() => {
@@ -324,9 +278,6 @@ const MapComponent = React.memo(() => {
     if (!map || !features.length) return;
 
     function handleClick(event: google.maps.Data.MouseEvent) {
-      // Your click handling logic here,
-      // using event.feature to access feature data
-
       const clickedFeature = event.feature;
       const clickedId = clickedFeature.getProperty("sdorgid") as string;
 
@@ -334,6 +285,10 @@ const MapComponent = React.memo(() => {
 
       setSelectedId(clickedId);
       setShowPopup(true);
+      const found = features.find((f) => f.properties?.sdorgid === clickedId);
+      if (found) {
+        setSelectedFeature(found);
+      }
 
       if (mapRef.current) {
         panToFeature(clickedFeature, mapRef.current);
@@ -351,27 +306,14 @@ const MapComponent = React.memo(() => {
   }, [selectedId, features]);
 
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !features.length) return;
-    map.data.setStyle((feature) => {
-      const id = feature.getProperty("sdorgid");
-      const isSelected = id === selectedId;
-      // Use hoveredIdRef directly (not state)
-      const isHovered = id === hoveredIdRef.current;
-      return {
-        fillColor: isSelected ? "#FFEB3B" : isHovered ? "#FFF176" : "#2196F3",
-        fillOpacity: 0.5,
-        strokeColor: isSelected || isHovered ? "#FBC02D" : "#1976D2",
-        strokeWeight: 2,
-      };
-    });
+    applyStyle(mapRef.current);
   }, [selectedId, features]);
 
   // const onMapClick = (e: google.maps.MapMouseEvent) => {
   //   console.log("event: ", e);
   // };
 
-  // const selectedFeature = (id: string): DistrictWithFoundation => {
+  // const selectedFeature = (id: string): DistrictFeature => {
   //   return features.find((x) => x.id === id);
   // }
 
@@ -407,7 +349,6 @@ const MapComponent = React.memo(() => {
               panToMinnesota(mapRef.current);
             }
           }}
-          updateDistrictInList={updateDistrictInList}
         />
       </div> */}
 
@@ -454,11 +395,7 @@ const MapComponent = React.memo(() => {
           >
             X
           </button>
-          <DistrictPopUp
-            district={selectedFeature}
-            user={user}
-            onLogoUpload={handleLogoUpload}
-          />
+          <DistrictPopUp district={selectedFeature} />
         </div>
       )}
 
@@ -467,6 +404,7 @@ const MapComponent = React.memo(() => {
           features={features}
           onSelect={(feature) => {
             setShowPopup(true);
+            setSelectedFeature(feature);
             setSelectedId(feature.properties?.sdorgid ?? null);
             if (mapRef.current) {
               panToFeature(feature, mapRef.current);

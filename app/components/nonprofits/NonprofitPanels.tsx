@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { NonprofitDTO } from "@/app/data/nonprofit-dto";
 import NonprofitMetadataEditor from "@/app/components/nonprofits/NonprofitMetadataEditor";
 import NonprofitDetailsEditor from "@/app/components/nonprofits/NonprofitDetailsEditor";
@@ -22,8 +23,38 @@ export default function NonprofitPanels({
   const [activeTab, setActiveTab] = useState<
     "overview" | "details" | "metadata" | "users" | "governance"
   >("overview");
-
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const isDistrictFoundation = nonprofit.org_type === "district_foundation";
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (
+      tabParam === "overview" ||
+      tabParam === "details" ||
+      tabParam === "metadata" ||
+      tabParam === "users" ||
+      tabParam === "governance"
+    ) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (activeTab === "metadata" && !isDistrictFoundation) {
+      handleTabChange("overview");
+    }
+  }, [activeTab, isDistrictFoundation]);
+
+  const handleTabChange = (
+    tab: "overview" | "details" | "metadata" | "users" | "governance",
+  ) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.replace(`${pathname}?${params.toString()}`);
+  };
 
   return (
     <div className="mt-6">
@@ -33,7 +64,7 @@ export default function NonprofitPanels({
           className={`pb-2 ${
             activeTab === "overview" ? "font-semibold border-b-2" : ""
           }`}
-          onClick={() => setActiveTab("overview")}
+          onClick={() => handleTabChange("overview")}
         >
           Overview
         </button>
@@ -42,7 +73,7 @@ export default function NonprofitPanels({
           className={`pb-2 ${
             activeTab === "details" ? "font-semibold border-b-2" : ""
           }`}
-          onClick={() => setActiveTab("details")}
+          onClick={() => handleTabChange("details")}
         >
           Details
         </button>
@@ -52,7 +83,7 @@ export default function NonprofitPanels({
             className={`pb-2 ${
               activeTab === "metadata" ? "font-semibold border-b-2" : ""
             }`}
-            onClick={() => setActiveTab("metadata")}
+            onClick={() => handleTabChange("metadata")}
           >
             Foundation Metadata
           </button>
@@ -61,7 +92,7 @@ export default function NonprofitPanels({
           className={`pb-2 ${
             activeTab === "users" ? "font-semibold border-b-2" : ""
           }`}
-          onClick={() => setActiveTab("users")}
+          onClick={() => handleTabChange("users")}
         >
           Users
         </button>
@@ -69,7 +100,7 @@ export default function NonprofitPanels({
           className={`pb-2 ${
             activeTab === "governance" ? "font-semibold border-b-2" : ""
           }`}
-          onClick={() => setActiveTab("governance")}
+          onClick={() => handleTabChange("governance")}
         >
           Governance
         </button>

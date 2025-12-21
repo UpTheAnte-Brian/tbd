@@ -99,7 +99,11 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
     colors: string[];
     role?: string;
   } | null>(null);
-  const { data, loading, error } = useBrandingSummary(districtId, refreshKey);
+  const { data, loading, error } = useBrandingSummary(
+    districtId,
+    refreshKey,
+    "district"
+  );
   const [showTypographyEditor, setShowTypographyEditor] = useState(false);
   const [selectedTypographyRole, setSelectedTypographyRole] =
     useState<string>("body");
@@ -116,6 +120,8 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
       return {
         id: `default-${role}`,
         district_id: districtId,
+        entity_id: districtId,
+        entity_type: "district",
         role,
         font_name: defaults.font_name,
         availability: defaults.availability,
