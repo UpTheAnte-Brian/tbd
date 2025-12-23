@@ -329,9 +329,6 @@ const MapComponent = React.memo(() => {
           console.info("Google Map loaded");
           onLoad(map);
         }}
-        onError={(e) => {
-          console.error("Google Map failed to load", e);
-        }}
         // onClick={onMapClick}
         onUnmount={onUnMount}
         // center={center}
