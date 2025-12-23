@@ -325,7 +325,13 @@ const MapComponent = React.memo(() => {
     <div className="relative flex">
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
-        onLoad={onLoad}
+        onLoad={(map) => {
+          console.info("Google Map loaded");
+          onLoad(map);
+        }}
+        onError={(e) => {
+          console.error("Google Map failed to load", e);
+        }}
         // onClick={onMapClick}
         onUnmount={onUnMount}
         // center={center}
