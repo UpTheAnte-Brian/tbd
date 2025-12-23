@@ -11,7 +11,7 @@ import {
   Image as ImageIcon,
   Type as TypeIcon,
   Palette as PaletteIcon,
-  Layers as LayersIcon,
+  // Layers as LayersIcon,
 } from "lucide-react";
 import ColorPaletteEditor from "@/app/components/branding/ColorPaletteEditor";
 import AccordionCard from "@/app/components/user/AccordionCard";
@@ -335,6 +335,10 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
                             width={150}
                             height={150}
                             className="object-contain max-h-32"
+                            onError={(e) => {
+                              // Hide broken images for placeholders without files
+                              e.currentTarget.style.display = "none";
+                            }}
                           />
                           <div className="mt-2 text-xs text-blue-700 underline">
                             Replace
@@ -363,7 +367,7 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
       </AccordionCard>
 
       {/* PATTERNS */}
-      <AccordionCard
+      {/* <AccordionCard
         variant="district"
         title={
           <span className="flex items-center gap-2 text-slate-50">
@@ -404,7 +408,7 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
             })}
           </div>
         )}
-      </AccordionCard>
+      </AccordionCard> */}
 
       {/* PALETTES */}
       <AccordionCard

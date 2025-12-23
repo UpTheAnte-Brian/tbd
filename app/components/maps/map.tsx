@@ -280,33 +280,32 @@ const MapComponent = React.memo(() => {
     const map = mapRef.current;
     if (!map || !features.length) return;
 
-    function handleClick(event: google.maps.Data.MouseEvent) {
+    const handleClick = (event: google.maps.Data.MouseEvent) => {
       const clickedFeature = event.feature;
       const clickedId = clickedFeature.getProperty("sdorgid") as string;
 
       if (!clickedId) return;
 
-      setSelectedId(clickedId);
-      setShowPopup(true);
       const found = features.find((f) => f.properties?.sdorgid === clickedId);
       if (found) {
         setSelectedFeature(found);
+        setSelectedId(clickedId);
+        setShowPopup(true);
+        panToFeature(found, map);
+      } else {
+        // fallback: pan using the Data.Feature geometry
+        panToFeature(clickedFeature, map);
+        setSelectedId(clickedId);
+        setShowPopup(true);
       }
-
-      if (mapRef.current) {
-        panToFeature(clickedFeature, mapRef.current);
-      }
-    }
-
-    // const clickEvent = map.data.addListener("click", handleClick);
-    map.data.addListener("click", handleClick);
-
-    // updateLabelMarkers(map, features);
-    return () => {
-      // clickEvent.remove();
-      // map.data.removeListener("click", handleClick);
     };
-  }, [selectedId, features]);
+
+    const clickListener = map.data.addListener("click", handleClick);
+
+    return () => {
+      clickListener.remove();
+    };
+  }, [features]);
 
   useEffect(() => {
     applyStyle(mapRef.current);

@@ -261,7 +261,8 @@ export async function POST(
                 .from("logos")
                 .update(updateData)
                 .eq("id", data.logoId)
-                .eq("district_id", data.districtId)
+                .eq("entity_id", data.districtId)
+                .eq("entity_type", entityType)
                 .select("*, updated_at")
                 .single();
 
@@ -273,7 +274,8 @@ export async function POST(
                 .schema("branding")
                 .from("logos")
                 .insert({
-                    district_id: data.districtId,
+                    entity_id: data.districtId,
+                    entity_type: entityType,
                     school_id: data.schoolId ?? null,
                     category: data.category,
                     subcategory: data.subcategory ?? "other",
