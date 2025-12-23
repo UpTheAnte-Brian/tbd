@@ -36,6 +36,7 @@ const MapComponent = React.memo(() => {
     useState<DistrictFeature | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mapReady, setMapReady] = useState(false);
   // Remove hovered state, use refs for tooltip content and id
   const hoveredFeaturePropsRef = useRef<DistrictProperties | null>(null);
   // const [mouseLatLng, setMouseLatLng] =
@@ -81,6 +82,7 @@ const MapComponent = React.memo(() => {
 
   const onUnMount = () => {
     mapRef.current = null;
+    setMapReady(false);
   };
 
   async function createLabelMarkers(
@@ -128,6 +130,7 @@ const MapComponent = React.memo(() => {
   }
   const onLoad = (map: google.maps.Map) => {
     mapRef.current = map;
+    setMapReady(true);
   };
   useEffect(() => {
     const load = async () => {
@@ -146,7 +149,7 @@ const MapComponent = React.memo(() => {
   }, []);
 
   useEffect(() => {
-    if (!mapRef.current || !features.length) return;
+    if (!mapReady || !mapRef.current || !features.length) return;
     const map = mapRef.current;
 
     // clear existing data to avoid duplicates
@@ -173,7 +176,7 @@ const MapComponent = React.memo(() => {
         hasFitInitialBounds.current = true;
       }
     }
-  }, [features]);
+  }, [features, mapReady]);
 
   useEffect(() => {
     if (!mapRef.current) return;
