@@ -335,6 +335,7 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
                             width={150}
                             height={150}
                             className="object-contain max-h-32"
+                            unoptimized
                             onError={(e) => {
                               // Hide broken images for placeholders without files
                               e.currentTarget.style.display = "none";

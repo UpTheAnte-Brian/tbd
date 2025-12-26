@@ -269,23 +269,30 @@ export async function POST(
             if (updErr) throw updErr;
             dbRow = updated;
         } else {
-            // Create new logo row
+            // Create or replace logo row (for placeholders) using upsert
+            const newLogoId = data.logoId ?? crypto.randomUUID();
             const { data: inserted, error: insErr } = await supabase
                 .schema("branding")
                 .from("logos")
-                .insert({
-                    entity_id: data.districtId,
-                    entity_type: entityType,
-                    school_id: data.schoolId ?? null,
-                    category: data.category,
-                    subcategory: data.subcategory ?? "other",
-                    name: data.name,
-                    description: data.description,
-                    file_png: ext === "png" ? filePath : null,
-                    file_jpg: ext === "jpg" || ext === "jpeg" ? filePath : null,
-                    file_svg: ext === "svg" ? filePath : null,
-                    file_eps: ext === "eps" ? filePath : null,
-                })
+                .upsert(
+                    {
+                        id: newLogoId,
+                        entity_id: data.districtId,
+                        entity_type: entityType,
+                        school_id: data.schoolId ?? null,
+                        category: data.category,
+                        subcategory: data.subcategory ?? "other",
+                        name: data.name,
+                        description: data.description,
+                        file_png: ext === "png" ? filePath : null,
+                        file_jpg: ext === "jpg" || ext === "jpeg" ? filePath : null,
+                        file_svg: ext === "svg" ? filePath : null,
+                        file_eps: ext === "eps" ? filePath : null,
+                    },
+                    {
+                        onConflict: "id",
+                    },
+                )
                 .select("*")
                 .single();
 
