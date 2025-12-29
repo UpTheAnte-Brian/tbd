@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
 
-// GET /api/districts/[id]/branding/logos?category=&schoolId=&teamId=
+// GET /api/districts/[id]/branding/logos?category=&teamId=
 export async function GET(
     req: NextRequest,
     { params }: { params: { id: string } },
@@ -12,7 +12,6 @@ export async function GET(
 
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
-    const schoolId = searchParams.get("schoolId");
     const teamId = searchParams.get("teamId");
 
     // Build the query
@@ -26,10 +25,6 @@ export async function GET(
 
     if (category) {
         query = query.eq("category", category);
-    }
-
-    if (schoolId) {
-        query = query.eq("school_id", schoolId);
     }
 
     if (teamId) {

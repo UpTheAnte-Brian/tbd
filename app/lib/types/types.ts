@@ -136,8 +136,7 @@ export interface BrandingLogo {
     id: string;
     entity_id: string;
     entity_type: EntityType;
-    school_id?: string | null;
-    category: string;
+    category: BrandingLogoCategory;
     subcategory?: string | null;
     name: string;
     description?: string | null;
@@ -176,6 +175,52 @@ export interface BrandingFont {
     created_at: string;
     updated_at?: string | null;
 }
+
+export const BRANDING_LOGO_CATEGORIES = [
+    "primary_logo",
+    "secondary_logo",
+    "icon",
+    "wordmark",
+    "seal",
+    "co_brand",
+    "event",
+    "program",
+    "athletics_primary",
+    "athletics_icon",
+    "athletics_wordmark",
+    "community_ed",
+    "team_logo",
+    "brand_pattern",
+    "font",
+] as const;
+
+export type BrandingLogoCategory =
+    | (typeof BRANDING_LOGO_CATEGORIES)[number]
+    | "district_primary"
+    | "district_secondary";
+
+export const BRANDING_LOGO_CATEGORY_LABELS: Record<
+    BrandingLogoCategory,
+    string
+> = {
+    primary_logo: "Primary Logo",
+    secondary_logo: "Secondary Logo",
+    icon: "Icon",
+    wordmark: "Wordmark",
+    seal: "Seal",
+    co_brand: "Co-branded",
+    event: "Event",
+    program: "Program",
+    athletics_primary: "Athletics Primary",
+    athletics_icon: "Athletics Icon",
+    athletics_wordmark: "Athletics Wordmark",
+    community_ed: "Community Ed",
+    team_logo: "Team Logo",
+    brand_pattern: "Pattern",
+    font: "Font",
+    district_primary: "Primary Logo",
+    district_secondary: "Secondary Logo",
+};
 
 export interface BrandingPalette {
     id: string;
@@ -230,7 +275,7 @@ export interface BrandingSummary {
     fonts: BrandingFont[];
     palettes: BrandingPalette[];
     typography: BrandingTypography[];
-    schools: BrandingSchool[];
+    schools?: BrandingSchool[];
 }
 
 // ----------------------------

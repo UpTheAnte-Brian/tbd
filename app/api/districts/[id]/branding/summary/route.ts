@@ -71,8 +71,10 @@ export async function GET(
     // `fonts` is kept for compatibility; we only need one typography query.
     const fonts = typography;
 
-    // Fetch schools for this district (used for school-logo uploads)
-    const { data: schools, error: schoolsErr } = await supabase
+    // Fetch schools for this district (used for school-logo uploads).
+    // Some environments may not have branding.schools yet; treat as optional.
+    let schools = [] as unknown[];
+    const { data: schoolsData, error: schoolsErr } = await supabase
         .schema("branding")
         .from("schools")
         .select("*")
@@ -81,9 +83,14 @@ export async function GET(
         .order("created_at", { ascending: true });
 
     if (schoolsErr) {
-        return NextResponse.json({ error: schoolsErr.message }, {
-            status: 500,
-        });
+        const message = schoolsErr.message ?? "";
+        if (!message.includes('branding.schools')) {
+            return NextResponse.json({ error: schoolsErr.message }, {
+                status: 500,
+            });
+        }
+    } else {
+        schools = schoolsData ?? [];
     }
 
     return new NextResponse(

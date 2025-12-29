@@ -28,13 +28,13 @@ export default function DistrictPrimaryLogo({
     const logos = data.logos;
 
     const pick = () => {
-      // Prefer district_primary + horizontal/full_color
+      // Prefer primary/district_primary + horizontal/full_color
       const primaryHoriz = logos.find((l) => {
         const name = (l.name || "").toLowerCase();
         const cat = (l.category || "").toLowerCase();
         const sub = (l.subcategory || "").toLowerCase();
         return (
-          cat.includes("district_primary") &&
+          (cat.includes("primary_logo") || cat.includes("district_primary")) &&
           (name.includes("horizontal") ||
             sub.includes("horizontal") ||
             sub.includes("full_color"))
@@ -42,9 +42,10 @@ export default function DistrictPrimaryLogo({
       });
       if (primaryHoriz) return primaryHoriz;
 
-      const primary = logos.find((l) =>
-        (l.category || "").toLowerCase().includes("district_primary")
-      );
+      const primary = logos.find((l) => {
+        const cat = (l.category || "").toLowerCase();
+        return cat.includes("primary_logo") || cat.includes("district_primary");
+      });
       if (primary) return primary;
 
       return logos[0];

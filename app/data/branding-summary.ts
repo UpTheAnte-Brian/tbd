@@ -57,24 +57,11 @@ export async function getBrandingSummary(
 
     const fonts = typography;
 
-    const { data: schools, error: schoolsErr } = await supabase
-        .schema("branding")
-        .from("schools")
-        .select("*")
-        .eq("entity_id", entityId)
-        .eq("entity_type", entityType)
-        .order("created_at", { ascending: true });
-    if (schoolsErr) {
-        console.error("Failed to fetch schools", schoolsErr);
-        return null;
-    }
-
     return {
         logos,
         patterns,
         fonts,
         palettes,
         typography,
-        schools,
     };
 }

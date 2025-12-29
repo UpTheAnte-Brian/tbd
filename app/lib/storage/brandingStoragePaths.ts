@@ -39,20 +39,6 @@ export function districtLogoPath(
 }
 
 /**
- * File path for SCHOOL-LEVEL logos.
- * Ex: branding-logos/{district_id}/schools/{school_id}/{logo_id}/logo.{ext}
- */
-export function schoolLogoPath(
-    districtId: string,
-    schoolId: string,
-    logoId: string,
-    file: File,
-): string {
-    const ext = extractExtension(file.name);
-    return `${districtId}/schools/${schoolId}/${logoId}/logo.${ext}`;
-}
-
-/**
  * File path for ATHLETICS logos (White Hawks, sport-specific marks, etc.)
  * Ex: branding-logos/{district_id}/athletics/{logo_id}/logo.{ext}
  */

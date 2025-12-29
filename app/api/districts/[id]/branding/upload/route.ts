@@ -8,7 +8,6 @@ import {
     districtLogoPath,
     fontFilePath,
     patternFilePath,
-    schoolLogoPath,
     teamLogoPath,
 } from "@/app/lib/storage/brandingStoragePaths";
 
@@ -17,7 +16,6 @@ const uploadSchema = z.object({
     districtId: z.string(),
     name: z.string().optional(),
     description: z.string().optional(),
-    schoolId: z.string().optional(),
     logoId: z.string().optional(),
     patternType: z.enum(["small", "large"]).optional(),
     fontId: z.string().optional(),
@@ -30,8 +28,8 @@ export async function POST(
 ) {
     const supabase = await createApiClient();
     const { id: districtId } = await context.params;
-    const entityType = "district";
     const formData = await req.formData();
+    const entityType = (formData.get("entityType") as string) ?? "district";
 
     const file = formData.get("file") as File;
     if (!file) {
@@ -46,7 +44,6 @@ export async function POST(
         districtId,
         name: logoId ? name ?? undefined : name,
         description: formData.get("description") ?? undefined,
-        schoolId: formData.get("schoolId") ?? undefined,
         logoId,
         patternType: formData.get("patternType") ?? undefined,
         fontId: formData.get("fontId") ?? undefined,
@@ -112,25 +109,18 @@ export async function POST(
     let filePath: string;
 
     switch (data.category) {
+        case "icon":
+        case "primary_logo":
+        case "secondary_logo":
         case "district_primary":
         case "district_secondary":
-        case "icon":
+        case "wordmark":
+        case "seal":
+        case "co_brand":
+        case "event":
+        case "program":
             filePath = districtLogoPath(
                 data.districtId,
-                data.logoId ?? crypto.randomUUID(),
-                file,
-            );
-            break;
-
-        case "school_logo":
-            if (!data.schoolId) {
-                return NextResponse.json({ error: "schoolId required" }, {
-                    status: 400,
-                });
-            }
-            filePath = schoolLogoPath(
-                data.districtId,
-                data.schoolId,
                 data.logoId ?? crypto.randomUUID(),
                 file,
             );
@@ -279,7 +269,6 @@ export async function POST(
                         id: newLogoId,
                         entity_id: data.districtId,
                         entity_type: entityType,
-                        school_id: data.schoolId ?? null,
                         category: data.category,
                         subcategory: data.subcategory ?? "other",
                         name: data.name,

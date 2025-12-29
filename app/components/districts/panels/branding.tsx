@@ -3,7 +3,11 @@
 import Image from "next/image";
 import { BrandAssetUploader } from "@/app/components/branding/BrandAssetUploader";
 import { useBrandingSummary } from "@/app/hooks/useBrandingSummary";
-import type { BrandingSummary as BrandingSummaryType } from "@/app/lib/types/types";
+import type {
+  BrandingSummary as BrandingSummaryType,
+  BrandingLogoCategory,
+} from "@/app/lib/types/types";
+import { BRANDING_LOGO_CATEGORY_LABELS } from "@/app/lib/types/types";
 import { useMemo, useState } from "react";
 import {
   Loader2,
@@ -82,11 +86,16 @@ const DEFAULT_TYPOGRAPHY: Record<
 };
 
 interface Props {
-  districtId: string | null;
-  districtShortname: string;
+  entityId: string | null;
+  entityType?: "district" | "nonprofit" | "business";
+  entityShortname: string;
 }
 
-export function BrandingPanel({ districtId, districtShortname }: Props) {
+export function BrandingPanel({
+  entityId,
+  entityType = "district",
+  entityShortname,
+}: Props) {
   const [refreshKey, setRefreshKey] = useState(0);
   const [selectedLogo, setSelectedLogo] = useState<{
     id: string;
@@ -100,15 +109,15 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
     role?: string;
   } | null>(null);
   const { data, loading, error } = useBrandingSummary(
-    districtId,
+    entityId,
     refreshKey,
-    "district"
+    entityType
   );
   const [showTypographyEditor, setShowTypographyEditor] = useState(false);
   const [selectedTypographyRole, setSelectedTypographyRole] =
     useState<string>("body");
   const typographyWithDefaults = useMemo(() => {
-    if (!districtId) return [];
+    if (!entityId) return [];
     return FONT_ROLES.map((role) => {
       const row =
         data?.typography.find((t) => t.role === role) ||
@@ -119,9 +128,9 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
       const defaults = DEFAULT_TYPOGRAPHY[role];
       return {
         id: `default-${role}`,
-        district_id: districtId,
-        entity_id: districtId,
-        entity_type: "district",
+        district_id: entityId,
+        entity_id: entityId,
+        entity_type: entityType,
         role,
         font_name: defaults.font_name,
         availability: defaults.availability,
@@ -135,7 +144,7 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
         updated_at: "",
       } as BrandingTypography;
     });
-  }, [data?.typography, districtId]);
+  }, [data?.typography, entityId]);
 
   const logosGrouped = useMemo(() => {
     if (!data) return {};
@@ -157,7 +166,7 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
   const colorColumns = Math.max(1, maxPaletteColors);
   const paletteGridTemplate = `minmax(220px, 2fr) 90px repeat(${colorColumns}, minmax(52px, 1fr))`;
 
-  if (!districtId) {
+  if (!entityId) {
     return <div className="text-gray-500 italic">Select a district…</div>;
   }
 
@@ -186,7 +195,7 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
   return (
     <div className="space-y-8 bg-district-secondary-1 text-district-secondary-0 p-6 rounded">
       {/* Edit Drawer */}
-      {selectedLogo && districtId && (
+      {selectedLogo && entityId && (
         <div className="fixed inset-0 z-50 bg-black/50 flex justify-end items-center">
           <div className="w-full max-w-md max-h-[calc(100vh-2rem)] bg-white shadow-xl p-4 overflow-y-auto rounded-lg mr-2">
             <div className="flex items-center justify-between mb-4">
@@ -200,26 +209,23 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
                 ✕
               </button>
             </div>
-            <BrandAssetUploader
-              districtId={districtId}
-              targetLogoId={selectedLogo.id}
-              defaultCategory={selectedLogo.category ?? ""}
-              defaultSubcategory={selectedLogo.subcategory ?? ""}
-              schools={data.schools?.map((s) => ({
-                id: s.id,
-                name: s.school_name,
-              }))}
-              onCancel={() => setSelectedLogo(null)}
-              onUploaded={() => {
-                setRefreshKey((k) => k + 1);
-                setSelectedLogo(null);
-              }}
+              <BrandAssetUploader
+                entityId={entityId}
+                entityType={entityType}
+                targetLogoId={selectedLogo.id}
+                defaultCategory={selectedLogo.category ?? ""}
+                defaultSubcategory={selectedLogo.subcategory ?? ""}
+                onCancel={() => setSelectedLogo(null)}
+                onUploaded={() => {
+                  setRefreshKey((k) => k + 1);
+                  setSelectedLogo(null);
+                }}
             />
           </div>
         </div>
       )}
 
-      {editingPalette && districtId && (
+      {editingPalette && entityId && (
         <div className="fixed inset-0 z-50 bg-black/50 flex justify-end items-center">
           <div className="w-full max-w-md max-h-[calc(100vh-2rem)] bg-white shadow-xl p-4 overflow-y-auto rounded-lg mr-2">
             <div className="flex items-center justify-between mb-4">
@@ -236,13 +242,13 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
 
             <ColorPaletteEditor
               initial={editingPalette}
-              districtShortname={districtShortname}
+              districtShortname={entityShortname}
               onCancel={() => setEditingPalette(null)}
               onSave={async (palette) => {
                 const method = palette.id ? "PATCH" : "POST";
                 const url = palette.id
-                  ? `/api/districts/${districtId}/branding/palettes/${palette.id}`
-                  : `/api/districts/${districtId}/branding/palettes`;
+                  ? `/api/districts/${entityId}/branding/palettes/${palette.id}`
+                  : `/api/districts/${entityId}/branding/palettes`;
 
                 const res = await fetch(url, {
                   method,
@@ -268,11 +274,11 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
         </div>
       )}
 
-      {showTypographyEditor && districtId && (
+      {showTypographyEditor && entityId && (
         <div className="fixed inset-0 z-50 bg-black/50 flex justify-end items-center">
           <div className="w-full max-w-md max-h-[calc(100vh-2rem)] bg-white shadow-xl p-4 overflow-y-auto rounded-lg mr-2">
             <TypographyEditor
-              districtId={districtId}
+              districtId={entityId}
               typography={typographyWithDefaults}
               role={selectedTypographyRole}
               onSaved={() => {
@@ -300,7 +306,9 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
           {Object.entries(logosGrouped).map(([category, items]) => (
             <div key={category}>
               <h3 className="text-md font-semibold uppercase tracking-wide text-white mb-2">
-                {category.replace("_", " ")}
+                {BRANDING_LOGO_CATEGORY_LABELS[
+                  category as BrandingLogoCategory
+                ] ?? category.replace(/_/g, " ")}
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
                 {items.map((logo) => {
@@ -310,6 +318,17 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
                     logo.file_jpg ||
                     logo.file_eps ||
                     null;
+                  const version = logo.updated_at ?? logo.created_at ?? "";
+                  const hasPath = file?.includes("/") ?? false;
+                  const inferredPath = file
+                    ? hasPath
+                      ? file
+                      : `${logo.entity_id}/${logo.entity_type}/${logo.id}/${file}`
+                    : null;
+                  const logoUrl =
+                    file && inferredPath
+                      ? `${SUPABASE_URL}/storage/v1/object/public/branding-logos/${inferredPath}?v=${version}`
+                      : null;
                   return (
                     <div
                       key={logo.id}
@@ -322,15 +341,13 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
                         })
                       }
                     >
-                      {file ? (
+                      {logoUrl ? (
                         <>
                           <div className="text-sm font-medium text-slate-800 text-center mb-2">
                             {logo.name}
                           </div>
                           <Image
-                            src={`${SUPABASE_URL}/storage/v1/object/public/branding-logos/${file}?v=${
-                              logo.updated_at ?? logo.created_at ?? ""
-                            }`}
+                            src={logoUrl}
                             alt={logo.name}
                             width={150}
                             height={150}
@@ -368,48 +385,6 @@ export function BrandingPanel({ districtId, districtShortname }: Props) {
       </AccordionCard>
 
       {/* PATTERNS */}
-      {/* <AccordionCard
-        variant="district"
-        title={
-          <span className="flex items-center gap-2 text-slate-50">
-            <LayersIcon size={18} className="text-green-300" />
-            Brand Patterns
-          </span>
-        }
-      >
-        {data.patterns.length === 0 ? (
-          <div className="text-slate-700 mt-2">No patterns defined.</div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-            {data.patterns.map((pattern) => {
-              const file = pattern.file_png || pattern.file_svg;
-              return (
-                <div
-                  key={pattern.id}
-                  className="border rounded p-3 bg-white shadow-sm flex flex-col items-center"
-                >
-                  {file ? (
-                    <Image
-                      src={`${SUPABASE_URL}/storage/v1/object/public/branding-patterns/${file}`}
-                      alt={pattern.pattern_type}
-                      width={150}
-                      height={150}
-                      className="object-contain max-h-32"
-                    />
-                  ) : (
-                    <div className="text-gray-400 italic">No file</div>
-                  )}
-                  <div className="text-sm mt-2">
-                    {pattern.pattern_type === "small"
-                      ? "Small Pattern"
-                      : "Large Pattern"}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </AccordionCard> */}
 
       {/* PALETTES */}
       <AccordionCard

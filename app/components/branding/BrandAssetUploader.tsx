@@ -3,30 +3,33 @@
 import { useState } from "react";
 import { UploadCloud, CheckCircle, XCircle } from "lucide-react";
 import clsx from "clsx";
+import {
+  BRANDING_LOGO_CATEGORIES,
+  BRANDING_LOGO_CATEGORY_LABELS,
+} from "@/app/lib/types/types";
 
 interface Props {
-  districtId: string;
+  entityId: string;
+  entityType?: string;
   targetLogoId?: string;
   onUploaded?: () => void;
   defaultCategory?: string;
   defaultSubcategory?: string;
   onCancel?: () => void;
-  schools?: { id: string; name: string }[];
 }
 
 export function BrandAssetUploader({
-  districtId,
+  entityId,
+  entityType = "district",
   targetLogoId,
   onUploaded,
   defaultCategory = "",
   defaultSubcategory = "",
   onCancel,
-  schools,
 }: Props) {
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [category, setCategory] = useState<string>(defaultCategory);
   const [subcategory, setSubcategory] = useState<string>(defaultSubcategory);
-  const [schoolId, setSchoolId] = useState<string>("");
   const [uploading, setUploading] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<"success" | "error" | null>(
@@ -48,10 +51,10 @@ export function BrandAssetUploader({
       formData.append("file", file);
       if (category) formData.append("category", category);
       if (subcategory) formData.append("subcategory", subcategory);
-      if (schoolId) formData.append("schoolId", schoolId);
       formData.append("logoId", targetLogoId ?? "");
+      if (entityType) formData.append("entityType", entityType);
 
-      const res = await fetch(`/api/districts/${districtId}/branding/upload`, {
+      const res = await fetch(`/api/districts/${entityId}/branding/upload`, {
         method: "POST",
         body: formData,
       });
@@ -89,17 +92,11 @@ export function BrandAssetUploader({
             onChange={(e) => setCategory(e.target.value)}
           >
             <option value="">Select category</option>
-            <option value="district_primary">District Primary</option>
-            <option value="district_secondary">District Secondary</option>
-            <option value="icon">Icon</option>
-            <option value="school_logo">School Logo</option>
-            <option value="community_ed">Community Ed</option>
-            <option value="athletics_primary">Athletics Primary</option>
-            <option value="athletics_icon">Athletics Icon</option>
-            <option value="athletics_wordmark">Athletics Wordmark</option>
-            <option value="team_logo">Team Logo</option>
-            <option value="brand_pattern">Pattern</option>
-            <option value="font">Font</option>
+            {BRANDING_LOGO_CATEGORIES.map((value) => (
+              <option key={value} value={value}>
+                {BRANDING_LOGO_CATEGORY_LABELS[value]}
+              </option>
+            ))}
           </select>
         </div>
         <div>
@@ -113,25 +110,6 @@ export function BrandAssetUploader({
             placeholder="e.g. stacked, primary, full_color"
           />
         </div>
-        {category === "school_logo" && (
-          <div>
-            <label className="block mb-1 font-medium text-gray-700">
-              School
-            </label>
-            <select
-              className="border rounded p-2 w-full bg-gray-50 text-gray-700"
-              value={schoolId}
-              onChange={(e) => setSchoolId(e.target.value)}
-            >
-              <option value="">Select a school</option>
-              {schools?.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
       {/* File Selector */}
