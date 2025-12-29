@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
-import { isEntityAdmin } from "@/app/lib/auth/entityRoles";
 
 // POST /api/districts/[id]/branding/palettes
 export async function POST(
@@ -18,14 +17,31 @@ export async function POST(
     }
     const userId: string = userData.user.id;
 
+    type RoleRow = {
+        role: string;
+        entities?:
+            | { entity_type?: string | null }[]
+            | { entity_type?: string | null }
+            | null;
+    };
     const { data: entityRoles } = await supabase
         .from("entity_users")
-        .select("entity_type, entity_id, role, user_id")
-        .eq("entity_type", entityType)
+        .select("entity_id, role, user_id, entities:entities ( entity_type )")
         .eq("entity_id", districtId)
         .eq("user_id", userId);
 
-    if (!isEntityAdmin(entityRoles ?? [], "district", districtId)) {
+    const getEntityType = (row: RoleRow): string | null => {
+        const entity = Array.isArray(row.entities)
+            ? row.entities[0]
+            : row.entities;
+        return entity?.entity_type ?? null;
+    };
+    const rows = (entityRoles ?? []) as RoleRow[];
+    const isAdmin = rows.some((row) =>
+        row.role === "admin" && getEntityType(row) === "district"
+    );
+
+    if (!isAdmin) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

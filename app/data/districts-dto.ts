@@ -22,28 +22,59 @@ export async function getDistrictDTO(id: string): Promise<DistrictFeature> {
     throw new Error("District not found");
   }
 
+  const resolveEntityId = async (): Promise<string> => {
+    const { data: bySdorgid, error: bySdorgidError } = await supabase
+      .from("entities")
+      .select("id")
+      .eq("entity_type", "district")
+      .eq("external_ids->>sdorgid", district.sdorgid)
+      .maybeSingle();
+    if (bySdorgidError) {
+      throw bySdorgidError;
+    }
+    if (bySdorgid?.id) return bySdorgid.id;
+
+    const { data: byDistrictId, error: byDistrictIdError } = await supabase
+      .from("entities")
+      .select("id")
+      .eq("entity_type", "district")
+      .eq("external_ids->>district_id", district.id)
+      .maybeSingle();
+    if (byDistrictIdError) {
+      throw byDistrictIdError;
+    }
+    if (byDistrictId?.id) return byDistrictId.id;
+
+    throw new Error(`Entity not found for district ${district.sdorgid}`);
+  };
+
+  const entityId = await resolveEntityId();
+
   const { data: users } = await supabase
     .from("entity_users")
     .select(
       `
       id,
-      entity_type,
       entity_id,
       user_id,
       role,
       status,
       created_at,
+      entities:entities (
+        entity_type
+      ),
       profile:profiles ( id, full_name, username, first_name, last_name, avatar_url, website )
     `,
     )
-    .eq("entity_type", "district")
-    .eq("entity_id", district.id);
+    .eq("entity_id", entityId);
 
   const mappedUsers = (users ?? []).map((u) => {
     const profileRaw = Array.isArray(u.profile) ? u.profile[0] : u.profile;
+    const entity =
+      Array.isArray(u.entities) ? u.entities[0] : u.entities;
     return {
       id: String(u.id),
-      entity_type: "district" as const,
+      entity_type: entity?.entity_type ?? "district",
       entity_id: String(u.entity_id),
       user_id: String(u.user_id),
       role: (u.role as EntityUserRole) ?? "viewer",
@@ -115,6 +146,7 @@ export async function getDistrictDTO(id: string): Promise<DistrictFeature> {
   const feature: DistrictFeature = {
     type: "Feature",
     id: district.id,
+    entity_id: entityId,
     properties: baseProps,
     geometry: district.geometry_simplified,
     users: mappedUsers,

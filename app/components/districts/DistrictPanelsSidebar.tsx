@@ -33,7 +33,12 @@ export default function DistrictPanelsSidebar({
 
   const entityUsers = (user?.entity_users ?? []) as EntityUser[];
   const platformAdmin = user?.global_role === "admin";
-  const districtAdmin = hasEntityRole(entityUsers, "district", district.id, ["admin"]);
+  const districtAdmin = hasEntityRole(
+    entityUsers,
+    "district",
+    district.entity_id ?? district.id,
+    ["admin"],
+  );
 
   useEffect(() => {
     setHydrated(true);

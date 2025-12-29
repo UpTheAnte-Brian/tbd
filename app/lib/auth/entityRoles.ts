@@ -2,7 +2,7 @@ export type EntityRole = "admin" | "editor" | "viewer" | "employee";
 export type EntityType = "district" | "nonprofit" | "business";
 
 export interface EntityUser {
-  entity_type: EntityType;
+  entity_type?: EntityType;
   entity_id: string;
   user_id: string;
   role: EntityRole;
@@ -20,7 +20,7 @@ export function hasEntityRole(
   if (!entityUsers || !entityId) return false;
   return entityUsers.some(
     (eu) =>
-      eu.entity_type === entityType &&
+      (!eu.entity_type || eu.entity_type === entityType) &&
       eu.entity_id === entityId &&
       allowedRoles.includes(eu.role),
   );

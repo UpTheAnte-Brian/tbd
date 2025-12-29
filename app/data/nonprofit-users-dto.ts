@@ -58,9 +58,16 @@ function mapEntityUser(
     eu: Record<string, unknown>,
 ): NonprofitUserDTO | null {
     if (!eu.id || !eu.entity_id || !eu.user_id) return null;
+    const entityRaw = eu.entities as
+        | { entity_type?: string | null }
+        | { entity_type?: string | null }[]
+        | null
+        | undefined;
+    const entity = Array.isArray(entityRaw) ? entityRaw[0] : entityRaw;
     return {
         id: String(eu.id),
-        entity_type: "nonprofit",
+        entity_type: (entity?.entity_type as EntityUser["entity_type"]) ??
+            "nonprofit",
         entity_id: String(eu.entity_id),
         user_id: String(eu.user_id),
         role: (eu.role as EntityUserRole) ?? "viewer",
@@ -78,11 +85,12 @@ export async function listNonprofitUsersDTO(): Promise<NonprofitUserDTO[]> {
         .from("entity_users")
         .select(
             `
-      id, entity_type, entity_id, user_id, role, status, created_at,
+      id, entity_id, user_id, role, status, created_at,
+      entities:entities ( entity_type ),
       profile:profiles ( ${PROFILE_FIELDS} )
     `,
         )
-        .eq("entity_type", "nonprofit")
+        .eq("entities.entity_type", "nonprofit")
         .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -99,12 +107,13 @@ export async function getNonprofitUserDTO(
         .from("entity_users")
         .select(
             `
-      id, entity_type, entity_id, user_id, role, status, created_at,
+      id, entity_id, user_id, role, status, created_at,
+      entities:entities ( entity_type ),
       profile:profiles ( ${PROFILE_FIELDS} )
     `,
         )
         .eq("id", id)
-        .eq("entity_type", "nonprofit")
+        .eq("entities.entity_type", "nonprofit")
         .maybeSingle();
 
     if (error) throw error;
@@ -123,14 +132,14 @@ export async function createNonprofitUserDTO(
     const { data, error } = await supabase
         .from("entity_users")
         .insert({
-            entity_type: "nonprofit",
             entity_id: input.nonprofit_id,
             user_id: input.user_id,
             role: input.role ?? "viewer",
         })
         .select(
             `
-      id, entity_type, entity_id, user_id, role, status, created_at,
+      id, entity_id, user_id, role, status, created_at,
+      entities:entities ( entity_type ),
       profile:profiles ( ${PROFILE_FIELDS} )
     `,
         )
@@ -155,10 +164,10 @@ export async function updateNonprofitUserDTO(
             role: input.role ?? undefined,
         })
         .eq("id", id)
-        .eq("entity_type", "nonprofit")
         .select(
             `
-      id, entity_type, entity_id, user_id, role, status, created_at,
+      id, entity_id, user_id, role, status, created_at,
+      entities:entities ( entity_type ),
       profile:profiles ( ${PROFILE_FIELDS} )
     `,
         )
@@ -177,7 +186,6 @@ export async function deleteNonprofitUserDTO(id: string): Promise<void> {
     const { error } = await supabase
         .from("entity_users")
         .delete()
-        .eq("id", id)
-        .eq("entity_type", "nonprofit");
+        .eq("id", id);
     if (error) throw error;
 }

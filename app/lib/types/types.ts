@@ -9,7 +9,7 @@ export type EntityUserRole = "admin" | "editor" | "viewer" | "employee";
 
 export interface EntityUser {
     id: string;
-    entity_type: EntityType;
+    entity_type?: EntityType;
     entity_id: string;
     user_id: string;
     role: EntityUserRole;
@@ -64,6 +64,7 @@ export interface DistrictProperties {
 export interface DistrictFeature
     extends Feature<Polygon | MultiPolygon, DistrictProperties> {
     id: string; // UUID from Supabase
+    entity_id?: string; // UUID from entities table
     properties: DistrictProperties;
     users?: EntityUser[]; // optional list of related users
 }

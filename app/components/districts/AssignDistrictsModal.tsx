@@ -93,7 +93,9 @@ const AssignDistrictsModal: React.FC<AssignDistrictsModalProps> = ({
                     .find((u) => u.id === assignToId)
                     ?.entity_users?.filter((eu) => eu.entity_type === "district")
                     .map((eu) => {
-                      const f = features.find((ft) => ft.id === eu.entity_id);
+                      const f = features.find(
+                        (ft) => (ft.entity_id ?? ft.id) === eu.entity_id
+                      );
                       return (
                         <li className="text-gray-900" key={eu.entity_id}>
                           {f?.properties?.shortname ?? eu.entity_id}

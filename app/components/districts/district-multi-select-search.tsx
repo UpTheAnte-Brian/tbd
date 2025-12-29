@@ -22,7 +22,7 @@ export default function DistrictMultiSelectSearch({
     if (!q) return [] as { id: string; label: string }[];
     return features
       .map((f) => {
-        const id = f.id;
+        const id = f.entity_id ?? f.id;
         const label =
           getLabel(f) ||
           (f.properties?.shortname as string) ||

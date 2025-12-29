@@ -41,7 +41,7 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
       const response = await fetch(`/api/entity-users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entityType, entityId, userId, role: newRole }),
+        body: JSON.stringify({ entityId, userId, role: newRole }),
       });
 
       const result = await response.json();
@@ -69,7 +69,6 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          entityType,
           entityId,
           userId: selectedUserId,
           role: selectedRole,
@@ -187,7 +186,6 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
                   onClick={async () => {
                     if (!confirm(`Remove ${displayName}'s role?`)) return;
                     const payload = {
-                      entityType,
                       entityId,
                       userId: assignment.user_id,
                     };

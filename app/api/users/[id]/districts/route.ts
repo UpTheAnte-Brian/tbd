@@ -22,19 +22,30 @@ export async function POST(
             );
         }
 
-        const { error: delError } = await supabase
+        const { data: existingRows, error: existingError } = await supabase
             .from("entity_users")
-            .delete()
+            .select("entity_id, entities:entities ( entity_type )")
             .eq("user_id", userId)
-            .eq("entity_type", "district");
+            .eq("entities.entity_type", "district");
 
-        if (delError) throw delError;
+        if (existingError) throw existingError;
+
+        const existingIds = (existingRows ?? []).map((row) => row.entity_id);
+
+        if (existingIds.length > 0) {
+            const { error: delError } = await supabase
+                .from("entity_users")
+                .delete()
+                .eq("user_id", userId)
+                .in("entity_id", existingIds);
+
+            if (delError) throw delError;
+        }
 
         if (districtIds.length > 0) {
             const rows = districtIds.map((districtId: string) => ({
                 user_id: userId,
                 entity_id: districtId,
-                entity_type: "district",
                 role: "admin",
             }));
 

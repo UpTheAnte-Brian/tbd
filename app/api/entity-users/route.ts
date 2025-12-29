@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
 
 type Payload = {
-  entityType?: "district" | "business" | "nonprofit";
   entityId?: string;
   userId?: string;
   role?: "admin" | "editor" | "viewer" | "employee";
@@ -12,29 +11,45 @@ type Payload = {
 export async function POST(req: NextRequest) {
   const supabase = await createApiClient();
   const body = (await req.json()) as Payload;
-  const { entityType, entityId, userId, role } = body;
+  const { entityId, userId, role } = body;
 
-  if (!entityType || !entityId || !userId || !role) {
+  if (!entityId || !userId || !role) {
     return NextResponse.json(
-      { error: "entityType, entityId, userId, and role are required" },
+      { error: "entityId, userId, and role are required" },
       { status: 400 },
     );
   }
 
-  const { error } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from("entity_users")
-    .upsert(
-      {
-        entity_type: entityType,
+    .select("id")
+    .eq("entity_id", entityId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existingError) {
+    return NextResponse.json({ error: existingError.message }, { status: 500 });
+  }
+
+  if (existing?.id) {
+    const { error } = await supabase
+      .from("entity_users")
+      .update({ role })
+      .eq("id", existing.id);
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+  } else {
+    const { error } = await supabase
+      .from("entity_users")
+      .insert({
         entity_id: entityId,
         user_id: userId,
         role,
-      },
-      { onConflict: "entity_id,user_id,entity_type" },
-    );
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+      });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ success: true });
@@ -44,11 +59,11 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const supabase = await createApiClient();
   const body = (await req.json()) as Payload;
-  const { entityType, entityId, userId } = body;
+  const { entityId, userId } = body;
 
-  if (!entityType || !entityId || !userId) {
+  if (!entityId || !userId) {
     return NextResponse.json(
-      { error: "entityType, entityId, and userId are required" },
+      { error: "entityId and userId are required" },
       { status: 400 },
     );
   }
@@ -56,7 +71,6 @@ export async function DELETE(req: NextRequest) {
   const { error } = await supabase
     .from("entity_users")
     .delete()
-    .eq("entity_type", entityType)
     .eq("entity_id", entityId)
     .eq("user_id", userId);
 

@@ -13,6 +13,7 @@ export default function DistrictAdmin({
 }) {
   const [users, setUsers] = useState<Profile[]>([]);
   const [assignedUsers, setAssignedUsers] = useState(district.users || []);
+  const entityId = district.entity_id;
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -47,16 +48,23 @@ export default function DistrictAdmin({
         </ul>
         <p className="text-black">The list below should be updated for changes. </p>
       </div>
-      <UserRolesAssignments
-        profiles={assignedUsers}
-        entityType="district"
-        entityId={district.id}
-        entityName={district.properties?.shortname ?? ""}
-        reload={reloadDistrict}
-        availableUsers={users.filter(
-          (u) => !assignedUsers.some((assigned) => assigned.user_id === u.id),
-        )}
-      />
+      {entityId ? (
+        <UserRolesAssignments
+          profiles={assignedUsers}
+          entityType="district"
+          entityId={entityId}
+          entityName={district.properties?.shortname ?? ""}
+          reload={reloadDistrict}
+          availableUsers={users.filter(
+            (u) => !assignedUsers.some((assigned) => assigned.user_id === u.id),
+          )}
+        />
+      ) : (
+        <div className="flex-1 border border-red-200 bg-red-50 p-4 text-red-700">
+          Missing entity mapping for this district. Check `entities.external_ids`
+          for the district to proceed.
+        </div>
+      )}
     </div>
   );
 }

@@ -6,6 +6,39 @@ import type {
 } from "@/app/lib/types/types";
 import { createClient } from "@/utils/supabase/server";
 
+type EntityUserRow = {
+    id: string;
+    entity_id: string;
+    user_id: string;
+    role: EntityUserRole;
+    status?: EntityUser["status"];
+    created_at?: string | null;
+    entities?:
+        | { entity_type?: EntityUser["entity_type"] | null }[]
+        | { entity_type?: EntityUser["entity_type"] | null }
+        | null;
+    profile?:
+        | {
+            id: string;
+            full_name?: string | null;
+            username?: string | null;
+            first_name?: string | null;
+            last_name?: string | null;
+            avatar_url?: string | null;
+            website?: string | null;
+        }[]
+        | {
+            id: string;
+            full_name?: string | null;
+            username?: string | null;
+            first_name?: string | null;
+            last_name?: string | null;
+            avatar_url?: string | null;
+            website?: string | null;
+        }
+        | null;
+};
+
 export async function getBusinesses(): Promise<Business[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -41,12 +74,14 @@ export async function getBusiness(id: string): Promise<Business> {
             *,
             entity_users:entity_users (
                 id,
-                entity_type,
                 entity_id,
                 user_id,
                 role,
                 status,
                 created_at,
+                entities:entities (
+                    entity_type
+                ),
                 profile:profiles ( id, full_name, username, first_name, last_name, avatar_url, website )
             )
         `,
@@ -58,13 +93,16 @@ export async function getBusiness(id: string): Promise<Business> {
 
     const entityUsers: EntityUser[] =
         Array.isArray((data as { entity_users?: unknown }).entity_users)
-            ? (data as { entity_users: EntityUser[] }).entity_users.map((u) => {
+            ? (data as { entity_users: EntityUserRow[] }).entity_users.map((u) => {
                 const profileRaw = Array.isArray(u.profile)
                     ? u.profile[0]
                     : u.profile;
+                const entity = Array.isArray(u.entities)
+                    ? u.entities[0]
+                    : u.entities;
                 return {
                     id: String(u.id),
-                    entity_type: "business",
+                    entity_type: entity?.entity_type ?? "business",
                     entity_id: String(u.entity_id),
                     user_id: String(u.user_id),
                     role: (u.role as EntityUserRole) ?? "viewer",
@@ -136,7 +174,6 @@ export async function registerBusiness(
 
     await supabase.from("entity_users").insert({
         entity_id: newBusiness.id,
-        entity_type: "business",
         user_id: userId,
         role: "admin",
     });

@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
         method: req.method,
         headers: req.headers,
         body: JSON.stringify({
-            entityType: "business",
             entityId: body.entityId,
             userId: body.userId,
             role: body.role,
@@ -33,7 +32,6 @@ export async function DELETE(req: NextRequest) {
         method: req.method,
         headers: req.headers,
         body: JSON.stringify({
-            entityType: "business",
             entityId: body.entityId,
             userId: body.userId,
         }),

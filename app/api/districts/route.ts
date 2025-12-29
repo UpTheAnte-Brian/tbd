@@ -28,6 +28,33 @@ export async function GET() {
         return new Response("Failed to fetch data", { status: 500 });
     }
 
+    const { data: entityRows, error: entityError } = await supabase
+        .from("entities")
+        .select("id, external_ids")
+        .eq("entity_type", "district");
+
+    if (entityError) {
+        return new Response("Failed to fetch entity data", { status: 500 });
+    }
+
+    const entityBySdorgid = new Map<string, string>();
+    const entityByDistrictId = new Map<string, string>();
+    for (const row of entityRows ?? []) {
+        const externalIds = row.external_ids as Record<string, unknown> | null;
+        const sdorgid = typeof externalIds?.sdorgid === "string"
+            ? externalIds.sdorgid
+            : null;
+        const districtId = typeof externalIds?.district_id === "string"
+            ? externalIds.district_id
+            : null;
+        if (sdorgid) {
+            entityBySdorgid.set(sdorgid, row.id);
+        }
+        if (districtId) {
+            entityByDistrictId.set(districtId, row.id);
+        }
+    }
+
     const asNumber = (val: unknown): number | null => {
         if (val === null || val === undefined || val === "") return null;
         const num = Number(val);
@@ -69,9 +96,13 @@ export async function GET() {
             centroid_lng: row.centroid_lng,
         };
 
+        const entityId = entityBySdorgid.get(row.sdorgid) ??
+            entityByDistrictId.get(row.id);
+
         return {
             type: "Feature",
             id: row.id,
+            entity_id: entityId,
             properties: props,
             geometry: row.geometry_simplified,
         };

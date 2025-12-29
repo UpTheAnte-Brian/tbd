@@ -65,9 +65,12 @@ export async function updateSession(request: NextRequest) {
     }
 
     type EntityUserRow = {
-        entity_type: string;
         entity_id: string;
         role: string;
+        entities?:
+            | { entity_type?: string | null }[]
+            | { entity_type?: string | null }
+            | null;
     };
     type ProfileRow = {
         role: string | null;
@@ -80,9 +83,11 @@ export async function updateSession(request: NextRequest) {
             `
         role,
         entity_users:entity_users (
-          entity_type,
           entity_id,
-          role
+          role,
+          entities:entities (
+            entity_type
+          )
         )
       `,
         )
@@ -95,14 +100,21 @@ export async function updateSession(request: NextRequest) {
 
     const globalRole: string | null = profile?.role ?? null;
     const entityUsers: EntityUserRow[] = profile?.entity_users ?? [];
+    const getEntityType = (eu: EntityUserRow): string | null => {
+        const entity = Array.isArray(eu.entities)
+            ? eu.entities[0]
+            : eu.entities;
+        return entity?.entity_type ?? null;
+    };
+
     const districtAdminOf: string[] = entityUsers
-        .filter((eu) => eu.entity_type === "district" && eu.role === "admin")
+        .filter((eu) => getEntityType(eu) === "district" && eu.role === "admin")
         .map((eu) => eu.entity_id);
     const businessAdminOf: string[] = entityUsers
-        .filter((eu) => eu.entity_type === "business" && eu.role === "admin")
+        .filter((eu) => getEntityType(eu) === "business" && eu.role === "admin")
         .map((eu) => eu.entity_id);
     const nonprofitAdminOf: string[] = entityUsers
-        .filter((eu) => eu.entity_type === "nonprofit" && eu.role === "admin")
+        .filter((eu) => getEntityType(eu) === "nonprofit" && eu.role === "admin")
         .map((eu) => eu.entity_id);
 
     const pathname = request.nextUrl.pathname;
