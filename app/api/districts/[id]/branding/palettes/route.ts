@@ -9,7 +9,6 @@ export async function POST(
 ) {
     const supabase = await createApiClient();
     const { id: districtId } = await context.params;
-    const entityType = "district";
 
     // Authorization: user must be admin for this district
     const { data: userData, error: userErr } = await supabase.auth.getUser();
@@ -93,8 +92,7 @@ export async function POST(
         .schema("branding")
         .from("palettes")
         .insert({
-            entity_id: districtId,
-            entity_type: entityType,
+            entity_id: entityId,
             name,
             colors,
             role,

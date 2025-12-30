@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
+import { resolveDistrictEntityId } from "@/app/lib/entities";
 
 // GET /api/districts/[id]/branding/summary
 export async function GET(
@@ -8,28 +9,22 @@ export async function GET(
 ) {
     const supabase = await createApiClient();
     const { id: districtId } = await context.params;
-    const entityType = "district";
-
-    // Fetch all logos
-    const { data: logos, error: logosErr } = await supabase
-        .schema("branding")
-        .from("logos")
-        .select("*")
-        .eq("entity_id", districtId)
-        .eq("entity_type", entityType)
-        .order("created_at", { ascending: false });
-
-    if (logosErr) {
-        return NextResponse.json({ error: logosErr.message }, { status: 500 });
+    let entityId: string;
+    try {
+        entityId = await resolveDistrictEntityId(supabase, districtId);
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "Entity not found";
+        return NextResponse.json({ error: message }, { status: 404 });
     }
+
+    const logos: unknown[] = [];
 
     // Fetch all patterns
     const { data: patterns, error: patternsErr } = await supabase
         .schema("branding")
         .from("patterns")
         .select("*")
-        .eq("entity_id", districtId)
-        .eq("entity_type", "district")
+        .eq("entity_id", entityId)
         .order("created_at", { ascending: false });
 
     if (patternsErr) {
@@ -43,8 +38,7 @@ export async function GET(
         .schema("branding")
         .from("palettes")
         .select("*")
-        .eq("entity_id", districtId)
-        .eq("entity_type", "district")
+        .eq("entity_id", entityId)
         .order("created_at", { ascending: true });
 
     if (palettesErr) {
@@ -58,8 +52,7 @@ export async function GET(
         .schema("branding")
         .from("typography")
         .select("*")
-        .eq("entity_id", districtId)
-        .eq("entity_type", "district")
+        .eq("entity_id", entityId)
         .order("created_at", { ascending: true });
 
     if (typographyErr) {
@@ -78,13 +71,12 @@ export async function GET(
         .schema("branding")
         .from("schools")
         .select("*")
-        .eq("entity_id", districtId)
-        .eq("entity_type", "district")
+        .eq("entity_id", entityId)
         .order("created_at", { ascending: true });
 
     if (schoolsErr) {
         const message = schoolsErr.message ?? "";
-        if (!message.includes('branding.schools')) {
+        if (!message.includes("branding.schools")) {
             return NextResponse.json({ error: schoolsErr.message }, {
                 status: 500,
             });

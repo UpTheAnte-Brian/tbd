@@ -77,7 +77,7 @@ export default function DistrictPanelsSidebar({
     <div className="flex flex-col md:flex-row gap-4">
       <aside className="w-48 rounded-lg bg-district-primary-0 text-district-secondary-0 border border-district-primary-1/30 p-2 shadow-sm flex flex-col gap-3 md:sticky md:top-24 self-start">
         <DistrictPrimaryLogo
-          entityId={district.id}
+          entityId={district.entity_id ?? district.id}
           entityType="district"
           districtName={props?.shortname ?? ""}
         />
@@ -125,7 +125,8 @@ export default function DistrictPanelsSidebar({
           <DistrictOverview district={district} />
         ) : activeTab === "Branding" ? (
           <BrandingPanel
-            entityId={district.id}
+            districtId={district.id}
+            entityId={district.entity_id ?? null}
             entityType="district"
             entityShortname={props?.shortname ?? ""}
           />

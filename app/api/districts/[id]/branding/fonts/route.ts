@@ -8,15 +8,20 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> },
 ) {
     const { id: districtId } = await params;
-    const entityType = "district";
     const supabase = await createApiClient();
+    let entityId: string;
+    try {
+        entityId = await resolveDistrictEntityId(supabase, districtId);
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "Entity not found";
+        return NextResponse.json({ error: message }, { status: 404 });
+    }
 
     const { data, error } = await supabase
         .schema("branding")
         .from("typography")
         .select("*")
-        .eq("entity_id", districtId)
-        .eq("entity_type", entityType)
+        .eq("entity_id", entityId)
         .order("created_at", { ascending: false });
 
     if (error) {
@@ -33,7 +38,6 @@ export async function PUT(
 ) {
     const { id: districtId } = await params;
     const supabase = await createApiClient();
-    const entityType = "district";
     // auth: must be admin on district
     const { data: userData, error: userErr } = await supabase.auth.getUser();
     if (userErr || !userData?.user) {
@@ -98,24 +102,41 @@ export async function PUT(
         );
     }
 
-    const { data, error } = await supabase
+    const { data: existing, error: existingErr } = await supabase
         .schema("branding")
         .from("typography")
-        .upsert(
-            [
-                {
-                    entity_id: districtId,
-                    entity_type: entityType,
-                    role,
-                    font_name: trimmedName,
-                    availability,
-                    weights,
-                    usage_rules,
-                },
-            ],
-            { onConflict: "entity_id,role,entity_type" },
-        )
-        .select("*");
+        .select("id")
+        .eq("entity_id", entityId)
+        .eq("role", role)
+        .maybeSingle();
+
+    if (existingErr) {
+        return NextResponse.json({ error: existingErr.message }, { status: 500 });
+    }
+
+    const payload = {
+        entity_id: entityId,
+        role,
+        font_name: trimmedName,
+        availability,
+        weights,
+        usage_rules,
+    };
+
+    const { data, error } = existing?.id
+        ? await supabase
+            .schema("branding")
+            .from("typography")
+            .update(payload)
+            .eq("id", existing.id)
+            .select("*")
+            .single()
+        : await supabase
+            .schema("branding")
+            .from("typography")
+            .insert(payload)
+            .select("*")
+            .single();
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });

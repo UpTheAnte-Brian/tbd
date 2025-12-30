@@ -1,30 +1,29 @@
 import { createApiClient } from "@/utils/supabase/route";
-import type { BrandingSummary, EntityType } from "@/app/lib/types/types";
+import { resolveDistrictEntityId } from "@/app/lib/entities";
+import type { BrandingSummary } from "@/app/lib/types/types";
 
 export async function getBrandingSummary(
     entityId: string,
-    entityType: EntityType = "district",
 ): Promise<BrandingSummary | null> {
     const supabase = await createApiClient();
-
-    const { data: logos, error: logosErr } = await supabase
-        .schema("branding")
-        .from("logos")
-        .select("*")
-        .eq("entity_id", entityId)
-        .eq("entity_type", entityType)
-        .order("created_at", { ascending: false });
-    if (logosErr) {
-        console.error("Failed to fetch logos", logosErr);
+    let resolvedEntityId = entityId;
+    try {
+        resolvedEntityId = await resolveDistrictEntityId(
+            supabase,
+            entityId,
+        );
+    } catch (err) {
+        console.error("Failed to resolve entity id for branding", err);
         return null;
     }
+
+    const logos: BrandingSummary["logos"] = [];
 
     const { data: patterns, error: patternsErr } = await supabase
         .schema("branding")
         .from("patterns")
         .select("*")
-        .eq("entity_id", entityId)
-        .eq("entity_type", entityType)
+        .eq("entity_id", resolvedEntityId)
         .order("created_at", { ascending: false });
     if (patternsErr) {
         console.error("Failed to fetch patterns", patternsErr);
@@ -35,8 +34,7 @@ export async function getBrandingSummary(
         .schema("branding")
         .from("palettes")
         .select("*")
-        .eq("entity_id", entityId)
-        .eq("entity_type", entityType)
+        .eq("entity_id", resolvedEntityId)
         .order("created_at", { ascending: true });
     if (palettesErr) {
         console.error("Failed to fetch palettes", palettesErr);
@@ -47,8 +45,7 @@ export async function getBrandingSummary(
         .schema("branding")
         .from("typography")
         .select("*")
-        .eq("entity_id", entityId)
-        .eq("entity_type", entityType)
+        .eq("entity_id", resolvedEntityId)
         .order("created_at", { ascending: true });
     if (typographyErr) {
         console.error("Failed to fetch typography", typographyErr);

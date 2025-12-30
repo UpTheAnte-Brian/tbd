@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { BrandingSummary, EntityType } from "@/app/lib/types/types";
+import type { BrandingSummary } from "@/app/lib/types/types";
 
 // simple in-memory cache per district
 const summaryCache = new Map<string, BrandingSummary>();
@@ -9,7 +9,6 @@ const summaryCache = new Map<string, BrandingSummary>();
 export function useBrandingSummary(
     entityId: string | null,
     refreshKey: number = 0,
-    entityType: EntityType = "district",
 ) {
     const [data, setData] = useState<BrandingSummary | null>(null);
     const [loading, setLoading] = useState(false);
@@ -33,7 +32,7 @@ export function useBrandingSummary(
             setError(null);
             try {
                 const res = await fetch(
-                    `/api/districts/${entityId}/branding/summary?entityType=${entityType}`,
+                    `/api/districts/${entityId}/branding/summary`,
                     { cache: "no-store" },
                 );
                 if (!res.ok) {
@@ -58,7 +57,7 @@ export function useBrandingSummary(
         return () => {
             cancelled = true;
         };
-    }, [entityId, entityType, refreshKey]);
+    }, [entityId, refreshKey]);
 
     return { data, loading, error } as const;
 }

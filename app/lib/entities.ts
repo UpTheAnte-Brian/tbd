@@ -8,6 +8,15 @@ export async function resolveDistrictEntityId(
     supabase: SupabaseClient,
     districtKey: string,
 ): Promise<string> {
+    const { data: directEntity, error: directEntityError } = await supabase
+        .from("entities")
+        .select("id")
+        .eq("id", districtKey)
+        .eq("entity_type", "district")
+        .maybeSingle();
+    if (directEntityError) throw directEntityError;
+    if (directEntity?.id) return directEntity.id;
+
     const { data: byDistrictId, error: byDistrictIdError } = await supabase
         .from("entities")
         .select("id")

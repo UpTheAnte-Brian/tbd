@@ -22,7 +22,6 @@ export async function PATCH(
 ) {
     const supabase = await createApiClient();
     const { id: districtId, paletteId } = await context.params;
-    const entityType = "district";
 
     // Authorization: user must be admin for this district
     const {
@@ -127,8 +126,7 @@ export async function PATCH(
         .from("palettes")
         .update(update)
         .eq("id", paletteId)
-        .eq("entity_id", districtId)
-        .eq("entity_type", entityType)
+        .eq("entity_id", entityId)
         .select("*")
         .single();
 
@@ -193,7 +191,7 @@ export async function DELETE(
         .from("palettes")
         .delete()
         .eq("id", paletteId)
-        .eq("district_id", districtId);
+        .eq("entity_id", entityId);
 
     if (error) {
         if (error.code === "PGRST116") {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useBrandingSummary } from "@/app/hooks/useBrandingSummary";
+import { useBrandingAssets } from "@/app/hooks/useBrandingAssets";
 import { EntityType } from "@/app/lib/types/types";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -17,57 +17,55 @@ export default function DistrictPrimaryLogo({
   entityType = "district",
   districtName,
 }: Props) {
-  const { data, loading, error } = useBrandingSummary(
+  const { slots, categories, assets, loading, error } = useBrandingAssets(
     entityId,
-    0,
-    entityType
+    entityType,
+    0
+  );
+
+  const categoryById = useMemo(
+    () => new Map(categories.map((c) => [c.id, c])),
+    [categories]
   );
 
   const logoUrl = useMemo(() => {
-    if (!data?.logos?.length || !SUPABASE_URL) return null;
-    const logos = data.logos;
-
-    const pick = () => {
-      // Prefer primary/district_primary + horizontal/full_color
-      const primaryHoriz = logos.find((l) => {
-        const name = (l.name || "").toLowerCase();
-        const cat = (l.category || "").toLowerCase();
-        const sub = (l.subcategory || "").toLowerCase();
-        return (
-          (cat.includes("primary_logo") || cat.includes("district_primary")) &&
-          (name.includes("horizontal") ||
-            sub.includes("horizontal") ||
-            sub.includes("full_color"))
-        );
-      });
-      if (primaryHoriz) return primaryHoriz;
-
-      const primary = logos.find((l) => {
-        const cat = (l.category || "").toLowerCase();
-        return cat.includes("primary_logo") || cat.includes("district_primary");
-      });
-      if (primary) return primary;
-
-      return logos[0];
+    if (!assets.length || !SUPABASE_URL) return null;
+    const getCategoryLabel = (categoryId: string | null) => {
+      if (!categoryId) return "";
+      const category = categoryById.get(categoryId);
+      return category?.label ?? category?.name ?? categoryId;
     };
 
-    const chosen = pick();
-    const file =
-      chosen.file_svg ||
-      chosen.file_png ||
-      chosen.file_jpg ||
-      chosen.file_eps ||
-      null;
-    if (!file) return null;
+    const matchesSlot = (slotId: string) => {
+      const slot = slots.find((s) => s.id === slotId);
+      if (!slot) return [];
+      return assets.filter(
+        (asset) =>
+          asset.category_id === slot.category_id &&
+          (asset.subcategory_id ?? null) === (slot.subcategory_id ?? null)
+      );
+    };
+
+    const primarySlot = slots.find((slot) => {
+      const label = (
+        slot.label ||
+        slot.name ||
+        getCategoryLabel(slot.category_id) ||
+        ""
+      ).toLowerCase();
+      return label.includes("primary");
+    });
+
+    const candidateAssets = primarySlot
+      ? matchesSlot(primarySlot.id)
+      : assets;
+
+    const chosen = candidateAssets[0] ?? assets[0];
+    if (!chosen?.path) return null;
 
     const version = chosen.updated_at ?? chosen.created_at ?? "";
-    const hasPath = file.includes("/");
-    const inferredPath = hasPath
-      ? file
-      : `${chosen.entity_id}/${chosen.entity_type}/${chosen.id}/${file}`;
-
-    return `${SUPABASE_URL}/storage/v1/object/public/branding-logos/${inferredPath}?v=${version}`;
-  }, [data]);
+    return `${SUPABASE_URL}/storage/v1/object/public/branding-assets/${chosen.path}?v=${version}`;
+  }, [assets, categoryById, slots]);
 
   if (!entityId) {
     return (

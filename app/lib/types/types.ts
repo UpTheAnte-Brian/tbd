@@ -226,7 +226,6 @@ export const BRANDING_LOGO_CATEGORY_LABELS: Record<
 export interface BrandingPalette {
     id: string;
     entity_id: string;
-    entity_type: EntityType;
     name: string;
     role: string;
     colors: string[]; // HEX values
@@ -246,7 +245,6 @@ export type FontAvailability = "system" | "google" | "licensed";
 export interface BrandingTypography {
     id: string;
     entity_id: string;
-    entity_type: EntityType;
     font_name: string;
     role?: FontRole | null;
     availability?: FontAvailability | null;

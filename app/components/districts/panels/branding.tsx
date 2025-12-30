@@ -1,14 +1,11 @@
 "use client";
 
-import Image from "next/image";
-import { BrandAssetUploader } from "@/app/components/branding/BrandAssetUploader";
-import { useBrandingSummary } from "@/app/hooks/useBrandingSummary";
-import type {
-  BrandingSummary as BrandingSummaryType,
-  BrandingLogoCategory,
-} from "@/app/lib/types/types";
-import { BRANDING_LOGO_CATEGORY_LABELS } from "@/app/lib/types/types";
 import { useMemo, useState } from "react";
+import { getSupabaseClient } from "@/utils/supabase/client";
+import { useBrandingAssets } from "@/app/hooks/useBrandingAssets";
+import { useBrandingSummary } from "@/app/hooks/useBrandingSummary";
+import { useUser } from "@/app/hooks/useUser";
+import { hasEntityRole } from "@/app/lib/auth/entityRoles";
 import {
   Loader2,
   AlertCircle,
@@ -86,51 +83,57 @@ const DEFAULT_TYPOGRAPHY: Record<
 };
 
 interface Props {
+  districtId: string | null;
   entityId: string | null;
   entityType?: "district" | "nonprofit" | "business";
   entityShortname: string;
 }
 
 export function BrandingPanel({
+  districtId,
   entityId,
   entityType = "district",
   entityShortname,
 }: Props) {
   const [refreshKey, setRefreshKey] = useState(0);
-  const [selectedLogo, setSelectedLogo] = useState<{
-    id: string;
-    category?: string;
-    subcategory?: string;
-  } | null>(null);
   const [editingPalette, setEditingPalette] = useState<{
     id?: string;
     name: string;
     colors: string[];
     role?: string;
   } | null>(null);
-  const { data, loading, error } = useBrandingSummary(
-    entityId,
-    refreshKey,
-    entityType
-  );
+  const [uploadingSlotId, setUploadingSlotId] = useState<string | null>(null);
+  const { user } = useUser();
+  const {
+    slots,
+    categories,
+    subcategories,
+    assets,
+    loading: assetsLoading,
+    error: assetsError,
+  } = useBrandingAssets(entityId, entityType, refreshKey);
+  const {
+    data: summary,
+    loading: summaryLoading,
+    error: summaryError,
+  } = useBrandingSummary(districtId, refreshKey);
   const [showTypographyEditor, setShowTypographyEditor] = useState(false);
   const [selectedTypographyRole, setSelectedTypographyRole] =
     useState<string>("body");
   const typographyWithDefaults = useMemo(() => {
-    if (!entityId) return [];
+    if (!districtId) return [];
     return FONT_ROLES.map((role) => {
       const row =
-        data?.typography.find((t) => t.role === role) ||
+        summary?.typography.find((t) => t.role === role) ||
         (role === "body"
-          ? data?.typography.find((t) => t.role === "body")
+          ? summary?.typography.find((t) => t.role === "body")
           : null);
       if (row) return row;
       const defaults = DEFAULT_TYPOGRAPHY[role];
       return {
         id: `default-${role}`,
-        district_id: entityId,
-        entity_id: entityId,
-        entity_type: entityType,
+        district_id: districtId,
+        entity_id: entityId ?? districtId,
         role,
         font_name: defaults.font_name,
         availability: defaults.availability,
@@ -144,29 +147,186 @@ export function BrandingPanel({
         updated_at: "",
       } as BrandingTypography;
     });
-  }, [data?.typography, entityId]);
-
-  const logosGrouped = useMemo(() => {
-    if (!data) return {};
-
-    type Logo = BrandingSummaryType["logos"][number];
-
-    return data.logos.reduce<Record<string, Logo[]>>((acc, logo) => {
-      const key = logo.category || "other";
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(logo);
-      return acc;
-    }, {} as Record<string, Logo[]>);
-  }, [data]);
+  }, [districtId, entityId, summary?.typography]);
 
   const maxPaletteColors = useMemo(() => {
-    if (!data?.palettes?.length) return 0;
-    return Math.max(0, ...data.palettes.map((p) => p.colors?.length ?? 0));
-  }, [data]);
+    if (!summary?.palettes?.length) return 0;
+    return Math.max(0, ...summary.palettes.map((p) => p.colors?.length ?? 0));
+  }, [summary]);
   const colorColumns = Math.max(1, maxPaletteColors);
   const paletteGridTemplate = `minmax(220px, 2fr) 90px repeat(${colorColumns}, minmax(52px, 1fr))`;
+  const loading = summaryLoading || assetsLoading;
+  const error = summaryError || assetsError;
+  const canEdit =
+    user?.global_role === "admin" ||
+    (entityId
+      ? hasEntityRole(user?.entity_users ?? [], entityType, entityId, ["admin"])
+      : false);
 
-  if (!entityId) {
+  const categoryById = useMemo(
+    () => new Map(categories.map((c) => [c.id, c])),
+    [categories]
+  );
+  const subcategoryById = useMemo(
+    () => new Map(subcategories.map((s) => [s.id, s])),
+    [subcategories]
+  );
+
+  const getCategoryLabel = (categoryId: string | null) => {
+    if (!categoryId) return "";
+    const category = categoryById.get(categoryId);
+    return category?.label ?? category?.name ?? categoryId;
+  };
+
+  const getSubcategoryLabel = (subcategoryId: string | null | undefined) => {
+    if (!subcategoryId) return "";
+    const subcategory = subcategoryById.get(subcategoryId);
+    return subcategory?.label ?? subcategory?.name ?? subcategoryId;
+  };
+
+  const getSlotLabel = (slot: (typeof slots)[number]) => {
+    return (
+      slot.label ||
+      slot.name ||
+      [
+        getCategoryLabel(slot.category_id),
+        getSubcategoryLabel(slot.subcategory_id),
+      ]
+        .filter(Boolean)
+        .join(" • ") ||
+      "Asset Slot"
+    );
+  };
+
+  const getSlotAssets = (slot: (typeof slots)[number]) =>
+    assets.filter(
+      (asset) =>
+        asset.category_id === slot.category_id &&
+        (asset.subcategory_id ?? null) === (slot.subcategory_id ?? null)
+    );
+
+  const resolveAllowedMimeTypes = (slot: (typeof slots)[number]): string[] => {
+    if (Array.isArray(slot.allowed_mime_types)) return slot.allowed_mime_types;
+    if (typeof slot.allowed_mime_types === "string") {
+      return slot.allowed_mime_types
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter(Boolean);
+    }
+    return [];
+  };
+
+  const getAssetUrl = (asset: (typeof assets)[number]) => {
+    if (!asset.path || !SUPABASE_URL) return null;
+    const version = asset.updated_at ?? asset.created_at ?? "";
+    return `${SUPABASE_URL}/storage/v1/object/public/branding-assets/${asset.path}?v=${version}`;
+  };
+
+  const handleUpload = async (
+    slot: (typeof slots)[number],
+    file: File,
+    slotAssets: (typeof assets)[number][]
+  ) => {
+    if (!entityId) return;
+    if (!slot.category_id) {
+      alert("Slot is missing a category.");
+      return;
+    }
+    const allowed = resolveAllowedMimeTypes(slot);
+    if (allowed.length > 0 && !allowed.includes(file.type)) {
+      alert(`File type ${file.type} is not allowed for this slot.`);
+      return;
+    }
+
+    try {
+      setUploadingSlotId(slot.id);
+      if (slot.max_assets === 1 && slotAssets.length > 0) {
+        await Promise.all(
+          slotAssets.map((asset) =>
+            fetch(`/api/branding/assets/${asset.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ isRetired: true }),
+            })
+          )
+        );
+      }
+
+      const createRes = await fetch(`/api/branding/assets`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entityId,
+          categoryId: slot.category_id,
+          subcategoryId: slot.subcategory_id ?? null,
+          name: file.name,
+        }),
+      });
+
+      if (!createRes.ok) {
+        const body = await createRes.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to create asset");
+      }
+
+      const created = (await createRes.json()) as {
+        asset?: { id?: string; path?: string | null };
+      };
+      const assetId = created.asset?.id;
+      const assetPath = created.asset?.path ?? null;
+      if (!assetId || !assetPath) {
+        throw new Error("Failed to create asset");
+      }
+
+      const path = assetPath;
+      const supabase = getSupabaseClient();
+      const { error: uploadError } = await supabase.storage
+        .from("branding-assets")
+        .upload(path, file, {
+          upsert: true,
+          contentType: file.type,
+        });
+
+      if (uploadError) {
+        await fetch(`/api/branding/assets/${assetId}`, { method: "DELETE" });
+        throw uploadError;
+      }
+
+      const patchRes = await fetch(`/api/branding/assets/${assetId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mimeType: file.type,
+          sizeBytes: file.size,
+        }),
+      });
+
+      if (!patchRes.ok) {
+        const body = await patchRes.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to finalize asset");
+      }
+
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingSlotId(null);
+    }
+  };
+
+  const handleDelete = async (assetId: string) => {
+    if (!confirm("Delete this asset?")) return;
+    const res = await fetch(`/api/branding/assets/${assetId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      alert(body.error || "Failed to delete asset");
+      return;
+    }
+    setRefreshKey((k) => k + 1);
+  };
+
+  if (!districtId) {
     return <div className="text-gray-500 italic">Select a district…</div>;
   }
 
@@ -188,44 +348,9 @@ export function BrandingPanel({
     );
   }
 
-  if (!data) {
-    return <div>No branding data found.</div>;
-  }
-
   return (
     <div className="space-y-8 bg-district-secondary-1 text-district-secondary-0 p-6 rounded">
-      {/* Edit Drawer */}
-      {selectedLogo && entityId && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex justify-end items-center">
-          <div className="w-full max-w-md max-h-[calc(100vh-2rem)] bg-white shadow-xl p-4 overflow-y-auto rounded-lg mr-2">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-district-secondary-0">
-                Upload / Replace Logo
-              </h3>
-              <button
-                className="text-gray-500 hover:text-gray-800"
-                onClick={() => setSelectedLogo(null)}
-              >
-                ✕
-              </button>
-            </div>
-              <BrandAssetUploader
-                entityId={entityId}
-                entityType={entityType}
-                targetLogoId={selectedLogo.id}
-                defaultCategory={selectedLogo.category ?? ""}
-                defaultSubcategory={selectedLogo.subcategory ?? ""}
-                onCancel={() => setSelectedLogo(null)}
-                onUploaded={() => {
-                  setRefreshKey((k) => k + 1);
-                  setSelectedLogo(null);
-                }}
-            />
-          </div>
-        </div>
-      )}
-
-      {editingPalette && entityId && (
+      {editingPalette && districtId && (
         <div className="fixed inset-0 z-50 bg-black/50 flex justify-end items-center">
           <div className="w-full max-w-md max-h-[calc(100vh-2rem)] bg-white shadow-xl p-4 overflow-y-auto rounded-lg mr-2">
             <div className="flex items-center justify-between mb-4">
@@ -247,8 +372,8 @@ export function BrandingPanel({
               onSave={async (palette) => {
                 const method = palette.id ? "PATCH" : "POST";
                 const url = palette.id
-                  ? `/api/districts/${entityId}/branding/palettes/${palette.id}`
-                  : `/api/districts/${entityId}/branding/palettes`;
+                  ? `/api/districts/${districtId}/branding/palettes/${palette.id}`
+                  : `/api/districts/${districtId}/branding/palettes`;
 
                 const res = await fetch(url, {
                   method,
@@ -274,11 +399,11 @@ export function BrandingPanel({
         </div>
       )}
 
-      {showTypographyEditor && entityId && (
+      {showTypographyEditor && districtId && (
         <div className="fixed inset-0 z-50 bg-black/50 flex justify-end items-center">
           <div className="w-full max-w-md max-h-[calc(100vh-2rem)] bg-white shadow-xl p-4 overflow-y-auto rounded-lg mr-2">
             <TypographyEditor
-              districtId={entityId}
+              districtId={districtId}
               typography={typographyWithDefaults}
               role={selectedTypographyRole}
               onSaved={() => {
@@ -291,97 +416,144 @@ export function BrandingPanel({
         </div>
       )}
 
-      {/* LOGOS */}
+      {/* BRAND ASSETS */}
       <AccordionCard
         variant="district"
         title={
-          <span className="flex items-center gap-2 text-slate-50">
+          <span className="flex items-center gap-2 text-district-primary-0">
             <ImageIcon size={18} className="text-blue-300" />
-            Logos
+            Brand Assets
           </span>
         }
         defaultOpen={false}
       >
-        <div className="space-y-6">
-          {Object.entries(logosGrouped).map(([category, items]) => (
-            <div key={category}>
-              <h3 className="text-md font-semibold uppercase tracking-wide text-white mb-2">
-                {BRANDING_LOGO_CATEGORY_LABELS[
-                  category as BrandingLogoCategory
-                ] ?? category.replace(/_/g, " ")}
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-                {items.map((logo) => {
-                  const file =
-                    logo.file_png ||
-                    logo.file_svg ||
-                    logo.file_jpg ||
-                    logo.file_eps ||
-                    null;
-                  const version = logo.updated_at ?? logo.created_at ?? "";
-                  const hasPath = file?.includes("/") ?? false;
-                  const inferredPath = file
-                    ? hasPath
-                      ? file
-                      : `${logo.entity_id}/${logo.entity_type}/${logo.id}/${file}`
-                    : null;
-                  const logoUrl =
-                    file && inferredPath
-                      ? `${SUPABASE_URL}/storage/v1/object/public/branding-logos/${inferredPath}?v=${version}`
-                      : null;
-                  return (
-                    <div
-                      key={logo.id}
-                      className="border rounded-lg p-3 bg-white shadow-sm flex flex-col items-center cursor-pointer hover:ring-2 hover:ring-blue-200"
-                      onClick={() =>
-                        setSelectedLogo({
-                          id: logo.id,
-                          category: logo.category,
-                          subcategory: logo.subcategory ?? undefined,
-                        })
-                      }
-                    >
-                      {logoUrl ? (
-                        <>
-                          <div className="text-sm font-medium text-slate-800 text-center mb-2">
-                            {logo.name}
-                          </div>
-                          <Image
-                            src={logoUrl}
-                            alt={logo.name}
-                            width={150}
-                            height={150}
-                            className="object-contain max-h-32"
-                            unoptimized
-                            onError={(e) => {
-                              // Hide broken images for placeholders without files
-                              e.currentTarget.style.display = "none";
-                            }}
-                          />
-                          <div className="mt-2 text-xs text-blue-700 underline">
-                            Replace
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="text-sm font-medium text-slate-800 text-center mb-2">
-                            {logo.name} - {logo.id}
-                          </div>
-                          <div className="w-full h-24 flex items-center justify-center border rounded bg-gray-50 text-gray-400">
-                            No file uploaded
-                          </div>
-                          <div className="mt-2 text-xs text-blue-700 underline">
-                            Upload
-                          </div>
-                        </>
+        {!entityId ? (
+          <div className="text-sm text-red-200">
+            Missing entity mapping for this district.
+          </div>
+        ) : slots.length === 0 ? (
+          <div className="text-sm text-slate-200">
+            No asset slots configured for this entity.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {slots.map((slot) => {
+              const slotAssets = getSlotAssets(slot);
+              const allowed = resolveAllowedMimeTypes(slot);
+              const maxAssets = slot.max_assets ?? null;
+              const canAdd =
+                maxAssets === null || slotAssets.length < maxAssets;
+              const canReplace = maxAssets === 1 && slotAssets.length > 0;
+              const inputId = `asset-slot-${slot.id}`;
+              return (
+                <details
+                  key={slot.id}
+                  className="rounded-lg border border-white/10 bg-district-primary-0/30"
+                >
+                  <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-white">
+                    <span>{getSlotLabel(slot)}</span>
+                    <span className="text-xs text-slate-300">
+                      {slotAssets.length}/{maxAssets ?? "∞"}
+                    </span>
+                  </summary>
+                  <div className="px-4 pb-4 pt-2 space-y-3 text-sm text-slate-100">
+                    {slot.help_text && (
+                      <div className="text-slate-200">{slot.help_text}</div>
+                    )}
+                    <div className="flex flex-wrap gap-3 text-xs text-slate-300">
+                      {allowed.length > 0 && (
+                        <span>Allowed: {allowed.join(", ")}</span>
                       )}
+                      {maxAssets !== null && <span>Max: {maxAssets}</span>}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
+
+                    {slotAssets.length === 0 ? (
+                      <div className="rounded border border-dashed border-white/20 bg-white/5 p-3 text-slate-300">
+                        No assets uploaded yet.
+                      </div>
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {slotAssets.map((asset) => {
+                          const assetUrl = getAssetUrl(asset);
+                          return (
+                            <div
+                              key={asset.id}
+                              className="rounded border border-white/10 bg-white/10 p-3 space-y-2"
+                            >
+                              <div className="text-xs text-slate-300">
+                                {asset.name || "Untitled asset"}
+                              </div>
+                              {assetUrl ? (
+                                <img
+                                  src={assetUrl}
+                                  alt={asset.name ?? "Brand asset"}
+                                  className="max-h-36 w-full rounded bg-white object-contain p-2"
+                                />
+                              ) : (
+                                <div className="flex h-28 items-center justify-center rounded bg-white/20 text-xs text-slate-300">
+                                  No preview available
+                                </div>
+                              )}
+                              <div className="flex items-center justify-between text-xs text-slate-300">
+                                <span>{asset.mime_type ?? "unknown"}</span>
+                                {canEdit && (
+                                  <button
+                                    onClick={() => handleDelete(asset.id)}
+                                    className="rounded bg-red-600/80 px-2 py-1 text-white hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {canEdit && (canAdd || canReplace) && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          document.getElementById(inputId)?.click()
+                        }
+                        className="inline-flex items-center rounded bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+                        disabled={uploadingSlotId === slot.id}
+                      >
+                        {uploadingSlotId === slot.id
+                          ? "Uploading…"
+                          : slotAssets.length > 0 && slot.max_assets === 1
+                          ? "Replace asset"
+                          : "Upload asset"}
+                      </button>
+                    )}
+
+                    {!canEdit && (
+                      <div className="text-xs text-slate-300">
+                        You do not have permission to edit assets.
+                      </div>
+                    )}
+
+                    <input
+                      id={inputId}
+                      type="file"
+                      className="hidden"
+                      accept={
+                        allowed.length > 0 ? allowed.join(",") : undefined
+                      }
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        handleUpload(slot, file, slotAssets);
+                        e.currentTarget.value = "";
+                      }}
+                    />
+                  </div>
+                </details>
+              );
+            })}
+          </div>
+        )}
       </AccordionCard>
 
       {/* PATTERNS */}
@@ -396,9 +568,7 @@ export function BrandingPanel({
           </span>
         }
       >
-        {data.palettes.length === 0 ? (
-          <div className="text-slate-700">No color palettes defined.</div>
-        ) : (
+        {summary?.palettes?.length ? (
           <div className="mt-2 overflow-x-auto">
             <div className="grid gap-2 min-w-max text-sm">
               <div
@@ -417,7 +587,7 @@ export function BrandingPanel({
                 ))}
               </div>
 
-              {data.palettes.map((palette) => (
+              {summary?.palettes?.map((palette) => (
                 <div
                   key={palette.id}
                   className="grid items-center gap-3 px-2 py-2 border-b border-white/5"
@@ -468,6 +638,8 @@ export function BrandingPanel({
               ))}
             </div>
           </div>
+        ) : (
+          <div className="text-slate-700">No color palettes defined.</div>
         )}
 
         <button
