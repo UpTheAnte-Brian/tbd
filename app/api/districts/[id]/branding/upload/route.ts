@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createApiClient } from "@/utils/supabase/route";
+import { resolveDistrictEntityId } from "@/app/lib/entities";
 import {
     athleticsLogoPath,
     communityEdLogoPath,
@@ -92,6 +93,13 @@ export async function POST(
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const userId = userData.user.id;
+    let entityId: string;
+    try {
+        entityId = await resolveDistrictEntityId(supabase, data.districtId);
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "Entity not found";
+        return NextResponse.json({ error: message }, { status: 404 });
+    }
 
     type RoleRow = {
         role: string;
@@ -103,7 +111,7 @@ export async function POST(
     const { data: roleRows } = await supabase
         .from("entity_users")
         .select("entity_id, role, user_id, entities:entities ( entity_type )")
-        .eq("entity_id", data.districtId)
+        .eq("entity_id", entityId)
         .eq("user_id", userId);
 
     const getEntityType = (row: RoleRow): string | null => {

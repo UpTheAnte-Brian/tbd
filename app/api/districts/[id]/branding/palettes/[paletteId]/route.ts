@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
+import { resolveDistrictEntityId } from "@/app/lib/entities";
 
 type RoleRow = {
     role: string;
@@ -35,10 +36,18 @@ export async function PATCH(
 
     const userId = userData.user.id;
 
+    let entityId: string;
+    try {
+        entityId = await resolveDistrictEntityId(supabase, districtId);
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "Entity not found";
+        return NextResponse.json({ error: message }, { status: 404 });
+    }
+
     const { data: roleCheck } = await supabase
         .from("entity_users")
         .select("entity_id, role, user_id, entities:entities ( entity_type )")
-        .eq("entity_id", districtId)
+        .eq("entity_id", entityId)
         .eq("user_id", userId);
 
     const rows = (roleCheck ?? []) as RoleRow[];
@@ -156,10 +165,18 @@ export async function DELETE(
 
     const userId = userData.user.id;
 
+    let entityId: string;
+    try {
+        entityId = await resolveDistrictEntityId(supabase, districtId);
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "Entity not found";
+        return NextResponse.json({ error: message }, { status: 404 });
+    }
+
     const { data: roleCheck } = await supabase
         .from("entity_users")
         .select("entity_id, role, user_id, entities:entities ( entity_type )")
-        .eq("entity_id", districtId)
+        .eq("entity_id", entityId)
         .eq("user_id", userId);
 
     const rows = (roleCheck ?? []) as RoleRow[];

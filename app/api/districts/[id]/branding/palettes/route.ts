@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
+import { resolveDistrictEntityId } from "@/app/lib/entities";
 
 // POST /api/districts/[id]/branding/palettes
 export async function POST(
@@ -17,6 +18,14 @@ export async function POST(
     }
     const userId: string = userData.user.id;
 
+    let entityId: string;
+    try {
+        entityId = await resolveDistrictEntityId(supabase, districtId);
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "Entity not found";
+        return NextResponse.json({ error: message }, { status: 404 });
+    }
+
     type RoleRow = {
         role: string;
         entities?:
@@ -27,7 +36,7 @@ export async function POST(
     const { data: entityRoles } = await supabase
         .from("entity_users")
         .select("entity_id, role, user_id, entities:entities ( entity_type )")
-        .eq("entity_id", districtId)
+        .eq("entity_id", entityId)
         .eq("user_id", userId);
 
     const getEntityType = (row: RoleRow): string | null => {
