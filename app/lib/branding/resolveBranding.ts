@@ -1,0 +1,195 @@
+import type {
+  BrandingPalette,
+  BrandingTypography,
+} from "@/app/lib/types/types";
+
+export type BrandColorTokens = {
+  primary0: string;
+  primary1: string;
+  primary2: string;
+  secondary0: string;
+  secondary1: string;
+  secondary2: string;
+  accent0: string;
+  accent1: string;
+  accent2: string;
+};
+
+export type BrandTypographyTokens = {
+  header1: string;
+  header2: string;
+  subheader: string;
+  body: string;
+  display: string;
+  logo: string;
+};
+
+export type ResolvedBranding = {
+  colors: BrandColorTokens;
+  typography: BrandTypographyTokens;
+};
+
+export const DEFAULT_BRAND_COLORS: BrandColorTokens = {
+  primary0: "#0b1223",
+  primary1: "#ffffff",
+  primary2: "#111827",
+  secondary0: "#111827",
+  secondary1: "#0b1223",
+  secondary2: "#111827",
+  accent0: "#0b1223",
+  accent1: "#111827",
+  accent2: "#111827",
+};
+
+export const DEFAULT_BRAND_TYPOGRAPHY: BrandTypographyTokens = {
+  header1: "Inter",
+  header2: "Inter",
+  subheader: "Inter",
+  body: "Inter",
+  display: "Inter",
+  logo: "Inter",
+};
+
+const asColor = (value: unknown): string | null =>
+  typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+
+const fillPalette = (
+  colors: unknown,
+  fallback: [string, string, string],
+): [string, string, string] => {
+  if (!Array.isArray(colors) || colors.length === 0) {
+    return fallback;
+  }
+  const resolved = [
+    asColor(colors[0]) ?? fallback[0],
+    asColor(colors[1]) ?? fallback[1],
+    asColor(colors[2]) ?? fallback[2],
+  ] as [string, string, string];
+  return resolved;
+};
+
+const resolveTypography = (
+  typography: BrandingTypography[] = [],
+): BrandTypographyTokens => {
+  const byRole = (role: string) =>
+    typography.find((t) => t.role === role)?.font_name?.trim() || null;
+
+  const fallback =
+    byRole("body") ||
+    typography[0]?.font_name?.trim() ||
+    DEFAULT_BRAND_TYPOGRAPHY.body;
+
+  const body = byRole("body") || fallback;
+  const header1 = byRole("header1") || fallback;
+  const header2 = byRole("header2") || header1;
+  const subheader = byRole("subheader") || header2;
+  const display = byRole("display") || header1;
+  const logo = byRole("logo") || display;
+
+  return {
+    body,
+    header1,
+    header2,
+    subheader,
+    display,
+    logo,
+  };
+};
+
+export const resolveBrandingTokens = (
+  palettes: BrandingPalette[] = [],
+  typography: BrandingTypography[] = [],
+): ResolvedBranding => {
+  const primaryPalette =
+    palettes.find((p) => p.role === "primary") || palettes[0] || null;
+  const primaryColors = fillPalette(primaryPalette?.colors, [
+    DEFAULT_BRAND_COLORS.primary0,
+    DEFAULT_BRAND_COLORS.primary1,
+    DEFAULT_BRAND_COLORS.primary2,
+  ]);
+
+  const secondaryPalette = palettes.find((p) => p.role === "secondary") || null;
+  const secondaryColors = secondaryPalette
+    ? fillPalette(secondaryPalette.colors, [
+        DEFAULT_BRAND_COLORS.secondary0,
+        DEFAULT_BRAND_COLORS.secondary1,
+        DEFAULT_BRAND_COLORS.secondary2,
+      ])
+    : ([primaryColors[1], primaryColors[0], primaryColors[1]] as [
+        string,
+        string,
+        string,
+      ]);
+
+  const accentPalette = palettes.find((p) => p.role === "accent") || null;
+  const accentColors = accentPalette
+    ? fillPalette(accentPalette.colors, [
+        DEFAULT_BRAND_COLORS.accent0,
+        DEFAULT_BRAND_COLORS.accent1,
+        DEFAULT_BRAND_COLORS.accent2,
+      ])
+    : primaryColors;
+
+  const tokens: BrandColorTokens = {
+    primary0: primaryColors[0],
+    primary1: primaryColors[1],
+    primary2: primaryColors[2],
+    secondary0: secondaryColors[0],
+    secondary1: secondaryColors[1],
+    secondary2: secondaryColors[2],
+    accent0: accentColors[0],
+    accent1: accentColors[1],
+    accent2: accentColors[2],
+  };
+
+  return {
+    colors: tokens,
+    typography: resolveTypography(typography),
+  };
+};
+
+export const buildBrandCssVars = (
+  tokens: ResolvedBranding,
+  options: { includeDistrict?: boolean } = {},
+) => {
+  const includeDistrict = options.includeDistrict ?? true;
+  const vars: Record<string, string> = {
+    "--brand-primary-0": tokens.colors.primary0,
+    "--brand-primary-1": tokens.colors.primary1,
+    "--brand-primary-2": tokens.colors.primary2,
+    "--brand-secondary-0": tokens.colors.secondary0,
+    "--brand-secondary-1": tokens.colors.secondary1,
+    "--brand-secondary-2": tokens.colors.secondary2,
+    "--brand-accent-0": tokens.colors.accent0,
+    "--brand-accent-1": tokens.colors.accent1,
+    "--brand-accent-2": tokens.colors.accent2,
+    "--brand-font-family": tokens.typography.body,
+    "--brand-font-header1": tokens.typography.header1,
+    "--brand-font-header2": tokens.typography.header2,
+    "--brand-font-subheader": tokens.typography.subheader,
+    "--brand-font-heading": tokens.typography.header1,
+    "--brand-font-display": tokens.typography.display,
+    "--brand-font-logo": tokens.typography.logo,
+  };
+
+  if (includeDistrict) {
+    vars["--district-primary-0"] = tokens.colors.primary0;
+    vars["--district-primary-1"] = tokens.colors.primary1;
+    vars["--district-primary-2"] = tokens.colors.primary2;
+    vars["--district-secondary-0"] = tokens.colors.secondary0;
+    vars["--district-secondary-1"] = tokens.colors.secondary1;
+    vars["--district-secondary-2"] = tokens.colors.secondary2;
+    vars["--district-accent-0"] = tokens.colors.accent0;
+    vars["--district-accent-1"] = tokens.colors.accent1;
+    vars["--district-accent-2"] = tokens.colors.accent2;
+    vars["--district-font-family"] = tokens.typography.body;
+    vars["--district-font-header1"] = tokens.typography.header1;
+    vars["--district-font-header2"] = tokens.typography.header2;
+    vars["--district-font-subheader"] = tokens.typography.subheader;
+    vars["--district-font-heading"] = tokens.typography.header1;
+    vars["--district-font-display"] = tokens.typography.display;
+    vars["--district-font-logo"] = tokens.typography.logo;
+  }
+
+  return vars;
+};

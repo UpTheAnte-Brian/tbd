@@ -57,3 +57,22 @@ export async function resolveDistrictEntityId(
 
     throw new Error(`Entity not found for district ${districtKey}`);
 }
+
+export async function resolveEntityId(
+    supabase: SupabaseClient,
+    entityKey: string,
+): Promise<string> {
+    const { data: directEntity, error: directEntityError } = await supabase
+        .from("entities")
+        .select("id")
+        .eq("id", entityKey)
+        .maybeSingle();
+    if (directEntityError) throw directEntityError;
+    if (directEntity?.id) return directEntity.id;
+
+    try {
+        return await resolveDistrictEntityId(supabase, entityKey);
+    } catch {
+        throw new Error(`Entity not found for id ${entityKey}`);
+    }
+}

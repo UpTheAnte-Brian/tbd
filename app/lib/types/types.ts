@@ -136,7 +136,6 @@ export interface BusinessCampaign {
 export interface BrandingLogo {
     id: string;
     entity_id: string;
-    entity_type: EntityType;
     category: BrandingLogoCategory;
     subcategory?: string | null;
     name: string;
@@ -152,7 +151,6 @@ export interface BrandingLogo {
 export interface BrandingPattern {
     id: string;
     entity_id: string;
-    entity_type: EntityType;
     pattern_type: "small" | "large";
     allowed_colors?: string[] | null;
     file_png?: string | null;
@@ -165,7 +163,6 @@ export interface BrandingPattern {
 export interface BrandingFont {
     id: string;
     entity_id: string;
-    entity_type: EntityType;
     family: string;
     weight?: string | null;
     style?: string | null;
@@ -261,7 +258,6 @@ export interface BrandingTypography {
 export interface BrandingSchool {
     id: string;
     entity_id: string;
-    entity_type: EntityType;
     school_name: string;
     mascot?: string | null;
     created_at?: string | null;

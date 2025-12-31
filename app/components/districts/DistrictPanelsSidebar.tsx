@@ -8,7 +8,7 @@ import { BrandingPanel } from "@/app/components/districts/panels/branding";
 import DistrictMap from "@/app/components/districts/panels/DistrictMap";
 import DistrictOverview from "@/app/components/districts/panels/overview";
 import DistrictPrimaryLogo from "@/app/components/districts/branding/DistrictPrimaryLogo";
-import DistrictPaletteCube from "@/app/components/branding/DistrictPaletteCube";
+import BrandPaletteCube from "@/app/components/branding/BrandPaletteCube";
 import { DistrictFeature, EntityUser, Profile } from "@/app/lib/types/types";
 import { hasEntityRole } from "@/app/lib/auth/entityRoles";
 
@@ -99,7 +99,7 @@ export default function DistrictPanelsSidebar({
             );
           })}
           <div className="mt-6">
-            <DistrictPaletteCube />
+            <BrandPaletteCube />
           </div>
         </div>
         {/* Mobile dropdown */}
@@ -125,10 +125,9 @@ export default function DistrictPanelsSidebar({
           <DistrictOverview district={district} />
         ) : activeTab === "Branding" ? (
           <BrandingPanel
-            districtId={district.id}
             entityId={district.entity_id ?? null}
             entityType="district"
-            entityShortname={props?.shortname ?? ""}
+            entityName={props?.shortname ?? "Entity"}
           />
         ) : activeTab === "Admin" && user && (platformAdmin || districtAdmin) ? (
           <DistrictAdmin

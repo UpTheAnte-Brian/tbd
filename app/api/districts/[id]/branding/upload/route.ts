@@ -1,15 +1,21 @@
+import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createApiClient } from "@/utils/supabase/route";
 import { resolveDistrictEntityId } from "@/app/lib/entities";
-import {
-    athleticsLogoPath,
-    communityEdLogoPath,
-    districtLogoPath,
-    fontFilePath,
-    patternFilePath,
-    teamLogoPath,
-} from "@/app/lib/storage/brandingStoragePaths";
+
+type CategoryRow = {
+    id: string;
+    key?: string | null;
+    label?: string | null;
+};
+
+type SubcategoryRow = {
+    id: string;
+    key?: string | null;
+    label?: string | null;
+    category_id?: string | null;
+};
 
 const uploadSchema = z.object({
     category: z.string().optional(),
@@ -17,10 +23,37 @@ const uploadSchema = z.object({
     name: z.string().optional(),
     description: z.string().optional(),
     logoId: z.string().optional(),
-    patternType: z.enum(["small", "large"]).optional(),
-    fontId: z.string().optional(),
     subcategory: z.string().optional(),
 });
+
+const normalizeValue = (value: string) =>
+    value.trim().toLowerCase().replace(/[\s-]+/g, "_");
+
+const matchesValue = (value: string, rowValue?: string | null) =>
+    rowValue ? normalizeValue(rowValue) === normalizeValue(value) : false;
+
+const findCategory = (rows: CategoryRow[], value: string) =>
+    rows.find((row) =>
+        matchesValue(value, row.id) ||
+        matchesValue(value, row.key) ||
+        matchesValue(value, row.label)
+    );
+
+const findSubcategory = (
+    rows: SubcategoryRow[],
+    value: string,
+    categoryId: string,
+) => rows.find((row) =>
+    (row.category_id ? row.category_id === categoryId : true) &&
+    (matchesValue(value, row.id) ||
+        matchesValue(value, row.key) ||
+        matchesValue(value, row.label))
+);
+
+const sanitizeFilename = (name: string): string => {
+    const trimmed = name.trim();
+    return trimmed ? trimmed.replace(/[\\/]/g, "-") : "asset";
+};
 
 export async function POST(
     req: NextRequest,
@@ -29,25 +62,26 @@ export async function POST(
     const supabase = await createApiClient();
     const { id: districtId } = await context.params;
     const formData = await req.formData();
-    const entityType = (formData.get("entityType") as string) ?? "district";
 
-    const file = formData.get("file") as File;
-    if (!file) {
+    const file = formData.get("file");
+    if (!file || !(file instanceof File)) {
         return NextResponse.json({ error: "Missing file" }, { status: 400 });
     }
 
-    const logoId = formData.get("logoId") ?? undefined;
-    const name = formData.get("name") ?? undefined;
+    const getString = (key: string) => {
+        const value = formData.get(key);
+        return typeof value === "string" ? value : undefined;
+    };
 
+    const rawLogoId = getString("logoId");
+    const logoId = rawLogoId && rawLogoId.trim() ? rawLogoId.trim() : undefined;
     const parsed = uploadSchema.safeParse({
-        category: formData.get("category"),
+        category: getString("category"),
         districtId,
-        name: logoId ? name ?? undefined : name,
-        description: formData.get("description") ?? undefined,
+        name: getString("name"),
+        description: getString("description"),
         logoId,
-        patternType: formData.get("patternType") ?? undefined,
-        fontId: formData.get("fontId") ?? undefined,
-        subcategory: formData.get("subcategory") ?? undefined,
+        subcategory: getString("subcategory"),
     });
 
     if (!parsed.success) {
@@ -56,36 +90,7 @@ export async function POST(
         });
     }
 
-    let data = parsed.data;
-
-    // If category not provided, try to derive from existing logo row
-    if (!data.category && data.logoId) {
-        const { data: existing, error: lookupErr } = await supabase
-            .schema("branding")
-            .from("logos")
-            .select("category, subcategory")
-            .eq("id", data.logoId)
-            .eq("entity_id", districtId)
-            .eq("entity_type", entityType)
-            .maybeSingle();
-        if (lookupErr) {
-            return NextResponse.json({ error: lookupErr.message }, {
-                status: 400,
-            });
-        }
-        if (existing?.category) {
-            data = { ...data, category: existing.category };
-            if (!data.subcategory && existing.subcategory) {
-                data.subcategory = existing.subcategory;
-            }
-        }
-    }
-
-    if (!data.category) {
-        return NextResponse.json({ error: "category is required" }, {
-            status: 400,
-        });
-    }
+    const data = parsed.data;
 
     // Enforce RBAC: check if user has district admin privileges
     const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -129,109 +134,115 @@ export async function POST(
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Compute file path
-    let filePath: string;
+    type ExistingAsset = {
+        id: string;
+        entity_id: string;
+        category_id?: string | null;
+        subcategory_id?: string | null;
+        path?: string | null;
+    };
 
-    switch (data.category) {
-        case "icon":
-        case "primary_logo":
-        case "secondary_logo":
-        case "district_primary":
-        case "district_secondary":
-        case "wordmark":
-        case "seal":
-        case "co_brand":
-        case "event":
-        case "program":
-            filePath = districtLogoPath(
-                data.districtId,
-                data.logoId ?? crypto.randomUUID(),
-                file,
-            );
-            break;
+    let existingAsset: ExistingAsset | null = null;
+    if (data.logoId) {
+        const { data: assetRow, error: assetErr } = await supabase
+            .schema("branding")
+            .from("assets")
+            .select("id, entity_id, category_id, subcategory_id, path")
+            .eq("id", data.logoId)
+            .maybeSingle();
 
-        case "athletics_primary":
-        case "athletics_icon":
-        case "athletics_wordmark":
-            filePath = athleticsLogoPath(
-                data.districtId,
-                data.logoId ?? crypto.randomUUID(),
-                file,
-            );
-            break;
+        if (assetErr) {
+            return NextResponse.json({ error: assetErr.message }, {
+                status: 500,
+            });
+        }
 
-        case "community_ed":
-            filePath = communityEdLogoPath(
-                data.districtId,
-                data.logoId ?? crypto.randomUUID(),
-                file,
-            );
-            break;
-
-        case "team_logo":
-            if (!data.logoId) {
-                return NextResponse.json(
-                    { error: "logoId / team id required" },
-                    { status: 400 },
-                );
-            }
-            filePath = teamLogoPath(
-                data.districtId,
-                data.logoId,
-                data.logoId,
-                file,
-            );
-            break;
-
-        case "brand_pattern":
-            if (!data.patternType) {
-                return NextResponse.json({ error: "patternType required" }, {
-                    status: 400,
+        if (assetRow) {
+            if (assetRow.entity_id !== entityId) {
+                return NextResponse.json({ error: "Asset not found" }, {
+                    status: 404,
                 });
             }
-            filePath = patternFilePath(
-                data.districtId,
-                data.patternType as "small" | "large",
-                data.logoId ?? crypto.randomUUID(),
-                file,
-            );
-            break;
+            existingAsset = assetRow as ExistingAsset;
+        }
+    }
 
-        case "font":
-            filePath = fontFilePath(
-                data.districtId,
-                data.fontId ?? crypto.randomUUID(),
-                file,
-            );
-            break;
+    const categoryInput = data.category?.trim() || existingAsset?.category_id ||
+        "";
+    if (!categoryInput) {
+        return NextResponse.json({ error: "category is required" }, {
+            status: 400,
+        });
+    }
 
-        default:
+    let categoryId = categoryInput;
+    if (!existingAsset || categoryInput !== existingAsset.category_id) {
+        const { data: categories, error: categoriesErr } = await supabase
+            .schema("branding")
+            .from("asset_categories")
+            .select("id, key, label");
+
+        if (categoriesErr) {
+            return NextResponse.json({ error: categoriesErr.message }, {
+                status: 500,
+            });
+        }
+
+        const match = findCategory(
+            (categories ?? []) as CategoryRow[],
+            categoryInput,
+        );
+        if (!match) {
             return NextResponse.json({ error: "Unknown category" }, {
                 status: 400,
             });
+        }
+        categoryId = match.id;
     }
 
-    // Upload file to Supabase Storage
+    let subcategoryId: string | null = null;
+    const subcategoryInput = data.subcategory?.trim() ||
+        existingAsset?.subcategory_id || "";
+    if (subcategoryInput) {
+        if (
+            existingAsset && subcategoryInput === existingAsset.subcategory_id
+        ) {
+            subcategoryId = existingAsset.subcategory_id ?? null;
+        } else {
+            const { data: subcategories, error: subcategoriesErr } =
+                await supabase
+                    .schema("branding")
+                    .from("asset_subcategories")
+                    .select("id, key, label, category_id");
+
+            if (subcategoriesErr) {
+                return NextResponse.json({ error: subcategoriesErr.message }, {
+                    status: 500,
+                });
+            }
+
+            const match = findSubcategory(
+                (subcategories ?? []) as SubcategoryRow[],
+                subcategoryInput,
+                categoryId,
+            );
+            if (!match) {
+                return NextResponse.json({ error: "Unknown subcategory" }, {
+                    status: 400,
+                });
+            }
+            subcategoryId = match.id;
+        }
+    }
+
+    const assetId = data.logoId ?? randomUUID();
+    const assetName = data.name?.trim() || file.name;
+    const safeName = sanitizeFilename(file.name || assetName);
+    const filePath = `${entityId}/${assetId}/${safeName}`;
+    const bucket = "branding-assets";
+
     const arrayBuffer = await file.arrayBuffer();
     const uint8 = new Uint8Array(arrayBuffer);
-
-    const bucket = data.category === "brand_pattern"
-        ? "branding-patterns"
-        : data.category === "font"
-        ? "branding-fonts"
-        : "branding-logos";
-
-    // If updating, remove existing files with known extensions before upload
-    if (data.logoId) {
-        const existingFiles = [
-            filePath.replace(/\.(png|jpg|jpeg|svg|eps)$/, ".png"),
-            filePath.replace(/\.(png|jpg|jpeg|svg|eps)$/, ".jpg"),
-            filePath.replace(/\.(png|jpg|jpeg|svg|eps)$/, ".jpeg"),
-            filePath.replace(/\.(png|jpg|jpeg|svg|eps)$/, ".svg"),
-            filePath.replace(/\.(png|jpg|jpeg|svg|eps)$/, ".eps"),
-        ];
-        await supabase.storage.from(bucket).remove(existingFiles);
-    }
 
     const { error: uploadError } = await supabase.storage.from(bucket).upload(
         filePath,
@@ -248,79 +259,58 @@ export async function POST(
         });
     }
 
-    // Insert or update DB row, with cleanup on failure
     let dbRow;
     try {
-        const ext = file.name.split(".").pop()?.toLowerCase() || "";
+        const payload = {
+            id: assetId,
+            entity_id: entityId,
+            category_id: categoryId,
+            subcategory_id: subcategoryId,
+            name: assetName,
+            path: filePath,
+            mime_type: file.type || null,
+            size_bytes: file.size,
+            is_retired: false,
+        };
 
-        if (data.logoId) {
-            // Update existing logo row
-            const updateData: Record<string, string | null> = {
-                description: data.description ?? null,
-                file_png: ext === "png" ? filePath : null,
-                file_jpg: ext === "jpg" || ext === "jpeg" ? filePath : null,
-                file_svg: ext === "svg" ? filePath : null,
-                file_eps: ext === "eps" ? filePath : null,
-            };
-            updateData.updated_at = new Date().toISOString();
-            if (data.name) {
-                updateData.name = data.name;
-            }
-            if (data.subcategory) {
-                updateData.subcategory = data.subcategory;
-            }
-
+        if (existingAsset) {
             const { data: updated, error: updErr } = await supabase
                 .schema("branding")
-                .from("logos")
-                .update(updateData)
-                .eq("id", data.logoId)
-                .eq("entity_id", data.districtId)
-                .eq("entity_type", entityType)
-                .select("*, updated_at")
+                .from("assets")
+                .update({
+                    ...payload,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq("id", assetId)
+                .select("*")
                 .single();
 
             if (updErr) throw updErr;
             dbRow = updated;
         } else {
-            // Create or replace logo row (for placeholders) using upsert
-            const newLogoId = data.logoId ?? crypto.randomUUID();
             const { data: inserted, error: insErr } = await supabase
                 .schema("branding")
-                .from("logos")
-                .upsert(
-                    {
-                        id: newLogoId,
-                        entity_id: data.districtId,
-                        entity_type: entityType,
-                        category: data.category,
-                        subcategory: data.subcategory ?? "other",
-                        name: data.name,
-                        description: data.description,
-                        file_png: ext === "png" ? filePath : null,
-                        file_jpg: ext === "jpg" || ext === "jpeg" ? filePath : null,
-                        file_svg: ext === "svg" ? filePath : null,
-                        file_eps: ext === "eps" ? filePath : null,
-                    },
-                    {
-                        onConflict: "id",
-                    },
-                )
+                .from("assets")
+                .insert(payload)
                 .select("*")
                 .single();
 
             if (insErr) throw insErr;
             dbRow = inserted;
         }
+
+        const oldPath = existingAsset?.path ?? null;
+        if (oldPath && oldPath !== filePath) {
+            await supabase.storage.from(bucket).remove([oldPath]);
+        }
     } catch (dbErr: unknown) {
-        // If DB write fails, remove the uploaded file so storage and DB stay in sync
         await supabase.storage.from(bucket).remove([filePath]);
 
         return NextResponse.json(
             {
                 error: dbErr instanceof Error
                     ? dbErr.message
-                    : "Database error while saving branding logo",
+                    : "Database error while saving branding asset",
             },
             { status: 500 },
         );
@@ -329,6 +319,7 @@ export async function POST(
     return NextResponse.json({
         success: true,
         filePath,
+        asset: dbRow,
         logo: dbRow,
     });
 }

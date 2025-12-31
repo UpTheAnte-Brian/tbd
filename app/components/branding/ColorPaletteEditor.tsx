@@ -11,14 +11,14 @@ export type ColorPalette = {
 
 type Props = {
   initial: ColorPalette;
-  districtShortname: string;
+  entityName: string;
   onSave: (palette: ColorPalette) => Promise<void>;
   onCancel: () => void;
 };
 
 export default function ColorPaletteEditor({
   initial,
-  districtShortname,
+  entityName,
   onSave,
   onCancel,
 }: Props) {
@@ -71,7 +71,7 @@ export default function ColorPaletteEditor({
       return;
     }
 
-    const cleanShortname = districtShortname?.trim() || "Palette";
+    const cleanShortname = entityName?.trim() || "Palette";
     const roleLabel =
       role === "primary"
         ? "Primary"
@@ -144,7 +144,7 @@ export default function ColorPaletteEditor({
           Palette name will be:{" "}
           <span className="font-semibold text-slate-800">
             {role
-              ? `${districtShortname} ${
+              ? `${entityName} ${
                   {
                     primary: "Primary",
                     secondary: "Secondary",

@@ -4,20 +4,48 @@
 
 
 :root {
-  /* Primary colors */
-  --district-primary-0: #0b1223;
-  --district-primary-1: #ffffff;
-  --district-primary-2: #111827;
+  /* Brand tokens */
+  --brand-primary-0: #0b1223;
+  --brand-primary-1: #ffffff;
+  --brand-primary-2: #111827;
 
-  /* Secondary colors (lighter text defaults) */
-  --district-secondary-0: #111827;
-  --district-secondary-1: #0b1223;
-  --district-secondary-2: #111827;
+  --brand-secondary-0: #111827;
+  --brand-secondary-1: #0b1223;
+  --brand-secondary-2: #111827;
 
-  /* Accent colors (fallback to primary) */
-  --district-accent-0: #0b1223;
-  --district-accent-1: #111827;
-  --district-accent-2: #111827;
+  --brand-accent-0: #0b1223;
+  --brand-accent-1: #111827;
+  --brand-accent-2: #111827;
+
+  /* Brand typography */
+  --brand-font-family: Inter;
+  --brand-font-header1: var(--brand-font-family);
+  --brand-font-header2: var(--brand-font-family);
+  --brand-font-subheader: var(--brand-font-family);
+  --brand-font-heading: var(--brand-font-header1);
+  --brand-font-display: var(--brand-font-family);
+  --brand-font-logo: var(--brand-font-family);
+
+  /* Legacy district aliases */
+  --district-primary-0: var(--brand-primary-0);
+  --district-primary-1: var(--brand-primary-1);
+  --district-primary-2: var(--brand-primary-2);
+
+  --district-secondary-0: var(--brand-secondary-0);
+  --district-secondary-1: var(--brand-secondary-1);
+  --district-secondary-2: var(--brand-secondary-2);
+
+  --district-accent-0: var(--brand-accent-0);
+  --district-accent-1: var(--brand-accent-1);
+  --district-accent-2: var(--brand-accent-2);
+
+  --district-font-family: var(--brand-font-family);
+  --district-font-header1: var(--brand-font-header1);
+  --district-font-header2: var(--brand-font-header2);
+  --district-font-subheader: var(--brand-font-subheader);
+  --district-font-heading: var(--brand-font-heading);
+  --district-font-display: var(--brand-font-display);
+  --district-font-logo: var(--brand-font-logo);
 
   --uta-primary-dark: #334632;
   --uta-primary-light: #d4d4de;

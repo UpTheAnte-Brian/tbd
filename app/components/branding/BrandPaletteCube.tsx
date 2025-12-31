@@ -1,18 +1,18 @@
 "use client";
 
 const cells = [
-  "bg-district-primary-0",
-  "bg-district-primary-1",
-  "bg-district-primary-2",
-  "bg-district-secondary-0",
-  "bg-district-secondary-1",
-  "bg-district-secondary-2",
-  "bg-district-accent-0",
-  "bg-district-accent-1",
-  "bg-district-accent-2",
+  "bg-brand-primary-0",
+  "bg-brand-primary-1",
+  "bg-brand-primary-2",
+  "bg-brand-secondary-0",
+  "bg-brand-secondary-1",
+  "bg-brand-secondary-2",
+  "bg-brand-accent-0",
+  "bg-brand-accent-1",
+  "bg-brand-accent-2",
 ] as const;
 
-export default function DistrictPaletteCube() {
+export default function BrandPaletteCube() {
   return (
     <div className="w-full bg-white p-2 rounded shadow-sm">
       <div className="grid grid-cols-3 grid-rows-3 gap-0 w-full overflow-hidden rounded">

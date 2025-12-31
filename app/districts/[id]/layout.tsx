@@ -1,6 +1,5 @@
-import { DistrictBrandingProvider } from "@/app/providers/DistrictBrandingProvider";
 import { getDistrictDTOCached } from "@/app/data/districts-dto";
-import { getBrandingSummary } from "@/app/data/branding-summary";
+import EntityThemeProvider from "@/app/providers/EntityThemeProvider";
 
 interface DistrictLayoutProps {
   children: React.ReactNode;
@@ -14,24 +13,15 @@ export default async function DistrictLayout({
   params,
 }: DistrictLayoutProps) {
   const { id: sdorgid } = await params;
-  let districtUuid: string | null = null;
-  let brandingSummary = null;
+  let entityId: string | null = null;
   try {
     const district = await getDistrictDTOCached(sdorgid);
-    districtUuid = district?.id ?? null;
-    if (districtUuid) {
-      brandingSummary = await getBrandingSummary(districtUuid);
-    }
+    entityId = district?.entity_id ?? null;
   } catch (err) {
-    console.error("Failed to resolve district UUID for branding:", err);
+    console.error("Failed to resolve district entity id for branding:", err);
   }
 
   return (
-    <DistrictBrandingProvider
-      districtId={districtUuid}
-      initialData={brandingSummary}
-    >
-      {children}
-    </DistrictBrandingProvider>
+    <EntityThemeProvider entityId={entityId}>{children}</EntityThemeProvider>
   );
 }

@@ -8,7 +8,7 @@ type Props = {
   children: ReactNode;
   defaultOpen?: boolean;
   onToggle?: (open: boolean) => void;
-  variant?: "default" | "district";
+  variant?: "default" | "district" | "brand";
   className?: string;
   headerClassName?: string;
   bodyClassName?: string;
@@ -27,19 +27,35 @@ export default function AccordionCard({
   const [open, setOpen] = useState(defaultOpen);
 
   const isDistrict = variant === "district";
+  const isBrand = variant === "brand";
   const containerClasses = `${
-    isDistrict
-      ? "border-district-primary-1 bg-district-primary-0 text-district-secondary-0"
-      : "border-gray-700 bg-gray-900 text-white"
+    isBrand
+      ? "border-brand-primary-1 bg-brand-primary-0 text-brand-secondary-0"
+      : isDistrict
+        ? "border-district-primary-1 bg-district-primary-0 text-district-secondary-0"
+        : "border-gray-700 bg-gray-900 text-white"
   } rounded-lg border ${className}`.trim();
   const headerClasses = `${
-    isDistrict
-      ? "text-district-secondary-0 bg-district-accent-1"
-      : "text-white bg-blue-600"
+    isBrand
+      ? "text-brand-secondary-0 bg-brand-accent-1"
+      : isDistrict
+        ? "text-district-secondary-0 bg-district-accent-1"
+        : "text-white bg-blue-600"
   } flex w-full items-center justify-between px-4 py-3 text-left ${headerClassName}`.trim();
   const bodyClasses = `${
-    isDistrict ? "border-district-primary-1" : "border-gray-800"
+    isBrand
+      ? "border-brand-primary-1"
+      : isDistrict
+        ? "border-district-primary-1"
+        : "border-gray-800"
   } border-t px-4 py-3 ${bodyClassName}`.trim();
+  const chevronClasses = `${
+    isBrand
+      ? "text-brand-primary-1"
+      : isDistrict
+        ? "text-district-primary-1"
+        : "text-white"
+  } h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`.trim();
 
   return (
     <div className={containerClasses}>
@@ -53,11 +69,7 @@ export default function AccordionCard({
         }}
       >
         <span className="font-semibold flex items-center gap-2">{title}</span>
-        <ChevronDown
-          className={`h-4 w-4 text-district-primary-1 transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
-        />
+        <ChevronDown className={chevronClasses} />
       </button>
       {open && <div className={bodyClasses}>{children}</div>}
     </div>

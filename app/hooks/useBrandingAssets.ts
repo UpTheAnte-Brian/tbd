@@ -17,6 +17,7 @@ export type AssetSlot = {
 
 export type AssetCategory = {
   id: string;
+  key?: string | null;
   name?: string | null;
   label?: string | null;
   sort_order?: number | null;
@@ -25,6 +26,7 @@ export type AssetCategory = {
 export type AssetSubcategory = {
   id: string;
   category_id?: string | null;
+  key?: string | null;
   name?: string | null;
   label?: string | null;
   sort_order?: number | null;

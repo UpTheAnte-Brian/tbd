@@ -278,7 +278,7 @@ const MapComponent = React.memo(() => {
   }, [selectedId, mapRef, features]);
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !features.length) return;
+    if (!mapReady || !map || !features.length) return;
 
     const handleClick = (event: google.maps.Data.MouseEvent) => {
       const clickedFeature = event.feature;
@@ -305,7 +305,7 @@ const MapComponent = React.memo(() => {
     return () => {
       clickListener.remove();
     };
-  }, [features]);
+  }, [features, mapReady]);
 
   useEffect(() => {
     applyStyle(mapRef.current);

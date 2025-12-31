@@ -29,7 +29,7 @@ type FontForm = {
 };
 
 interface Props {
-  districtId: string;
+  entityId: string;
   role: string;
   typography: BrandingTypography[];
   onSaved: () => void;
@@ -37,7 +37,7 @@ interface Props {
 }
 
 export default function TypographyEditor({
-  districtId,
+  entityId,
   role,
   typography,
   onSaved,
@@ -78,7 +78,7 @@ export default function TypographyEditor({
     }
     setFontSaving(true);
     try {
-      const res = await fetch(`/api/districts/${districtId}/branding/fonts`, {
+      const res = await fetch(`/api/entities/${entityId}/branding/typography`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

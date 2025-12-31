@@ -101,10 +101,9 @@ export default function DistrictPanels({
           <DistrictOverview district={district} />
         ) : activeTab === "Branding" ? (
           <BrandingPanel
-            districtId={district.id}
             entityId={district.entity_id ?? null}
             entityType="district"
-            entityShortname={props?.shortname ?? ""}
+            entityName={props?.shortname ?? "Entity"}
           />
         ) : activeTab === "Admin" && user && (platformAdmin || districtAdmin) ? (
           <DistrictAdmin

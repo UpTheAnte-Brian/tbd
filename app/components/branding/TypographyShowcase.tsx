@@ -1,6 +1,6 @@
 "use client";
 
-import { useDistrictBranding } from "@/app/providers/DistrictBrandingProvider";
+import { useBranding } from "@/app/providers/EntityThemeProviderClient";
 
 interface Block {
   label: string;
@@ -16,30 +16,27 @@ const blocks: Block[] = [
 ];
 
 export function TypographyShowcase() {
-  const { colors, fonts } = useDistrictBranding();
-  const highlight =
-    colors["--district-secondary-1"] ||
-    colors["--district-primary-1"] ||
-    "#cfe8ff";
-  const textColor = colors["--district-secondary-0"] || "#0f172a";
+  const { colors, fonts } = useBranding();
+  const highlight = colors.secondary1 || colors.primary1 || "#cfe8ff";
+  const textColor = colors.secondary0 || "#0f172a";
   const fontFor = (key: string) => {
     switch (key) {
       case "header1":
-        return fonts.header1 || fonts.display || fonts.heading || fonts.body;
+        return fonts.header1 || fonts.header2 || fonts.display || fonts.body;
       case "header2":
-        return fonts.header2 || fonts.header1 || fonts.heading || fonts.body;
+        return fonts.header2 || fonts.header1 || fonts.display || fonts.body;
       case "subheader":
         return fonts.subheader || fonts.header2 || fonts.body;
       case "body":
       default:
-        return fonts.body || fonts.header2 || fonts.heading;
+        return fonts.body || fonts.header2;
     }
   };
   const headingFont = fontFor("header1");
   const bodyFont = fontFor("body");
 
   return (
-    <div className="mt-10 rounded-lg border border-district-primary-1/40 bg-white shadow-sm p-6">
+    <div className="mt-10 rounded-lg border border-brand-primary-1/40 bg-white shadow-sm p-6">
       <div className="flex flex-col gap-8 md:flex-row md:items-start">
         <div className="flex flex-col gap-6 text-sm text-slate-700 md:w-1/4">
           <div className="uppercase tracking-wide text-slate-500 text-xs">

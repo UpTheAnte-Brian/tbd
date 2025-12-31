@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
+import { resolveDistrictEntityId } from "@/app/lib/entities";
 
 // GET /api/districts/[id]/branding/patterns?patternType=small|large
 export async function GET(
@@ -8,7 +9,13 @@ export async function GET(
 ) {
     const supabase = await createApiClient();
     const districtId = params.id;
-    const entityType = "district";
+    let entityId: string;
+    try {
+        entityId = await resolveDistrictEntityId(supabase, districtId);
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "Entity not found";
+        return NextResponse.json({ error: message }, { status: 404 });
+    }
 
     const { searchParams } = new URL(req.url);
     const patternType = searchParams.get("patternType"); // optional
@@ -17,8 +24,7 @@ export async function GET(
         .schema("branding")
         .from("patterns")
         .select("*")
-        .eq("entity_id", districtId)
-        .eq("entity_type", entityType)
+        .eq("entity_id", entityId)
         .order("created_at", { ascending: false });
 
     if (patternType) {
