@@ -51,11 +51,20 @@ const MapComponent = React.memo(() => {
     visible: false,
   });
   const hasFitInitialBounds = useRef(false);
+  const getMapFeatureId = (feature: google.maps.Data.Feature) =>
+    (feature.getProperty("district_id") as string) ||
+    (feature.getProperty("sdorgid") as string) ||
+    null;
+  const getFeatureId = (feature: DistrictFeature) =>
+    feature.properties?.district_id ??
+    feature.id ??
+    feature.properties?.sdorgid ??
+    null;
   const applyStyle = (map: google.maps.Map | null, selected?: string) => {
     if (!map) return;
     const selectedVal = selected ?? selectedId;
     map.data.setStyle((feature) => {
-      const id = feature.getProperty("sdorgid");
+      const id = getMapFeatureId(feature);
       const isSelected = id === selectedVal;
       const isHovered = id === hoveredIdRef.current;
       return {
@@ -193,10 +202,10 @@ const MapComponent = React.memo(() => {
     const mouseOver = map.data.addListener(
       "mouseover",
       (event: google.maps.Data.MouseEvent) => {
-        const id = event.feature.getProperty("sdorgid") as string;
+        const id = getMapFeatureId(event.feature);
         hoveredIdRef.current = id;
         hoveredFeaturePropsRef.current = {
-          sdorgid: id,
+          sdorgid: event.feature.getProperty("sdorgid") as string,
           acres: event.feature.getProperty("acres") as string,
           formid: event.feature.getProperty("formid") as string,
           sdtype: event.feature.getProperty("sdtype") as string,
@@ -267,7 +276,7 @@ const MapComponent = React.memo(() => {
     if (!mapRef.current || !selectedId) return;
 
     const findFeature = features.find(
-      (f) => f.properties?.sdorgid === selectedId
+      (f) => getFeatureId(f) === selectedId
     );
 
     if (findFeature) {
@@ -282,11 +291,11 @@ const MapComponent = React.memo(() => {
 
     const handleClick = (event: google.maps.Data.MouseEvent) => {
       const clickedFeature = event.feature;
-      const clickedId = clickedFeature.getProperty("sdorgid") as string;
+      const clickedId = getMapFeatureId(clickedFeature);
 
       if (!clickedId) return;
 
-      const found = features.find((f) => f.properties?.sdorgid === clickedId);
+      const found = features.find((f) => getFeatureId(f) === clickedId);
       if (found) {
         setSelectedFeature(found);
         setSelectedId(clickedId);
@@ -410,7 +419,7 @@ const MapComponent = React.memo(() => {
           onSelect={(feature) => {
             setShowPopup(true);
             setSelectedFeature(feature);
-            setSelectedId(feature.properties?.sdorgid ?? null);
+            setSelectedId(getFeatureId(feature));
             if (mapRef.current) {
               panToFeature(feature, mapRef.current);
             }

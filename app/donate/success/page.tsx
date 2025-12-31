@@ -22,7 +22,7 @@ async function getReceipt(sessionId: string): Promise<Receipt | null> {
 export default function DonationSuccessPage() {
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sdorgid, setSdorgid] = useState<string | null>(null);
+  const [districtId, setDistrictId] = useState<string | null>(null);
 
   const sessionId = new URLSearchParams(window.location.search).get(
     "session_id"
@@ -33,7 +33,7 @@ export default function DonationSuccessPage() {
     fetch(`/api/stripe/get-session?session_id=${sessionId}`)
       .then((res) => res.json())
       .then((data) => {
-        setSdorgid(data.metadata?.district_sdorgid || null);
+        setDistrictId(data.metadata?.district_id || null);
       });
   }, []);
 
@@ -47,8 +47,6 @@ export default function DonationSuccessPage() {
       setLoading(false);
     });
   }, [sessionId]);
-
-  if (!sdorgid) return <p>Loading...</p>;
 
   return (
     <div className="relative w-full h-full bg-black">
@@ -103,9 +101,9 @@ export default function DonationSuccessPage() {
             </div>
           )}
         </div>
-        {sdorgid && (
+        {districtId && (
           <Link
-            href={`/districts/${sdorgid}`}
+            href={`/districts/${districtId}`}
             className="inline-block mt-2 px-6 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700"
           >
             Return to District

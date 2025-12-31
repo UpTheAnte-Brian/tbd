@@ -46,6 +46,7 @@ export const RoleOptions = {
 // District domain
 // ----------------------------
 export interface DistrictProperties {
+    district_id?: string;
     sdorgid: string; // "10004000000.0"
     shortname: string; // "McGregor"
     prefname: string; // "McGregor Public School District"

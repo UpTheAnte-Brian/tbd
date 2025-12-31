@@ -12,10 +12,10 @@ export default async function DistrictLayout({
   children,
   params,
 }: DistrictLayoutProps) {
-  const { id: sdorgid } = await params;
+  const { id: districtId } = await params;
   let entityId: string | null = null;
   try {
-    const district = await getDistrictDTOCached(sdorgid);
+    const district = await getDistrictDTOCached(districtId);
     entityId = district?.entity_id ?? null;
   } catch (err) {
     console.error("Failed to resolve district entity id for branding:", err);

@@ -117,6 +117,7 @@ export async function GET() {
         ) as Record<string, unknown>;
 
         const props = {
+            district_id: row.id,
             sdorgid: row.sdorgid,
             shortname: row.shortname,
             prefname: asString(propsLower.prefname, row.shortname) ?? "",

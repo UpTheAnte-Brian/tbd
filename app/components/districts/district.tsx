@@ -57,7 +57,10 @@ export function DistrictsPanel({
       <div className="overflow-y-auto flex-1">
         <ul>
           {districts.map((feature) => {
-            const id = feature.properties?.sdorgid;
+            const id =
+              feature.properties?.district_id ??
+              feature.id ??
+              feature.properties?.sdorgid;
             const name = feature.properties?.shortname || "Unnamed";
             return (
               <li

@@ -95,7 +95,10 @@ export default function DistrictsPage() {
         flex: 1.5,
         valueGetter: (params) => params.data?.properties?.prefname,
         cellRenderer: (params: ICellRendererParams<DistrictFeature>) => {
-          const id = params.data?.properties?.sdorgid;
+          const id =
+            params.data?.properties?.district_id ??
+            params.data?.id ??
+            params.data?.properties?.sdorgid;
           const name = params.data?.properties?.prefname ?? params.value;
           if (!id) return name;
           return (

@@ -17,13 +17,12 @@ export async function GET(
     }
 
     try {
-        const receipts = await getBusiness(id);
-        return NextResponse.json(receipts);
+        const business = await getBusiness(id);
+        return NextResponse.json(business);
     } catch (err) {
-        console.error("Error fetching receipts:", err);
-        return NextResponse.json(
-            { error: "Unable to fetch receipts" },
-            { status: 500 },
-        );
+        const message = err instanceof Error ? err.message : "Unknown error";
+        const status = message === "Business not found" ? 404 : 500;
+        console.error("Error fetching business:", err);
+        return NextResponse.json({ error: message }, { status });
     }
 }

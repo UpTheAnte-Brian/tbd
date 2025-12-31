@@ -25,7 +25,7 @@ const DistrictCard = React.memo(
 
     return (
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3">
-        <Link href={`/districts/${props?.sdorgid}`}>
+        <Link href={`/districts/${district.id}`}>
           <div className="text-lg font-semibold text-blue-600 underline text-center">
             {props?.shortname} ({Number(props?.sdnumber)})
           </div>

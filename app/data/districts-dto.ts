@@ -10,15 +10,35 @@ import {
 export async function getDistrictDTO(id: string): Promise<DistrictFeature> {
   const supabase = await createClient();
 
-  const { data: district, error: districtError } = await supabase
+  const { data: byId, error: byIdError } = await supabase
     .from("districts")
     .select(
-      "id, sdorgid, shortname, properties, geometry_simplified, centroid_lat, centroid_lng",
+      "id, sdorgid, shortname, properties, geometry_simplified, centroid_lat, centroid_lng, entity_id",
     )
-    .eq("sdorgid", id)
+    .eq("id", id)
     .maybeSingle();
 
-  if (districtError || !district) {
+  if (byIdError) {
+    throw byIdError;
+  }
+
+  const { data: bySdorgid, error: bySdorgidError } = byId
+    ? { data: null, error: null }
+    : await supabase
+      .from("districts")
+      .select(
+        "id, sdorgid, shortname, properties, geometry_simplified, centroid_lat, centroid_lng, entity_id",
+      )
+      .eq("sdorgid", id)
+      .maybeSingle();
+
+  if (bySdorgidError) {
+    throw bySdorgidError;
+  }
+
+  const district = byId ?? bySdorgid;
+
+  if (!district) {
     throw new Error("District not found");
   }
 
@@ -48,7 +68,7 @@ export async function getDistrictDTO(id: string): Promise<DistrictFeature> {
     throw new Error(`Entity not found for district ${district.sdorgid}`);
   };
 
-  const entityId = await resolveEntityId();
+  const entityId = district.entity_id ?? await resolveEntityId();
 
   const { data: users } = await supabase
     .from("entity_users")
@@ -128,6 +148,7 @@ export async function getDistrictDTO(id: string): Promise<DistrictFeature> {
   ): string | null => (typeof val === "string" ? val : fallback);
 
   const baseProps: DistrictFeature["properties"] = {
+    district_id: district.id,
     sdorgid: district.sdorgid,
     shortname: district.shortname,
     prefname: asString(props.prefname, district.shortname) ?? "",

@@ -31,18 +31,6 @@ export async function POST(req: Request) {
 
     if (districtId !== undefined) {
         metadata.district_id = districtId;
-
-        // Fetch the district natural key (sdorgid)
-        const supabase = await createApiClient();
-        const { data: district } = await supabase
-            .from("districts")
-            .select("sdorgid")
-            .eq("id", districtId)
-            .single();
-
-        if (district?.sdorgid) {
-            metadata.district_sdorgid = district.sdorgid;
-        }
     }
 
     if (anonymous !== undefined) {
