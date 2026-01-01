@@ -1,35 +1,25 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getResolvedEntityBranding } from "@/app/data/entity-branding";
+import { NextResponse } from "next/server";
+import { createApiClient } from "@/utils/supabase/route";
+import { resolveEntityId } from "@/app/lib/entities";
+import { getEntityBrandingSummary } from "@/app/lib/server/entities";
 
 // GET /api/entities/[id]/branding
 export async function GET(
-  _req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  _req: Request,
+  context: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await context.params;
+  const supabase = await createApiClient();
+  const { id: entityKey } = await context.params;
 
   try {
-    const resolved = await getResolvedEntityBranding(id);
-
-    return NextResponse.json(
-      {
-        entityId: resolved.entityId,
-        tokens: {
-          colors: resolved.colors,
-          typography: resolved.typography,
-        },
-        palettes: resolved.palettes,
-        typography: resolved.typographyRows,
-        assets: resolved.assets,
-        primaryLogoAsset: resolved.primaryLogoAsset,
+    const entityId = await resolveEntityId(supabase, entityKey);
+    const summary = await getEntityBrandingSummary(supabase, entityId);
+    return NextResponse.json(summary, {
+      status: 200,
+      headers: {
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600",
       },
-      {
-        status: 200,
-        headers: {
-          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600",
-        },
-      }
-    );
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Entity not found";
     const status = message.toLowerCase().includes("entity not found") ? 404 : 500;

@@ -3,27 +3,15 @@ import type { Geometry } from "geojson";
 export function getLabel(
     feature: {
         properties?: Record<string, unknown> | null;
-        shortname?: string | null;
-        prefname?: string | null;
-        name?: string | null;
-        slug?: string | null;
-        sdorgid?: string | null;
     },
 ): string | null {
     const asString = (val: unknown): string | null =>
         typeof val === "string" ? val : null;
     // Adjust based on your actual property keys
     return (
-        asString(feature.shortname) ||
-        asString(feature.prefname) ||
-        asString(feature.name) ||
-        asString(feature.slug) ||
-        asString(feature.sdorgid) ||
-        asString(feature.properties?.shortname) ||
-        asString(feature.properties?.prefname) ||
         asString(feature.properties?.name) ||
         asString(feature.properties?.slug) ||
-        asString(feature.properties?.sdorgid) ||
+        asString(feature.properties?.entity_id) ||
         null
     );
 }

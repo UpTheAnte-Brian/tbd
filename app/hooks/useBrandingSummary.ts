@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { BrandingSummary } from "@/app/lib/types/types";
 
-// simple in-memory cache per district
+// simple in-memory cache per entity
 const summaryCache = new Map<string, BrandingSummary>();
 
 export function useBrandingSummary(
@@ -32,7 +32,7 @@ export function useBrandingSummary(
             setError(null);
             try {
                 const res = await fetch(
-                    `/api/districts/${entityId}/branding/summary`,
+                    `/api/entities/${entityId}/branding`,
                     { cache: "no-store" },
                 );
                 if (!res.ok) {

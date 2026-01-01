@@ -7,11 +7,6 @@ export type EntityMapProperties = {
     name: string | null;
     active: boolean;
     child_count: number;
-    centroid_lat?: number | null;
-    centroid_lng?: number | null;
-    shortname?: string;
-    sdorgid?: string;
-    web_url?: string | null;
 };
 
 export type EntityFeature = Feature<

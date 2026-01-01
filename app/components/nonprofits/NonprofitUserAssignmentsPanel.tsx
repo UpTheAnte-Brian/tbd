@@ -4,19 +4,7 @@ import { useEffect, useState } from "react";
 import LoadingSpinner from "@/app/components/loading-spinner";
 import { SmallAvatar } from "@/app/components/ui/avatar";
 import { toast } from "react-hot-toast";
-
-interface NonprofitUser {
-  id: string;
-  nonprofit_id: string;
-  user_id: string;
-  role: string;
-  profiles?: {
-    id: string;
-    full_name: string | null;
-    email: string | null;
-    avatar_url: string | null;
-  };
-}
+import type { EntityUser } from "@/app/lib/types/types";
 
 interface NonprofitUserAssignmentsPanelProps {
   nonprofitId: string;
@@ -25,7 +13,7 @@ interface NonprofitUserAssignmentsPanelProps {
 export default function NonprofitUserAssignmentsPanel({
   nonprofitId,
 }: NonprofitUserAssignmentsPanelProps) {
-  const [users, setUsers] = useState<NonprofitUser[]>([]);
+  const [users, setUsers] = useState<EntityUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
 
@@ -48,13 +36,10 @@ export default function NonprofitUserAssignmentsPanel({
   async function fetchUsers() {
     try {
       setLoading(true);
-      const res = await fetch(`/api/nonprofit-users`);
+      const res = await fetch(`/api/entities/${nonprofitId}/users`);
       if (!res.ok) throw new Error("Failed to fetch nonprofit users");
       const json = await res.json();
-
-      setUsers(
-        json.filter((u: NonprofitUser) => u.nonprofit_id === nonprofitId)
-      );
+      setUsers(json ?? []);
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Failed to load users";
@@ -78,12 +63,11 @@ export default function NonprofitUserAssignmentsPanel({
         setAdding(false);
         return;
       }
-      const res = await fetch(`/api/nonprofit-users`, {
+      const res = await fetch(`/api/entities/${nonprofitId}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nonprofit_id: nonprofitId,
-          user_id: newUserId,
+          userId: newUserId,
           role: newRole,
         }),
       });
@@ -102,12 +86,12 @@ export default function NonprofitUserAssignmentsPanel({
     }
   }
 
-  async function updateUser(id: string, updates: Partial<NonprofitUser>) {
+  async function updateUser(userId: string, role: string) {
     try {
-      const res = await fetch(`/api/nonprofit-users/${id}`, {
-        method: "PATCH",
+      const res = await fetch(`/api/entities/${nonprofitId}/users`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates),
+        body: JSON.stringify({ userId, role }),
       });
 
       if (!res.ok) throw new Error("Failed to update user");
@@ -140,11 +124,14 @@ export default function NonprofitUserAssignmentsPanel({
     }
   }
 
-  async function deleteUser(id: string) {
+  async function deleteUser(userId: string) {
     try {
-      const res = await fetch(`/api/nonprofit-users/${id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/entities/${nonprofitId}/users?userId=${encodeURIComponent(
+          userId
+        )}`,
+        { method: "DELETE" }
+      );
 
       if (!res.ok) throw new Error("Failed to delete user");
       toast.success("Removed");
@@ -310,19 +297,19 @@ export default function NonprofitUserAssignmentsPanel({
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <SmallAvatar
-                    name={u.profiles?.full_name ?? null}
-                    url={u.profiles?.avatar_url ?? null}
-                    size={32}
-                  />
-                  <div>
-                    <p className="font-semibold">
-                      {u.profiles?.full_name ?? u.user_id}
-                    </p>
+                      name={u.profile?.full_name ?? null}
+                      url={u.profile?.avatar_url ?? null}
+                      size={32}
+                    />
+                    <div>
+                      <p className="font-semibold">
+                        {u.profile?.full_name ?? u.user_id}
+                      </p>
+                    </div>
                   </div>
-                </div>
 
                 <button
-                  onClick={() => deleteUser(u.id)}
+                  onClick={() => deleteUser(u.user_id)}
                   className="text-red-400 hover:text-red-300"
                 >
                   Remove
@@ -333,7 +320,7 @@ export default function NonprofitUserAssignmentsPanel({
                 <label className="block text-sm mb-1">Role</label>
                 <select
                   value={u.role}
-                  onChange={(e) => updateUser(u.id, { role: e.target.value })}
+                  onChange={(e) => updateUser(u.user_id, e.target.value)}
                   className="w-full p-2 rounded bg-gray-800 border border-gray-700"
                 >
                   <option value="viewer">Viewer</option>

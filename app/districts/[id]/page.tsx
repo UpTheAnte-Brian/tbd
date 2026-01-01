@@ -32,7 +32,7 @@ export default function DistrictPage() {
     <main className="p-4 bg-district-primary-0">
       {/* <DistrictPrimaryLogo
         districtId={district.id}
-        districtName={district.properties?.shortname}
+        districtName={district.shortname}
         subtitle="Primary logo"
       /> */}
 

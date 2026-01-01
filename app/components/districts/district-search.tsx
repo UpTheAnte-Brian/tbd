@@ -29,14 +29,7 @@ export default function DistrictSearch<T extends SearchFeature>({
             ? String(f.id)
             : "";
         const label =
-          getLabel(f as { properties?: Record<string, unknown> | null }) ||
-          (typeof f.properties?.["name"] === "string"
-            ? f.properties?.["name"]
-            : null) ||
-          (typeof f.properties?.["slug"] === "string"
-            ? f.properties?.["slug"]
-            : null) ||
-          "";
+          getLabel(f as { properties?: Record<string, unknown> | null }) || "";
         return { id, label };
       })
       .filter((x) => x.id && x.label.toLowerCase().includes(q))

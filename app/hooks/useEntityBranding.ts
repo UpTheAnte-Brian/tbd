@@ -1,27 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type {
-  BrandColorTokens,
-  BrandTypographyTokens,
-} from "@/app/lib/branding/resolveBranding";
-import type {
-  BrandingPalette,
-  BrandingTypography,
-} from "@/app/lib/types/types";
-import type { BrandingAssetRow } from "@/app/data/entity-branding";
+import type { BrandingSummary } from "@/app/lib/types/types";
 
-export type EntityBrandingResponse = {
-  entityId: string;
-  tokens: {
-    colors: BrandColorTokens;
-    typography: BrandTypographyTokens;
-  };
-  palettes: BrandingPalette[];
-  typography: BrandingTypography[];
-  assets: BrandingAssetRow[];
-  primaryLogoAsset: BrandingAssetRow | null;
-};
+export type EntityBrandingResponse = BrandingSummary;
 
 const brandingCache = new Map<string, EntityBrandingResponse>();
 

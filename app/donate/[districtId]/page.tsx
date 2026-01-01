@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { DistrictDetails } from "@/app/lib/types/types";
 import Canvas from "react-canvas-confetti/dist/presets/snow";
@@ -26,6 +26,25 @@ export function DonatePageContent({
   const [districts, setDistricts] = useState<DistrictDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useUser();
+  const searchFeatures = useMemo(
+    () =>
+      districts.map((district) => ({
+        id: district.id,
+        properties: {
+          entity_id: district.entity_id,
+          entity_type: "district",
+          name:
+            district.prefname ??
+            district.shortname ??
+            district.sdorgid ??
+            "District",
+          slug: null,
+          active: true,
+          child_count: 0,
+        },
+      })),
+    [districts]
+  );
 
   const anonymous = !user;
   useEffect(() => {
@@ -148,7 +167,7 @@ export function DonatePageContent({
               Select District(s)
             </h2>
             <DistrictSearch
-              features={districts}
+              features={searchFeatures}
               onSelect={(selected) => {
                 const id =
                   typeof selected.id === "string" || typeof selected.id === "number"
@@ -164,7 +183,7 @@ export function DonatePageContent({
         {/* {selectedDistrictId && (
           <p className="mt-2 text-lg text-black">
             Selected:{" "}
-            {districts.find((d) => d.id === selectedDistrictId)?.properties?.shortname}
+            {districts.find((d) => d.id === selectedDistrictId)?.shortname}
           </p>
         )} */}
       </section>

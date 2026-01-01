@@ -5,13 +5,15 @@ export const ENTITY_TYPES = ["district", "nonprofit", "business"] as const;
 export type EntityType = (typeof ENTITY_TYPES)[number];
 export type EntityUserRole = "admin" | "editor" | "viewer" | "employee";
 
+export type EntityUserStatus = "active" | "invited" | "removed" | null;
+
 export interface EntityUser {
     id: string;
     entity_type?: EntityType;
     entity_id: string;
     user_id: string;
     role: EntityUserRole;
-    status?: "active" | "invited" | "removed" | null;
+    status?: EntityUserStatus;
     created_at?: string | null;
     updated_at?: string | null;
     profile?: ProfilePreview | null;
