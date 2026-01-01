@@ -1,74 +1,62 @@
 import "server-only";
 import { cache } from "react";
 import { createClient } from "@/utils/supabase/server";
+import { resolveDistrictEntityId } from "@/app/lib/entities";
 import {
-  DistrictFeature,
+  DistrictDetails,
   EntityUser,
   EntityUserRole,
 } from "@/app/lib/types/types";
 
-export async function getDistrictDTO(id: string): Promise<DistrictFeature> {
+export async function getDistrictDTO(id: string): Promise<DistrictDetails> {
   const supabase = await createClient();
+  const entityId = await resolveDistrictEntityId(supabase, id);
 
-  const { data: byId, error: byIdError } = await supabase
-    .from("districts")
-    .select(
-      "id, sdorgid, shortname, properties, geometry_simplified, centroid_lat, centroid_lng, entity_id",
-    )
-    .eq("id", id)
-    .maybeSingle();
+  const selectClause =
+    "id, sdorgid, shortname, status, properties, centroid_lat, centroid_lng";
 
-  if (byIdError) {
-    throw byIdError;
-  }
-
-  const { data: bySdorgid, error: bySdorgidError } = byId
-    ? { data: null, error: null }
-    : await supabase
+  const { data: districtByEntity, error: districtByEntityError } =
+    await supabase
       .from("districts")
-      .select(
-        "id, sdorgid, shortname, properties, geometry_simplified, centroid_lat, centroid_lng, entity_id",
-      )
-      .eq("sdorgid", id)
+      .select(selectClause)
+      .eq("entity_id", entityId)
       .maybeSingle();
 
-  if (bySdorgidError) {
-    throw bySdorgidError;
+  if (districtByEntityError) {
+    throw districtByEntityError;
   }
 
-  const district = byId ?? bySdorgid;
+  const { data: districtById, error: districtByIdError } =
+    districtByEntity
+      ? { data: null, error: null }
+      : await supabase
+          .from("districts")
+          .select(selectClause)
+          .eq("id", id)
+          .maybeSingle();
+
+  if (districtByIdError) {
+    throw districtByIdError;
+  }
+
+  const { data: districtBySdorgid, error: districtBySdorgidError } =
+    districtByEntity || districtById
+      ? { data: null, error: null }
+      : await supabase
+          .from("districts")
+          .select(selectClause)
+          .eq("sdorgid", id)
+          .maybeSingle();
+
+  if (districtBySdorgidError) {
+    throw districtBySdorgidError;
+  }
+
+  const district = districtByEntity ?? districtById ?? districtBySdorgid;
 
   if (!district) {
     throw new Error("District not found");
   }
-
-  const resolveEntityId = async (): Promise<string> => {
-    const { data: bySdorgid, error: bySdorgidError } = await supabase
-      .from("entities")
-      .select("id")
-      .eq("entity_type", "district")
-      .eq("external_ids->>sdorgid", district.sdorgid)
-      .maybeSingle();
-    if (bySdorgidError) {
-      throw bySdorgidError;
-    }
-    if (bySdorgid?.id) return bySdorgid.id;
-
-    const { data: byDistrictId, error: byDistrictIdError } = await supabase
-      .from("entities")
-      .select("id")
-      .eq("entity_type", "district")
-      .eq("external_ids->>district_id", district.id)
-      .maybeSingle();
-    if (byDistrictIdError) {
-      throw byDistrictIdError;
-    }
-    if (byDistrictId?.id) return byDistrictId.id;
-
-    throw new Error(`Entity not found for district ${district.sdorgid}`);
-  };
-
-  const entityId = district.entity_id ?? await resolveEntityId();
 
   const { data: users } = await supabase
     .from("entity_users")
@@ -147,33 +135,25 @@ export async function getDistrictDTO(id: string): Promise<DistrictFeature> {
     fallback: string | null = "",
   ): string | null => (typeof val === "string" ? val : fallback);
 
-  const baseProps: DistrictFeature["properties"] = {
-    district_id: district.id,
+  return {
+    id: district.id,
+    entity_id: entityId,
     sdorgid: district.sdorgid,
-    shortname: district.shortname,
-    prefname: asString(props.prefname, district.shortname) ?? "",
-    sdnumber: asString(props.sdnumber, "") ?? "",
-    web_url: asString(props.web_url, "") ?? "",
+    shortname: district.shortname ?? null,
+    prefname: asString(props.prefname, district.shortname) ?? null,
+    sdnumber: asString(props.sdnumber, "") ?? null,
+    web_url: asString(props.web_url, "") ?? null,
     acres: asNumber(props.acres),
     formid: asString(props.formid, null),
     sdtype: asString(props.sdtype, null),
     sqmiles: asNumber(props.sqmiles),
     shape_area: asNumber(props.shape_area),
     shape_leng: asNumber(props.shape_leng),
-    centroid_lat: district.centroid_lat,
-    centroid_lng: district.centroid_lng,
-  };
-
-  const feature: DistrictFeature = {
-    type: "Feature",
-    id: district.id,
-    entity_id: entityId,
-    properties: baseProps,
-    geometry: district.geometry_simplified,
+    centroid_lat: district.centroid_lat ?? null,
+    centroid_lng: district.centroid_lng ?? null,
+    status: district.status ?? null,
     users: mappedUsers,
   };
-
-  return feature;
 }
 
 export const getDistrictDTOCached = cache(async (id: string) =>

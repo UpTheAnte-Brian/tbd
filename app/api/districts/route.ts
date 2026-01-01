@@ -1,11 +1,7 @@
 export const revalidate = 3600; // cache this route for 1 hour
 export const dynamic = "force-static";
 import { NextResponse } from "next/server";
-import type { GeoJsonObject } from "geojson";
-// This endpoint expects district boundaries to be stored in `entity_geometries` and exposed via the
-// `entity_geometries_geojson` view (Option A: GeoJSON derived from PostGIS).
-// The client you created from the Server-Side Auth instructions
-// import { supabaseServiceClient } from "@/utils/supabase/service-worker";
+import type { DistrictDetails } from "@/app/lib/types/types";
 import { createApiClient } from "@/utils/supabase/route";
 
 export async function GET() {
@@ -15,7 +11,7 @@ export async function GET() {
     const { data: districts, error: districtError } = await supabase
         .from("districts")
         .select(
-            "id, sdorgid, shortname, properties, centroid_lat, centroid_lng, entity_id",
+            "id, sdorgid, shortname, status, properties, centroid_lat, centroid_lng, entity_id",
         );
     console.timeEnd("sb fetch districts");
     console.time("combine districts");
@@ -58,37 +54,6 @@ export async function GET() {
         }
     }
 
-    // Load simplified boundary GeoJSON for each district entity.
-    // NOTE: This expects a DB view `public.entity_geometries_geojson` that exposes:
-    // - entity_id uuid
-    // - geometry_type text
-    // - geojson jsonb  (computed from ST_AsGeoJSON(geom)::jsonb)
-    const districtEntityIds = (districts ?? [])
-        .map((d) => d.entity_id)
-        .filter((v): v is string => typeof v === "string" && v.length > 0);
-
-    const geoByEntityId = new Map<string, GeoJsonObject>();
-
-    if (districtEntityIds.length > 0) {
-        const { data: geomRows, error: geomError } = await supabase
-            .from("entity_geometries_geojson")
-            .select("entity_id, geometry_type, geojson")
-            .in("entity_id", districtEntityIds)
-            .eq("geometry_type", "boundary_simplified");
-
-        if (geomError) {
-            return new Response("Failed to fetch entity geometry data", {
-                status: 500,
-            });
-        }
-
-        for (const g of geomRows ?? []) {
-            if (g?.entity_id && g?.geojson) {
-                geoByEntityId.set(g.entity_id, g.geojson);
-            }
-        }
-    }
-
     const asNumber = (val: unknown): number | null => {
         if (val === null || val === undefined || val === "") return null;
         const num = Number(val);
@@ -100,7 +65,8 @@ export async function GET() {
         fallback: string | null = "",
     ): string | null => typeof val === "string" ? val : fallback;
 
-    const features = districts?.map((row) => {
+    const rows: DistrictDetails[] = [];
+    for (const row of districts ?? []) {
         const rawProps = (() => {
             if (!row.properties) return {};
             if (typeof row.properties === "string") {
@@ -116,39 +82,35 @@ export async function GET() {
             Object.entries(rawProps).map(([k, v]) => [k.toLowerCase(), v]),
         ) as Record<string, unknown>;
 
-        const props = {
-            district_id: row.id,
+        const entityId = row.entity_id ??
+            entityBySdorgid.get(row.sdorgid) ??
+            entityByDistrictId.get(row.id);
+        if (!entityId) {
+            return new Response("Missing entity for district", { status: 500 });
+        }
+
+        rows.push({
+            id: row.id,
+            entity_id: entityId,
             sdorgid: row.sdorgid,
-            shortname: row.shortname,
-            prefname: asString(propsLower.prefname, row.shortname) ?? "",
-            sdnumber: asString(propsLower.sdnumber, "") ?? "",
-            web_url: asString(propsLower.web_url, "") ?? "",
+            shortname: row.shortname ?? null,
+            prefname: asString(propsLower.prefname, row.shortname) ?? null,
+            sdnumber: asString(propsLower.sdnumber, "") ?? null,
+            web_url: asString(propsLower.web_url, "") ?? null,
             acres: asNumber(propsLower.acres),
             formid: asString(propsLower.formid, null),
             sdtype: asString(propsLower.sdtype, null),
             sqmiles: asNumber(propsLower.sqmiles),
             shape_area: asNumber(propsLower.shape_area),
             shape_leng: asNumber(propsLower.shape_leng),
-            centroid_lat: row.centroid_lat,
-            centroid_lng: row.centroid_lng,
-        };
-
-        const entityId = row.entity_id ??
-            entityBySdorgid.get(row.sdorgid) ??
-            entityByDistrictId.get(row.id);
-
-        return {
-            type: "Feature",
-            id: row.id,
-            entity_id: entityId,
-            properties: props,
-            geometry: entityId ? geoByEntityId.get(entityId) ?? null : null,
-        };
-    });
+            status: row.status ?? null,
+            centroid_lat: row.centroid_lat ?? null,
+            centroid_lng: row.centroid_lng ?? null,
+        });
+    }
     console.timeEnd("combine districts");
 
     return NextResponse.json({
-        type: "FeatureCollection",
-        features,
+        districts: rows,
     });
 }

@@ -1,5 +1,3 @@
-import type { Feature, MultiPolygon, Polygon } from "geojson";
-
 // ----------------------------
 // Entity + User base types
 // ----------------------------
@@ -45,28 +43,23 @@ export const RoleOptions = {
 // ----------------------------
 // District domain
 // ----------------------------
-export interface DistrictProperties {
-    district_id?: string;
-    sdorgid: string; // "10004000000.0"
-    shortname: string; // "McGregor"
-    prefname: string; // "McGregor Public School District"
-    sdnumber: string; // "0004"
-    web_url: string; // "https://www.mcgregor.k12.mn.us/"
-    acres?: number | string | null; // "514149.7135"
-    formid?: string | null; // "0004-01"
-    sdtype?: string | null; // "01"
-    sqmiles?: number | string | null; // "803.3552"
-    shape_area?: number | string | null; // "2080689853.05"
-    shape_leng?: number | string | null; // "327108.90135599999"
+export interface DistrictDetails {
+    id: string; // UUID from districts table
+    entity_id: string; // UUID from entities table
+    sdorgid: string;
+    shortname: string | null;
+    prefname: string | null;
+    sdnumber: string | null;
+    web_url: string | null;
+    acres?: number | null;
+    formid?: string | null;
+    sdtype?: string | null;
+    sqmiles?: number | null;
+    shape_area?: number | null;
+    shape_leng?: number | null;
     centroid_lat?: number | null;
     centroid_lng?: number | null;
-}
-
-export interface DistrictFeature
-    extends Feature<Polygon | MultiPolygon, DistrictProperties> {
-    id: string; // UUID from Supabase
-    entity_id?: string; // UUID from entities table
-    properties: DistrictProperties;
+    status?: string | null;
     users?: EntityUser[]; // optional list of related users
 }
 

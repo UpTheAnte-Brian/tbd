@@ -15,8 +15,9 @@ export default async function DistrictLayout({
   const { id: districtId } = await params;
   let entityId: string | null = null;
   try {
+    console.log("districtId: ", districtId);
     const district = await getDistrictDTOCached(districtId);
-    entityId = district?.entity_id ?? null;
+    entityId = district.entity_id;
   } catch (err) {
     console.error("Failed to resolve district entity id for branding:", err);
   }

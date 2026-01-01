@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
-import { DistrictFeature } from "@/app/lib/types/types";
+import { DistrictDetails } from "@/app/lib/types/types";
 import Canvas from "react-canvas-confetti/dist/presets/snow";
 import { useUser } from "@/app/hooks/useUser";
 import DistrictSearch from "@/app/components/districts/district-search";
@@ -23,7 +23,7 @@ export function DonatePageContent({
   );
   const [donationAmount, setDonationAmount] = useState<number | "">("");
   const [subscriptionType, setSubscriptionType] = useState("none");
-  const [districts, setDistricts] = useState<DistrictFeature[]>([]);
+  const [districts, setDistricts] = useState<DistrictDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useUser();
 
@@ -33,7 +33,7 @@ export function DonatePageContent({
       try {
         const res = await fetch("/api/districts");
         const data = await res.json();
-        setDistricts(data.features);
+        setDistricts(data.districts ?? []);
       } catch (error) {
         console.error("Failed to fetch districts:", error);
         setDistricts([]);
@@ -133,7 +133,7 @@ export function DonatePageContent({
         Donate{" "}
         {selectedDistrictId && (
           <span className="text-3xl font-bold text-gray-700">
-            to {districts.find((d) => d.id === selectedDistrictId)?.properties?.shortname}
+            to {districts.find((d) => d.id === selectedDistrictId)?.shortname}
           </span>
         )}
       </h1>
@@ -149,7 +149,15 @@ export function DonatePageContent({
             </h2>
             <DistrictSearch
               features={districts}
-              onSelect={(selected) => setSelectedDistrictId(selected.id)}
+              onSelect={(selected) => {
+                const id =
+                  typeof selected.id === "string" || typeof selected.id === "number"
+                    ? String(selected.id)
+                    : null;
+                if (id) {
+                  setSelectedDistrictId(id);
+                }
+              }}
             />
           </div>
         )}

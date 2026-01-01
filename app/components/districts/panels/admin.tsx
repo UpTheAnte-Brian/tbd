@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Profile, DistrictFeature } from "@/app/lib/types/types";
+import { EntityUser, Profile, DistrictDetails } from "@/app/lib/types/types";
 import UserRolesAssignments from "@/app/components/ui/user-roles-assignments";
 
 export default function DistrictAdmin({
@@ -8,11 +8,13 @@ export default function DistrictAdmin({
   reloadDistrict,
 }: {
   user: Profile;
-  district: DistrictFeature;
+  district: DistrictDetails;
   reloadDistrict: () => void;
 }) {
   const [users, setUsers] = useState<Profile[]>([]);
-  const [assignedUsers, setAssignedUsers] = useState(district.users || []);
+  const [assignedUsers, setAssignedUsers] = useState<EntityUser[]>(
+    district.users ?? []
+  );
   const entityId = district.entity_id;
 
   useEffect(() => {
@@ -30,7 +32,7 @@ export default function DistrictAdmin({
   }, []);
 
   useEffect(() => {
-    setAssignedUsers(district.users || []);
+    setAssignedUsers(district.users ?? []);
   }, [district]);
 
   return (
@@ -53,7 +55,7 @@ export default function DistrictAdmin({
           profiles={assignedUsers}
           entityType="district"
           entityId={entityId}
-          entityName={district.properties?.shortname ?? ""}
+          entityName={district.shortname ?? ""}
           reload={reloadDistrict}
           availableUsers={users.filter(
             (u) => !assignedUsers.some((assigned) => assigned.user_id === u.id),

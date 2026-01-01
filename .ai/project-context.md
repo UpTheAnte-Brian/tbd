@@ -13,6 +13,14 @@
 - No Supabase client calls directly from React components (fetch UI → API route → DTO)
 - API routes should stay thin and delegate to DTO/service helpers
 - Shared logic belongs in `/lib` or `/services`, not in components
+- Districts are entity-backed; `entity_id` is required in district DTOs and must be resolved before branding/permissions
+- Avoid sdorgid-based routing; use UUIDs and resolve entity context first
+- District URLs are canonicalized to `entities.id`; keep legacy keys only as metadata (`properties.district_id`, `properties.sdorgid`)
+- Home map is state-first: `/` only loads state geometries and drills into districts in-place (no navigation required)
+- All map data must flow through `/api/map/*` routes, never direct Supabase calls from map components
+- Map APIs return FeatureCollections with `entity_id` as the feature id and `properties.active`/`properties.child_count` to gate navigation
+- Map feature types use GeoJSON `Geometry` (Point/Polygon/etc); each `/api/map/*` route must filter `geometry_type` for its layer
+- Entity Map Explorer uses a single map instance with in-place layer swaps; data loading/caching lives in the controller, rendering in the shell
 
 ## Linting & TypeScript Rules
 - `strict` mode on; `no-explicit-any` enforced

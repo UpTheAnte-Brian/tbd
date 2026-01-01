@@ -3,7 +3,7 @@
 import Link from "next/link";
 // import { useState } from "react";
 import { Input } from "../../components/ui/input";
-import { DistrictFeature } from "../../lib/types/types";
+import { DistrictDetails } from "../../lib/types/types";
 import React from "react";
 
 const DistrictCard = React.memo(
@@ -12,7 +12,7 @@ const DistrictCard = React.memo(
     uploading,
     handleLogoUpload,
   }: {
-    district: DistrictFeature;
+    district: DistrictDetails;
     uploading: boolean;
     handleLogoUpload: (
       e: React.ChangeEvent<HTMLInputElement>,
@@ -21,20 +21,19 @@ const DistrictCard = React.memo(
   }) => {
     // const [description, setDescription] = useState(district.metadata?.description || "");
     // const [description, setDescription] = useState("");
-    const props = district.properties;
 
     return (
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3">
         <Link href={`/districts/${district.id}`}>
           <div className="text-lg font-semibold text-blue-600 underline text-center">
-            {props?.shortname} ({Number(props?.sdnumber)})
+            {district.shortname} ({Number(district.sdnumber)})
           </div>
         </Link>
         <Input
           type="file"
           accept="image/*"
           onChange={(e) => {
-            if (props?.sdorgid) handleLogoUpload(e, props.sdorgid);
+            if (district.sdorgid) handleLogoUpload(e, district.sdorgid);
           }}
           disabled={uploading}
         />

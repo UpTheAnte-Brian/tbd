@@ -1,36 +1,22 @@
 "use client";
 import { useEffect, useState } from "react";
-import { DistrictFeature, EntityUser, Profile } from "@/app/lib/types/types";
+import { EntityUser, Profile } from "@/app/lib/types/types";
 import Link from "next/link";
-import AssignDistrictsModal from "@/app/components/districts/AssignDistrictsModal";
 
 export default function UsersPage() {
   const [users, setUsers] = useState<Profile[]>([]);
-  const [features, setFeatures] = useState<DistrictFeature[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [assignToId, setAssignToId] = useState<string | null>(null);
 
-  // Load users + districts
+  // Load users
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [usersRes, districtsRes] = await Promise.all([
-          fetch("/api/users"),
-          fetch("/api/districts"),
-        ]);
-
+        const usersRes = await fetch("/api/users");
         if (!usersRes.ok) throw new Error("Failed to load users");
-        if (!districtsRes.ok) throw new Error("Failed to load districts");
 
         const usersData = (await usersRes.json()) as Profile[];
-        const geojson = (await districtsRes.json()) as {
-          features: DistrictFeature[];
-        };
-
         setUsers(usersData);
-        setFeatures(geojson.features);
-         
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to load data";
@@ -63,31 +49,6 @@ export default function UsersPage() {
   if (loading) return <div>Loading…</div>;
   if (error) return <div>Error: {error}</div>;
 
-  const handleSaveAssignments = async () => {
-    const user = users.find((u) => u.id === assignToId);
-    if (!user) return;
-
-    try {
-      const res = await fetch(`/api/users/${user.id}/districts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          districtIds: (user.entity_users ?? [])
-            .filter((eu) => eu.entity_type === "district")
-            .map((eu) => eu.entity_id),
-        }),
-      });
-
-      if (!res.ok) throw new Error("Failed to save assignments");
-
-      // ✅ Close modal and rely on local state (already updated)
-      setAssignToId(null);
-    } catch (err) {
-      console.error(err);
-      alert("Error saving districts");
-    }
-  };
-
   return (
     <div className="p-6">
       <h1 className="text-xl font-bold mb-4">Users</h1>
@@ -102,9 +63,6 @@ export default function UsersPage() {
             </th>
             <th className="border border-gray-300 px-2 py-1 text-left text-black">
               Districts
-            </th>
-            <th className="border border-gray-300 px-2 py-1 text-black">
-              Actions
             </th>
           </tr>
         </thead>
@@ -148,37 +106,10 @@ export default function UsersPage() {
                   <span className="text-gray-500 italic">None</span>
                 )}
               </td>
-              <td className="border border-gray-300 px-2 py-1">
-                <button
-                  className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
-                  onClick={() => setAssignToId(u.id)}
-                >
-                  Assign District
-                </button>
-              </td>
             </tr>
           ))}
         </tbody>
       </table>
-      {/* Modal for district search */}
-      {assignToId && (
-        <AssignDistrictsModal
-          setAssignToId={setAssignToId}
-          assignToId={assignToId!}
-          handleSaveAssignments={() => {
-            setUsers((localUsers) => {
-              // localUsers is not defined here; we must pass it from modal
-              // So instead, update handleSaveAssignments to accept localUsers
-              return localUsers;
-            });
-            handleSaveAssignments();
-          }}
-          users={users}
-          features={features}
-          setUsers={setUsers}
-          onClose={() => setAssignToId(null)}
-        />
-      )}
     </div>
   );
 }

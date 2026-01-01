@@ -1,11 +1,11 @@
 // app/hooks/useUser.ts
 "use client";
 
-import { DistrictFeature } from "@/app/lib/types/types";
+import { DistrictDetails } from "@/app/lib/types/types";
 import { useCallback, useEffect, useState } from "react";
 
 export function useDistrict(id: string) {
-    const [district, setDistrict] = useState<DistrictFeature | null>(
+    const [district, setDistrict] = useState<DistrictDetails | null>(
         null,
     );
     const [loading, setLoading] = useState(true);

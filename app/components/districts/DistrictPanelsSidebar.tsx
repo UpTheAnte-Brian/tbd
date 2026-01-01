@@ -9,12 +9,12 @@ import DistrictMap from "@/app/components/districts/panels/DistrictMap";
 import DistrictOverview from "@/app/components/districts/panels/overview";
 import DistrictPrimaryLogo from "@/app/components/districts/branding/DistrictPrimaryLogo";
 import BrandPaletteCube from "@/app/components/branding/BrandPaletteCube";
-import { DistrictFeature, EntityUser, Profile } from "@/app/lib/types/types";
+import { DistrictDetails, EntityUser, Profile } from "@/app/lib/types/types";
 import { hasEntityRole } from "@/app/lib/auth/entityRoles";
 
 type Props = {
   user: Profile | null;
-  district: DistrictFeature;
+  district: DistrictDetails;
   reloadDistrict: () => void;
 };
 
@@ -23,7 +23,6 @@ export default function DistrictPanelsSidebar({
   district,
   reloadDistrict,
 }: Props) {
-  const props = district.properties;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -36,7 +35,7 @@ export default function DistrictPanelsSidebar({
   const districtAdmin = hasEntityRole(
     entityUsers,
     "district",
-    district.entity_id ?? district.id,
+    district.entity_id,
     ["admin"],
   );
 
@@ -77,9 +76,9 @@ export default function DistrictPanelsSidebar({
     <div className="flex flex-col md:flex-row gap-4">
       <aside className="w-48 rounded-lg bg-district-primary-0 text-district-secondary-0 border border-district-primary-1/30 p-2 shadow-sm flex flex-col gap-3 md:sticky md:top-24 self-start">
         <DistrictPrimaryLogo
-          entityId={district.entity_id ?? district.id}
+          entityId={district.entity_id}
           entityType="district"
-          districtName={props?.shortname ?? ""}
+          districtName={district.shortname ?? ""}
         />
         <div className="mt-4 space-y-2 hidden md:block">
           {tabs.map((tab) => {
@@ -125,9 +124,9 @@ export default function DistrictPanelsSidebar({
           <DistrictOverview district={district} />
         ) : activeTab === "Branding" ? (
           <BrandingPanel
-            entityId={district.entity_id ?? null}
+            entityId={district.entity_id}
             entityType="district"
-            entityName={props?.shortname ?? "Entity"}
+            entityName={district.shortname ?? "Entity"}
           />
         ) : activeTab === "Admin" && user && (platformAdmin || districtAdmin) ? (
           <DistrictAdmin

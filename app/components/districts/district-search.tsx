@@ -1,14 +1,21 @@
 "use client";
 import { useState, useMemo } from "react";
-import { DistrictFeature } from "@/app/lib/types/types";
 import { getLabel } from "@/app/lib/district/utils";
 
-type Props = {
-  features: DistrictFeature[];
-  onSelect: (feature: DistrictFeature) => void;
+type SearchFeature = {
+  id?: string | number | null;
+  properties?: Record<string, unknown> | null;
 };
 
-export default function DistrictSearch({ features, onSelect }: Props) {
+type Props<T extends SearchFeature> = {
+  features: T[];
+  onSelect: (feature: T) => void;
+};
+
+export default function DistrictSearch<T extends SearchFeature>({
+  features,
+  onSelect,
+}: Props<T>) {
   const [query, setQuery] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
@@ -17,11 +24,18 @@ export default function DistrictSearch({ features, onSelect }: Props) {
     if (!q) return [] as { id: string; label: string }[];
     return features
       .map((f) => {
-        const id = f.id;
+        const id =
+          typeof f.id === "string" || typeof f.id === "number"
+            ? String(f.id)
+            : "";
         const label =
-          getLabel(f) ||
-          f.properties?.shortname ||
-          f.properties?.prefname ||
+          getLabel(f as { properties?: Record<string, unknown> | null }) ||
+          (typeof f.properties?.["name"] === "string"
+            ? f.properties?.["name"]
+            : null) ||
+          (typeof f.properties?.["slug"] === "string"
+            ? f.properties?.["slug"]
+            : null) ||
           "";
         return { id, label };
       })
@@ -30,7 +44,7 @@ export default function DistrictSearch({ features, onSelect }: Props) {
   }, [query, features]);
 
   const handleSelect = (s: { id: string; label: string }) => {
-    const f = features.find((d) => d.id === s.id);
+    const f = features.find((d) => String(d.id ?? "") === s.id);
     if (f) {
       onSelect(f);
     }

@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import { DistrictFeature } from "../../lib/types/types";
+import { DistrictDetails } from "../../lib/types/types";
 import { Button } from "@/app/components/ui/button";
 
 type DistrictsPanelProps = {
   selectedId: string | null;
   setSelectedId: (id: string | null) => void;
-  districts: DistrictFeature[];
+  districts: DistrictDetails[];
   mapRef: React.RefObject<google.maps.Map | null>;
   panToMinnesota: () => void;
 };
@@ -21,7 +21,7 @@ export function DistrictList({
 }: DistrictsPanelProps) {
   // WRAP IN USE EFFECT WITH selectedId dependency
   const [selectedFeature, setSelectedFeature] =
-    useState<DistrictFeature>();
+    useState<DistrictDetails>();
 
   useEffect(() => {
     const fetchDistrict = async () => {
@@ -42,11 +42,8 @@ export function DistrictList({
       <div className="overflow-y-auto flex-1">
         <ul>
           {districts.map((feature) => {
-            const id =
-              feature.properties?.district_id ??
-              feature.id ??
-              feature.properties?.sdorgid;
-            const name = feature.properties?.shortname || "Unnamed";
+            const id = feature.id;
+            const name = feature.shortname || "Unnamed";
             return (
               <li
                 key={id}
@@ -65,24 +62,24 @@ export function DistrictList({
       </div>
       {/* Selected feature details */}
       <div className="flex-1 p-4 border-t border-gray-600 overflow-y-auto">
-        {selectedFeature?.properties?.sdorgid && (
+        {selectedFeature?.sdorgid && (
           <div className="space-y-2 text-black">
             <h3 className="text-lg font-semibold">
-              {selectedFeature.properties?.shortname}
+              {selectedFeature.shortname}
             </h3>
             <p className="text-sm">
-              District ID: {selectedFeature.properties?.sdorgid}
+              District ID: {selectedFeature.sdorgid}
             </p>
             <p className="text-sm">
               Website:{" "}
-              {selectedFeature.properties?.web_url ? (
+              {selectedFeature.web_url ? (
                 <a
-                  href={selectedFeature.properties.web_url}
+                  href={selectedFeature.web_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 underline"
                 >
-                  {selectedFeature.properties.web_url}
+                  {selectedFeature.web_url}
                 </a>
               ) : (
                 "Not provided"

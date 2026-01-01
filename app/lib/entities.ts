@@ -38,10 +38,14 @@ export async function resolveDistrictEntityId(
     if (isUuid(districtKey)) {
         const { data: districtRow, error: districtError } = await supabase
             .from("districts")
-            .select("sdorgid")
+            .select("sdorgid, entity_id")
             .eq("id", districtKey)
             .maybeSingle();
         if (districtError) throw districtError;
+
+        if (districtRow?.entity_id) {
+            return districtRow.entity_id;
+        }
 
         if (districtRow?.sdorgid) {
             const { data: bySdorgidFromDistrict, error } = await supabase

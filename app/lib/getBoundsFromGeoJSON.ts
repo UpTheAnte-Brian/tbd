@@ -1,7 +1,13 @@
-import type { Feature, Geometry, GeometryCollection, Position } from "geojson";
+import type {
+    Feature,
+    FeatureCollection,
+    Geometry,
+    GeometryCollection,
+    Position,
+} from "geojson";
 
 export function getBoundsFromGeoJSON(
-    feature: Feature<Geometry>,
+    input: Feature<Geometry> | FeatureCollection<Geometry>,
 ): google.maps.LatLngBounds {
     const bounds = new google.maps.LatLngBounds();
 
@@ -26,7 +32,20 @@ export function getBoundsFromGeoJSON(
         }
     };
 
-    const geometry = feature.geometry;
+    if (input.type === "FeatureCollection") {
+        for (const feature of input.features) {
+            const nested = getBoundsFromGeoJSON(feature);
+            if (!nested.isEmpty()) {
+                bounds.union(nested);
+            }
+        }
+        return bounds;
+    }
+
+    const geometry = input.geometry;
+    if (!geometry) {
+        return bounds;
+    }
 
     switch (geometry.type) {
         case "Point":

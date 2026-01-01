@@ -1,32 +1,66 @@
-import { Feature, Geometry } from "geojson";
-import { DistrictFeature, DistrictProperties } from "../types/types";
+import type { Geometry } from "geojson";
 
 export function getLabel(
-    feature: Feature<Geometry, DistrictProperties>,
+    feature: {
+        properties?: Record<string, unknown> | null;
+        shortname?: string | null;
+        prefname?: string | null;
+        name?: string | null;
+        slug?: string | null;
+        sdorgid?: string | null;
+    },
 ): string | null {
+    const asString = (val: unknown): string | null =>
+        typeof val === "string" ? val : null;
     // Adjust based on your actual property keys
-    return feature.properties?.shortname || feature.properties?.sdorgid || null;
+    return (
+        asString(feature.shortname) ||
+        asString(feature.prefname) ||
+        asString(feature.name) ||
+        asString(feature.slug) ||
+        asString(feature.sdorgid) ||
+        asString(feature.properties?.shortname) ||
+        asString(feature.properties?.prefname) ||
+        asString(feature.properties?.name) ||
+        asString(feature.properties?.slug) ||
+        asString(feature.properties?.sdorgid) ||
+        null
+    );
 }
 
 export function getLabelPosition(
-    feature: DistrictFeature,
+    feature: {
+        geometry?: Geometry | null;
+        properties?: Record<string, unknown> | null;
+        centroid_lat?: number | null;
+        centroid_lng?: number | null;
+    },
 ): google.maps.LatLng | null {
     const geom = feature.geometry;
 
-    if (geom.type === "Polygon") {
+    if (geom?.type === "Polygon") {
         const coords = geom.coordinates[0];
         return new google.maps.LatLng(...getPolygonCentroid(coords));
     }
 
-    if (geom.type === "MultiPolygon") {
+    if (geom?.type === "MultiPolygon") {
         const outerRing = geom.coordinates[0][0];
         return new google.maps.LatLng(...getPolygonCentroid(outerRing));
     }
 
     // fallback
+    const props = feature.properties ?? {};
+    const lat =
+        (typeof feature.centroid_lat === "number" && feature.centroid_lat) ||
+        (typeof props.centroid_lat === "number" && props.centroid_lat) ||
+        45;
+    const lng =
+        (typeof feature.centroid_lng === "number" && feature.centroid_lng) ||
+        (typeof props.centroid_lng === "number" && props.centroid_lng) ||
+        -93;
     return new google.maps.LatLng(
-        feature.properties?.centroid_lat || 45,
-        feature.properties?.centroid_lng || -93,
+        lat,
+        lng,
     );
 }
 

@@ -1,13 +1,13 @@
 import { useEffect, useRef } from "react";
 import { getLabel, getLabelPosition } from "../lib/district/utils";
-import { DistrictFeature } from "../lib/types/types";
+import type { EntityFeature } from "@/app/lib/types/map";
 
 interface UseLabelMarkersProps {
     mapRef: React.RefObject<google.maps.Map | null>;
-    features: DistrictFeature[];
+    features: EntityFeature[];
     zoom: number;
     selectedId: string | null;
-    onClickFeature?: (feature: DistrictFeature) => void;
+    onClickFeature?: (feature: EntityFeature) => void;
 }
 
 export function useLabelMarkers({

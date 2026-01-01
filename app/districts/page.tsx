@@ -11,7 +11,7 @@ import React, {
 import type { GridApi, IClientSideRowModel } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { themeQuartz } from "ag-grid-community";
-import { DistrictFeature } from "@/app/lib/types/types";
+import { DistrictDetails } from "@/app/lib/types/types";
 import { ColDef, GridReadyEvent } from "ag-grid-community";
 import Link from "next/link";
 import type { ICellRendererParams } from "ag-grid-community";
@@ -24,10 +24,10 @@ type FullGridApi<T> = GridApi<T> & {
 };
 
 export default function DistrictsPage() {
-  const [districts, setDistricts] = useState<DistrictFeature[]>([]);
+  const [districts, setDistricts] = useState<DistrictDetails[]>([]);
   const [searchText, setSearchText] = useState("");
   const [visibleCount, setVisibleCount] = useState(0);
-  const gridApiRef = useRef<FullGridApi<DistrictFeature> | null>(null);
+  const gridApiRef = useRef<FullGridApi<DistrictDetails> | null>(null);
   const isSmall = useMediaQuery({ maxWidth: 767 });
 
   useEffect(() => {
@@ -36,8 +36,8 @@ export default function DistrictsPage() {
         const response = await fetch("/api/districts", { method: "GET" });
         if (!response.ok) throw new Error("Failed to fetch districts");
         const json = await response.json();
-        if (json?.features?.length) {
-          setDistricts(json.features as DistrictFeature[]);
+        if (json?.districts?.length) {
+          setDistricts(json.districts as DistrictDetails[]);
         } else {
           console.warn("Unexpected /api/districts format:", json);
         }
@@ -48,13 +48,16 @@ export default function DistrictsPage() {
     fetchDistricts();
   }, []);
 
-  const onGridReady = useCallback((params: GridReadyEvent<DistrictFeature>) => {
-    gridApiRef.current = params.api as FullGridApi<DistrictFeature>;
-    setVisibleCount(params.api.getDisplayedRowCount());
-    params.api.addEventListener("filterChanged", () => {
+  const onGridReady = useCallback(
+    (params: GridReadyEvent<DistrictDetails>) => {
+      gridApiRef.current = params.api as FullGridApi<DistrictDetails>;
       setVisibleCount(params.api.getDisplayedRowCount());
-    });
-  }, []);
+      params.api.addEventListener("filterChanged", () => {
+        setVisibleCount(params.api.getDisplayedRowCount());
+      });
+    },
+    [],
+  );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -88,18 +91,15 @@ export default function DistrictsPage() {
   //   }
   // };
 
-  const columnDefs: ColDef<DistrictFeature>[] = useMemo(() => {
-    const baseColumns: ColDef<DistrictFeature>[] = [
+  const columnDefs: ColDef<DistrictDetails>[] = useMemo(() => {
+    const baseColumns: ColDef<DistrictDetails>[] = [
       {
         headerName: "District Name",
         flex: 1.5,
-        valueGetter: (params) => params.data?.properties?.prefname,
-        cellRenderer: (params: ICellRendererParams<DistrictFeature>) => {
-          const id =
-            params.data?.properties?.district_id ??
-            params.data?.id ??
-            params.data?.properties?.sdorgid;
-          const name = params.data?.properties?.prefname ?? params.value;
+        valueGetter: (params) => params.data?.prefname,
+        cellRenderer: (params: ICellRendererParams<DistrictDetails>) => {
+          const id = params.data?.id;
+          const name = params.data?.prefname ?? params.value;
           if (!id) return name;
           return (
             <Link
@@ -114,14 +114,14 @@ export default function DistrictsPage() {
       {
         headerName: "Number",
         width: 120,
-        valueGetter: (params) => params.data?.properties?.sdnumber,
+        valueGetter: (params) => params.data?.sdnumber,
       },
       {
         headerName: "District Website",
         flex: 1.5,
-        valueGetter: (params) => params.data?.properties?.web_url,
-        cellRenderer: (params: ICellRendererParams<DistrictFeature>) => {
-          const url = params.data?.properties?.web_url;
+        valueGetter: (params) => params.data?.web_url,
+        cellRenderer: (params: ICellRendererParams<DistrictDetails>) => {
+          const url = params.data?.web_url;
           if (!url) return "";
           const domain = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
           return (
@@ -147,7 +147,7 @@ export default function DistrictsPage() {
       {
         headerName: "Short Name",
         flex: 1,
-        valueGetter: (params) => params.data?.properties?.shortname,
+        valueGetter: (params) => params.data?.shortname,
       },
       baseColumns[1],
       baseColumns[2],
@@ -182,7 +182,7 @@ export default function DistrictsPage() {
       </div>
 
       <div className="ag-theme-quartz h-[600px] w-full text-white bg-[#0f1116]">
-        <AgGridReact<DistrictFeature>
+        <AgGridReact<DistrictDetails>
           rowData={districts}
           columnDefs={columnDefs}
           rowModelType="clientSide"

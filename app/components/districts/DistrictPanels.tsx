@@ -4,7 +4,7 @@ import DistrictAdmin from "@/app/components/districts/panels/admin";
 import { BrandingPanel } from "@/app/components/districts/panels/branding";
 import DistrictMap from "@/app/components/districts/panels/DistrictMap";
 import DistrictOverview from "@/app/components/districts/panels/overview";
-import { DistrictFeature, EntityUser, Profile } from "@/app/lib/types/types";
+import { DistrictDetails, EntityUser, Profile } from "@/app/lib/types/types";
 import { hasEntityRole } from "@/app/lib/auth/entityRoles";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -15,10 +15,9 @@ export default function DistrictPanels({
   reloadDistrict,
 }: {
   user: Profile | null;
-  district: DistrictFeature;
+  district: DistrictDetails;
   reloadDistrict: () => void;
 }) {
-  const props = district.properties;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -31,7 +30,7 @@ export default function DistrictPanels({
   const districtAdmin = hasEntityRole(
     entityUsers,
     "district",
-    district.entity_id ?? district.id,
+    district.entity_id,
     ["admin"],
   );
 
@@ -101,9 +100,9 @@ export default function DistrictPanels({
           <DistrictOverview district={district} />
         ) : activeTab === "Branding" ? (
           <BrandingPanel
-            entityId={district.entity_id ?? null}
+            entityId={district.entity_id}
             entityType="district"
-            entityName={props?.shortname ?? "Entity"}
+            entityName={district.shortname ?? "Entity"}
           />
         ) : activeTab === "Admin" && user && (platformAdmin || districtAdmin) ? (
           <DistrictAdmin

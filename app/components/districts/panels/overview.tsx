@@ -1,13 +1,13 @@
 import Link from "next/link";
 import DistrictDonationsSummary from "@/app/components/districts/DistrictDonationsSummary";
 import DistrictSideBar from "@/app/components/ui/district-sidebar";
-import { DistrictFeature } from "@/app/lib/types/types";
+import { DistrictDetails } from "@/app/lib/types/types";
 
 export default function DistrictOverview({
   district,
 }: // user,
 {
-  district: DistrictFeature;
+  district: DistrictDetails;
   // user: Profile | null;
 }) {
   return (
