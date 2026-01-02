@@ -16,6 +16,87 @@ export interface NonprofitDTO extends Nonprofit {
     foundation_metadata: FoundationMetadata | null;
 }
 
+async function resolveNonprofitEntityIdByNonprofitId(
+    nonprofitId: string,
+) : Promise<string | null> {
+    const supabase = await createApiClient();
+
+    const { data: directEntity, error: directError } = await supabase
+        .from("entities")
+        .select("id")
+        .eq("entity_type", "nonprofit")
+        .eq("id", nonprofitId)
+        .maybeSingle();
+    if (directError) throw directError;
+    if (directEntity?.id) return String(directEntity.id);
+
+    const { data: byExternal, error: externalError } = await supabase
+        .from("entities")
+        .select("id, external_ids")
+        .eq("entity_type", "nonprofit")
+        .eq("external_ids->>nonprofit_id", nonprofitId)
+        .maybeSingle();
+    if (externalError) throw externalError;
+    if (byExternal?.id) return String(byExternal.id);
+
+    return null;
+}
+
+async function resolveNonprofitIdFromEntityId(
+    entityId: string,
+): Promise<string | null> {
+    const supabase = await createApiClient();
+    const { data, error } = await supabase
+        .from("entities")
+        .select("external_ids")
+        .eq("entity_type", "nonprofit")
+        .eq("id", entityId)
+        .maybeSingle();
+
+    if (error) throw error;
+    const externalIds = data?.external_ids as Record<string, unknown> | null;
+    const nonprofitId = externalIds?.nonprofit_id;
+    return typeof nonprofitId === "string" ? nonprofitId : null;
+}
+
+async function mapNonprofitEntityIds(
+    nonprofitIds: string[],
+): Promise<Map<string, string>> {
+    const supabase = await createApiClient();
+    const entityIdByNonprofitId = new Map<string, string>();
+
+    if (nonprofitIds.length === 0) return entityIdByNonprofitId;
+
+    const { data: directRows, error: directError } = await supabase
+        .from("entities")
+        .select("id")
+        .eq("entity_type", "nonprofit")
+        .in("id", nonprofitIds);
+    if (directError) throw directError;
+    (directRows ?? []).forEach((row) => {
+        if (row?.id) {
+            entityIdByNonprofitId.set(String(row.id), String(row.id));
+        }
+    });
+
+    const { data: externalRows, error: externalError } = await supabase
+        .from("entities")
+        .select("id, external_ids")
+        .eq("entity_type", "nonprofit")
+        .in("external_ids->>nonprofit_id", nonprofitIds);
+    if (externalError) throw externalError;
+
+    (externalRows ?? []).forEach((row) => {
+        const externalIds = row.external_ids as Record<string, unknown> | null;
+        const nonprofitId = externalIds?.nonprofit_id;
+        if (row?.id && typeof nonprofitId === "string") {
+            entityIdByNonprofitId.set(nonprofitId, String(row.id));
+        }
+    });
+
+    return entityIdByNonprofitId;
+}
+
 /**
  * Fetch a nonprofit by ID.
  */
@@ -26,13 +107,44 @@ export async function getNonprofitDTO(id: string): Promise<NonprofitDTO> {
         .from("nonprofits")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
-    if (nonprofitError || !nonprofit) {
-        throw new Error(nonprofitError?.message ?? "Nonprofit not found");
+    if (nonprofitError) {
+        throw new Error(nonprofitError.message);
     }
 
-    return { ...nonprofit, foundation_metadata: null };
+    if (nonprofit) {
+        const entityId = await resolveNonprofitEntityIdByNonprofitId(
+            String(nonprofit.id),
+        );
+        return {
+            ...nonprofit,
+            entity_id: entityId ?? null,
+            foundation_metadata: null,
+        };
+    }
+
+    const nonprofitId = await resolveNonprofitIdFromEntityId(id);
+    if (!nonprofitId) {
+        throw new Error("Nonprofit not found");
+    }
+
+    const { data: nonprofitByEntity, error: nonprofitByEntityError } =
+        await supabase
+            .from("nonprofits")
+            .select("*")
+            .eq("id", nonprofitId)
+            .maybeSingle();
+
+    if (nonprofitByEntityError || !nonprofitByEntity) {
+        throw new Error(nonprofitByEntityError?.message ?? "Nonprofit not found");
+    }
+
+    return {
+        ...nonprofitByEntity,
+        entity_id: id,
+        foundation_metadata: null,
+    };
 }
 
 /**
@@ -68,8 +180,14 @@ export async function listNonprofitDTO(filters?: {
 
     if (!nonprofits) return [];
 
+    const ids = nonprofits
+        .map((np) => String(np.id))
+        .filter((value) => value.length > 0);
+    const entityIdByNonprofitId = await mapNonprofitEntityIds(ids);
+
     return nonprofits.map((np) => ({
         ...np,
+        entity_id: entityIdByNonprofitId.get(String(np.id)) ?? null,
         foundation_metadata: null,
     }));
 }

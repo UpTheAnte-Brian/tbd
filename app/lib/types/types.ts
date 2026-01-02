@@ -89,6 +89,7 @@ export type BusinessStatus =
 
 export interface Business {
     id: string;
+    entity_id?: string | null;
     place_id?: string;
     name: string;
     address?: string;

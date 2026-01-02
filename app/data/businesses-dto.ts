@@ -39,6 +39,63 @@ type EntityUserRow = {
         | null;
 };
 
+type EntityIdRow = {
+    id: string;
+    external_ids?: Record<string, unknown> | null;
+};
+
+async function mapBusinessEntityIds(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    businessIds: string[],
+): Promise<Map<string, string>> {
+    const entityIdByBusinessId = new Map<string, string>();
+    if (businessIds.length === 0) return entityIdByBusinessId;
+
+    const { data: directRows, error: directError } = await supabase
+        .from("entities")
+        .select("id")
+        .eq("entity_type", "business")
+        .in("id", businessIds);
+    if (directError) throw directError;
+    (directRows ?? []).forEach((row) => {
+        if (row?.id) {
+            entityIdByBusinessId.set(String(row.id), String(row.id));
+        }
+    });
+
+    const { data: externalRows, error: externalError } = await supabase
+        .from("entities")
+        .select("id, external_ids")
+        .eq("entity_type", "business")
+        .in("external_ids->>business_id", businessIds);
+    if (externalError) throw externalError;
+    (externalRows ?? []).forEach((row) => {
+        const externalIds = (row as EntityIdRow).external_ids ?? null;
+        const businessId = externalIds?.business_id;
+        if (row?.id && typeof businessId === "string") {
+            entityIdByBusinessId.set(businessId, String(row.id));
+        }
+    });
+
+    return entityIdByBusinessId;
+}
+
+async function resolveBusinessIdFromEntityId(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    entityId: string,
+): Promise<string | null> {
+    const { data, error } = await supabase
+        .from("entities")
+        .select("external_ids")
+        .eq("entity_type", "business")
+        .eq("id", entityId)
+        .maybeSingle();
+    if (error) throw error;
+    const externalIds = (data as EntityIdRow | null)?.external_ids ?? null;
+    const businessId = externalIds?.business_id;
+    return typeof businessId === "string" ? businessId : null;
+}
+
 export async function getBusinesses(): Promise<Business[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -49,8 +106,12 @@ export async function getBusinesses(): Promise<Business[]> {
     if (error) throw error;
     if (!data) return [];
 
+    const ids = (data as Business[]).map((r) => String(r.id));
+    const entityIdByBusinessId = await mapBusinessEntityIds(supabase, ids);
+
     return (data as Business[]).map((r) => ({
         id: r.id,
+        entity_id: entityIdByBusinessId.get(String(r.id)) ?? null,
         place_id: r.place_id,
         name: r.name,
         address: r.address,
@@ -73,8 +134,40 @@ export async function getBusiness(id: string): Promise<Business> {
         .eq("id", id)
         .maybeSingle();
 
-    if (error || !data) {
-        throw error ?? new Error("Business not found");
+    if (error) {
+        throw error;
+    }
+
+    let business = data ?? null;
+    let entityId: string | null = null;
+
+    if (!business) {
+        const resolvedBusinessId = await resolveBusinessIdFromEntityId(
+            supabase,
+            id,
+        );
+        if (resolvedBusinessId) {
+            entityId = id;
+            const { data: resolvedBusiness, error: resolvedError } =
+                await supabase
+                    .from("businesses")
+                    .select("*")
+                    .eq("id", resolvedBusinessId)
+                    .maybeSingle();
+            if (resolvedError) throw resolvedError;
+            business = resolvedBusiness ?? null;
+        }
+    }
+
+    if (!business) {
+        throw new Error("Business not found");
+    }
+
+    if (!entityId) {
+        const entityMap = await mapBusinessEntityIds(supabase, [
+            String(business.id),
+        ]);
+        entityId = entityMap.get(String(business.id)) ?? null;
     }
 
     let entityUsers: EntityUser[] = [];
@@ -141,18 +234,19 @@ export async function getBusiness(id: string): Promise<Business> {
     }
 
     return {
-        id: data.id,
-        place_id: data.place_id,
-        name: data.name,
-        address: data.address,
-        lat: data.lat,
-        lng: data.lng,
-        phone_number: data.phone_number,
-        website: data.website,
-        types: data.types,
-        status: data.status,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
+        id: business.id,
+        entity_id: entityId ?? null,
+        place_id: business.place_id,
+        name: business.name,
+        address: business.address,
+        lat: business.lat,
+        lng: business.lng,
+        phone_number: business.phone_number,
+        website: business.website,
+        types: business.types,
+        status: business.status,
+        created_at: business.created_at,
+        updated_at: business.updated_at,
         users: entityUsers,
     } as Business;
 }

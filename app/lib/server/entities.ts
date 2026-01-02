@@ -179,7 +179,7 @@ export async function getEntityUsers(
     .from("entity_users")
     .select(
       `
-        id, entity_id, user_id, role, status, created_at, updated_at,
+        id, entity_id, user_id, role, status, created_at,
         entities:entities ( entity_type ),
         profile:profiles ( ${PROFILE_FIELDS} )
       `
@@ -216,7 +216,7 @@ export async function upsertEntityUser(
     )
     .select(
       `
-        id, entity_id, user_id, role, status, created_at, updated_at,
+        id, entity_id, user_id, role, status, created_at,
         entities:entities ( entity_type ),
         profile:profiles ( ${PROFILE_FIELDS} )
       `

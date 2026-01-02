@@ -5,6 +5,7 @@ export type OrgType =
 
 export interface Nonprofit {
     id: string;
+    entity_id?: string | null;
     name: string;
     ein: string | null;
     logo_url: string | null;

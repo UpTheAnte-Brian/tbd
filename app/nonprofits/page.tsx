@@ -70,12 +70,12 @@ export default function NonprofitsPage() {
         headerName: "Organization Name",
         flex: 1.5,
         cellRenderer: (params: ICellRendererParams<Nonprofit>) => {
-          const id = params.data?.id;
-          if (!id) return params.value;
+          const entityId = params.data?.entity_id ?? null;
+          if (!entityId) return params.value;
 
           return (
             <Link
-              href={`/nonprofits/${id}`}
+              href={`/nonprofits/${entityId}`}
               style={{ color: "#4dabf7", textDecoration: "none" }}
             >
               {params.value}

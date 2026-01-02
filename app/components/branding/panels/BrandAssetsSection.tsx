@@ -153,18 +153,102 @@ export default function BrandAssetsSection({
         throw new Error("Failed to create asset");
       }
 
+      const signedRes = await fetch(
+        `/api/branding/assets/${assetId}/upload-url`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contentType: file.type,
+            sizeBytes: file.size,
+          }),
+        }
+      );
+
+      const signedBody = (await signedRes.json().catch(() => ({}))) as {
+        signedUrl?: string;
+        token?: string;
+        path?: string;
+        error?: string;
+      };
+
+      if (!signedRes.ok) {
+        throw new Error(signedBody.error || "Failed to create signed upload URL");
+      }
+
+      const signedUrl = signedBody.signedUrl ?? null;
+      const signedToken = signedBody.token ?? null;
+      const signedPath = signedBody.path ?? null;
+      if (!signedUrl || !signedToken || !signedPath) {
+        throw new Error("Signed upload response is missing required fields");
+      }
+
+      const uploadOptions = {
+        cacheControl: "3600",
+        contentType: file.type || "application/octet-stream",
+      };
+
+      console.info("[branding-upload] start", {
+        entityId,
+        categoryId: slot.category_id,
+        subcategoryId: slot.subcategory_id ?? null,
+        assetId,
+        assetPath,
+        bucket: "branding-assets",
+        method: "uploadToSignedUrl",
+        uploadUrl: signedUrl,
+        file: {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+        },
+        options: uploadOptions,
+      });
+
       const supabase = getSupabaseClient();
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from("branding-assets")
-        .upload(assetPath, file, {
-          upsert: true,
-          contentType: file.type,
-        });
+        .uploadToSignedUrl(signedPath, signedToken, file, uploadOptions);
 
       if (uploadError) {
-        await fetch(`/api/branding/assets/${assetId}`, { method: "DELETE" });
+        console.error("[branding-upload] failed", {
+          assetId,
+          assetPath,
+          error: uploadError,
+          status: (uploadError as { status?: number })?.status,
+          message: (uploadError as { message?: string })?.message,
+          uploadData,
+        });
+        console.info("[branding-upload] cleanup", {
+          reason: "upload_failed",
+          assetId,
+          assetPath,
+        });
+        const cleanupRes = await fetch(`/api/branding/assets/${assetId}`, {
+          method: "DELETE",
+        });
+        if (!cleanupRes.ok) {
+          const cleanupBody = await cleanupRes.json().catch(() => ({}));
+          console.error("[branding-upload] cleanup_failed", {
+            assetId,
+            assetPath,
+            status: cleanupRes.status,
+            body: cleanupBody,
+          });
+        } else {
+          console.info("[branding-upload] cleanup_complete", {
+            assetId,
+            assetPath,
+          });
+        }
         throw uploadError;
       }
+
+      console.info("[branding-upload] success", {
+        assetId,
+        assetPath,
+        uploadData,
+      });
 
       const patchRes = await fetch(`/api/branding/assets/${assetId}`, {
         method: "PATCH",

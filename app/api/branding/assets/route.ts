@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   if (!entityIdParam && !districtIdParam) {
     return NextResponse.json(
       { error: "entityId or districtId is required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -70,14 +70,24 @@ export async function POST(req: NextRequest) {
   if (!entityId || !body.categoryId) {
     return NextResponse.json(
       { error: "entityId and categoryId are required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   const assetId = randomUUID();
+
+  // Keep the original name for display/audit, but do not use it in the storage key.
+  // User-provided filenames can contain spaces/symbols that lead to 400s at the Storage layer.
   const rawName = (body.name ?? "").trim();
-  const safeName = rawName ? rawName.replace(/[\\/]/g, "-") : "asset";
-  const path = `${entityId}/${assetId}/${safeName}`;
+
+  // Extract a conservative file extension (letters/numbers only). If none, store without an extension.
+  const extMatch = rawName.match(/\.([A-Za-z0-9]{1,10})$/);
+  const ext = extMatch ? extMatch[1].toLowerCase() : "";
+  const extSuffix = ext ? `.${ext}` : "";
+
+  // Deterministic, URL-safe object key.
+  const path = `${entityId}/${assetId}${extSuffix}`;
+
   const payload = {
     id: assetId,
     entity_id: entityId,
@@ -87,6 +97,15 @@ export async function POST(req: NextRequest) {
     path,
     is_retired: false,
   };
+
+  console.info("[branding-assets] create", {
+    entityId,
+    categoryId: body.categoryId,
+    subcategoryId: body.subcategoryId ?? null,
+    rawName: body.name ?? null,
+    computedPath: path,
+    assetId,
+  });
 
   const { data, error } = await supabase
     .schema("branding")

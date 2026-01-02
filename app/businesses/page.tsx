@@ -35,11 +35,11 @@ export default function BusinessesPage() {
         headerName: "Name",
         flex: 1,
         cellRenderer: (params: ICellRendererParams<Business, string>) => {
-          const businessId = params.data?.id;
-          if (!businessId) return params.value;
+          const entityId = params.data?.entity_id ?? null;
+          if (!entityId) return params.value;
           return (
             <Link
-              href={`/businesses/${businessId}`}
+              href={`/businesses/${entityId}`}
               style={{ color: "#4dabf7" }}
             >
               {params.value}
