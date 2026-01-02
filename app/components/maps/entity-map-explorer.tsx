@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useMemo, useRef, useState } from "react";
@@ -30,13 +31,17 @@ type ChildrenResponse = {
 
 const STATES_CACHE_KEY = "states:us";
 
-export default function EntityMapExplorer({ initialStates, homeStatus }: Props) {
+export default function EntityMapExplorer({
+  initialStates,
+  homeStatus,
+}: Props) {
   const [activeLayer, setActiveLayer] = useState<Layer>("states");
   const [featureCollection, setFeatureCollection] =
     useState<EntityFeatureCollection>(initialStates);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedFeature, setSelectedFeature] =
-    useState<EntityFeature | null>(null);
+  const [selectedFeature, setSelectedFeature] = useState<EntityFeature | null>(
+    null
+  );
   const [loadingChildLayer, setLoadingChildLayer] = useState(false);
   const [selectedState, setSelectedState] =
     useState<EntityMapProperties | null>(null);
@@ -105,7 +110,8 @@ export default function EntityMapExplorer({ initialStates, homeStatus }: Props) 
   };
 
   const handleBack = () => {
-    const cachedStates = cacheRef.current.get(STATES_CACHE_KEY) ?? initialStates;
+    const cachedStates =
+      cacheRef.current.get(STATES_CACHE_KEY) ?? initialStates;
     setFeatureCollection(cachedStates);
     setActiveLayer("states");
     setSelectedId(null);
@@ -136,7 +142,9 @@ export default function EntityMapExplorer({ initialStates, homeStatus }: Props) 
           Back to States
         </button>
         <div className="text-white">
-          <div className="text-xs uppercase text-white/60">Viewing districts</div>
+          <div className="text-xs uppercase text-white/60">
+            Viewing districts
+          </div>
           <div className="font-semibold">
             {selectedState?.name ?? selectedState?.slug ?? "State"}
           </div>
