@@ -145,21 +145,6 @@ export default function EntityMapExplorer({ initialStates, homeStatus }: Props) 
     );
   }, [activeLayer, selectedState]);
 
-  const debugOverlay = useMemo(() => {
-    if (!homeStatus) return null;
-    return (
-      <div className="absolute top-4 right-4 z-50">
-        <div className="rounded bg-black/70 text-white text-xs px-3 py-2 space-y-1">
-          <div>home.loading: {homeStatus.loading ? "true" : "false"}</div>
-          <div>home.features: {homeStatus.featureCount}</div>
-          {homeStatus.error ? (
-            <div className="text-red-300">home.error: {homeStatus.error}</div>
-          ) : null}
-        </div>
-      </div>
-    );
-  }, [homeStatus]);
-
   return (
     <div className="relative">
       <EntityMapShell
@@ -174,19 +159,9 @@ export default function EntityMapExplorer({ initialStates, homeStatus }: Props) 
           activeLayer === "states" ? isClickable(props) : true
         }
         getTooltip={tooltipBuilder}
-        renderOverlay={({ mapReady, scriptLoaded, loadError }) => (
+        renderOverlay={({ scriptLoaded, loadError }) => (
           <>
             {overlay}
-            {debugOverlay}
-            <div className="absolute top-4 left-4 z-50">
-              <div className="rounded bg-black/70 text-white text-xs px-3 py-2 space-y-1">
-                <div>maps.script: {scriptLoaded ? "loaded" : "loading"}</div>
-                <div>maps.ready: {mapReady ? "true" : "false"}</div>
-                {loadError ? (
-                  <div className="text-red-300">maps.error: {loadError}</div>
-                ) : null}
-              </div>
-            </div>
             {loadingChildLayer && (
               <div className="absolute top-4 right-4 z-50">
                 <div className="px-3 py-1 rounded bg-black/70 text-white text-sm">

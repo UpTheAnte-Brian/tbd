@@ -10,7 +10,7 @@
     "tailwind:watch": "npx tailwindcss -i ./app/lib/styles/global.css -o ./app/lib/styles/style.css --watch",
     "importDistricts": "NEXT_PUBLIC_SUPABASE_URL=https://ficwwbcophgsttirthxd.supabase.co SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpY3d3YmNvcGhnc3R0aXJ0aHhkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDkyNzI0NSwiZXhwIjoyMDYwNTAzMjQ1fQ.21udV2f73FqqpqU-sUQXrj6S18Zz9MQYEz2NSwkGjs8 node --loader ts-node/esm scripts/import-sd-mn.ts",
     "importDistricts:test": "NEXT_PUBLIC_SUPABASE_URL=https://ynuqfzamakmiqzluuhnr.supabase.co SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InludXFmemFtYWttaXF6bHV1aG5yIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDk0NDUwOSwiZXhwIjoyMDYwNTIwNTA5fQ.QFmHXiEDDgWvUArXYV6yqmQNCtyVGYDtLQ8-r62qo5E node --loader ts-node/esm scripts/import-sd-mn.ts",
-    "importStates": "NEXT_PUBLIC_SUPABASE_URL=https://ficwwbcophgsttirthxd.supabase.co SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZpY3d3YmNvcGhnc3R0aXJ0aHhkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDkyNzI0NSwiZXhwIjoyMDYwNTAzMjQ1fQ.21udV2f73FqqpqU-sUQXrj6S18Zz9MQYEz2NSwkGjs8 node scripts/import-states-geojson.js scripts/geojson/us_states_2023.geojson"
+    "importStates": "NEXT_PUBLIC_SUPABASE_URL=https://ynuqfzamakmiqzluuhnr.supabase.co SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InludXFmemFtYWttaXF6bHV1aG5yIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDk0NDUwOSwiZXhwIjoyMDYwNTIwNTA5fQ.QFmHXiEDDgWvUArXYV6yqmQNCtyVGYDtLQ8-r62qo5E node scripts/import-states-geojson.js scripts/geojson/us_states_2023.geojson"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
