@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import DistrictDonationsSummary from "@/app/components/districts/DistrictDonationsSummary";
 import DistrictSideBar from "@/app/components/ui/district-sidebar";

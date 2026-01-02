@@ -1,3 +1,5 @@
+"use client";
+
 import { Business } from "@/app/lib/types/types";
 import PlaceMap from "@/app/components/places/place-map";
 

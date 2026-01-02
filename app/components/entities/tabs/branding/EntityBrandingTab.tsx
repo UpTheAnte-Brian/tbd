@@ -3,13 +3,17 @@
 import EntityBrandingPanel from "@/app/components/branding/panels/EntityBrandingPanel";
 import type { EntityType } from "@/app/lib/types/types";
 
-interface Props {
-  entityId: string | null;
+type Props = {
+  entityId: string;
   entityType: EntityType;
-  entityName?: string;
-}
+  entityName: string;
+};
 
-export function BrandingPanel({ entityId, entityType, entityName }: Props) {
+export default function EntityBrandingTab({
+  entityId,
+  entityType,
+  entityName,
+}: Props) {
   return (
     <EntityBrandingPanel
       entityId={entityId}

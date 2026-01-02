@@ -6,18 +6,15 @@ import { SmallAvatar } from "@/app/components/ui/avatar";
 import { toast } from "react-hot-toast";
 import type { EntityUser } from "@/app/lib/types/types";
 
-interface NonprofitUserAssignmentsPanelProps {
-  nonprofitId: string;
+interface Props {
+  entityId: string;
 }
 
-export default function NonprofitUserAssignmentsPanel({
-  nonprofitId,
-}: NonprofitUserAssignmentsPanelProps) {
+export default function EntityUsersTab({ entityId }: Props) {
   const [users, setUsers] = useState<EntityUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
 
-  // New user fields
   const [newUserId, setNewUserId] = useState("");
   const [newRole, setNewRole] = useState("viewer");
   const [searchText, setSearchText] = useState("");
@@ -36,8 +33,8 @@ export default function NonprofitUserAssignmentsPanel({
   async function fetchUsers() {
     try {
       setLoading(true);
-      const res = await fetch(`/api/entities/${nonprofitId}/users`);
-      if (!res.ok) throw new Error("Failed to fetch nonprofit users");
+      const res = await fetch(`/api/entities/${entityId}/users`);
+      if (!res.ok) throw new Error("Failed to fetch entity users");
       const json = await res.json();
       setUsers(json ?? []);
     } catch (err: unknown) {
@@ -51,19 +48,17 @@ export default function NonprofitUserAssignmentsPanel({
 
   useEffect(() => {
     fetchUsers();
-  }, [nonprofitId]);
+  }, [entityId]);
 
   async function addUser() {
     try {
       setAdding(true);
-      // Prevent adding duplicate user assignments
       if (users.some((u) => u.user_id === newUserId)) {
-        toast.error("User is already assigned to this nonprofit");
-        alert("User is already assigned to this nonprofit");
+        toast.error("User is already assigned to this entity");
         setAdding(false);
         return;
       }
-      const res = await fetch(`/api/entities/${nonprofitId}/users`, {
+      const res = await fetch(`/api/entities/${entityId}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -88,7 +83,7 @@ export default function NonprofitUserAssignmentsPanel({
 
   async function updateUser(userId: string, role: string) {
     try {
-      const res = await fetch(`/api/entities/${nonprofitId}/users`, {
+      const res = await fetch(`/api/entities/${entityId}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, role }),
@@ -127,9 +122,7 @@ export default function NonprofitUserAssignmentsPanel({
   async function deleteUser(userId: string) {
     try {
       const res = await fetch(
-        `/api/entities/${nonprofitId}/users?userId=${encodeURIComponent(
-          userId
-        )}`,
+        `/api/entities/${entityId}/users?userId=${encodeURIComponent(userId)}`,
         { method: "DELETE" }
       );
 
@@ -147,11 +140,10 @@ export default function NonprofitUserAssignmentsPanel({
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">User Assignments</h2>
       <p className="text-sm text-gray-400">
-        Governance roles are managed separately in the Board tab. Use this list
-        for operational access (admin, editor, viewer, employee).
+        Governance roles are managed separately. Use this list for operational
+        access (admin, editor, viewer, employee).
       </p>
 
-      {/* ADD USER */}
       <div className="p-4 border rounded bg-gray-900 space-y-4">
         <h3 className="font-semibold text-lg">Add User</h3>
 
@@ -210,24 +202,19 @@ export default function NonprofitUserAssignmentsPanel({
           )}
 
           {dropdownOpen && searchResults.length > 0 && (
-            <div className="absolute z-10 w-full bg-gray-800 border border-gray-700 rounded mt-1 max-h-60 overflow-y-auto">
-              {searchResults.map((u, index) => {
+            <div className="absolute z-10 w-full bg-gray-900 border border-gray-700 rounded mt-1 max-h-56 overflow-y-auto">
+              {searchResults.map((u, idx) => {
                 const alreadyAssigned = users.some(
-                  (usr) => usr.user_id === u.id
+                  (user) => user.user_id === u.id
                 );
-
+                const active = idx === highlightIndex;
                 return (
                   <div
                     key={u.id}
-                    className={`px-3 py-2 cursor-pointer ${
-                      highlightIndex === index
-                        ? "bg-gray-600"
-                        : alreadyAssigned
-                        ? "opacity-60 bg-gray-800"
-                        : "hover:bg-gray-700"
+                    className={`px-3 py-2 flex items-center gap-3 cursor-pointer ${
+                      active ? "bg-gray-700" : "hover:bg-gray-800"
                     }`}
                     onClick={() => {
-                      if (alreadyAssigned) return;
                       setNewUserId(u.id);
                       setSearchText(u.full_name ?? "");
                       setSearchResults([]);
@@ -235,23 +222,19 @@ export default function NonprofitUserAssignmentsPanel({
                       setHighlightIndex(-1);
                     }}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <SmallAvatar
-                          name={u.full_name}
-                          url={u.avatar_url}
-                          size={28}
-                        />
-                        <p className="font-medium">
-                          {u.full_name ?? "Unnamed User"}
-                        </p>
-                      </div>
-                      {alreadyAssigned && (
-                        <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">
-                          Assigned
-                        </span>
-                      )}
+                    <SmallAvatar
+                      name={u.full_name ?? null}
+                      url={u.avatar_url ?? null}
+                      size={32}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm">{u.full_name ?? u.id}</p>
                     </div>
+                    {alreadyAssigned && (
+                      <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">
+                        Assigned
+                      </span>
+                    )}
                   </div>
                 );
               })}
@@ -282,7 +265,6 @@ export default function NonprofitUserAssignmentsPanel({
         </button>
       </div>
 
-      {/* LIST USERS */}
       <div className="space-y-4">
         {loading ? (
           <LoadingSpinner />
@@ -297,16 +279,16 @@ export default function NonprofitUserAssignmentsPanel({
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <SmallAvatar
-                      name={u.profile?.full_name ?? null}
-                      url={u.profile?.avatar_url ?? null}
-                      size={32}
-                    />
-                    <div>
-                      <p className="font-semibold">
-                        {u.profile?.full_name ?? u.user_id}
-                      </p>
-                    </div>
+                    name={u.profile?.full_name ?? null}
+                    url={u.profile?.avatar_url ?? null}
+                    size={32}
+                  />
+                  <div>
+                    <p className="font-semibold">
+                      {u.profile?.full_name ?? u.user_id}
+                    </p>
                   </div>
+                </div>
 
                 <button
                   onClick={() => deleteUser(u.user_id)}

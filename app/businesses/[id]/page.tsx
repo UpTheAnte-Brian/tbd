@@ -1,47 +1,21 @@
-"use client";
 import Breadcrumbs from "@/app/components/nav/breadcrumbs";
-import { useBusiness } from "@/app/hooks/useBusiness";
-import LoadingSpinner from "@/app/components/loading-spinner";
-import { useParams } from "next/navigation";
-// import BusinessPanels from "@/app/components/businesses/BusinessPanels";
-import { useUser } from "@/app/hooks/useUser";
-import BusinessPanels from "@/app/components/businesses/BusinessPanels";
+import EntityPanel from "@/app/components/entities/panels/EntityPanel";
 
-export default function BusinessPage() {
-  const params = useParams();
-  const { id } = params;
-  const { user, error: userError } = useUser();
+interface BusinessPageProps {
+  params: Promise<{ id: string }>;
+}
 
-  const {
-    business,
-    loading: businessLoading,
-    error: businessError,
-    reload: reloadBusiness,
-  } = useBusiness(id as string);
-
-  if (userError) {
-    console.warn("no user session");
-  }
-  if (businessLoading) return <LoadingSpinner />;
-  if (!business || businessError) return <p>No business found</p>;
-
+export default async function BusinessPage({ params }: BusinessPageProps) {
+  const { id } = await params;
   return (
     <main className="p-4">
       <Breadcrumbs
         breadcrumbs={[
           { label: "Businesses", href: "/businesses" },
-          {
-            label: business.name || business.id,
-            href: `/businesses/${business.id}`,
-            active: true,
-          },
+          { label: id, href: `/businesses/${id}`, active: true },
         ]}
       />
-      <BusinessPanels
-        business={business}
-        user={user}
-        reloadBusiness={reloadBusiness}
-      ></BusinessPanels>
+      <EntityPanel entityId={id} entityType="business" />
     </main>
   );
 }

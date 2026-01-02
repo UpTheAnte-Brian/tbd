@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { DistrictDetails } from "../../lib/types/types";
 import DistrictExtWebLinkHeader from "@/app/components/ui/district-ext-weblink-header";
