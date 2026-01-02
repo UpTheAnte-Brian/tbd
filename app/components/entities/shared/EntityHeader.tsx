@@ -11,13 +11,7 @@ type Props = {
   active?: boolean | null;
 };
 
-export default function EntityHeader({
-  entityId,
-  entityName,
-  entityType,
-  slug,
-  active,
-}: Props) {
+export default function EntityHeader({ entityId, entityType }: Props) {
   return (
     <div className="rounded border border-gray-200 bg-white p-4">
       <div className="flex flex-wrap items-center gap-3">
