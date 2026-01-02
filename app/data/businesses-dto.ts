@@ -111,7 +111,7 @@ export async function getBusinesses(): Promise<Business[]> {
 
     return (data as Business[]).map((r) => ({
         id: r.id,
-        entity_id: entityIdByBusinessId.get(String(r.id)) ?? null,
+        entity_id: r.entity_id ?? entityIdByBusinessId.get(String(r.id)) ?? null,
         place_id: r.place_id,
         name: r.name,
         address: r.address,
@@ -139,7 +139,7 @@ export async function getBusiness(id: string): Promise<Business> {
     }
 
     let business = data ?? null;
-    let entityId: string | null = null;
+    let entityId: string | null = data?.entity_id ?? null;
 
     if (!business) {
         const resolvedBusinessId = await resolveBusinessIdFromEntityId(

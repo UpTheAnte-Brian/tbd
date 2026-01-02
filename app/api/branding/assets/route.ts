@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
   const body = (await req.json()) as {
     entityId?: string;
     districtId?: string;
+    slotId?: string | null;
     categoryId?: string | null;
     subcategoryId?: string | null;
     name?: string | null;
@@ -74,6 +75,75 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const { data: entityRow, error: entityError } = await supabase
+    .from("entities")
+    .select("entity_type")
+    .eq("id", entityId)
+    .maybeSingle();
+
+  if (entityError) {
+    return NextResponse.json({ error: entityError.message }, { status: 500 });
+  }
+
+  const entityType = entityRow?.entity_type ?? null;
+  if (!entityType) {
+    return NextResponse.json(
+      { error: "Entity type not found" },
+      { status: 404 },
+    );
+  }
+
+  const { data: userData, error: userErr } = await supabase.auth.getUser();
+  if (userErr || !userData?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { data: canManage, error: permError } = await supabase.rpc(
+    "can_manage_entity_assets",
+    {
+      p_uid: userData.user.id,
+      p_entity_id: entityId,
+    }
+  );
+
+  if (permError) {
+    return NextResponse.json({ error: permError.message }, { status: 500 });
+  }
+
+  if (!canManage) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  let slotQuery = supabase
+    .schema("branding")
+    .from("asset_slots")
+    .select("id, category_id, subcategory_id")
+    .eq("entity_type", entityType)
+    .eq("category_id", body.categoryId);
+
+  if (body.subcategoryId) {
+    slotQuery = slotQuery.eq("subcategory_id", body.subcategoryId);
+  } else {
+    slotQuery = slotQuery.is("subcategory_id", null);
+  }
+
+  if (body.slotId) {
+    slotQuery = slotQuery.eq("id", body.slotId);
+  }
+
+  const { data: slotRow, error: slotError } = await slotQuery.maybeSingle();
+
+  if (slotError) {
+    return NextResponse.json({ error: slotError.message }, { status: 500 });
+  }
+
+  if (!slotRow) {
+    return NextResponse.json(
+      { error: "No asset slot configured for this entity" },
+      { status: 400 },
+    );
+  }
+
   const assetId = randomUUID();
 
   // Keep the original name for display/audit, but do not use it in the storage key.
@@ -86,7 +156,7 @@ export async function POST(req: NextRequest) {
   const extSuffix = ext ? `.${ext}` : "";
 
   // Deterministic, URL-safe object key.
-  const path = `${entityId}/${assetId}${extSuffix}`;
+  const path = `branding/${entityType}/${entityId}/${slotRow.id}/${assetId}${extSuffix}`;
 
   const payload = {
     id: assetId,

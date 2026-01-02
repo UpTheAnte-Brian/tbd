@@ -25,31 +25,19 @@ export async function POST(
         return NextResponse.json({ error: message }, { status: 404 });
     }
 
-    type RoleRow = {
-        role: string;
-        entities?:
-            | { entity_type?: string | null }[]
-            | { entity_type?: string | null }
-            | null;
-    };
-    const { data: entityRoles } = await supabase
-        .from("entity_users")
-        .select("entity_id, role, user_id, entities:entities ( entity_type )")
-        .eq("entity_id", entityId)
-        .eq("user_id", userId);
-
-    const getEntityType = (row: RoleRow): string | null => {
-        const entity = Array.isArray(row.entities)
-            ? row.entities[0]
-            : row.entities;
-        return entity?.entity_type ?? null;
-    };
-    const rows = (entityRoles ?? []) as RoleRow[];
-    const isAdmin = rows.some((row) =>
-        row.role === "admin" && getEntityType(row) === "district"
+    const { data: canManage, error: permError } = await supabase.rpc(
+        "can_manage_entity_assets",
+        {
+            p_uid: userId,
+            p_entity_id: entityId,
+        },
     );
 
-    if (!isAdmin) {
+    if (permError) {
+        return NextResponse.json({ error: permError.message }, { status: 500 });
+    }
+
+    if (!canManage) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

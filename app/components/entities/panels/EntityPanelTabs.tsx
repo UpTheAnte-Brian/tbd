@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMemo } from "react";
 import type { EntityType } from "@/app/lib/types/types";
 import EntityOverviewTab from "@/app/components/entities/tabs/overview/EntityOverviewTab";
 import EntityBrandingTab from "@/app/components/entities/tabs/branding/EntityBrandingTab";
@@ -14,6 +13,11 @@ type Props = {
   entityId: string;
   entityType: EntityType | null;
   entityName?: string;
+  activeTab: TabKey;
+  onTabChange: (tab: TabKey) => void;
+  showTabs?: boolean;
+  tabsClassName?: string;
+  tabsVariant?: "buttons" | "select";
 };
 
 const TAB_ORDER: { key: TabKey; label: string }[] = [
@@ -27,33 +31,12 @@ export default function EntityPanelTabs({
   entityId,
   entityType,
   entityName,
+  activeTab,
+  onTabChange,
+  showTabs = true,
+  tabsClassName,
+  tabsVariant = "buttons",
 }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const normalizeTab = (value: string | null): TabKey => {
-    const lower = (value ?? "overview").toLowerCase();
-    if (lower === "branding") return "branding";
-    if (lower === "users") return "users";
-    if (lower === "map") return "map";
-    return "overview";
-  };
-
-  const initialTab = normalizeTab(searchParams.get("tab"));
-  const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
-
-  useEffect(() => {
-    const current = normalizeTab(searchParams.get("tab"));
-    setActiveTab(current);
-  }, [searchParams]);
-
-  const handleTabChange = (tab: TabKey) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", tab);
-    router.replace(`${pathname}?${params.toString()}`);
-    setActiveTab(tab);
-  };
-
   const tabContent = useMemo(() => {
     if (!entityType) {
       return (
@@ -91,22 +74,47 @@ export default function EntityPanelTabs({
 
   return (
     <div>
-      <div className="flex flex-wrap gap-2 border-b border-gray-300 pb-2">
-        {TAB_ORDER.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            className={`px-3 py-1 text-sm rounded ${
-              activeTab === tab.key
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-            onClick={() => handleTabChange(tab.key)}
+      {showTabs ? (
+        tabsVariant === "select" ? (
+          <div className={tabsClassName ?? ""}>
+            <label className="block text-xs font-semibold text-gray-600">
+              Panel
+            </label>
+            <select
+              className="mt-1 w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
+              value={activeTab}
+              onChange={(event) =>
+                onTabChange(event.target.value as TabKey)
+              }
+            >
+              {TAB_ORDER.map((tab) => (
+                <option key={tab.key} value={tab.key}>
+                  {tab.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div
+            className={`flex flex-wrap gap-2 border-b border-gray-300 pb-2 ${tabsClassName ?? ""}`}
           >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+            {TAB_ORDER.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                className={`px-3 py-1 text-sm rounded ${
+                  activeTab === tab.key
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+                onClick={() => onTabChange(tab.key)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )
+      ) : null}
 
       <div className="mt-4">{tabContent}</div>
     </div>

@@ -15,12 +15,14 @@ interface Props {
   entityId: string | null;
   entityType: EntityType;
   entityName?: string;
+  onRefresh?: () => void;
 }
 
 export default function EntityBrandingPanel({
   entityId,
   entityType,
   entityName = "Entity",
+  onRefresh,
 }: Props) {
   const [refreshKey, setRefreshKey] = useState(0);
   const { user } = useUser();
@@ -49,7 +51,10 @@ export default function EntityBrandingPanel({
       ? hasEntityRole(user?.entity_users ?? [], entityType, entityId, ["admin"])
       : false);
 
-  const handleRefresh = () => setRefreshKey((k) => k + 1);
+  const handleRefresh = () => {
+    setRefreshKey((k) => k + 1);
+    onRefresh?.();
+  };
 
   if (!entityId) {
     return <div className="text-gray-500 italic">Select an entity...</div>;

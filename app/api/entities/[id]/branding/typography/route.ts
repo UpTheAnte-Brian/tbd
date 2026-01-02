@@ -54,15 +54,19 @@ export async function PUT(
     return NextResponse.json({ error: message }, { status: 404 });
   }
 
-  const { data: roleRows } = await supabase
-    .from("entity_users")
-    .select("entity_id, role, user_id")
-    .eq("entity_id", entityId)
-    .eq("user_id", userId);
+  const { data: canManage, error: permError } = await supabase.rpc(
+    "can_manage_entity_assets",
+    {
+      p_uid: userId,
+      p_entity_id: entityId,
+    }
+  );
 
-  const rows = roleRows ?? [];
-  const isAdmin = rows.some((row) => row.role === "admin");
-  if (!isAdmin) {
+  if (permError) {
+    return NextResponse.json({ error: permError.message }, { status: 500 });
+  }
+
+  if (!canManage) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

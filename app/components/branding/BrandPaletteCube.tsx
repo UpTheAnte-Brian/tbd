@@ -17,11 +17,7 @@ export default function BrandPaletteCube() {
     <div className="w-full bg-white p-2 rounded shadow-sm">
       <div className="grid grid-cols-3 grid-rows-3 gap-0 w-full overflow-hidden rounded">
         {cells.map((cls, idx) => (
-          <div
-            key={cls + idx}
-            className={`${cls} aspect-square`}
-            aria-label={cls}
-          />
+          <div key={cls + idx} className={`${cls} aspect-square`} />
         ))}
       </div>
     </div>

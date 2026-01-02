@@ -7,6 +7,43 @@ export async function PATCH(
 ) {
   const supabase = await createApiClient();
   const { id } = await context.params;
+
+  const { data: userData, error: userErr } = await supabase.auth.getUser();
+  if (userErr || !userData?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { data: assetRow, error: assetError } = await supabase
+    .schema("branding")
+    .from("assets")
+    .select("entity_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (assetError) {
+    return NextResponse.json({ error: assetError.message }, { status: 500 });
+  }
+
+  const entityId = assetRow?.entity_id ?? null;
+  if (!entityId) {
+    return NextResponse.json({ error: "Asset not found" }, { status: 404 });
+  }
+
+  const { data: canManage, error: permError } = await supabase.rpc(
+    "can_manage_entity_assets",
+    {
+      p_uid: userData.user.id,
+      p_entity_id: entityId,
+    }
+  );
+
+  if (permError) {
+    return NextResponse.json({ error: permError.message }, { status: 500 });
+  }
+
+  if (!canManage) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   const body = (await req.json().catch(() => ({}))) as {
     name?: string | null;
     path?: string | null;
@@ -51,15 +88,42 @@ export async function DELETE(
   const supabase = await createApiClient();
   const { id } = await context.params;
 
+  const { data: userData, error: userErr } = await supabase.auth.getUser();
+  if (userErr || !userData?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { data: existing, error: existingError } = await supabase
     .schema("branding")
     .from("assets")
-    .select("path")
+    .select("path, entity_id")
     .eq("id", id)
     .maybeSingle();
 
   if (existingError) {
     return NextResponse.json({ error: existingError.message }, { status: 500 });
+  }
+
+  const entityId = (existing as { entity_id?: string | null } | null)
+    ?.entity_id;
+  if (!entityId) {
+    return NextResponse.json({ error: "Asset not found" }, { status: 404 });
+  }
+
+  const { data: canManage, error: permError } = await supabase.rpc(
+    "can_manage_entity_assets",
+    {
+      p_uid: userData.user.id,
+      p_entity_id: entityId,
+    }
+  );
+
+  if (permError) {
+    return NextResponse.json({ error: permError.message }, { status: 500 });
+  }
+
+  if (!canManage) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const { error: deleteError } = await supabase

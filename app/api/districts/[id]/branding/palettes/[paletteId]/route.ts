@@ -2,19 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
 import { resolveDistrictEntityId } from "@/app/lib/entities";
 
-type RoleRow = {
-    role: string;
-    entities?:
-        | { entity_type?: string | null }[]
-        | { entity_type?: string | null }
-        | null;
-};
-
-const getEntityType = (row: RoleRow): string | null => {
-    const entity = Array.isArray(row.entities) ? row.entities[0] : row.entities;
-    return entity?.entity_type ?? null;
-};
-
 // PATCH /api/districts/[id]/branding/palettes/[paletteId]
 export async function PATCH(
     req: NextRequest,
@@ -43,18 +30,19 @@ export async function PATCH(
         return NextResponse.json({ error: message }, { status: 404 });
     }
 
-    const { data: roleCheck } = await supabase
-        .from("entity_users")
-        .select("entity_id, role, user_id, entities:entities ( entity_type )")
-        .eq("entity_id", entityId)
-        .eq("user_id", userId);
-
-    const rows = (roleCheck ?? []) as RoleRow[];
-    const isAdmin = rows.some((row) =>
-        row.role === "admin" && getEntityType(row) === "district"
+    const { data: canManage, error: permError } = await supabase.rpc(
+        "can_manage_entity_assets",
+        {
+            p_uid: userId,
+            p_entity_id: entityId,
+        },
     );
 
-    if (!isAdmin) {
+    if (permError) {
+        return NextResponse.json({ error: permError.message }, { status: 500 });
+    }
+
+    if (!canManage) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -171,18 +159,19 @@ export async function DELETE(
         return NextResponse.json({ error: message }, { status: 404 });
     }
 
-    const { data: roleCheck } = await supabase
-        .from("entity_users")
-        .select("entity_id, role, user_id, entities:entities ( entity_type )")
-        .eq("entity_id", entityId)
-        .eq("user_id", userId);
-
-    const rows = (roleCheck ?? []) as RoleRow[];
-    const isAdmin = rows.some((row) =>
-        row.role === "admin" && getEntityType(row) === "district"
+    const { data: canManage, error: permError } = await supabase.rpc(
+        "can_manage_entity_assets",
+        {
+            p_uid: userId,
+            p_entity_id: entityId,
+        },
     );
 
-    if (!isAdmin) {
+    if (permError) {
+        return NextResponse.json({ error: permError.message }, { status: 500 });
+    }
+
+    if (!canManage) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

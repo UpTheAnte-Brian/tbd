@@ -133,6 +133,7 @@ export default function BrandAssetsSection({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           entityId,
+          slotId: slot.id,
           categoryId: slot.category_id,
           subcategoryId: slot.subcategory_id ?? null,
           name: file.name,
