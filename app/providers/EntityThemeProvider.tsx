@@ -1,5 +1,6 @@
 import { getResolvedEntityBranding } from "@/app/data/entity-branding";
 import { EntityThemeProviderClient } from "@/app/providers/EntityThemeProviderClient";
+import EntityBrandingAssetsProvider from "@/app/providers/EntityBrandingAssetsProvider";
 import type { ResolvedBranding } from "@/app/lib/branding/resolveBranding";
 import type { ReactNode } from "react";
 
@@ -30,7 +31,9 @@ export default async function EntityThemeProvider({
       entityId={resolvedEntityId}
       resolved={resolved}
     >
-      {children}
+      <EntityBrandingAssetsProvider entityId={resolvedEntityId}>
+        {children}
+      </EntityBrandingAssetsProvider>
     </EntityThemeProviderClient>
   );
 }

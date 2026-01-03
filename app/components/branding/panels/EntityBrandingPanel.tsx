@@ -79,7 +79,7 @@ export default function EntityBrandingPanel({
   }
 
   return (
-    <div className="space-y-8 bg-brand-secondary-1 text-brand-secondary-0 p-6 rounded">
+    <div className="space-y-8 bg-brand-secondary-0 p-6 rounded">
       <BrandAssetsSection
         entityId={entityId}
         entityType={entityType}

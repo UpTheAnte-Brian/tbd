@@ -46,6 +46,16 @@ export type BrandingAsset = {
   updated_at?: string | null;
 };
 
+type BrandingAssetsCacheEntry = {
+  slots: AssetSlot[];
+  categories: AssetCategory[];
+  subcategories: AssetSubcategory[];
+  assets: BrandingAsset[];
+};
+
+const brandingAssetsCache = new Map<string, BrandingAssetsCacheEntry>();
+const brandingAssetsRequests = new Map<string, Promise<BrandingAssetsCacheEntry>>();
+
 export function useBrandingAssets(
   entityId: string | null,
   entityType: string,
@@ -61,41 +71,71 @@ export function useBrandingAssets(
   useEffect(() => {
     if (!entityId || !entityType) return;
     let cancelled = false;
+    const cacheKey = `${entityType}:${entityId}`;
+
+    if (refreshKey === 0 && brandingAssetsCache.has(cacheKey)) {
+      const cached = brandingAssetsCache.get(cacheKey);
+      if (cached) {
+        setSlots(cached.slots);
+        setCategories(cached.categories);
+        setSubcategories(cached.subcategories);
+        setAssets(cached.assets);
+        setLoading(false);
+        return () => {
+          cancelled = true;
+        };
+      }
+    }
 
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
-        const [slotsRes, assetsRes] = await Promise.all([
-          fetch(`/api/branding/slots?entityType=${entityType}`, {
-            cache: "no-store",
-          }),
-          fetch(`/api/branding/assets?entityId=${entityId}`, {
-            cache: "no-store",
-          }),
-        ]);
+        let pending = brandingAssetsRequests.get(cacheKey);
+        if (!pending || refreshKey !== 0) {
+          pending = (async () => {
+            const [slotsRes, assetsRes] = await Promise.all([
+              fetch(`/api/branding/slots?entityType=${entityType}`, {
+                cache: "no-store",
+              }),
+              fetch(`/api/branding/assets?entityId=${entityId}`, {
+                cache: "no-store",
+              }),
+            ]);
 
-        if (!slotsRes.ok) {
-          const body = await slotsRes.json().catch(() => ({}));
-          throw new Error(body.error || "Failed to load branding slots");
-        }
-        if (!assetsRes.ok) {
-          const body = await assetsRes.json().catch(() => ({}));
-          throw new Error(body.error || "Failed to load branding assets");
+            if (!slotsRes.ok) {
+              const body = await slotsRes.json().catch(() => ({}));
+              throw new Error(body.error || "Failed to load branding slots");
+            }
+            if (!assetsRes.ok) {
+              const body = await assetsRes.json().catch(() => ({}));
+              throw new Error(body.error || "Failed to load branding assets");
+            }
+
+            const slotsData = await slotsRes.json();
+            const assetsData = await assetsRes.json();
+
+            return {
+              slots: (slotsData?.slots ?? []) as AssetSlot[],
+              categories: (slotsData?.categories ?? []) as AssetCategory[],
+              subcategories: (slotsData?.subcategories ?? []) as AssetSubcategory[],
+              assets: (assetsData?.assets ?? []) as BrandingAsset[],
+            } satisfies BrandingAssetsCacheEntry;
+          })();
+          brandingAssetsRequests.set(cacheKey, pending);
         }
 
-        const slotsData = await slotsRes.json();
-        const assetsData = await assetsRes.json();
+        const data = await pending;
+        brandingAssetsRequests.delete(cacheKey);
+        brandingAssetsCache.set(cacheKey, data);
 
         if (cancelled) return;
-
-        setSlots((slotsData?.slots ?? []) as AssetSlot[]);
-        setCategories((slotsData?.categories ?? []) as AssetCategory[]);
-        setSubcategories(
-          (slotsData?.subcategories ?? []) as AssetSubcategory[]
-        );
-        setAssets((assetsData?.assets ?? []) as BrandingAsset[]);
+        setSlots(data.slots);
+        setCategories(data.categories);
+        setSubcategories(data.subcategories);
+        setAssets(data.assets);
       } catch (err) {
+        brandingAssetsRequests.delete(cacheKey);
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Error");
           setSlots([]);

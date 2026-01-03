@@ -31,37 +31,37 @@ const DEFAULT_TYPOGRAPHY: Record<
   Pick<BrandingTypography, "font_name" | "availability" | "weights" | "usage_rules">
 > = {
   body: {
-    font_name: "Inter",
+    font_name: "",
     availability: "system",
     weights: [],
     usage_rules: "",
   },
   display: {
-    font_name: "Inter",
+    font_name: "",
     availability: "system",
     weights: [],
     usage_rules: "",
   },
   logo: {
-    font_name: "Inter",
+    font_name: "",
     availability: "system",
     weights: [],
     usage_rules: "",
   },
   header1: {
-    font_name: "Inter",
+    font_name: "",
     availability: "system",
     weights: [],
     usage_rules: "",
   },
   header2: {
-    font_name: "Inter",
+    font_name: "",
     availability: "system",
     weights: [],
     usage_rules: "",
   },
   subheader: {
-    font_name: "Inter",
+    font_name: "",
     availability: "system",
     weights: [],
     usage_rules: "",
@@ -112,8 +112,12 @@ export default function BrandTypographySection({
   return (
     <>
       {showTypographyEditor && entityId && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex justify-end items-center">
-          <div className="w-full max-w-md max-h-[calc(100vh-2rem)] bg-white shadow-xl p-4 overflow-y-auto rounded-lg mr-2">
+        <div className="fixed inset-0 z-50 flex justify-end items-center">
+          <div
+            className="absolute inset-0 bg-brand-primary-0"
+            style={{ opacity: 0.8 }}
+          />
+          <div className="relative z-10 w-full max-w-md max-h-[calc(100vh-2rem)] bg-brand-primary-0 text-brand-primary-1 border border-brand-primary-1 shadow-xl p-4 overflow-y-auto rounded-lg mr-2">
             <TypographyEditor
               entityId={entityId}
               typography={typographyWithDefaults}
@@ -129,40 +133,39 @@ export default function BrandTypographySection({
       )}
 
       <AccordionCard
-        variant="brand"
         title={
-          <span className="flex items-center gap-2 text-slate-50">
-            <TypeIcon size={18} className="text-red-700" />
+          <span className="flex items-center gap-2">
+            <TypeIcon size={18} />
             Typography
           </span>
         }
       >
         {!entityId ? (
-          <div className="text-sm text-red-200">
+          <div className="text-sm text-brand-accent-1">
             Missing entity mapping for this entity.
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <div className="text-sm text-brand-accent-1">
+            <div className="text-sm text-brand-primary-1 opacity-80">
               Customize entity typography by role.
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {typographyWithDefaults.map((t) => (
                 <div
                   key={t.role ?? t.id}
-                  className="border rounded bg-white p-3 shadow-sm text-slate-900 space-y-2"
+                  className="border border-brand-primary-1 rounded bg-brand-secondary-0 p-3 shadow-sm text-brand-primary-1 space-y-2"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="text-xs uppercase text-slate-500 mb-1">
+                      <div className="text-xs uppercase text-brand-primary-1 opacity-70 mb-1">
                         {t.role
                           ? FONT_ROLE_LABELS[t.role as FontRole]
                           : "Typography"}
                       </div>
-                      <div className="font-semibold text-slate-900">
+                      <div className="font-semibold text-brand-primary-1">
                         {t.font_name || "Not set"}
                       </div>
-                      <div className="text-xs text-slate-600 capitalize">
+                      <div className="text-xs text-brand-primary-1 opacity-70 capitalize">
                         Availability: {t.availability ?? "system"}
                       </div>
                     </div>
@@ -172,7 +175,7 @@ export default function BrandTypographySection({
                           setSelectedTypographyRole(t.role as string);
                           setShowTypographyEditor(true);
                         }}
-                        className="px-2 py-1 text-xs rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                        className="px-2 py-1 text-xs rounded bg-brand-accent-1 text-brand-primary-1 hover:bg-brand-accent-2 disabled:opacity-50"
                         disabled={!canEdit}
                       >
                         Edit
@@ -180,11 +183,11 @@ export default function BrandTypographySection({
                     )}
                   </div>
                   {t.usage_rules && (
-                    <div className="text-sm text-slate-700 italic">
+                    <div className="text-sm text-brand-primary-1 opacity-80 italic">
                       {t.usage_rules}
                     </div>
                   )}
-                  <div className="text-xs text-slate-600">
+                  <div className="text-xs text-brand-primary-1 opacity-70">
                     Weights:{" "}
                     {Array.isArray(t.weights) && t.weights.length > 0
                       ? t.weights.join(", ")

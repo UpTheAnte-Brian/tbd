@@ -33,12 +33,12 @@ export const DEFAULT_BRAND_COLORS: BrandColorTokens = {
   primary0: "#0b1223",
   primary1: "#ffffff",
   primary2: "#111827",
-  secondary0: "#111827",
-  secondary1: "#0b1223",
-  secondary2: "#111827",
-  accent0: "#0b1223",
-  accent1: "#111827",
-  accent2: "#111827",
+  secondary0: "#6cb617",
+  secondary1: "#024c06",
+  secondary2: "#dcf07a",
+  accent0: "#245ef0",
+  accent1: "#ed37cb",
+  accent2: "#f52a1f",
 };
 
 export const DEFAULT_BRAND_TYPOGRAPHY: BrandTypographyTokens = {
@@ -115,11 +115,11 @@ export const resolveBrandingTokens = (
         DEFAULT_BRAND_COLORS.secondary1,
         DEFAULT_BRAND_COLORS.secondary2,
       ])
-    : ([primaryColors[1], primaryColors[0], primaryColors[1]] as [
-        string,
-        string,
-        string,
-      ]);
+    : ([
+        DEFAULT_BRAND_COLORS.secondary0,
+        DEFAULT_BRAND_COLORS.secondary1,
+        DEFAULT_BRAND_COLORS.secondary2,
+      ] as [string, string, string]);
 
   const accentPalette = palettes.find((p) => p.role === "accent") || null;
   const accentColors = accentPalette
@@ -128,7 +128,11 @@ export const resolveBrandingTokens = (
         DEFAULT_BRAND_COLORS.accent1,
         DEFAULT_BRAND_COLORS.accent2,
       ])
-    : primaryColors;
+    : ([
+        DEFAULT_BRAND_COLORS.accent0,
+        DEFAULT_BRAND_COLORS.accent1,
+        DEFAULT_BRAND_COLORS.accent2,
+      ] as [string, string, string]);
 
   const tokens: BrandColorTokens = {
     primary0: primaryColors[0],

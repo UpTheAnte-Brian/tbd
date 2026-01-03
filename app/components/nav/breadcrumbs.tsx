@@ -1,6 +1,5 @@
 import { clsx } from "clsx";
 import Link from "next/link";
-import { lusitana } from "@/app/lib/styles/fonts";
 
 interface Breadcrumb {
   label: string;
@@ -17,7 +16,6 @@ export default function Breadcrumbs({
     <nav aria-label="Breadcrumb" className="my-2 block">
       <ol
         className={clsx(
-          lusitana.className,
           "flex  flex-row text-xl md:text-2xl"
         )}
       >

@@ -4,7 +4,6 @@ import {
   UserGroupIcon,
   InboxIcon,
 } from "@heroicons/react/24/outline";
-import { lusitana } from "@/app/lib/styles/fonts";
 import { fetchCardData } from "@/app/lib/keeper-archive/data";
 
 const iconMap = {
@@ -54,10 +53,7 @@ export function Card({
         {Icon ? <Icon className="h-5 w-5 text-gray-700" /> : null}
         <h3 className="ml-2 text-sm font-medium">{title}</h3>
       </div>
-      <p
-        className={`${lusitana.className}
-          truncate rounded-xl bg-white px-4 py-8 text-center text-2xl`}
-      >
+      <p className="truncate rounded-xl bg-white px-4 py-8 text-center text-2xl">
         {value}
       </p>
     </div>

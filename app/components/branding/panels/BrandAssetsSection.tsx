@@ -67,7 +67,10 @@ export default function BrandAssetsSection({
     return (
       slot.label ||
       slot.name ||
-      [getCategoryLabel(slot.category_id), getSubcategoryLabel(slot.subcategory_id)]
+      [
+        getCategoryLabel(slot.category_id),
+        getSubcategoryLabel(slot.subcategory_id),
+      ]
         .filter(Boolean)
         .join(" - ") ||
       "Asset Slot"
@@ -174,7 +177,9 @@ export default function BrandAssetsSection({
       };
 
       if (!signedRes.ok) {
-        throw new Error(signedBody.error || "Failed to create signed upload URL");
+        throw new Error(
+          signedBody.error || "Failed to create signed upload URL"
+        );
       }
 
       const signedUrl = signedBody.signedUrl ?? null;
@@ -288,21 +293,20 @@ export default function BrandAssetsSection({
 
   return (
     <AccordionCard
-      variant="brand"
       title={
-        <span className="flex items-center gap-2 text-brand-primary-0">
-          <ImageIcon size={18} className="text-blue-300" />
+        <span className="flex items-center gap-2">
+          <ImageIcon size={18} />
           Brand Assets
         </span>
       }
       defaultOpen={false}
     >
       {!entityId ? (
-        <div className="text-sm text-red-200">
+        <div className="text-sm text-brand-accent-1">
           Missing entity mapping for this {entityType}.
         </div>
       ) : slots.length === 0 ? (
-        <div className="text-sm text-slate-200">
+        <div className="text-sm text-brand-primary-1">
           No asset slots configured for this entity.
         </div>
       ) : (
@@ -317,19 +321,19 @@ export default function BrandAssetsSection({
             return (
               <details
                 key={slot.id}
-                className="rounded-lg border border-white/10 bg-brand-primary-0/30"
+                className="rounded-lg border border-brand-primary-1 bg-brand-secondary-0"
               >
-                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-white">
+                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-brand-primary-1 bg-brand-secondary-1">
                   <span>{getSlotLabel(slot)}</span>
-                  <span className="text-xs text-slate-300">
+                  <span className="text-xs text-brand-primary-1 opacity-80">
                     {slotAssets.length}/{maxAssets ?? "inf"}
                   </span>
                 </summary>
-                <div className="px-4 pb-4 pt-2 space-y-3 text-sm text-slate-100">
+                <div className="px-4 pb-4 pt-2 space-y-3 text-sm text-brand-primary-1">
                   {slot.help_text && (
-                    <div className="text-slate-200">{slot.help_text}</div>
+                    <div className="opacity-80">{slot.help_text}</div>
                   )}
-                  <div className="flex flex-wrap gap-3 text-xs text-slate-300">
+                  <div className="flex flex-wrap gap-3 text-xs text-brand-primary-1 opacity-80">
                     {allowed.length > 0 && (
                       <span>Allowed: {allowed.join(", ")}</span>
                     )}
@@ -337,7 +341,7 @@ export default function BrandAssetsSection({
                   </div>
 
                   {slotAssets.length === 0 ? (
-                    <div className="rounded border border-dashed border-white/20 bg-white/5 p-3 text-slate-300">
+                    <div className="rounded border border-dashed border-brand-primary-1 bg-brand-secondary-1 p-3 text-brand-primary-1 opacity-80">
                       No assets uploaded yet.
                     </div>
                   ) : (
@@ -347,28 +351,28 @@ export default function BrandAssetsSection({
                         return (
                           <div
                             key={asset.id}
-                            className="rounded border border-white/10 bg-white/10 p-3 space-y-2"
+                            className="rounded border border-brand-primary-1 bg-brand-secondary-1 p-3 space-y-2"
                           >
-                            <div className="text-xs text-slate-300">
+                            <div className="text-xs text-brand-primary-1 opacity-80">
                               {asset.name || "Untitled asset"}
                             </div>
                             {assetUrl ? (
                               <img
                                 src={assetUrl}
                                 alt={asset.name ?? "Brand asset"}
-                                className="max-h-36 w-full rounded bg-white object-contain p-2"
+                                className="max-h-36 w-full rounded bg-brand-primary-1 object-contain p-2"
                               />
                             ) : (
-                              <div className="flex h-28 items-center justify-center rounded bg-white/20 text-xs text-slate-300">
+                              <div className="flex h-28 items-center justify-center rounded bg-brand-primary-0 text-xs text-brand-primary-1 opacity-80">
                                 No preview available
                               </div>
                             )}
-                            <div className="flex items-center justify-between text-xs text-slate-300">
+                            <div className="flex items-center justify-between text-xs text-brand-primary-1 opacity-80">
                               <span>{asset.mime_type ?? "unknown"}</span>
                               {canEdit && (
                                 <button
                                   onClick={() => handleDelete(asset.id)}
-                                  className="rounded bg-red-600/80 px-2 py-1 text-white hover:bg-red-700"
+                                  className="rounded bg-brand-accent-1 px-2 py-1 text-brand-primary-1 hover:bg-brand-accent-2"
                                 >
                                   Delete
                                 </button>
@@ -384,7 +388,7 @@ export default function BrandAssetsSection({
                     <button
                       type="button"
                       onClick={() => document.getElementById(inputId)?.click()}
-                      className="inline-flex items-center rounded bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+                      className="inline-flex items-center rounded bg-brand-accent-1 px-3 py-2 text-xs font-semibold text-brand-primary-1 hover:bg-brand-accent-2"
                       disabled={uploadingSlotId === slot.id}
                     >
                       {uploadingSlotId === slot.id
@@ -396,7 +400,7 @@ export default function BrandAssetsSection({
                   )}
 
                   {!canEdit && (
-                    <div className="text-xs text-slate-300">
+                    <div className="text-xs text-brand-primary-1 opacity-80">
                       You do not have permission to edit assets.
                     </div>
                   )}

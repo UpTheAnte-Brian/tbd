@@ -6,6 +6,7 @@ import type { BrandingSummary } from "@/app/lib/types/types";
 export type EntityBrandingResponse = BrandingSummary;
 
 const brandingCache = new Map<string, EntityBrandingResponse>();
+const brandingRequests = new Map<string, Promise<EntityBrandingResponse>>();
 
 export function useEntityBranding(entityId: string | null, refreshKey = 0) {
   const [data, setData] = useState<EntityBrandingResponse | null>(null);
@@ -28,19 +29,29 @@ export function useEntityBranding(entityId: string | null, refreshKey = 0) {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/entities/${entityId}/branding`, {
-          cache: "no-store",
-        });
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body.error || "Failed to load branding");
+        let pending = brandingRequests.get(entityId);
+        if (!pending || refreshKey !== 0) {
+          pending = (async () => {
+            const res = await fetch(`/api/entities/${entityId}/branding`, {
+              cache: "no-store",
+            });
+            if (!res.ok) {
+              const body = await res.json().catch(() => ({}));
+              throw new Error(body.error || "Failed to load branding");
+            }
+            return (await res.json()) as EntityBrandingResponse;
+          })();
+          brandingRequests.set(entityId, pending);
         }
-        const json = (await res.json()) as EntityBrandingResponse;
+
+        const json = await pending;
+        brandingRequests.delete(entityId);
+        brandingCache.set(entityId, json);
         if (!cancelled) {
-          brandingCache.set(entityId, json);
           setData(json);
         }
       } catch (err) {
+        brandingRequests.delete(entityId);
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Error");
           setData(null);

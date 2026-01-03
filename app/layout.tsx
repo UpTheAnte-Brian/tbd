@@ -1,7 +1,6 @@
 "use server";
 
 import "@/app/lib/styles/style.css";
-import { inter } from "./lib/styles/fonts";
 import { StyledEngineProvider } from "@mui/material";
 import NavBarComponent from "@/app/components/nav/NavBar";
 import GoogleMapsProvider from "@/app/lib/providers/GoogleMapsProvider";
@@ -27,9 +26,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <head></head>
-      <body
-        className={`${inter.className} antialiased flex flex-col min-h-screen overflow-x-hidden`}
-      >
+      <body className="antialiased flex flex-col min-h-screen overflow-x-hidden">
         <script
           src="https://accounts.google.com/gsi/client"
           async

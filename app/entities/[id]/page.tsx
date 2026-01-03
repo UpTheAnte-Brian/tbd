@@ -1,4 +1,5 @@
 import EntityPanel from "@/app/components/entities/panels/EntityPanel";
+import EntityThemeProvider from "@/app/providers/EntityThemeProvider";
 
 interface EntityPageProps {
   params: Promise<{ id: string }>;
@@ -7,8 +8,10 @@ interface EntityPageProps {
 export default async function EntityPage({ params }: EntityPageProps) {
   const { id } = await params;
   return (
-    <main className="p-4">
-      <EntityPanel entityId={id} />
-    </main>
+    <EntityThemeProvider entityId={id}>
+      <main className="p-4">
+        <EntityPanel entityId={id} />
+      </main>
+    </EntityThemeProvider>
   );
 }

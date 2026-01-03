@@ -103,32 +103,34 @@ export default function DistrictDonationsSummary({
 
   if (loading) {
     return (
-      <div className="border rounded p-4 mb-4 bg-gray-50 animate-pulse">
-        <h2 className="text-lg font-semibold mb-2 bg-gray-300 rounded w-48 h-6"></h2>
+      <div className="border border-brand-primary-1 rounded p-4 mb-4 bg-brand-secondary-0 text-brand-primary-1 animate-pulse">
+        <h2 className="text-lg font-semibold mb-2 bg-brand-accent-1 opacity-40 rounded w-48 h-6"></h2>
         <div className="mb-1 flex space-x-2 items-center">
-          <span className="font-medium bg-gray-300 rounded w-40 h-5 inline-block"></span>
-          <span className="bg-gray-300 rounded w-24 h-5 inline-block"></span>
+          <span className="font-medium bg-brand-accent-1 opacity-30 rounded w-40 h-5 inline-block"></span>
+          <span className="bg-brand-accent-1 opacity-30 rounded w-24 h-5 inline-block"></span>
         </div>
         <div className="mb-1 flex space-x-2 items-center">
-          <span className="font-medium bg-gray-300 rounded w-40 h-5 inline-block"></span>
-          <span className="bg-gray-300 rounded w-12 h-5 inline-block"></span>
+          <span className="font-medium bg-brand-accent-1 opacity-30 rounded w-40 h-5 inline-block"></span>
+          <span className="bg-brand-accent-1 opacity-30 rounded w-12 h-5 inline-block"></span>
         </div>
         <div className="flex space-x-2 items-center">
-          <span className="font-medium bg-gray-300 rounded w-60 h-5 inline-block"></span>
-          <span className="bg-gray-300 rounded w-12 h-5 inline-block"></span>
+          <span className="font-medium bg-brand-accent-1 opacity-30 rounded w-60 h-5 inline-block"></span>
+          <span className="bg-brand-accent-1 opacity-30 rounded w-12 h-5 inline-block"></span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="border rounded p-4 mb-4 bg-gray-50">
-      <h2 className="text-lg font-semibold mb-2 text-black">
+    <div className="border border-brand-primary-1 rounded p-4 mb-4 bg-brand-secondary-0 text-brand-primary-1">
+      <h2 className="text-lg font-semibold mb-2 text-brand-primary-1">
         Donation Summary
       </h2>
       <div className="mb-1">
-        <span className="font-medium text-black">Total Donations: </span>
-        <span className="text-black">
+        <span className="font-medium text-brand-primary-1">
+          Total Donations:{" "}
+        </span>
+        <span className="text-brand-primary-1">
           $
           {(totalAmount / 100).toLocaleString("en-US", {
             minimumFractionDigits: 2,
@@ -136,14 +138,16 @@ export default function DistrictDonationsSummary({
         </span>
       </div>
       <div className="mb-1">
-        <span className="font-medium text-black">Unique Donors: </span>
-        <span className="text-black">{uniqueDonors}</span>
+        <span className="font-medium text-brand-primary-1">
+          Unique Donors:{" "}
+        </span>
+        <span className="text-brand-primary-1">{uniqueDonors}</span>
       </div>
       <div>
-        <span className="font-medium text-black">
+        <span className="font-medium text-brand-primary-1">
           Active Recurring Subscriptions:{" "}
         </span>
-        <span className="text-black">{activeSubsCount}</span>
+        <span className="text-brand-primary-1">{activeSubsCount}</span>
       </div>
     </div>
   );
