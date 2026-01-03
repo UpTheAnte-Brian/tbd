@@ -10,19 +10,24 @@ type Props = {
   preferredSlotKeys?: string[];
   className?: string;
   size?: number;
+  fullWidth?: boolean;
+  minHeight?: number;
+  fillContainer?: boolean;
+  fallbackName?: string;
+  fallbackType?: string | null;
 };
 
 export function EntityLogo({
   entityId,
   entityType,
-  preferredSlotKeys = [
-    "primary",
-    "logo",
-    "icon",
-    "mark",
-  ],
+  preferredSlotKeys = ["primary", "logo", "icon", "mark"],
   className,
   size = 48,
+  fullWidth = false,
+  minHeight,
+  fillContainer = false,
+  fallbackName,
+  fallbackType,
 }: Props) {
   const { slots, categories, subcategories, assets } = useBrandingAssets(
     entityId,
@@ -99,13 +104,22 @@ export function EntityLogo({
   if (logoUrl) {
     return (
       <div
-        className={`inline-flex items-center justify-center rounded-md bg-white ${className ?? ""}`}
-        style={{ width: size, height: size }}
+        className={`flex items-center justify-center rounded-md bg-white ${
+          className ?? ""
+        }`}
+        style={
+          fillContainer
+            ? { width: "100%", height: "100%" }
+            : fullWidth
+            ? { width: "100%", height: minHeight ?? size }
+            : { width: size, height: size }
+        }
+        title={`${entityType} • ${entityId}`}
       >
         <img
           src={logoUrl}
           alt={`${entityType} logo`}
-          className="h-full w-full object-contain"
+          className="h-full w-full"
         />
       </div>
     );
@@ -113,11 +127,28 @@ export function EntityLogo({
 
   return (
     <div
-      className={`inline-flex items-center justify-center rounded-md bg-gray-200 text-gray-700 text-xs font-semibold ${className ?? ""}`}
-      style={{ width: size, height: size }}
+      className={`flex flex-col items-center justify-center rounded-md bg-gray-200 text-gray-700 text-xs font-semibold ${
+        className ?? ""
+      }`}
+      style={
+        fillContainer
+          ? { width: "100%", height: "100%" }
+          : fullWidth
+          ? { width: "100%", height: minHeight ?? size }
+          : { width: size, height: size }
+      }
       title={`${entityType} • ${entityId}`}
     >
-      {entityType}
+      {fallbackName ? (
+        <>
+          <div className="text-sm font-semibold">{fallbackName}</div>
+          {fallbackType ? (
+            <div className="text-xs opacity-70 capitalize">{fallbackType}</div>
+          ) : null}
+        </>
+      ) : (
+        entityType
+      )}
     </div>
   );
 }
