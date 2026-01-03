@@ -93,7 +93,21 @@ async function resolveBusinessIdFromEntityId(
     if (error) throw error;
     const externalIds = (data as EntityIdRow | null)?.external_ids ?? null;
     const businessId = externalIds?.business_id;
-    return typeof businessId === "string" ? businessId : null;
+    if (typeof businessId === "string") {
+        return businessId;
+    }
+    const placeId = externalIds?.place_id;
+    if (typeof placeId !== "string") {
+        return null;
+    }
+
+    const { data: businessRow, error: businessError } = await supabase
+        .from("businesses")
+        .select("id")
+        .eq("place_id", placeId)
+        .maybeSingle();
+    if (businessError) throw businessError;
+    return businessRow?.id ? String(businessRow.id) : null;
 }
 
 export async function getBusinesses(): Promise<Business[]> {
@@ -142,6 +156,20 @@ export async function getBusiness(id: string): Promise<Business> {
     let entityId: string | null = data?.entity_id ?? null;
 
     if (!business) {
+        const { data: entityBusiness, error: entityBusinessError } =
+            await supabase
+                .from("businesses")
+                .select("*")
+                .eq("entity_id", id)
+                .maybeSingle();
+        if (entityBusinessError) throw entityBusinessError;
+        if (entityBusiness) {
+            business = entityBusiness;
+            entityId = id;
+        }
+    }
+
+    if (!business) {
         const resolvedBusinessId = await resolveBusinessIdFromEntityId(
             supabase,
             id,
@@ -171,66 +199,68 @@ export async function getBusiness(id: string): Promise<Business> {
     }
 
     let entityUsers: EntityUser[] = [];
-    const { data: userRows, error: usersError } = await supabase
-        .from("entity_users")
-        .select(
-            `
-            id,
-            entity_id,
-            user_id,
-            role,
-            status,
-            created_at,
-            entities:entities (
-                entity_type
-            ),
-            profile:profiles ( id, full_name, username, first_name, last_name, avatar_url, website )
-        `,
-        )
-        .eq("entity_id", data.id);
+    if (entityId) {
+        const { data: userRows, error: usersError } = await supabase
+            .from("entity_users")
+            .select(
+                `
+                id,
+                entity_id,
+                user_id,
+                role,
+                status,
+                created_at,
+                entities:entities (
+                    entity_type
+                ),
+                profile:profiles ( id, full_name, username, first_name, last_name, avatar_url, website )
+            `,
+            )
+            .eq("entity_id", entityId);
 
-    if (!usersError && Array.isArray(userRows)) {
-        entityUsers = (userRows as EntityUserRow[]).map((u) => {
-            const profileRaw = Array.isArray(u.profile)
-                ? u.profile[0]
-                : u.profile;
-            const entity = Array.isArray(u.entities)
-                ? u.entities[0]
-                : u.entities;
-            return {
-                id: String(u.id),
-                entity_type: entity?.entity_type ?? "business",
-                entity_id: String(u.entity_id),
-                user_id: String(u.user_id),
-                role: (u.role as EntityUserRole) ?? "viewer",
-                status: (u.status as EntityUser["status"]) ?? null,
-                created_at: u.created_at ?? null,
-                updated_at: null,
-                profile: profileRaw
-                    ? {
-                        id: String((profileRaw as { id: string }).id ?? ""),
-                        full_name:
-                            (profileRaw as { full_name?: string | null })
-                                .full_name ?? null,
-                        username:
-                            (profileRaw as { username?: string | null })
-                                .username ?? null,
-                        first_name:
-                            (profileRaw as { first_name?: string | null })
-                                .first_name ?? null,
-                        last_name:
-                            (profileRaw as { last_name?: string | null })
-                                .last_name ?? null,
-                        avatar_url:
-                            (profileRaw as { avatar_url?: string | null })
-                                .avatar_url ?? null,
-                        website: (profileRaw as { website?: string | null })
-                            .website ?? null,
-                        entity_users: undefined,
-                    }
-                    : null,
-            };
-        });
+        if (!usersError && Array.isArray(userRows)) {
+            entityUsers = (userRows as EntityUserRow[]).map((u) => {
+                const profileRaw = Array.isArray(u.profile)
+                    ? u.profile[0]
+                    : u.profile;
+                const entity = Array.isArray(u.entities)
+                    ? u.entities[0]
+                    : u.entities;
+                return {
+                    id: String(u.id),
+                    entity_type: entity?.entity_type ?? "business",
+                    entity_id: String(u.entity_id),
+                    user_id: String(u.user_id),
+                    role: (u.role as EntityUserRole) ?? "viewer",
+                    status: (u.status as EntityUser["status"]) ?? null,
+                    created_at: u.created_at ?? null,
+                    updated_at: null,
+                    profile: profileRaw
+                        ? {
+                            id: String((profileRaw as { id: string }).id ?? ""),
+                            full_name:
+                                (profileRaw as { full_name?: string | null })
+                                    .full_name ?? null,
+                            username:
+                                (profileRaw as { username?: string | null })
+                                    .username ?? null,
+                            first_name:
+                                (profileRaw as { first_name?: string | null })
+                                    .first_name ?? null,
+                            last_name:
+                                (profileRaw as { last_name?: string | null })
+                                    .last_name ?? null,
+                            avatar_url:
+                                (profileRaw as { avatar_url?: string | null })
+                                    .avatar_url ?? null,
+                            website: (profileRaw as { website?: string | null })
+                                .website ?? null,
+                            entity_users: undefined,
+                        }
+                        : null,
+                };
+            });
+        }
     }
 
     return {
