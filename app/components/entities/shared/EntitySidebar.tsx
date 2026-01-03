@@ -35,8 +35,11 @@ export default function EntitySidebar({
           <EntityLogo
             entityId={entityId}
             entityType={entityType}
+            fullWidth
+            minHeight={80}
             fallbackName={entityName}
             fallbackType={entityType}
+            className="w-full rounded-md border border-brand-secondary-1 bg-brand-secondary-1 p-2"
           />
         ) : null}
         <nav className="mt-2 space-y-2">
