@@ -1,10 +1,9 @@
 "use client";
 
 import { ReactNode } from "react";
+import type { TabKey } from "@/app/components/entities/hooks/useEntityTabParam";
 import type { EntityType } from "@/app/lib/types/types";
 import EntitySidebar from "@/app/components/entities/shared/EntitySidebar";
-
-type TabKey = "overview" | "branding" | "users" | "map";
 
 type Props = {
   entityId: string;
@@ -42,8 +41,8 @@ export default function EntityPageLayout({
         activeTab={activeTab}
         onTabChange={onTabChange}
       />
-      <div className="flex-1 md:pl-4 md:border-l md:border-brand-secondary-1">
-        <div className="max-w-5xl space-y-6 md:space-y-0">{children}</div>
+      <div className="flex-1 min-w-0 md:pl-4 md:border-l md:border-brand-secondary-1">
+        <div className="w-full space-y-6 md:space-y-0">{children}</div>
       </div>
     </div>
   );

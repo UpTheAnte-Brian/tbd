@@ -2,9 +2,8 @@
 
 import { EntityLogo } from "@/app/components/branding/EntityLogo";
 import BrandPaletteCube from "@/app/components/branding/BrandPaletteCube";
+import type { TabKey } from "@/app/components/entities/hooks/useEntityTabParam";
 import type { EntityType } from "@/app/lib/types/types";
-
-type TabKey = "overview" | "branding" | "users" | "map";
 
 type Props = {
   entityId: string;
@@ -14,12 +13,24 @@ type Props = {
   onTabChange: (tab: TabKey) => void;
 };
 
-const TAB_ORDER: { key: TabKey; label: string }[] = [
+const BASE_TABS: { key: TabKey; label: string }[] = [
   { key: "overview", label: "Overview" },
   { key: "branding", label: "Branding" },
   { key: "users", label: "Users" },
   { key: "map", label: "Map" },
 ];
+
+const GOVERNANCE_TAB: { key: TabKey; label: string } = {
+  key: "governance",
+  label: "Governance",
+};
+
+function getTabs(entityType?: EntityType | null) {
+  if (entityType !== "nonprofit") {
+    return BASE_TABS;
+  }
+  return [...BASE_TABS.slice(0, 3), GOVERNANCE_TAB, ...BASE_TABS.slice(3)];
+}
 
 export default function EntitySidebar({
   entityId,
@@ -28,6 +39,7 @@ export default function EntitySidebar({
   activeTab,
   onTabChange,
 }: Props) {
+  const tabs = getTabs(entityType);
   return (
     <aside className="hidden md:block w-72 shrink-0">
       <div className="sticky top-4 rounded border border-brand-secondary-1 bg-brand-secondary-0 p-4 text-brand-secondary-2">
@@ -43,7 +55,7 @@ export default function EntitySidebar({
           />
         ) : null}
         <nav className="mt-2 space-y-2">
-          {TAB_ORDER.map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.key}
               type="button"

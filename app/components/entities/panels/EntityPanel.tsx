@@ -6,7 +6,10 @@ import EntityPanelTabs from "@/app/components/entities/panels/EntityPanelTabs";
 import EntityPanelContent from "@/app/components/entities/panels/EntityPanelContent";
 import EntityPageLayout from "@/app/components/entities/EntityPageLayout";
 import { EntityLogo } from "@/app/components/branding/EntityLogo";
-import { useEntityTabParam } from "@/app/components/entities/hooks/useEntityTabParam";
+import {
+  getEntityTabKeys,
+  useEntityTabParam,
+} from "@/app/components/entities/hooks/useEntityTabParam";
 import type { EntityType } from "@/app/lib/types/types";
 
 type EntityDetails = {
@@ -26,7 +29,6 @@ export default function EntityPanel({ entityId, entityType }: Props) {
   const [entity, setEntity] = useState<EntityDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { activeTab, setActiveTab } = useEntityTabParam();
 
   useEffect(() => {
     let cancelled = false;
@@ -71,6 +73,9 @@ export default function EntityPanel({ entityId, entityType }: Props) {
     return null;
   }, [entityType, entity?.entity_type]);
 
+  const allowedTabs = useMemo(() => getEntityTabKeys(resolvedType), [resolvedType]);
+  const { activeTab, setActiveTab } = useEntityTabParam(allowedTabs);
+
   if (loading) {
     return (
       <div className="rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-6">
@@ -107,6 +112,7 @@ export default function EntityPanel({ entityId, entityType }: Props) {
     <EntityPanelTabs
       activeTab={activeTab}
       onTabChange={setActiveTab}
+      entityType={resolvedType}
       tabsVariant="select"
     />
   );

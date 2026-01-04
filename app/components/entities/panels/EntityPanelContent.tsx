@@ -6,6 +6,7 @@ import EntityOverviewTab from "@/app/components/entities/tabs/overview/EntityOve
 import EntityBrandingTab from "@/app/components/entities/tabs/branding/EntityBrandingTab";
 import EntityUsersTab from "@/app/components/entities/tabs/users/EntityUsersTab";
 import EntityMapTab from "@/app/components/entities/tabs/map/EntityMapTab";
+import GovernancePanel from "@/app/components/nonprofits/GovernancePanel";
 import type { TabKey } from "@/app/components/entities/hooks/useEntityTabParam";
 
 type Props = {
@@ -51,6 +52,14 @@ export default function EntityPanelContent({
         return <EntityUsersTab entityId={entityId} />;
       case "map":
         return <EntityMapTab entityId={entityId} entityType={entityType} />;
+      case "governance":
+        return entityType === "nonprofit" ? (
+          <GovernancePanel nonprofitId={entityId} />
+        ) : (
+          <div className="rounded border border-dashed border-brand-secondary-1 p-4 text-sm text-brand-secondary-0">
+            Governance is only available for nonprofits.
+          </div>
+        );
       default:
         return null;
     }
