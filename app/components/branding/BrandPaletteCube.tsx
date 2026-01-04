@@ -14,10 +14,10 @@ const cells = [
 
 export default function BrandPaletteCube() {
   return (
-    <div className="w-full bg-white p-2 rounded shadow-sm">
+    <div className="w-full rounded border border-brand-secondary-1 bg-brand-secondary-2 p-2">
       <div className="grid grid-cols-3 grid-rows-3 gap-0 w-full overflow-hidden rounded">
         {cells.map((cls, idx) => (
-          <div key={cls + idx} className={`${cls} aspect-square`} />
+          <div key={cls + idx} className={`${cls} aspect-square opacity-90`} />
         ))}
       </div>
     </div>

@@ -38,16 +38,16 @@ export default function BrandPalettesSection({
       {editingPalette && entityId && (
         <div className="fixed inset-0 z-50 flex justify-end items-center">
           <div
-            className="absolute inset-0 bg-brand-primary-0"
+            className="absolute inset-0 bg-brand-secondary-0"
             style={{ opacity: 0.8 }}
           />
-          <div className="relative z-10 w-full max-w-md max-h-[calc(100vh-2rem)] bg-brand-primary-0 text-brand-primary-1 border border-brand-primary-1 shadow-xl p-4 overflow-y-auto rounded-lg mr-2">
+          <div className="relative z-10 w-full max-w-md max-h-[calc(100vh-2rem)] bg-brand-secondary-2 text-brand-secondary-0 border border-brand-secondary-1 shadow-xl p-4 overflow-y-auto rounded-lg mr-2">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">
                 {editingPalette.id ? "Edit Palette" : "Create Palette"}
               </h3>
               <button
-                className="text-brand-primary-1 hover:text-brand-accent-1"
+                className="text-brand-secondary-0 hover:text-brand-primary-2"
                 onClick={() => setEditingPalette(null)}
               >
                 x
@@ -97,14 +97,14 @@ export default function BrandPalettesSection({
         }
       >
         {!entityId ? (
-          <div className="text-sm text-brand-accent-1">
+          <div className="text-sm text-brand-primary-2">
             Missing entity mapping for this entity.
           </div>
         ) : palettes?.length ? (
-          <div className="mt-2 overflow-x-auto rounded border border-brand-primary-1 bg-brand-secondary-0">
-            <div className="grid gap-2 min-w-max text-sm text-brand-primary-1">
+          <div className="mt-2 overflow-x-auto rounded border border-brand-secondary-1 bg-brand-secondary-2">
+            <div className="grid gap-2 min-w-max text-sm text-brand-secondary-0">
               <div
-                className="grid items-center gap-3 px-2 py-2 text-xs uppercase tracking-wide border-b border-brand-primary-1 bg-brand-secondary-1"
+                className="grid items-center gap-3 px-2 py-2 text-xs uppercase tracking-wide border-b border-brand-secondary-1 bg-brand-secondary-1"
                 style={{ gridTemplateColumns: paletteGridTemplate }}
               >
                 <div>Name</div>
@@ -122,17 +122,17 @@ export default function BrandPalettesSection({
               {palettes.map((palette) => (
                 <div
                   key={palette.id}
-                  className="grid items-center gap-3 px-2 py-2 border-b border-brand-primary-1"
+                  className="grid items-center gap-3 px-2 py-2 border-b border-brand-secondary-1"
                   style={{ gridTemplateColumns: paletteGridTemplate }}
                 >
                   <div className="flex items-center">
-                    <h3 className="text-md font-medium text-brand-primary-1">
+                    <h3 className="text-md font-medium text-brand-secondary-0">
                       {palette.name}
                     </h3>
                   </div>
                   <div className="flex justify-center">
                     <button
-                      className="px-3 py-1 rounded bg-brand-accent-1 text-brand-primary-1 text-xs hover:bg-brand-accent-2 disabled:opacity-50"
+                      className="rounded bg-brand-secondary-0 px-3 py-1 text-xs text-brand-secondary-2 hover:bg-brand-secondary-1 disabled:opacity-50"
                       onClick={() =>
                         setEditingPalette({
                           id: palette.id,
@@ -155,12 +155,12 @@ export default function BrandPalettesSection({
                       >
                         {color ? (
                           <div
-                            className="w-12 h-12 rounded border border-brand-primary-1 shadow-sm"
+                            className="w-12 h-12 rounded border border-brand-secondary-1"
                             style={{ backgroundColor: color }}
                             title={color}
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded border border-dashed border-brand-primary-1 flex items-center justify-center text-xs text-brand-primary-1">
+                          <div className="flex h-12 w-12 items-center justify-center rounded border border-dashed border-brand-secondary-1 text-xs text-brand-secondary-0">
                             -
                           </div>
                         )}
@@ -172,7 +172,7 @@ export default function BrandPalettesSection({
             </div>
           </div>
         ) : (
-          <div className="text-brand-primary-1">
+          <div className="text-brand-secondary-0">
             No color palettes defined.
           </div>
         )}
@@ -180,7 +180,7 @@ export default function BrandPalettesSection({
         {entityId &&
           (canEdit ? (
             <button
-              className="mt-4 px-3 py-2 bg-brand-accent-1 text-brand-primary-1 rounded hover:bg-brand-accent-2"
+              className="mt-4 rounded bg-brand-primary-0 px-3 py-2 text-brand-secondary-2 hover:bg-brand-primary-2"
               onClick={() =>
                 setEditingPalette({
                   id: undefined,
@@ -193,7 +193,7 @@ export default function BrandPalettesSection({
               + Add Palette
             </button>
           ) : (
-            <div className="mt-4 text-xs text-brand-primary-1">
+            <div className="mt-4 text-xs text-brand-secondary-0">
               You do not have permission to edit palettes.
             </div>
           ))}

@@ -17,15 +17,15 @@ const DistrictPopUp = React.memo(
     }, []);
 
     return (
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col gap-3">
+      <div className="flex flex-col gap-3 rounded-xl border border-brand-secondary-1 bg-brand-secondary-2 p-4">
         <Link href={`/districts/${district.id}`}>
-          <div className="text-lg font-semibold text-blue-500 underline decoration-blue-500 text-center hover:underline hover:decoration-blue-700">
+          <div className="text-center text-lg font-semibold text-brand-primary-0 underline decoration-brand-primary-0 hover:text-brand-primary-2">
             {props.name ?? props.slug ?? "District"}
           </div>
         </Link>
         <Link
           href={`/donate/${district.id}`}
-          className="inline-block px-4 py-2 bg-blue-600 text-white justify-center text-center rounded hover:bg-blue-700 hover:underline hover:decoration-blue-700"
+          className="inline-block justify-center rounded bg-brand-primary-0 px-4 py-2 text-center text-brand-secondary-2 hover:bg-brand-primary-2"
         >
           Donate
         </Link>

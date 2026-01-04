@@ -103,34 +103,34 @@ export default function DistrictDonationsSummary({
 
   if (loading) {
     return (
-      <div className="border border-brand-primary-1 rounded p-4 mb-4 bg-brand-secondary-0 text-brand-primary-1 animate-pulse">
-        <h2 className="text-lg font-semibold mb-2 bg-brand-accent-1 opacity-40 rounded w-48 h-6"></h2>
+      <div className="mb-4 rounded border border-brand-secondary-1 bg-brand-secondary-2 p-4 text-brand-secondary-0 animate-pulse">
+        <h2 className="mb-2 h-6 w-48 rounded bg-brand-secondary-1 opacity-40 text-lg font-semibold"></h2>
         <div className="mb-1 flex space-x-2 items-center">
-          <span className="font-medium bg-brand-accent-1 opacity-30 rounded w-40 h-5 inline-block"></span>
-          <span className="bg-brand-accent-1 opacity-30 rounded w-24 h-5 inline-block"></span>
+          <span className="inline-block h-5 w-40 rounded bg-brand-secondary-1 opacity-30"></span>
+          <span className="inline-block h-5 w-24 rounded bg-brand-secondary-1 opacity-30"></span>
         </div>
         <div className="mb-1 flex space-x-2 items-center">
-          <span className="font-medium bg-brand-accent-1 opacity-30 rounded w-40 h-5 inline-block"></span>
-          <span className="bg-brand-accent-1 opacity-30 rounded w-12 h-5 inline-block"></span>
+          <span className="inline-block h-5 w-40 rounded bg-brand-secondary-1 opacity-30"></span>
+          <span className="inline-block h-5 w-12 rounded bg-brand-secondary-1 opacity-30"></span>
         </div>
         <div className="flex space-x-2 items-center">
-          <span className="font-medium bg-brand-accent-1 opacity-30 rounded w-60 h-5 inline-block"></span>
-          <span className="bg-brand-accent-1 opacity-30 rounded w-12 h-5 inline-block"></span>
+          <span className="inline-block h-5 w-60 rounded bg-brand-secondary-1 opacity-30"></span>
+          <span className="inline-block h-5 w-12 rounded bg-brand-secondary-1 opacity-30"></span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="border border-brand-primary-1 rounded p-4 mb-4 bg-brand-secondary-0 text-brand-primary-1">
-      <h2 className="text-lg font-semibold mb-2 text-brand-primary-1">
+    <div className="mb-4 rounded border border-brand-secondary-1 bg-brand-secondary-2 p-4 text-brand-secondary-0">
+      <h2 className="mb-2 text-lg font-semibold text-brand-secondary-0">
         Donation Summary
       </h2>
       <div className="mb-1">
-        <span className="font-medium text-brand-primary-1">
+        <span className="font-medium text-brand-secondary-0">
           Total Donations:{" "}
         </span>
-        <span className="text-brand-primary-1">
+        <span className="text-brand-secondary-0">
           $
           {(totalAmount / 100).toLocaleString("en-US", {
             minimumFractionDigits: 2,
@@ -138,16 +138,16 @@ export default function DistrictDonationsSummary({
         </span>
       </div>
       <div className="mb-1">
-        <span className="font-medium text-brand-primary-1">
+        <span className="font-medium text-brand-secondary-0">
           Unique Donors:{" "}
         </span>
-        <span className="text-brand-primary-1">{uniqueDonors}</span>
+        <span className="text-brand-secondary-0">{uniqueDonors}</span>
       </div>
       <div>
-        <span className="font-medium text-brand-primary-1">
+        <span className="font-medium text-brand-secondary-0">
           Active Recurring Subscriptions:{" "}
         </span>
-        <span className="text-brand-primary-1">{activeSubsCount}</span>
+        <span className="text-brand-secondary-0">{activeSubsCount}</span>
       </div>
     </div>
   );

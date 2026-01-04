@@ -9,7 +9,7 @@ export default async function EntityPage({ params }: EntityPageProps) {
   const { id } = await params;
   return (
     <EntityThemeProvider entityId={id}>
-      <main className="p-4">
+      <main className="min-h-screen bg-brand-secondary-1 p-4 text-brand-secondary-0">
         <EntityPanel entityId={id} />
       </main>
     </EntityThemeProvider>

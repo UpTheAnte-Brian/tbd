@@ -302,11 +302,11 @@ export default function BrandAssetsSection({
       defaultOpen={false}
     >
       {!entityId ? (
-        <div className="text-sm text-brand-accent-1">
+        <div className="text-sm text-brand-primary-2">
           Missing entity mapping for this {entityType}.
         </div>
       ) : slots.length === 0 ? (
-        <div className="text-sm text-brand-primary-1">
+        <div className="text-sm text-brand-secondary-0">
           No asset slots configured for this entity.
         </div>
       ) : (
@@ -321,19 +321,19 @@ export default function BrandAssetsSection({
             return (
               <details
                 key={slot.id}
-                className="rounded-lg border border-brand-primary-1 bg-brand-secondary-0"
+                className="rounded-lg border border-brand-secondary-1 bg-brand-secondary-2"
               >
-                <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-brand-primary-1 bg-brand-secondary-1">
+                <summary className="flex cursor-pointer items-center justify-between border-b border-brand-secondary-1 px-4 py-3 text-sm font-semibold text-brand-secondary-0 bg-brand-secondary-2">
                   <span>{getSlotLabel(slot)}</span>
-                  <span className="text-xs text-brand-primary-1 opacity-80">
+                  <span className="text-xs text-brand-secondary-0 opacity-70">
                     {slotAssets.length}/{maxAssets ?? "inf"}
                   </span>
                 </summary>
-                <div className="px-4 pb-4 pt-2 space-y-3 text-sm text-brand-primary-1">
+                <div className="px-4 pb-4 pt-2 space-y-3 text-sm text-brand-secondary-0">
                   {slot.help_text && (
                     <div className="opacity-80">{slot.help_text}</div>
                   )}
-                  <div className="flex flex-wrap gap-3 text-xs text-brand-primary-1 opacity-80">
+                  <div className="flex flex-wrap gap-3 text-xs text-brand-secondary-0 opacity-70">
                     {allowed.length > 0 && (
                       <span>Allowed: {allowed.join(", ")}</span>
                     )}
@@ -341,7 +341,7 @@ export default function BrandAssetsSection({
                   </div>
 
                   {slotAssets.length === 0 ? (
-                    <div className="rounded border border-dashed border-brand-primary-1 bg-brand-secondary-1 p-3 text-brand-primary-1 opacity-80">
+                    <div className="rounded border border-dashed border-brand-secondary-1 bg-brand-secondary-2 p-3 text-brand-secondary-0 opacity-70">
                       No assets uploaded yet.
                     </div>
                   ) : (
@@ -351,28 +351,28 @@ export default function BrandAssetsSection({
                         return (
                           <div
                             key={asset.id}
-                            className="rounded border border-brand-primary-1 bg-brand-secondary-1 p-3 space-y-2"
+                            className="rounded border border-brand-secondary-1 bg-brand-secondary-2 p-3 space-y-2"
                           >
-                            <div className="text-xs text-brand-primary-1 opacity-80">
+                            <div className="text-xs text-brand-secondary-0 opacity-70">
                               {asset.name || "Untitled asset"}
                             </div>
                             {assetUrl ? (
                               <img
                                 src={assetUrl}
                                 alt={asset.name ?? "Brand asset"}
-                                className="max-h-36 w-full rounded bg-brand-primary-1 object-contain p-2"
+                                className="max-h-36 w-full rounded border border-brand-secondary-1 bg-brand-secondary-2 object-contain p-2"
                               />
                             ) : (
-                              <div className="flex h-28 items-center justify-center rounded bg-brand-primary-0 text-xs text-brand-primary-1 opacity-80">
+                              <div className="flex h-28 items-center justify-center rounded bg-brand-secondary-1 text-xs text-brand-secondary-0 opacity-70">
                                 No preview available
                               </div>
                             )}
-                            <div className="flex items-center justify-between text-xs text-brand-primary-1 opacity-80">
+                            <div className="flex items-center justify-between text-xs text-brand-secondary-0 opacity-70">
                               <span>{asset.mime_type ?? "unknown"}</span>
                               {canEdit && (
                                 <button
                                   onClick={() => handleDelete(asset.id)}
-                                  className="rounded bg-brand-accent-1 px-2 py-1 text-brand-primary-1 hover:bg-brand-accent-2"
+                                  className="rounded bg-brand-primary-2 px-2 py-1 text-brand-secondary-2 hover:bg-brand-primary-0"
                                 >
                                   Delete
                                 </button>
@@ -388,7 +388,7 @@ export default function BrandAssetsSection({
                     <button
                       type="button"
                       onClick={() => document.getElementById(inputId)?.click()}
-                      className="inline-flex items-center rounded bg-brand-accent-1 px-3 py-2 text-xs font-semibold text-brand-primary-1 hover:bg-brand-accent-2"
+                      className="inline-flex items-center rounded bg-brand-primary-0 px-3 py-2 text-xs font-semibold text-brand-secondary-2 hover:bg-brand-primary-2"
                       disabled={uploadingSlotId === slot.id}
                     >
                       {uploadingSlotId === slot.id
@@ -400,7 +400,7 @@ export default function BrandAssetsSection({
                   )}
 
                   {!canEdit && (
-                    <div className="text-xs text-brand-primary-1 opacity-80">
+                    <div className="text-xs text-brand-secondary-0 opacity-70">
                       You do not have permission to edit assets.
                     </div>
                   )}

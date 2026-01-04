@@ -102,31 +102,33 @@ export default function TypographyEditor({
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4 p-4 text-brand-secondary-0">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold text-slate-900">Typography</h3>
+        <h3 className="text-xl font-semibold text-brand-secondary-0">
+          Typography
+        </h3>
         <button
           onClick={onClose}
-          className="text-sm text-slate-600 hover:text-slate-900"
+          className="text-sm text-brand-secondary-0 opacity-70 hover:opacity-100"
         >
           ✕ Close
         </button>
       </div>
       {fontError && (
-        <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+        <div className="rounded border border-brand-primary-2 px-3 py-2 text-sm text-brand-primary-2">
           {fontError}
         </div>
       )}
       <div className="space-y-4">
-        <div className="border rounded bg-white p-3 shadow-sm text-slate-900">
+        <div className="rounded border border-brand-secondary-1 bg-brand-secondary-2 p-3 text-brand-secondary-0">
           <div className="flex items-center justify-between mb-2">
-            <div className="font-semibold text-slate-900">
+            <div className="font-semibold text-brand-secondary-0">
               {ROLE_LABELS[role] ?? role}
             </div>
           </div>
           <div className="space-y-3">
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-800">
+              <label className="text-sm font-medium text-brand-secondary-0">
                 Font family
               </label>
               <input
@@ -134,13 +136,13 @@ export default function TypographyEditor({
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, font_name: e.target.value }))
                 }
-                className="border border-slate-300 rounded px-2 py-1 text-slate-900"
+                className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-2 py-1 text-brand-secondary-0"
                 placeholder="e.g. Figtree"
               />
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-slate-800">
+              <span className="text-sm font-medium text-brand-secondary-0">
                 Availability
               </span>
               <div className="flex gap-3 text-sm">
@@ -165,7 +167,7 @@ export default function TypographyEditor({
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-slate-800">
+              <span className="text-sm font-medium text-brand-secondary-0">
                 Allowed weights
               </span>
               <div className="flex flex-wrap gap-2 text-sm">
@@ -174,8 +176,8 @@ export default function TypographyEditor({
                     key={w}
                     className={`px-2 py-1 rounded border cursor-pointer ${
                       form.weights.includes(w)
-                        ? "bg-blue-200 border-blue-900 text-blue-900"
-                        : "bg-white border-slate-300 text-slate-700"
+                        ? "bg-brand-primary-0 border-brand-primary-0 text-brand-secondary-2"
+                        : "bg-brand-secondary-2 border-brand-secondary-1 text-brand-secondary-0"
                     }`}
                   >
                     <input
@@ -199,7 +201,7 @@ export default function TypographyEditor({
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-800">
+              <label className="text-sm font-medium text-brand-secondary-0">
                 Usage rules
               </label>
               <textarea
@@ -210,7 +212,7 @@ export default function TypographyEditor({
                     usage_rules: e.target.value,
                   }))
                 }
-                className="border border-slate-300 rounded px-2 py-1 text-slate-900"
+                className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-2 py-1 text-brand-secondary-0"
                 rows={3}
                 placeholder="Guidance for where/how to use this font"
               />
@@ -220,7 +222,7 @@ export default function TypographyEditor({
               <button
                 onClick={saveRole}
                 disabled={fontSaving}
-                className="px-3 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                className="rounded bg-brand-primary-0 px-3 py-2 text-brand-secondary-2 hover:bg-brand-primary-2 disabled:opacity-50"
               >
                 {fontSaving ? "Saving…" : "Save"}
               </button>
@@ -237,7 +239,7 @@ export default function TypographyEditor({
                     usage_rules: row?.usage_rules ?? "",
                   });
                 }}
-                className="px-3 py-2 rounded bg-gray-200 text-slate-800 hover:bg-gray-300"
+                className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-brand-secondary-0 hover:bg-brand-secondary-1"
               >
                 Reset
               </button>

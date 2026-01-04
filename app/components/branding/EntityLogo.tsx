@@ -35,7 +35,7 @@ export function EntityLogo({
   if (logoUrl) {
     return (
       <div
-        className={`flex items-center justify-center rounded-md bg-brand-primary-1 overflow-hidden ${
+        className={`flex items-center justify-center rounded-md border border-brand-secondary-1 bg-brand-secondary-2 overflow-hidden ${
           className ?? ""
         }`}
         style={
@@ -58,7 +58,7 @@ export function EntityLogo({
 
   return (
     <div
-      className={`flex flex-col items-center justify-center rounded-md bg-brand-secondary-0 text-brand-primary-1 text-xs font-semibold ${
+      className={`flex flex-col items-center justify-center rounded-md border border-brand-secondary-1 bg-brand-secondary-2 text-brand-secondary-0 text-xs font-semibold ${
         className ?? ""
       }`}
       style={

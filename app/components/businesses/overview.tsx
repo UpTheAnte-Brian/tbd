@@ -15,11 +15,11 @@ export default function BusinessOverview({
       {/* Flex container for two-column layout */}
       <div className="flex flex-col md:flex-row gap-4 w-full">
         {/* Left content: 3/4 width */}
-        <div className="w-full md:w-3/4 [&>*]:text-black">
+        <div className="w-full md:w-3/4 [&>*]:text-brand-secondary-0">
           <p>-</p>
           <p>- </p>
           <h3 className="text-lg font-semibold mb-2"> Data:</h3>
-          <ul className="list-disc list-inside space-y-1 [&>*]:text-black">
+          <ul className="list-disc list-inside space-y-1 [&>*]:text-brand-secondary-0">
             <li>
               Welcome {business.name}.Status: {business.status}
             </li>

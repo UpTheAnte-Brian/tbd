@@ -139,12 +139,12 @@ export default function EntityUsersTab({ entityId }: Props) {
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">User Assignments</h2>
-      <p className="text-sm text-gray-400">
+      <p className="text-sm text-brand-secondary-0 opacity-70">
         Governance roles are managed separately. Use this list for operational
         access (admin, editor, viewer, employee).
       </p>
 
-      <div className="p-4 border rounded bg-gray-900 space-y-4">
+      <div className="space-y-4 rounded border border-brand-secondary-1 bg-brand-secondary-2 p-4">
         <h3 className="font-semibold text-lg">Add User</h3>
 
         <div className="relative">
@@ -191,7 +191,7 @@ export default function EntityUsersTab({ entityId }: Props) {
                 setHighlightIndex(-1);
               }
             }}
-            className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+            className="w-full rounded border border-brand-secondary-1 bg-brand-secondary-2 p-2 text-brand-secondary-0"
             placeholder="Search users by name..."
           />
 
@@ -202,7 +202,7 @@ export default function EntityUsersTab({ entityId }: Props) {
           )}
 
           {dropdownOpen && searchResults.length > 0 && (
-            <div className="absolute z-10 w-full bg-gray-900 border border-gray-700 rounded mt-1 max-h-56 overflow-y-auto">
+            <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded border border-brand-secondary-1 bg-brand-secondary-2">
               {searchResults.map((u, idx) => {
                 const alreadyAssigned = users.some(
                   (user) => user.user_id === u.id
@@ -212,7 +212,7 @@ export default function EntityUsersTab({ entityId }: Props) {
                   <div
                     key={u.id}
                     className={`px-3 py-2 flex items-center gap-3 cursor-pointer ${
-                      active ? "bg-gray-700" : "hover:bg-gray-800"
+                      active ? "bg-brand-secondary-1" : "hover:bg-brand-secondary-1"
                     }`}
                     onClick={() => {
                       setNewUserId(u.id);
@@ -231,7 +231,7 @@ export default function EntityUsersTab({ entityId }: Props) {
                       <p className="text-sm">{u.full_name ?? u.id}</p>
                     </div>
                     {alreadyAssigned && (
-                      <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">
+                      <span className="rounded bg-brand-secondary-1 px-2 py-1 text-xs text-brand-secondary-0">
                         Assigned
                       </span>
                     )}
@@ -247,7 +247,7 @@ export default function EntityUsersTab({ entityId }: Props) {
           <select
             value={newRole}
             onChange={(e) => setNewRole(e.target.value)}
-            className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+            className="w-full rounded border border-brand-secondary-1 bg-brand-secondary-2 p-2 text-brand-secondary-0"
           >
             <option value="viewer">Viewer</option>
             <option value="editor">Editor</option>
@@ -259,7 +259,7 @@ export default function EntityUsersTab({ entityId }: Props) {
         <button
           onClick={addUser}
           disabled={adding || !newUserId}
-          className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500 disabled:bg-gray-700"
+          className="rounded bg-brand-primary-0 px-4 py-2 text-brand-secondary-2 hover:bg-brand-primary-2 disabled:bg-brand-secondary-1 disabled:text-brand-secondary-0"
         >
           {adding ? <LoadingSpinner /> : "Add User"}
         </button>
@@ -269,12 +269,14 @@ export default function EntityUsersTab({ entityId }: Props) {
         {loading ? (
           <LoadingSpinner />
         ) : users.length === 0 ? (
-          <p className="text-gray-400">No users assigned.</p>
+          <p className="text-brand-secondary-0 opacity-70">
+            No users assigned.
+          </p>
         ) : (
           users.map((u) => (
             <div
               key={u.id}
-              className="p-4 border rounded bg-gray-900 flex flex-col gap-3"
+              className="flex flex-col gap-3 rounded border border-brand-secondary-1 bg-brand-secondary-2 p-4"
             >
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
@@ -292,7 +294,7 @@ export default function EntityUsersTab({ entityId }: Props) {
 
                 <button
                   onClick={() => deleteUser(u.user_id)}
-                  className="text-red-400 hover:text-red-300"
+                  className="text-brand-primary-2 hover:text-brand-primary-0"
                 >
                   Remove
                 </button>
@@ -303,7 +305,7 @@ export default function EntityUsersTab({ entityId }: Props) {
                 <select
                   value={u.role}
                   onChange={(e) => updateUser(u.user_id, e.target.value)}
-                  className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+                  className="w-full rounded border border-brand-secondary-1 bg-brand-secondary-2 p-2 text-brand-secondary-0"
                 >
                   <option value="viewer">Viewer</option>
                   <option value="editor">Editor</option>

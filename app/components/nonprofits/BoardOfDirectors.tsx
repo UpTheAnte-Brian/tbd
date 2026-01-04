@@ -75,19 +75,21 @@ export default function BoardOfDirectors({
       {loading ? (
         <LoadingSpinner />
       ) : sortedMembers.length === 0 ? (
-        <p className="text-gray-400">No board members listed.</p>
+        <p className="text-brand-secondary-0 opacity-70">
+          No board members listed.
+        </p>
       ) : (
         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
           {sortedMembers.map((m) => (
             <div
               key={m.id}
-              className="p-4 border rounded bg-gray-900 shadow-sm flex flex-col gap-2"
+              className="flex flex-col gap-2 rounded border border-brand-secondary-1 bg-brand-secondary-2 p-4"
             >
               <p className="font-semibold text-lg">
                 {m.profile?.full_name ?? "Unnamed User"}
               </p>
 
-              <p className="text-sm text-gray-400 capitalize">
+              <p className="text-sm text-brand-secondary-0 opacity-70 capitalize">
                 {m.role?.replace("_", " ") ?? ""}
               </p>
 

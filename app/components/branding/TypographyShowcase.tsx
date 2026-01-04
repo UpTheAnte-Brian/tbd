@@ -36,21 +36,21 @@ export function TypographyShowcase() {
   const bodyFont = fontFor("body");
 
   return (
-    <div className="mt-10 rounded-lg border border-brand-primary-1/40 bg-white shadow-sm p-6">
+    <div className="mt-10 rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-6">
       <div className="flex flex-col gap-8 md:flex-row md:items-start">
-        <div className="flex flex-col gap-6 text-sm text-slate-700 md:w-1/4">
-          <div className="uppercase tracking-wide text-slate-500 text-xs">
+        <div className="flex flex-col gap-6 text-sm text-brand-secondary-0 md:w-1/4">
+          <div className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-60">
             Typography
           </div>
           {blocks.map((b) => (
             <div key={b.label} className="space-y-0.5">
-              <div className="font-semibold uppercase text-slate-700">
+              <div className="font-semibold uppercase text-brand-secondary-0">
                 {b.label}
               </div>
-              <div className="text-slate-600 capitalize">
+              <div className="capitalize text-brand-secondary-0 opacity-70">
                 {b.font.replace(/header/, "header ")}
               </div>
-              <div className="text-slate-500">{b.size}</div>
+              <div className="text-brand-secondary-0 opacity-60">{b.size}</div>
             </div>
           ))}
         </div>

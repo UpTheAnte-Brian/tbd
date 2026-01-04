@@ -16,7 +16,9 @@ const DistrictExtWebLinkHeader: React.FC<DistrictExtWebLinkHeaderProps> = ({
 }) => {
   if (!url) {
     return (
-      <div className="text-lg font-semibold text-brand-primary-1">{name}</div>
+      <div className="text-lg font-semibold text-brand-secondary-0">
+        {name}
+      </div>
     );
   }
 
@@ -25,14 +27,14 @@ const DistrictExtWebLinkHeader: React.FC<DistrictExtWebLinkHeaderProps> = ({
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group text-lg font-semibold text-brand-primary-1 flex items-center gap-2 hover:underline"
+      className="group flex items-center gap-2 text-lg font-semibold text-brand-secondary-0 hover:underline"
     >
       {name}
       {/* External link icon (fixed color + larger size) */}
       <span className="w-6 flex justify-center items-center flex-shrink-0">
         <DynamicIcon
           name={"external-link" as IconName}
-          className="w-5 h-5 stroke-brand-primary-1 group-hover:stroke-brand-accent-1"
+          className="h-5 w-5 stroke-brand-secondary-0 group-hover:stroke-brand-primary-0"
         />
       </span>
     </a>

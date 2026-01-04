@@ -19,11 +19,11 @@ export default function AccordionCard({
   const [open, setOpen] = useState(defaultOpen);
 
   const containerClasses =
-    "rounded-lg border border-brand-primary-1 bg-brand-primary-0 text-brand-primary-1";
+    "rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 text-brand-secondary-0";
   const headerClasses =
-    "flex w-full items-center justify-between px-4 py-3 text-left bg-brand-accent-1 text-brand-primary-1";
-  const bodyClasses = "border-t border-brand-primary-1 px-4 py-3";
-  const chevronClasses = `h-4 w-4 text-brand-primary-1 transition-transform ${
+    "flex w-full items-center justify-between border-b border-brand-secondary-1 px-4 py-3 text-left bg-brand-secondary-2 text-brand-secondary-0";
+  const bodyClasses = "px-4 py-3";
+  const chevronClasses = `h-4 w-4 text-brand-secondary-0 transition-transform ${
     open ? "rotate-180" : ""
   }`;
 

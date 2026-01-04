@@ -18,21 +18,23 @@ export default function EntityHeader({
   active,
 }: Props) {
   return (
-    <div className="rounded border border-gray-200 bg-white p-4">
+    <div className="rounded border border-brand-secondary-1 bg-brand-secondary-2 p-4">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-xl font-semibold text-gray-900">{entityName}</h1>
+        <h1 className="text-xl font-semibold text-brand-secondary-0">
+          {entityName}
+        </h1>
         {entityType && (
-          <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+          <span className="rounded bg-brand-secondary-1 px-2 py-0.5 text-xs text-brand-secondary-0">
             {entityType}
           </span>
         )}
         {active === false && (
-          <span className="rounded bg-red-100 px-2 py-0.5 text-xs text-red-700">
+          <span className="rounded bg-brand-primary-2 px-2 py-0.5 text-xs text-brand-secondary-2">
             inactive
           </span>
         )}
       </div>
-      <div className="mt-2 text-xs text-gray-500">
+      <div className="mt-2 text-xs text-brand-secondary-0 opacity-70">
         <span>ID: {entityId}</span>
         {slug ? <span className="ml-3">Slug: {slug}</span> : null}
       </div>

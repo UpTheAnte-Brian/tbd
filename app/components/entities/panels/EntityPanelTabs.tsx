@@ -26,7 +26,7 @@ export default function EntityPanelTabs({
     return (
       <div className={tabsClassName ?? ""}>
         <select
-          className="mt-1 w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
+          className="mt-1 w-full rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-sm text-brand-secondary-0"
           value={activeTab}
           onChange={(event) => onTabChange(event.target.value as TabKey)}
         >
@@ -42,7 +42,7 @@ export default function EntityPanelTabs({
 
   return (
     <div
-      className={`flex flex-wrap gap-2 border-b border-gray-300 pb-2 ${
+      className={`flex flex-wrap gap-2 border-b border-brand-secondary-1 pb-2 ${
         tabsClassName ?? ""
       }`}
     >
@@ -50,10 +50,10 @@ export default function EntityPanelTabs({
         <button
           key={tab.key}
           type="button"
-          className={`px-3 py-1 text-sm rounded ${
+          className={`rounded px-3 py-1 text-sm transition ${
             activeTab === tab.key
-              ? "bg-blue-600 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              ? "bg-brand-primary-0 text-brand-secondary-2"
+              : "bg-transparent text-brand-secondary-0 hover:bg-brand-secondary-1"
           }`}
           onClick={() => onTabChange(tab.key)}
         >

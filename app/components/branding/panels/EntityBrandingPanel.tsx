@@ -57,12 +57,16 @@ export default function EntityBrandingPanel({
   };
 
   if (!entityId) {
-    return <div className="text-gray-500 italic">Select an entity...</div>;
+    return (
+      <div className="italic text-brand-secondary-0 opacity-70">
+        Select an entity...
+      </div>
+    );
   }
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-gray-600">
+      <div className="flex items-center gap-2 text-brand-secondary-0 opacity-80">
         <Loader2 className="animate-spin" size={20} />
         Loading branding...
       </div>
@@ -71,7 +75,7 @@ export default function EntityBrandingPanel({
 
   if (error) {
     return (
-      <div className="flex items-center gap-2 text-red-600">
+      <div className="flex items-center gap-2 text-brand-primary-2">
         <AlertCircle size={20} />
         {error}
       </div>
@@ -79,7 +83,7 @@ export default function EntityBrandingPanel({
   }
 
   return (
-    <div className="space-y-8 bg-brand-secondary-0 p-6 rounded">
+    <div className="space-y-8">
       <BrandAssetsSection
         entityId={entityId}
         entityType={entityType}

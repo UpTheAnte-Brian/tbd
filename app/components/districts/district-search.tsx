@@ -46,12 +46,12 @@ export default function DistrictSearch<T extends SearchFeature>({
   };
 
   return (
-    <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg p-2">
+    <div className="rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-2">
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search districts…"
-        className="w-full rounded border px-3 py-2 outline-none"
+        className="w-full rounded border border-brand-secondary-1 px-3 py-2 text-brand-secondary-0 outline-none"
         type="text"
         onKeyDown={(e) => {
           if (e.key === "ArrowDown") {
@@ -74,12 +74,12 @@ export default function DistrictSearch<T extends SearchFeature>({
         }}
       />
       {query && suggestions.length > 0 && (
-        <ul className="mt-2 max-h-60 overflow-y-auto divide-y">
+        <ul className="mt-2 max-h-60 overflow-y-auto divide-y divide-brand-secondary-1">
           {suggestions.map((s, i) => (
             <li key={s.id}>
               <button
-                className={`w-full text-left px-3 py-2 hover:bg-gray-100 hover:text-black ${
-                  i === highlightedIndex ? "bg-gray-200 hover:text-black" : ""
+                className={`w-full text-left px-3 py-2 text-brand-secondary-0 hover:bg-brand-secondary-1 ${
+                  i === highlightedIndex ? "bg-brand-secondary-1" : ""
                 }`}
                 onClick={() => handleSelect(s)}
               >

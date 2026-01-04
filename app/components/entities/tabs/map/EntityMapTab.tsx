@@ -58,19 +58,19 @@ export default function EntityMapTab({ entityId, entityType }: Props) {
 
   if (loading) {
     return (
-      <div className="rounded border border-dashed p-4 text-sm text-gray-500">
+      <div className="rounded border border-dashed border-brand-secondary-1 p-4 text-sm text-brand-secondary-0 opacity-70">
         Loading map…
       </div>
     );
   }
 
   if (error) {
-    return <div className="text-red-500">{error}</div>;
+    return <div className="text-brand-primary-2">{error}</div>;
   }
 
   if (!featureCollection.features.length) {
     return (
-      <div className="rounded border border-dashed p-4 text-sm text-gray-500">
+      <div className="rounded border border-dashed border-brand-secondary-1 p-4 text-sm text-brand-secondary-0 opacity-70">
         No map geometry available for this {entityType}.
       </div>
     );

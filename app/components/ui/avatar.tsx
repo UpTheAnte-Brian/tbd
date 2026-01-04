@@ -125,7 +125,7 @@ export function SmallAvatar({
 
   return (
     <div
-      className="flex items-center justify-center rounded-full bg-blue-700 text-white font-semibold overflow-hidden"
+      className="flex items-center justify-center rounded-full bg-brand-secondary-0 text-brand-secondary-2 font-semibold overflow-hidden"
       style={{ width: size, height: size }}
     >
       {avatarUrl ? (

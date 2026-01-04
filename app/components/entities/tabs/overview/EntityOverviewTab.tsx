@@ -90,7 +90,7 @@ export default function EntityOverviewTab({
   }
 
   if (error) {
-    return <div className="text-red-500">{error}</div>;
+    return <div className="text-brand-primary-2">{error}</div>;
   }
 
   if (entityType === "district" && district) {
@@ -106,7 +106,7 @@ export default function EntityOverviewTab({
   }
 
   return (
-    <div className="text-sm text-gray-600">
+    <div className="text-sm text-brand-secondary-0 opacity-70">
       Overview not available for {entityName}.
     </div>
   );

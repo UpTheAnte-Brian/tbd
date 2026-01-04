@@ -120,16 +120,16 @@ export default function ColorPaletteEditor({
   const handleDragEnd = () => setDragIndex(null);
 
   return (
-    <div className="flex flex-col gap-4 p-4 border rounded-lg bg-white max-w-lg text-slate-900">
-      <h2 className="text-xl font-semibold text-slate-900">
+    <div className="flex max-w-lg flex-col gap-4 rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-4 text-brand-secondary-0">
+      <h2 className="text-xl font-semibold text-brand-secondary-0">
         {initial.id ? "Edit Color Palette" : "Create Color Palette"}
       </h2>
 
-      {error && <div className="text-red-600 text-sm">{error}</div>}
+      {error && <div className="text-sm text-brand-primary-2">{error}</div>}
 
       <div className="flex flex-col gap-2">
         <select
-          className="border border-slate-300 rounded px-3 py-2 text-slate-900 bg-white"
+          className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-brand-secondary-0"
           value={role}
           onChange={(e) => setRole(e.target.value)}
           aria-label="Palette role"
@@ -140,9 +140,9 @@ export default function ColorPaletteEditor({
           <option value="tertiary">Tertiary</option>
           <option value="accent">Accent</option>
         </select>
-        <div className="text-xs text-slate-600">
+        <div className="text-xs text-brand-secondary-0 opacity-70">
           Palette name will be:{" "}
-          <span className="font-semibold text-slate-800">
+          <span className="font-semibold text-brand-secondary-0">
             {role
               ? `${entityName} ${
                   {
@@ -158,14 +158,14 @@ export default function ColorPaletteEditor({
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="font-medium text-slate-800">Colors</label>
+        <label className="font-medium text-brand-secondary-0">Colors</label>
 
         <div className="flex flex-wrap gap-2">
           {colors.map((c, i) => (
             <div
               key={i}
-              className={`flex items-center gap-2 border border-slate-300 px-2 py-1 rounded bg-white ${
-                dragIndex === i ? "ring-2 ring-blue-300" : ""
+              className={`flex items-center gap-2 rounded border border-brand-secondary-1 bg-brand-secondary-2 px-2 py-1 ${
+                dragIndex === i ? "ring-2 ring-brand-primary-1" : ""
               }`}
               draggable
               onDragStart={() => handleDragStart(i)}
@@ -176,18 +176,18 @@ export default function ColorPaletteEditor({
                 type="color"
                 value={isValidHex(c) ? c : "#000000"}
                 onChange={(e) => updateColor(i, e.target.value)}
-                className="w-8 h-8 border border-slate-300 rounded bg-white"
+                className="h-8 w-8 rounded border border-brand-secondary-1 bg-brand-secondary-2"
               />
               <input
                 type="text"
                 value={c}
                 onChange={(e) => updateColor(i, e.target.value)}
-                className="border border-slate-300 rounded px-2 py-1 w-28 text-slate-900 bg-white"
+                className="w-28 rounded border border-brand-secondary-1 bg-brand-secondary-2 px-2 py-1 text-brand-secondary-0"
                 placeholder="#RRGGBB"
               />
               <button
                 onClick={() => removeColor(i)}
-                className="text-xs text-red-600 hover:underline"
+                className="text-xs text-brand-primary-2 hover:underline"
               >
                 remove
               </button>
@@ -200,17 +200,17 @@ export default function ColorPaletteEditor({
             type="color"
             value={newColor}
             onChange={(e) => setNewColor(e.target.value)}
-            className="w-10 h-10 border border-slate-300 rounded bg-white"
+            className="h-10 w-10 rounded border border-brand-secondary-1 bg-brand-secondary-2"
           />
           <input
             type="text"
-            className="border border-slate-300 rounded px-2 py-1 w-32 text-slate-900 bg-white"
+            className="w-32 rounded border border-brand-secondary-1 bg-brand-secondary-2 px-2 py-1 text-brand-secondary-0"
             value={newColor}
             onChange={(e) => setNewColor(e.target.value)}
           />
           <button
             onClick={addColor}
-            className="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+            className="rounded bg-brand-secondary-0 px-3 py-2 text-brand-secondary-2 hover:bg-brand-secondary-1"
           >
             Add Color
           </button>
@@ -221,14 +221,14 @@ export default function ColorPaletteEditor({
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+          className="rounded bg-brand-primary-0 px-4 py-2 text-brand-secondary-2 hover:bg-brand-primary-2 disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save"}
         </button>
 
         <button
           onClick={onCancel}
-          className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+          className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-4 py-2 text-brand-secondary-0 hover:bg-brand-secondary-1"
         >
           Cancel
         </button>

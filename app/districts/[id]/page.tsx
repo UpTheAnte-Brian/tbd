@@ -7,7 +7,7 @@ interface DistrictPageProps {
 export default async function DistrictPage({ params }: DistrictPageProps) {
   const { id } = await params;
   return (
-    <main className="p-4 bg-brand-primary-0 min-h-screen">
+    <main className="min-h-screen bg-brand-secondary-1 p-4 text-brand-secondary-0">
       <EntityPanel entityId={id} entityType="district" />
     </main>
   );

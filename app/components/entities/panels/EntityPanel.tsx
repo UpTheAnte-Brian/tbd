@@ -73,7 +73,7 @@ export default function EntityPanel({ entityId, entityType }: Props) {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-6">
         <LoadingSpinner />
       </div>
     );
@@ -81,12 +81,14 @@ export default function EntityPanel({ entityId, entityType }: Props) {
 
   if (error || !entity) {
     return (
-      <div className="p-6 text-red-500">{error ?? "Entity not found."}</div>
+      <div className="rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-6 text-brand-primary-2">
+        {error ?? "Entity not found."}
+      </div>
     );
   }
 
   const mobileHeader = (
-    <div className="flex items-center gap-3 rounded border border-gray-200 bg-white p-4">
+    <div className="flex items-center gap-3 rounded border border-brand-secondary-1 bg-brand-secondary-2 p-4">
       {resolvedType ? (
         <EntityLogo entityId={entity.id} entityType={resolvedType} size={56} />
       ) : null}
@@ -110,30 +112,32 @@ export default function EntityPanel({ entityId, entityType }: Props) {
   );
 
   return (
-    <EntityPageLayout
-      entityId={entity.id}
-      entityName={entity.name ?? "Entity"}
-      entityType={resolvedType}
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-      mobileHeader={mobileHeader}
-      tabs={mobileTabs}
-    >
-      {/* <div className="space-y-6"> */}
-      {/* <EntityHeader
-          entityId={entity.id}
-          entityName={entity.name ?? "Entity"}
-          entityType={resolvedType}
-          slug={entity.slug ?? null}
-          active={entity.active ?? null}
-        /> */}
-      <EntityPanelContent
+    <div className="rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-4 md:p-6">
+      <EntityPageLayout
         entityId={entity.id}
-        entityType={resolvedType}
         entityName={entity.name ?? "Entity"}
+        entityType={resolvedType}
         activeTab={activeTab}
-      />
-      {/* </div> */}
-    </EntityPageLayout>
+        onTabChange={setActiveTab}
+        mobileHeader={mobileHeader}
+        tabs={mobileTabs}
+      >
+        {/* <div className="space-y-6"> */}
+        {/* <EntityHeader
+            entityId={entity.id}
+            entityName={entity.name ?? "Entity"}
+            entityType={resolvedType}
+            slug={entity.slug ?? null}
+            active={entity.active ?? null}
+          /> */}
+        <EntityPanelContent
+          entityId={entity.id}
+          entityType={resolvedType}
+          entityName={entity.name ?? "Entity"}
+          activeTab={activeTab}
+        />
+        {/* </div> */}
+      </EntityPageLayout>
+    </div>
   );
 }
