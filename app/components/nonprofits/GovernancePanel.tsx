@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import LoadingSpinner from "@/app/components/loading-spinner";
 import { toast } from "react-hot-toast";
+import { useUser } from "@/app/hooks/useUser";
+import { hasEntityRole } from "@/app/lib/auth/entityRoles";
 import {
   type BoardMember,
   type BoardMeeting,
@@ -38,6 +40,7 @@ const STATUS_OPTIONS: { value: BoardMember["status"]; label: string }[] = [
 ];
 
 export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
+  const { user } = useUser();
   const [snapshot, setSnapshot] = useState<GovernanceSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [memberLoading, setMemberLoading] = useState(false);
@@ -61,9 +64,6 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   const [voteDrafts, setVoteDrafts] = useState<
     Record<string, { board_member_id: string; vote: "yes" | "no" | "abstain" }>
   >({});
-  const [approvalDrafts, setApprovalDrafts] = useState<
-    Record<string, { board_member_id: string }>
-  >({});
 
   const boardId = snapshot?.board.id;
 
@@ -71,6 +71,33 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     () => (snapshot?.members ?? []).filter((m) => m.status === "active"),
     [snapshot?.members]
   );
+
+  const isEntityAdmin =
+    user?.global_role === "admin" ||
+    hasEntityRole(user?.entity_users ?? [], "nonprofit", nonprofitId, ["admin"]);
+
+  const isChair = (snapshot?.members ?? []).some(
+    (member) =>
+      member.user_id === user?.id && member.role === "chair" && member.status === "active"
+  );
+
+  const canFinalize = isEntityAdmin || isChair;
+
+  const buildSignatureHash = async (
+    motionId: string,
+    userId: string,
+    timestamp: string
+  ) => {
+    if (!crypto?.subtle) {
+      throw new Error("Signature hashing unavailable");
+    }
+    const payload = `finalize_motion|${nonprofitId}|${motionId}|${userId}|${timestamp}`;
+    const data = new TextEncoder().encode(payload);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  };
 
   const membersById = useMemo(() => {
     const map: Record<string, BoardMember> = {};
@@ -266,15 +293,24 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   }
 
   async function finalizeMotion(motionId: string) {
+    if (!user?.id) {
+      toast.error("Sign in to finalize motion");
+      return;
+    }
     try {
-      const res = await fetch(`/api/governance/motions/${motionId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: "finalized",
-          finalized_at: new Date().toISOString(),
-        }),
-      });
+      const timestamp = new Date().toISOString();
+      const signatureHash = await buildSignatureHash(motionId, user.id, timestamp);
+      const res = await fetch(
+        `/api/entities/${nonprofitId}/governance/motions/${motionId}/finalize`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            approvalMethod: "clickwrap",
+            signatureHash,
+          }),
+        }
+      );
       if (!res.ok) throw new Error("Failed to finalize motion");
       toast.success("Motion finalized");
       await loadSnapshot();
@@ -324,32 +360,6 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       await loadSnapshot();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to save minutes";
-      toast.error(message);
-    }
-  }
-
-  async function addApproval(entityId: string, entityType: "motion" | "minutes") {
-    const draft = approvalDrafts[entityId];
-    if (!draft?.board_member_id) {
-      toast.error("Choose a signer");
-      return;
-    }
-    try {
-      const res = await fetch(`/api/governance/approvals`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          entity_id: entityId,
-          entity_type: entityType,
-          board_member_id: draft.board_member_id,
-        }),
-      });
-      if (!res.ok) throw new Error("Failed to record approval");
-      toast.success("Approval recorded");
-      setApprovalDrafts((prev) => ({ ...prev, [entityId]: { board_member_id: "" } }));
-      await loadSnapshot();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to record approval";
       toast.error(message);
     }
   }
@@ -556,7 +566,6 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
         {(snapshot.meetings ?? []).map((meeting: BoardMeeting) => {
           const meetingMotions = motionsByMeeting[meeting.id] ?? [];
-          const minutes = minutesByMeeting[meeting.id];
           return (
             <div key={meeting.id} className="border border-gray-700 rounded p-4 space-y-4 bg-gray-900/60">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
@@ -579,8 +588,9 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
                 {meetingMotions.map((motion) => {
                   const votes = votesByMotion[motion.id] ?? [];
+                  const isFinalized = motion.status === "finalized";
                   const approvals = (snapshot.approvals ?? []).filter(
-                    (a) => a.entity_id === motion.id && a.entity_type === "motion"
+                    (a) => a.target_type === "motion" && a.target_id === motion.id
                   );
                   return (
                     <div
@@ -596,12 +606,12 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                             <p className="text-sm text-gray-300">{motion.description}</p>
                           )}
                         </div>
-                        {motion.status !== "finalized" && (
+                        {canFinalize && !isFinalized && (
                           <button
                             onClick={() => finalizeMotion(motion.id)}
                             className="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500"
                           >
-                            Finalize
+                            Finalize motion
                           </button>
                         )}
                       </div>
@@ -620,6 +630,9 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                             )
                             .join(", ")}
                         </p>
+                        <p className="text-sm text-gray-400">
+                          Approvals ({approvals.length})
+                        </p>
 
                         <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
                           <select
@@ -633,7 +646,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                                 },
                               }))
                             }
-                            className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
+                            disabled={isFinalized}
+                            className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100 disabled:opacity-50"
                           >
                             <option value="">Select voter</option>
                             {activeMembers.map((m) => (
@@ -654,7 +668,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                                 },
                               }))
                             }
-                            className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
+                            disabled={isFinalized}
+                            className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100 disabled:opacity-50"
                           >
                             <option value="yes">Yes</option>
                             <option value="no">No</option>
@@ -663,35 +678,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
                           <button
                             onClick={() => submitVote(motion.id)}
-                            className="px-3 py-1 bg-blue-600 rounded text-sm hover:bg-blue-500"
+                            disabled={isFinalized}
+                            className="px-3 py-1 bg-blue-600 rounded text-sm hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
                           >
                             Record Vote
-                          </button>
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                          <select
-                            value={approvalDrafts[motion.id]?.board_member_id ?? ""}
-                            onChange={(e) =>
-                              setApprovalDrafts((prev) => ({
-                                ...prev,
-                                [motion.id]: { board_member_id: e.target.value },
-                              }))
-                            }
-                            className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
-                          >
-                            <option value="">Approval signer</option>
-                            {activeMembers.map((m) => (
-                              <option key={m.id} value={m.id}>
-                                {m.profile?.full_name ?? m.user_id}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            onClick={() => addApproval(motion.id, "motion")}
-                            className="px-3 py-1 bg-purple-600 rounded text-sm hover:bg-purple-500"
-                          >
-                            Record Motion Approval ({approvals.length})
                           </button>
                         </div>
                       </div>
@@ -786,39 +776,6 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                   >
                     Save Minutes
                   </button>
-
-                  <select
-                    value={minutes?.id ? approvalDrafts[minutes.id]?.board_member_id ?? "" : ""}
-                    onChange={(e) =>
-                      setApprovalDrafts((prev) => ({
-                        ...prev,
-                        ...(minutes?.id
-                          ? { [minutes.id]: { board_member_id: e.target.value } }
-                          : {}),
-                      }))
-                    }
-                    className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100 disabled:opacity-50"
-                    disabled={!minutes}
-                  >
-                    <option value="">Chair/Admin signer</option>
-                    {activeMembers.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.profile?.full_name ?? m.user_id}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={() => minutes?.id && addApproval(minutes.id, "minutes")}
-                    className="px-3 py-1 bg-purple-600 rounded text-sm hover:bg-purple-500 disabled:opacity-50"
-                    disabled={!minutes}
-                  >
-                    Record Minutes Approval
-                  </button>
-                  {!minutes && (
-                    <span className="text-xs text-gray-400">
-                      Save minutes before recording approvals.
-                    </span>
-                  )}
                 </div>
               </div>
             </div>

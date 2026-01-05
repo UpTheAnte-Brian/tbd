@@ -3,7 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 
 /**
  * Determines whether the current authenticated user is a platform-level admin
- * (profiles.global_role = 'admin'). Errors are treated as non-admin.
+ * (profiles.role = 'admin'). Errors are treated as non-admin.
  */
 export async function isPlatformAdminServer(): Promise<boolean> {
     try {
@@ -13,12 +13,12 @@ export async function isPlatformAdminServer(): Promise<boolean> {
 
         const { data, error } = await supabase
             .from("profiles")
-            .select("global_role")
+            .select("role")
             .eq("id", user.id)
             .maybeSingle();
 
         if (error) return false;
-        return data?.global_role === "admin";
+        return data?.role === "admin";
     } catch {
         return false;
     }

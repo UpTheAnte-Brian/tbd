@@ -66,14 +66,20 @@ export interface VoteInput {
 export interface MinutesInput {
     meeting_id: string;
     content?: string | null;
+    draft?: boolean;
     approved_at?: string | null;
+    approved_by?: string | null;
 }
 
 export interface ApprovalInput {
-    entity_type: GovernanceApproval["entity_type"];
     entity_id: string;
+    target_type: GovernanceApproval["target_type"];
+    target_id: string;
     board_member_id: string;
-    signature_hash?: string | null;
+    approval_method?: string;
+    signature_hash: string;
+    ip_address?: string | null;
+    approved_at?: string | null;
 }
 
 const PROFILE_FIELDS =
@@ -117,10 +123,11 @@ function mapProfile(profileRaw: unknown): ProfilePreview | null {
 }
 
 function mapBoard(row: Record<string, unknown> | null): Board | null {
-    if (!row || !row.id || !row.nonprofit_id) return null;
+    if (!row || !row.id || !row.entity_id) return null;
     return {
         id: String(row.id),
-        nonprofit_id: String(row.nonprofit_id),
+        name: String(row.name),
+        entity_id: String(row.entity_id),
         created_at: (row.created_at as string | null | undefined) ?? null,
     };
 }
@@ -229,7 +236,9 @@ function mapMinutes(
         id: String(row.id),
         meeting_id: String(row.meeting_id),
         content: (row.content as string | null | undefined) ?? null,
+        draft: (row.draft as boolean | null | undefined) ?? null,
         approved_at: (row.approved_at as string | null | undefined) ?? null,
+        approved_by: (row.approved_by as string | null | undefined) ?? null,
         created_at: (row.created_at as string | null | undefined) ?? null,
         updated_at: (row.updated_at as string | null | undefined) ?? null,
     };
@@ -238,42 +247,59 @@ function mapMinutes(
 function mapApproval(
     row: Record<string, unknown> | null,
 ): GovernanceApproval | null {
-    if (!row || !row.id || !row.entity_type || !row.entity_id) return null;
+    if (
+        !row || !row.id || !row.entity_id || !row.target_type ||
+        !row.target_id || !row.board_member_id
+    ) {
+        return null;
+    }
+
     return {
         id: String(row.id),
-        entity_type: row.entity_type as GovernanceApproval["entity_type"],
         entity_id: String(row.entity_id),
+        target_type: row.target_type as GovernanceApproval["target_type"],
+        target_id: String(row.target_id),
         board_member_id: String(row.board_member_id),
-        signature_hash: (row.signature_hash as string | null | undefined) ??
+        approval_method: (row.approval_method as string | null | undefined) ??
             null,
-        created_at: (row.created_at as string | null | undefined) ?? null,
+        signature_hash: String(row.signature_hash ?? ""),
+        ip_address: (row.ip_address as string | null | undefined) ?? null,
+        approved_at: (row.approved_at as string | null | undefined) ?? null,
     };
 }
 
-export async function getBoardByNonprofitId(
-    nonprofitId: string,
+export async function getBoardByEntityId(
+    entityId: string,
     options?: GovernanceClientOptions,
 ): Promise<Board | null> {
     const supabase = await getGovernanceClient(options);
     const { data, error } = await governanceTable(supabase, "boards")
         .select("*")
-        .eq("nonprofit_id", nonprofitId)
+        .eq("entity_id", entityId)
         .maybeSingle();
 
     if (error) throw error;
     return mapBoard(data as Record<string, unknown> | null);
 }
 
-export async function ensureBoardForNonprofit(
+// Backwards-compatible alias (treats nonprofitId as entityId)
+export async function getBoardByNonprofitId(
     nonprofitId: string,
     options?: GovernanceClientOptions,
+): Promise<Board | null> {
+    return getBoardByEntityId(nonprofitId, options);
+}
+
+export async function ensureBoardForEntity(
+    entityId: string,
+    options?: GovernanceClientOptions,
 ): Promise<Board> {
-    const existing = await getBoardByNonprofitId(nonprofitId, options);
+    const existing = await getBoardByEntityId(entityId, options);
     if (existing) return existing;
 
     const supabase = await getGovernanceClient(options);
     const { data, error } = await governanceTable(supabase, "boards")
-        .insert({ nonprofit_id: nonprofitId })
+        .insert({ entity_id: entityId })
         .select("*")
         .single();
 
@@ -281,6 +307,14 @@ export async function ensureBoardForNonprofit(
     const mapped = mapBoard(data as Record<string, unknown>);
     if (!mapped) throw new Error("Failed to create board");
     return mapped;
+}
+
+// Backwards-compatible alias (treats nonprofitId as entityId)
+export async function ensureBoardForNonprofit(
+    nonprofitId: string,
+    options?: GovernanceClientOptions,
+): Promise<Board> {
+    return ensureBoardForEntity(nonprofitId, options);
 }
 
 export async function listBoardMembers(
@@ -636,13 +670,17 @@ export async function saveMinutes(
         ? governanceTable(supabase, "meeting_minutes")
             .update({
                 content: rest.content ?? undefined,
+                draft: rest.draft ?? undefined,
                 approved_at: rest.approved_at ?? undefined,
+                approved_by: rest.approved_by ?? undefined,
             })
             .eq("id", id)
         : governanceTable(supabase, "meeting_minutes").insert({
             meeting_id: rest.meeting_id,
             content: rest.content ?? null,
+            draft: rest.draft ?? true,
             approved_at: rest.approved_at ?? null,
+            approved_by: rest.approved_by ?? null,
         });
 
     const { data, error } = await mutation.select("*").single();
@@ -652,20 +690,55 @@ export async function saveMinutes(
     return mapped;
 }
 
-export async function listApprovalsByEntityIds(
-    entityIds: string[],
+export async function listApprovalsByEntityId(
+    entityId: string,
     options?: GovernanceClientOptions,
 ): Promise<GovernanceApproval[]> {
-    if (entityIds.length === 0) return [];
     const supabase = await getGovernanceClient(options);
     const { data, error } = await governanceTable(supabase, "approvals")
         .select("*")
-        .in("entity_id", entityIds);
+        .eq("entity_id", entityId);
 
     if (error) throw error;
     return (data ?? [])
         .map((row) => mapApproval(row as Record<string, unknown>))
         .filter((a): a is GovernanceApproval => Boolean(a));
+}
+
+export async function listApprovalsByTargets(
+    targets: Array<
+        { target_type: GovernanceApproval["target_type"]; target_id: string }
+    >,
+    options?: GovernanceClientOptions,
+): Promise<GovernanceApproval[]> {
+    if (targets.length === 0) return [];
+
+    const supabase = await getGovernanceClient(options);
+
+    // Supabase can't do a clean multi-column IN, so we query per target_type and merge.
+    const byType = new Map<GovernanceApproval["target_type"], string[]>();
+    for (const t of targets) {
+        const arr = byType.get(t.target_type) ?? [];
+        arr.push(t.target_id);
+        byType.set(t.target_type, arr);
+    }
+
+    const results: GovernanceApproval[] = [];
+
+    for (const [target_type, ids] of byType.entries()) {
+        const { data, error } = await governanceTable(supabase, "approvals")
+            .select("*")
+            .eq("target_type", target_type)
+            .in("target_id", ids);
+
+        if (error) throw error;
+        (data ?? []).forEach((row) => {
+            const mapped = mapApproval(row as Record<string, unknown>);
+            if (mapped) results.push(mapped);
+        });
+    }
+
+    return results;
 }
 
 export async function createApproval(
@@ -675,10 +748,14 @@ export async function createApproval(
     const supabase = await getGovernanceClient(options);
     const { data, error } = await governanceTable(supabase, "approvals")
         .insert({
-            entity_type: payload.entity_type,
             entity_id: payload.entity_id,
+            target_type: payload.target_type,
+            target_id: payload.target_id,
             board_member_id: payload.board_member_id,
-            signature_hash: payload.signature_hash ?? null,
+            approval_method: payload.approval_method ?? "clickwrap",
+            signature_hash: payload.signature_hash,
+            ip_address: payload.ip_address ?? null,
+            approved_at: payload.approved_at ?? undefined,
         })
         .select("*")
         .single();
@@ -690,10 +767,10 @@ export async function createApproval(
 }
 
 export async function getGovernanceSnapshot(
-    nonprofitId: string,
+    entityId: string,
     options?: GovernanceClientOptions,
 ): Promise<GovernanceSnapshot> {
-    const board = await ensureBoardForNonprofit(nonprofitId, options);
+    const board = await ensureBoardForEntity(entityId, options);
     const [members, meetings] = await Promise.all([
         listBoardMembers(board.id, options),
         listBoardMeetings(board.id, options),
@@ -706,10 +783,19 @@ export async function getGovernanceSnapshot(
     ]);
 
     const motionIds = motions.map((m) => m.id);
-    const approvals = await listApprovalsByEntityIds([
-        ...motionIds,
-        ...minutes.map((m) => m.id),
-    ], options);
+    const approvals = await listApprovalsByTargets(
+        [
+            ...motionIds.map((id) => ({
+                target_type: "motion" as const,
+                target_id: id,
+            })),
+            ...minutes.map((m) => ({
+                target_type: "meeting_minutes" as const,
+                target_id: m.id,
+            })),
+        ],
+        options,
+    );
     const votes = await listVotesByMotionIds(motionIds, options);
 
     return {

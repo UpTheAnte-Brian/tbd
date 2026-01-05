@@ -13,7 +13,15 @@ export async function GET(req: Request, context: RouteParams) {
         const { id } = await context.params;
         const elevated = await isPlatformAdminServer();
         const nonprofit = await getNonprofitDTO(id);
-        const snapshot = await getGovernanceSnapshot(String(nonprofit.id), { elevated });
+
+        // Governance is keyed by entity_id; nonprofit.id is not an entities.id
+        if (!nonprofit?.entity_id) {
+            throw new Error(`Nonprofit ${id} is missing entity_id`);
+        }
+
+        const snapshot = await getGovernanceSnapshot(nonprofit.entity_id, {
+            elevated,
+        });
         return NextResponse.json(snapshot);
     });
 }

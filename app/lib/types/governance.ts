@@ -11,7 +11,8 @@ export type BoardMemberStatus = "active" | "expired" | "resigned" | "removed";
 
 export interface Board {
     id: string;
-    nonprofit_id: string;
+    name: string;
+    entity_id: string;
     created_at?: string | null;
 }
 
@@ -64,18 +65,29 @@ export interface MeetingMinutes {
     id: string;
     meeting_id: string;
     content: string | null;
+    draft: boolean | null;
     approved_at: string | null;
+    approved_by: string | null;
     created_at?: string | null;
     updated_at?: string | null;
 }
 
+export type ApprovalTargetType =
+    | "meeting_minutes"
+    | "document_version"
+    | "motion"
+    | string;
+
 export interface GovernanceApproval {
     id: string;
-    entity_type: "motion" | "minutes" | string;
     entity_id: string;
+    target_type: ApprovalTargetType;
+    target_id: string;
     board_member_id: string;
-    signature_hash: string | null;
-    created_at?: string | null;
+    approval_method: string | null;
+    signature_hash: string;
+    ip_address: string | null;
+    approved_at: string | null;
 }
 
 export interface GovernanceSnapshot {
