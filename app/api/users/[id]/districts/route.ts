@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
+import type { Database } from "@/database.types";
+
+type EntityUserRole = Database["public"]["Enums"]["entity_user_role"];
+type EntityUserInsert = Database["public"]["Tables"]["entity_users"]["Insert"];
 
 export async function POST(
     request: NextRequest,
@@ -43,10 +47,11 @@ export async function POST(
         }
 
         if (districtIds.length > 0) {
-            const rows = districtIds.map((districtId: string) => ({
+            const role: EntityUserRole = "admin";
+            const rows: EntityUserInsert[] = districtIds.map((districtId) => ({
                 user_id: userId,
                 entity_id: districtId,
-                role: "admin",
+                role,
             }));
 
             const { error: insertError } = await supabase

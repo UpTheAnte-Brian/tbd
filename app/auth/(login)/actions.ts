@@ -118,7 +118,8 @@ export const signInWithLoginCode = validatedAction(
       throw err;
     }
 
-    return { success: "Successfully signed in with login code." };
+    // Force a fresh server navigation so layouts/server components re-read the new auth cookies.
+    redirect(data.redirect ?? "/");
   },
 );
 export const signInWithGoogle = async (

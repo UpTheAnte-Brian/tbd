@@ -75,7 +75,10 @@ function buildColorVars(data: BrandingSummary | null) {
   }
 
   data.palettes.forEach((palette) => {
-    palette.colors.forEach((color, idx) => {
+    const paletteColors = Array.isArray(palette.colors)
+      ? palette.colors
+      : [];
+    paletteColors.forEach((color, idx) => {
       const varName = `--district-${palette.name
         .toLowerCase()
         .replace(/\s+/g, "-")}-${idx}`;

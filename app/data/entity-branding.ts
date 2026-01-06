@@ -9,6 +9,11 @@ import type {
   BrandingTypography,
 } from "@/app/lib/types/types";
 
+const normalizePaletteColors = (value: unknown): string[] | null => {
+  if (!Array.isArray(value)) return null;
+  return value.filter((color): color is string => typeof color === "string");
+};
+
 export type ResolvedEntityBranding = ResolvedBranding & {
   entityId: string;
   palettes: BrandingPalette[];
@@ -45,8 +50,15 @@ export async function getResolvedEntityBranding(entityKey: string) {
     .order("created_at", { ascending: true });
   if (typographyError) warnQuery("typography", typographyError);
 
+  const normalizedPalettes: BrandingPalette[] = (palettes ?? []).map(
+    (palette) => ({
+      ...palette,
+      colors: normalizePaletteColors(palette.colors),
+    }),
+  );
+
   const resolved = resolveBrandingTokens(
-    (palettes ?? []) as BrandingPalette[],
+    normalizedPalettes,
     (typography ?? []) as BrandingTypography[],
   );
 
@@ -54,7 +66,7 @@ export async function getResolvedEntityBranding(entityKey: string) {
     entityId,
     colors: resolved.colors,
     typography: resolved.typography,
-    palettes: (palettes ?? []) as BrandingPalette[],
+    palettes: normalizedPalettes,
     typographyRows: (typography ?? []) as BrandingTypography[],
   };
 

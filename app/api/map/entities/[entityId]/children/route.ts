@@ -7,6 +7,11 @@ import type {
   EntityMapProperties,
 } from "@/app/lib/types/map";
 
+const isGeometry = (value: unknown): value is Geometry =>
+  typeof value === "object" &&
+  value !== null &&
+  "type" in value;
+
 export async function GET(
   req: Request,
   context: { params: Promise<{ entityId: string }> }
@@ -71,7 +76,7 @@ export async function GET(
 
   const geoByEntityId = new Map<string, Geometry>();
   for (const g of geomRows ?? []) {
-    if (g?.entity_id && g?.geojson) {
+    if (g?.entity_id && isGeometry(g.geojson)) {
       geoByEntityId.set(g.entity_id, g.geojson);
     }
   }

@@ -61,9 +61,9 @@ export async function POST(req: NextRequest, context: RouteParams) {
         }
     }
 
-    const signatureHash = body.signatureHash ?? null;
+    const signatureHash = body.signatureHash ?? undefined;
     const approvalMethod = body.approvalMethod ?? "in_app";
-    const ip = getRequestIp(req);
+    const ip = getRequestIp(req) ?? undefined;
 
     const { data, error } = await supabase
         .schema("governance")

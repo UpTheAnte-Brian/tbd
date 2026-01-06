@@ -2,6 +2,11 @@ import { createApiClient } from "@/utils/supabase/route";
 import { resolveDistrictEntityId } from "@/app/lib/entities";
 import type { BrandingSummary } from "@/app/lib/types/types";
 
+const normalizePaletteColors = (value: unknown): string[] | null => {
+    if (!Array.isArray(value)) return null;
+    return value.filter((color): color is string => typeof color === "string");
+};
+
 export async function getBrandingSummary(
     entityId: string,
 ): Promise<BrandingSummary | null> {
@@ -40,6 +45,11 @@ export async function getBrandingSummary(
         console.error("Failed to fetch palettes", palettesErr);
         return null;
     }
+    const normalizedPalettes: BrandingSummary["palettes"] = (palettes ?? [])
+        .map((palette) => ({
+            ...palette,
+            colors: normalizePaletteColors(palette.colors),
+        }));
 
     const { data: typography, error: typographyErr } = await supabase
         .schema("branding")
@@ -58,7 +68,7 @@ export async function getBrandingSummary(
         logos,
         patterns,
         fonts,
-        palettes,
+        palettes: normalizedPalettes,
         typography,
     };
 }

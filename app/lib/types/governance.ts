@@ -72,6 +72,15 @@ export interface MeetingMinutes {
     updated_at?: string | null;
 }
 
+export interface MeetingAttendance {
+    id?: string | null;
+    meeting_id: string;
+    board_member_id: string;
+    status: "present" | "absent" | string;
+    created_at?: string | null;
+    updated_at?: string | null;
+}
+
 export type ApprovalTargetType =
     | "meeting_minutes"
     | "document_version"
@@ -98,4 +107,5 @@ export interface GovernanceSnapshot {
     votes: Vote[];
     minutes: MeetingMinutes[];
     approvals: GovernanceApproval[];
+    attendance: MeetingAttendance[];
 }

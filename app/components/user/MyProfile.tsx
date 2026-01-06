@@ -3,8 +3,16 @@
 import Avatar from "@/app/components/ui/avatar";
 import { useUser } from "@/app/hooks/useUser";
 import React, { useEffect, useRef, useState } from "react";
-import { getSupabaseClient } from "@/utils/supabase/client";
 import AccordionCard from "@/app/components/user/AccordionCard";
+
+type ProfileUpdatePayload = {
+  full_name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  username?: string | null;
+  website?: string | null;
+  avatar_url?: string | null;
+};
 
 export default function MyProfile({
   defaultOpen = true,
@@ -12,7 +20,6 @@ export default function MyProfile({
   defaultOpen?: boolean;
 }) {
   const { user, refreshUser } = useUser();
-  const supabase = getSupabaseClient();
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(defaultOpen);
   const [fullname, setFullname] = useState<string>(user?.full_name ?? "");
@@ -67,6 +74,21 @@ export default function MyProfile({
     );
   })();
 
+  async function patchProfile(update: ProfileUpdatePayload) {
+    const response = await fetch("/api/me/profile", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(update),
+    });
+
+    if (!response.ok) {
+      const message = await response.text();
+      throw new Error(message || "Failed to update profile");
+    }
+  }
+
   async function updateProfile({
     username,
     fullname,
@@ -85,27 +107,20 @@ export default function MyProfile({
     if (!user) return;
     try {
       setLoading(true);
-      const payload = {
-        id: user.id,
+      await patchProfile({
         full_name: fullname,
         first_name: firstName,
         last_name: lastName,
         username,
         website,
         avatar_url,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error } = await supabase
-        .from("profiles")
-        .upsert(payload)
-        .select()
-        .single();
-      if (error) throw error;
+      });
       await refreshUser();
       alert("Profile updated!");
-    } catch (error) {
-      alert("Error updating the data: " + JSON.stringify(error));
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : JSON.stringify(error);
+      alert("Error updating the data: " + message);
     } finally {
       setLoading(false);
     }
@@ -115,13 +130,9 @@ export default function MyProfile({
     if (!user) return;
     try {
       setLoading(true);
-      const { error } = await supabase
-        .from("profiles")
-        .update({ avatar_url: url, updated_at: new Date().toISOString() })
-        .eq("id", user.id);
-      if (error) throw error;
+      await patchProfile({ avatar_url: url });
       await refreshUser();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error updating avatar:", error);
       alert("Error updating avatar");
     } finally {
@@ -161,7 +172,9 @@ export default function MyProfile({
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <label className="text-xs uppercase tracking-wide text-gray-400">Full Name</label>
+          <label className="text-xs uppercase tracking-wide text-gray-400">
+            Full Name
+          </label>
           <input
             id="fullName"
             type="text"
@@ -170,7 +183,9 @@ export default function MyProfile({
             onChange={(e) => setFullname(e.target.value)}
           />
 
-          <label className="text-xs uppercase tracking-wide text-gray-400">First Name</label>
+          <label className="text-xs uppercase tracking-wide text-gray-400">
+            First Name
+          </label>
           <input
             id="firstName"
             type="text"
@@ -179,7 +194,9 @@ export default function MyProfile({
             onChange={(e) => setFirstName(e.target.value)}
           />
 
-          <label className="text-xs uppercase tracking-wide text-gray-400">Last Name</label>
+          <label className="text-xs uppercase tracking-wide text-gray-400">
+            Last Name
+          </label>
           <input
             id="lastName"
             type="text"
@@ -188,7 +205,9 @@ export default function MyProfile({
             onChange={(e) => setLastName(e.target.value)}
           />
 
-          <label className="text-xs uppercase tracking-wide text-gray-400">Username</label>
+          <label className="text-xs uppercase tracking-wide text-gray-400">
+            Username
+          </label>
           <input
             id="username"
             type="text"

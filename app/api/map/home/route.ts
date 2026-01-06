@@ -7,6 +7,11 @@ import type {
     EntityMapProperties,
 } from "@/app/lib/types/map";
 
+const isGeometry = (value: unknown): value is Geometry =>
+    typeof value === "object" &&
+    value !== null &&
+    "type" in value;
+
 export const revalidate = 86400;
 export const dynamic = "force-static";
 
@@ -38,7 +43,7 @@ export async function GET() {
 
     const geoByEntityId = new Map<string, Geometry>();
     for (const row of geomRows ?? []) {
-        if (row?.entity_id && row?.geojson) {
+        if (row?.entity_id && isGeometry(row.geojson)) {
             geoByEntityId.set(row.entity_id, row.geojson);
         }
     }

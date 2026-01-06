@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseServiceClient } from "../../../../utils/supabase/service-worker";
+import { supabaseAdmin } from "../../../../utils/supabase/service-worker";
 
 export async function POST(req: Request) {
     const { userId, role } = await req.json();
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
     try {
         // 1. Update profiles table
-        const { error: profileError } = await supabaseServiceClient
+        const { error: profileError } = await supabaseAdmin
             .from("profiles")
             .update({ role })
             .eq("id", userId);
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
         if (profileError) throw profileError;
 
         // 2. Update auth.users.app_metadata
-        const { error: authError } = await supabaseServiceClient.auth.admin
+        const { error: authError } = await supabaseAdmin.auth.admin
             .updateUserById(
                 userId,
                 { app_metadata: { role } },
