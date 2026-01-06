@@ -1,36 +1,54 @@
 // utils/supabase/route.ts
-import { createServerClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import type { Database } from "@/database.types";
 
-export async function createApiClient() {
+export async function createApiClient(): Promise<SupabaseClient<Database>> {
     const cookieStore = await cookies();
 
-    return createServerClient(
+    // Next.js typings can represent `cookies()` differently depending on runtime (RSC vs route handlers).
+    // We only rely on `getAll()` and `set()` here.
+    const cookieStoreRW = cookieStore as unknown as {
+        getAll: () => Array<{ name: string; value: string }>;
+        set: (
+            name: string,
+            value: string,
+            options?: Record<string, unknown>,
+        ) => void;
+    };
+
+    return createServerClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
             cookies: {
                 getAll() {
-                    return cookieStore.getAll().map(({ name, value }) => ({
-                        name,
-                        value,
-                    }));
+                    return cookieStoreRW
+                        .getAll()
+                        .map((c: { name: string; value: string }) => ({
+                            name: c.name,
+                            value: c.value,
+                        }));
                 },
-                setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        cookieStore.set(name, value, {
+                setAll(
+                    cookiesToSet: Array<{
+                        name: string;
+                        value: string;
+                        options?: Record<string, unknown> & {
+                            secure?: boolean;
+                        };
+                    }>,
+                ) {
+                    cookiesToSet.forEach(({ name, value, options }) => {
+                        cookieStoreRW.set(name, value, {
                             ...options,
                             secure: options?.secure ??
                                 process.env.NODE_ENV === "production",
-                        })
-                    );
+                        });
+                    });
                 },
             },
-            auth: {
-                autoRefreshToken: true,
-                persistSession: true,
-                detectSessionInUrl: true,
-            },
         },
-    );
+    ) as unknown as SupabaseClient<Database>;
 }

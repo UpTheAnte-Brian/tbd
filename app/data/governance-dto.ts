@@ -6,6 +6,7 @@ import {
     type GovernanceApproval,
     type GovernanceSnapshot,
     type MeetingMinutes,
+    type MeetingAttendance,
     type Motion,
     type Vote,
 } from "@/app/lib/types/governance";
@@ -239,6 +240,20 @@ function mapMinutes(
         draft: (row.draft as boolean | null | undefined) ?? null,
         approved_at: (row.approved_at as string | null | undefined) ?? null,
         approved_by: (row.approved_by as string | null | undefined) ?? null,
+        created_at: (row.created_at as string | null | undefined) ?? null,
+        updated_at: (row.updated_at as string | null | undefined) ?? null,
+    };
+}
+
+function mapMeetingAttendance(
+    row: Record<string, unknown> | null,
+): MeetingAttendance | null {
+    if (!row || !row.meeting_id || !row.board_member_id) return null;
+    return {
+        id: row.id ? String(row.id) : null,
+        meeting_id: String(row.meeting_id),
+        board_member_id: String(row.board_member_id),
+        status: (row.status as MeetingAttendance["status"]) ?? "absent",
         created_at: (row.created_at as string | null | undefined) ?? null,
         updated_at: (row.updated_at as string | null | undefined) ?? null,
     };
@@ -660,6 +675,22 @@ export async function listMinutesByMeetingIds(
         .filter((m): m is MeetingMinutes => Boolean(m));
 }
 
+export async function listMeetingAttendanceByMeetingIds(
+    meetingIds: string[],
+    options?: GovernanceClientOptions,
+): Promise<MeetingAttendance[]> {
+    if (meetingIds.length === 0) return [];
+    const supabase = await getGovernanceClient(options);
+    const { data, error } = await governanceTable(supabase, "meeting_attendance")
+        .select("*")
+        .in("meeting_id", meetingIds);
+
+    if (error) throw error;
+    return (data ?? [])
+        .map((row) => mapMeetingAttendance(row as Record<string, unknown>))
+        .filter((a): a is MeetingAttendance => Boolean(a));
+}
+
 export async function saveMinutes(
     payload: MinutesInput & { id?: string },
     options?: GovernanceClientOptions,
@@ -777,9 +808,10 @@ export async function getGovernanceSnapshot(
     ]);
 
     const meetingIds = meetings.map((m) => m.id);
-    const [motions, minutes] = await Promise.all([
+    const [motions, minutes, attendance] = await Promise.all([
         listMotionsByMeetingIds(meetingIds, options),
         listMinutesByMeetingIds(meetingIds, options),
+        listMeetingAttendanceByMeetingIds(meetingIds, options),
     ]);
 
     const motionIds = motions.map((m) => m.id);
@@ -806,5 +838,6 @@ export async function getGovernanceSnapshot(
         votes,
         minutes,
         approvals,
+        attendance,
     };
 }

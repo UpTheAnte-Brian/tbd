@@ -6,6 +6,7 @@ import {
     Nonprofit,
     OrgType,
 } from "@/app/lib/types/nonprofits";
+import type { Database } from "@/database.types";
 
 /**
  * DTO returned to UI.
@@ -225,6 +226,12 @@ export async function createNonprofitDTO(
 ): Promise<NonprofitDTO> {
     // use authenticated client so RLS enforces admin checks
     const supabase = await createApiClient();
+    const entityId = payload.entity_id ?? null;
+    const name = payload.name ?? null;
+    const orgType = payload.org_type ?? null;
+    if (!entityId || !name || !orgType) {
+        throw new Error("entity_id, name, and org_type are required");
+    }
     const sanitized: Record<string, unknown> = {};
     Object.entries(payload).forEach(([key, value]) => {
         if (value === undefined) return;
@@ -232,10 +239,16 @@ export async function createNonprofitDTO(
         if (["id", "created_at", "updated_at"].includes(key)) return;
         sanitized[key] = value;
     });
+    const insertPayload: Database["public"]["Tables"]["nonprofits"]["Insert"] = {
+        ...sanitized,
+        entity_id: entityId,
+        name,
+        org_type: orgType as Database["public"]["Enums"]["org_type"],
+    };
 
     const { data, error } = await supabase
         .from("nonprofits")
-        .insert(sanitized)
+        .insert(insertPayload)
         .select()
         .single();
 
@@ -264,9 +277,11 @@ export async function updateNonprofitDTO(
         sanitized[key] = value;
     });
 
+    const updatePayload =
+        sanitized as Database["public"]["Tables"]["nonprofits"]["Update"];
     const { error } = await supabase
         .from("nonprofits")
-        .update(sanitized)
+        .update(updatePayload)
         .eq("id", id);
 
     if (error) {

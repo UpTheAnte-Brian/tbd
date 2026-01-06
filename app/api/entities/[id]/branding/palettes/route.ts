@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
 import { resolveEntityId } from "@/app/lib/entities";
+import type { Database } from "@/database.types";
+
+type ColorRole = Database["branding"]["Enums"]["color_role"];
 
 // POST /api/entities/[id]/branding/palettes
 export async function POST(
@@ -40,7 +43,7 @@ export async function POST(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  type PaletteInput = { name?: string; colors?: unknown; role?: string };
+  type PaletteInput = { name?: string; colors?: unknown; role?: unknown };
 
   let body: PaletteInput;
   try {
@@ -49,17 +52,26 @@ export async function POST(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const name: string | undefined = body.name;
+  const name = body.name;
   const colorsRaw = body.colors;
-  const role = body.role;
+  const roleRaw = body.role;
 
-  if (!name) {
+  if (typeof name !== "string" || name.trim().length === 0) {
     return NextResponse.json({ error: "name is required" }, { status: 400 });
+  }
+  if (typeof roleRaw !== "string") {
+    return NextResponse.json({ error: "role is required" }, { status: 400 });
   }
   if (!Array.isArray(colorsRaw)) {
     return NextResponse.json({ error: "colors must be an array" }, { status: 400 });
   }
 
+  const roleOptions: ColorRole[] = ["primary", "secondary", "tertiary", "accent"];
+  if (!roleOptions.includes(roleRaw as ColorRole)) {
+    return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+  }
+
+  const role = roleRaw as ColorRole;
   const colors: string[] = [];
   for (const c of colorsRaw) {
     if (typeof c !== "string" || !/^#([0-9A-Fa-f]{6})$/.test(c)) {

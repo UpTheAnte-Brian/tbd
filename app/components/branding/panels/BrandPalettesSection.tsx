@@ -29,7 +29,10 @@ export default function BrandPalettesSection({
 
   const colorColumns = useMemo(() => {
     if (!palettes?.length) return 0;
-    return Math.max(0, ...palettes.map((p) => p.colors?.length ?? 0));
+    return Math.max(
+      0,
+      ...palettes.map((p) => (Array.isArray(p.colors) ? p.colors.length : 0))
+    );
   }, [palettes]);
   const paletteGridTemplate = `minmax(220px, 2fr) 90px repeat(${colorColumns}, minmax(52px, 1fr))`;
 
@@ -137,7 +140,9 @@ export default function BrandPalettesSection({
                         setEditingPalette({
                           id: palette.id,
                           name: palette.name,
-                          colors: palette.colors,
+                          colors: Array.isArray(palette.colors)
+                            ? palette.colors
+                            : [],
                           role: palette.role,
                         })
                       }
@@ -147,7 +152,10 @@ export default function BrandPalettesSection({
                     </button>
                   </div>
                   {Array.from({ length: colorColumns }).map((_, idx) => {
-                    const color = palette.colors[idx];
+                    const paletteColors = Array.isArray(palette.colors)
+                      ? palette.colors
+                      : [];
+                    const color = paletteColors[idx];
                     return (
                       <div
                         key={`${palette.id}-color-${idx}`}

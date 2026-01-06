@@ -1,11 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/database.types";
 
 const isUuid = (value: string) =>
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-        .test(value);
+        .test(
+            value,
+        );
 
 export async function resolveDistrictEntityId(
-    supabase: SupabaseClient,
+    supabase: SupabaseClient<Database>,
     districtKey: string,
 ): Promise<string> {
     const { data: directEntity, error: directEntityError } = await supabase
@@ -63,7 +66,7 @@ export async function resolveDistrictEntityId(
 }
 
 export async function resolveEntityId(
-    supabase: SupabaseClient,
+    supabase: SupabaseClient<Database>,
     entityKey: string,
 ): Promise<string> {
     const { data: directEntity, error: directEntityError } = await supabase

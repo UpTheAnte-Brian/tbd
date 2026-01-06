@@ -40,7 +40,8 @@ export async function POST(
 
   const assetId = randomUUID();
   const rawName = (body.name ?? "").trim();
-  const safeName = rawName ? rawName.replace(/[\\/]/g, "-") : "asset";
+  const assetName = rawName || "asset";
+  const safeName = assetName.replace(/[\\/]/g, "-");
   const path = `${entityId}/${assetId}/${safeName}`;
 
   const payload = {
@@ -48,7 +49,7 @@ export async function POST(
     entity_id: entityId,
     category_id: body.categoryId,
     subcategory_id: body.subcategoryId ?? null,
-    name: body.name ?? null,
+    name: assetName,
     path,
     is_retired: false,
   };

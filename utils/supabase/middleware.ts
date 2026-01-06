@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import type { Database } from "@/database.types";
 
 export async function updateSession(request: NextRequest) {
     // Clone request headers so we can forward any updated cookies
@@ -10,7 +11,7 @@ export async function updateSession(request: NextRequest) {
         },
     });
 
-    const supabase = createServerClient(
+    const supabase = createServerClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
@@ -114,7 +115,9 @@ export async function updateSession(request: NextRequest) {
         .filter((eu) => getEntityType(eu) === "business" && eu.role === "admin")
         .map((eu) => eu.entity_id);
     const nonprofitAdminOf: string[] = entityUsers
-        .filter((eu) => getEntityType(eu) === "nonprofit" && eu.role === "admin")
+        .filter((eu) =>
+            getEntityType(eu) === "nonprofit" && eu.role === "admin"
+        )
         .map((eu) => eu.entity_id);
 
     const pathname = request.nextUrl.pathname;

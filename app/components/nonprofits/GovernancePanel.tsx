@@ -8,7 +8,9 @@ import { hasEntityRole } from "@/app/lib/auth/entityRoles";
 import {
   type BoardMember,
   type BoardMeeting,
+  type GovernanceApproval,
   type GovernanceSnapshot,
+  type MeetingAttendance,
   type MeetingMinutes,
   type Motion,
   type Vote,
@@ -64,6 +66,9 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   const [voteDrafts, setVoteDrafts] = useState<
     Record<string, { board_member_id: string; vote: "yes" | "no" | "abstain" }>
   >({});
+  const [quorumByMeetingId, setQuorumByMeetingId] = useState<
+    Record<string, boolean>
+  >({});
 
   const boardId = snapshot?.board.id;
 
@@ -83,15 +88,11 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
   const canFinalize = isEntityAdmin || isChair;
 
-  const buildSignatureHash = async (
-    motionId: string,
-    userId: string,
-    timestamp: string
-  ) => {
+  const buildSignatureHash = async (...parts: string[]) => {
     if (!crypto?.subtle) {
       throw new Error("Signature hashing unavailable");
     }
-    const payload = `finalize_motion|${nonprofitId}|${motionId}|${userId}|${timestamp}`;
+    const payload = parts.join("|");
     const data = new TextEncoder().encode(payload);
     const digest = await crypto.subtle.digest("SHA-256", data);
     return Array.from(new Uint8Array(digest))
@@ -132,6 +133,29 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     });
     return map;
   }, [snapshot?.minutes]);
+
+  const attendanceByMeeting = useMemo(() => {
+    const map: Record<string, Record<string, MeetingAttendance["status"]>> = {};
+    (snapshot?.attendance ?? []).forEach((attendance) => {
+      if (!map[attendance.meeting_id]) {
+        map[attendance.meeting_id] = {};
+      }
+      map[attendance.meeting_id][attendance.board_member_id] =
+        attendance.status ?? "absent";
+    });
+    return map;
+  }, [snapshot?.attendance]);
+
+  const approvalsByTarget = useMemo(() => {
+    const map = new Map<string, GovernanceApproval[]>();
+    (snapshot?.approvals ?? []).forEach((approval) => {
+      const key = `${approval.target_type}:${approval.target_id}`;
+      const existing = map.get(key) ?? [];
+      existing.push(approval);
+      map.set(key, existing);
+    });
+    return map;
+  }, [snapshot?.approvals]);
 
   async function loadSnapshot() {
     try {
@@ -181,6 +205,54 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       controller.abort();
     };
   }, [searchText]);
+
+  const getMemberLabel = (memberId: string | null | undefined) => {
+    if (!memberId) return "Unknown";
+    const member = membersById[memberId];
+    return member?.profile?.full_name ?? member?.user_id ?? memberId;
+  };
+
+  const getLatestApproval = (
+    targetType: GovernanceApproval["target_type"],
+    targetId: string
+  ) => {
+    const key = `${targetType}:${targetId}`;
+    const approvals = approvalsByTarget.get(key) ?? [];
+    return approvals.reduce<GovernanceApproval | null>((latest, approval) => {
+      if (!latest) return approval;
+      const latestTime = latest.approved_at
+        ? new Date(latest.approved_at).getTime()
+        : 0;
+      const nextTime = approval.approved_at
+        ? new Date(approval.approved_at).getTime()
+        : 0;
+      return nextTime > latestTime ? approval : latest;
+    }, null);
+  };
+
+  const formatApprovedAt = (value: string | null | undefined) => {
+    if (!value) return null;
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleString();
+  };
+
+  async function loadQuorum(meetingId: string) {
+    try {
+      const res = await fetch(`/api/governance/meetings/${meetingId}/quorum`);
+      if (!res.ok) throw new Error("Failed to load quorum");
+      const json = (await res.json()) as { quorumMet: boolean };
+      setQuorumByMeetingId((prev) => ({ ...prev, [meetingId]: json.quorumMet }));
+    } catch {
+      setQuorumByMeetingId((prev) => ({ ...prev, [meetingId]: false }));
+    }
+  }
+
+  useEffect(() => {
+    (snapshot?.meetings ?? []).forEach((meeting) => {
+      void loadQuorum(meeting.id);
+    });
+  }, [snapshot?.meetings]);
 
   async function addMember() {
     if (!boardId) return;
@@ -292,14 +364,44 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     }
   }
 
-  async function finalizeMotion(motionId: string) {
+  async function updateAttendance(
+    meetingId: string,
+    boardMemberId: string,
+    status: "present" | "absent"
+  ) {
+    try {
+      const res = await fetch(`/api/governance/meetings/${meetingId}/attendance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ board_member_id: boardMemberId, status }),
+      });
+      if (!res.ok) throw new Error("Failed to update attendance");
+      await loadSnapshot();
+      await loadQuorum(meetingId);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to update attendance";
+      toast.error(message);
+    }
+  }
+
+  async function finalizeMotion(motionId: string, meetingId: string) {
     if (!user?.id) {
       toast.error("Sign in to finalize motion");
       return;
     }
+    if (quorumByMeetingId[meetingId] !== true) {
+      toast.error("Quorum not met");
+      return;
+    }
     try {
       const timestamp = new Date().toISOString();
-      const signatureHash = await buildSignatureHash(motionId, user.id, timestamp);
+      const signatureHash = await buildSignatureHash(
+        "finalize_motion",
+        nonprofitId,
+        motionId,
+        user.id,
+        timestamp
+      );
       const res = await fetch(
         `/api/entities/${nonprofitId}/governance/motions/${motionId}/finalize`,
         {
@@ -364,9 +466,57 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     }
   }
 
+  async function approveMinutes(meetingId: string, minutesId: string) {
+    if (!user?.id) {
+      toast.error("Sign in to approve minutes");
+      return;
+    }
+    if (quorumByMeetingId[meetingId] !== true) {
+      toast.error("Quorum not met");
+      return;
+    }
+    try {
+      const timestamp = new Date().toISOString();
+      const signatureHash = await buildSignatureHash(
+        "approve_minutes",
+        nonprofitId,
+        meetingId,
+        minutesId,
+        user.id,
+        timestamp
+      );
+      const res = await fetch(
+        `/api/entities/${nonprofitId}/governance/meetings/${meetingId}/minutes/approve`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            approvalMethod: "clickwrap",
+            signatureHash,
+          }),
+        }
+      );
+      if (!res.ok) throw new Error("Failed to approve minutes");
+      toast.success("Minutes approved");
+      await loadSnapshot();
+      await loadQuorum(meetingId);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to approve minutes";
+      toast.error(message);
+    }
+  }
+
   if (loading) return <LoadingSpinner />;
-  if (!snapshot || !boardId)
+  if (!snapshot || !boardId) {
+    if (!user?.id) {
+      return (
+        <p className="text-gray-400">
+          Sign in to view this nonprofit&apos;s board and governance details.
+        </p>
+      );
+    }
     return <p className="text-gray-400">No board found for this nonprofit.</p>;
+  }
 
   return (
     <div className="space-y-8 text-gray-100">
@@ -566,8 +716,26 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
         {(snapshot.meetings ?? []).map((meeting: BoardMeeting) => {
           const meetingMotions = motionsByMeeting[meeting.id] ?? [];
+          const attendanceForMeeting = attendanceByMeeting[meeting.id] ?? {};
+          const quorumMet = quorumByMeetingId[meeting.id] ?? false;
+          const quorumLabel = quorumMet ? "Quorum met" : "Quorum not met";
+          const quorumBadgeClass = quorumMet
+            ? "bg-green-900/40 text-green-300 border-green-700/60"
+            : "bg-red-900/40 text-red-300 border-red-700/60";
+          const minutes = minutesByMeeting[meeting.id];
+          const minutesApproval = minutes
+            ? getLatestApproval("meeting_minutes", minutes.id)
+            : null;
+          const minutesApprovedAt =
+            minutesApproval?.approved_at ?? minutes?.approved_at ?? null;
+          const minutesApprovedBy =
+            minutesApproval?.board_member_id ?? minutes?.approved_by ?? null;
+          const minutesApproved = Boolean(minutesApprovedAt);
           return (
-            <div key={meeting.id} className="border border-gray-700 rounded p-4 space-y-4 bg-gray-900/60">
+            <div
+              key={meeting.id}
+              className="border border-gray-700 rounded p-4 space-y-4 bg-gray-900/60"
+            >
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <div>
                   <p className="font-semibold">
@@ -578,6 +746,57 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                   </p>
                   <p className="text-sm text-gray-400">Status: {meeting.status ?? "draft"}</p>
                 </div>
+                <span
+                  className={`px-2 py-1 text-xs rounded border ${quorumBadgeClass}`}
+                >
+                  {quorumLabel}
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-semibold">Attendance</h4>
+                {activeMembers.length === 0 && (
+                  <p className="text-sm text-gray-400">No active members.</p>
+                )}
+                {activeMembers.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {activeMembers.map((member) => {
+                      const status = attendanceForMeeting[member.id] ?? "absent";
+                      const isPresent = status === "present";
+                      return (
+                        <label
+                          key={member.id}
+                          className="flex items-center gap-2 text-sm text-gray-200"
+                        >
+                          {canFinalize ? (
+                            <input
+                              type="checkbox"
+                              checked={isPresent}
+                              onChange={(e) =>
+                                updateAttendance(
+                                  meeting.id,
+                                  member.id,
+                                  e.target.checked ? "present" : "absent"
+                                )
+                              }
+                              className="accent-green-500"
+                            />
+                          ) : (
+                            <span
+                              className={`inline-block h-2 w-2 rounded-full ${
+                                isPresent ? "bg-green-500" : "bg-gray-600"
+                              }`}
+                            />
+                          )}
+                          <span>{member.profile?.full_name ?? member.user_id}</span>
+                          <span className="text-xs text-gray-400">
+                            {isPresent ? "Present" : "Absent"}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3">
@@ -589,9 +808,14 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                 {meetingMotions.map((motion) => {
                   const votes = votesByMotion[motion.id] ?? [];
                   const isFinalized = motion.status === "finalized";
-                  const approvals = (snapshot.approvals ?? []).filter(
-                    (a) => a.target_type === "motion" && a.target_id === motion.id
-                  );
+                  const approvals =
+                    approvalsByTarget.get(`motion:${motion.id}`) ?? [];
+                  const motionApproval = getLatestApproval("motion", motion.id);
+                  const motionApproved = isFinalized && Boolean(motionApproval);
+                  const motionApprovedAt = motionApproval?.approved_at ?? null;
+                  const motionApprovedBy = motionApproval?.board_member_id ?? null;
+                  const disableFinalize =
+                    !canFinalize || isFinalized || quorumMet !== true;
                   return (
                     <div
                       key={motion.id}
@@ -602,14 +826,28 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                           <p className="font-semibold">
                             {motion.title ?? "Motion"} ({motion.status ?? "draft"})
                           </p>
+                          {motionApproved && (
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-green-300">
+                              <span className="px-2 py-0.5 rounded border border-green-700/60 bg-green-900/40">
+                                Approved
+                              </span>
+                              <span>
+                                Approved by {getMemberLabel(motionApprovedBy)}
+                                {motionApprovedAt
+                                  ? ` at ${formatApprovedAt(motionApprovedAt)}`
+                                  : ""}
+                              </span>
+                            </div>
+                          )}
                           {motion.description && (
                             <p className="text-sm text-gray-300">{motion.description}</p>
                           )}
                         </div>
                         {canFinalize && !isFinalized && (
                           <button
-                            onClick={() => finalizeMotion(motion.id)}
-                            className="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500"
+                            onClick={() => finalizeMotion(motion.id, meeting.id)}
+                            disabled={disableFinalize}
+                            className="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500 disabled:bg-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
                           >
                             Finalize motion
                           </button>
@@ -760,6 +998,19 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
               <div className="space-y-2">
                 <h4 className="font-semibold">Minutes</h4>
+                {minutesApproved && (
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-green-300">
+                    <span className="px-2 py-0.5 rounded border border-green-700/60 bg-green-900/40">
+                      Approved
+                    </span>
+                    <span>
+                      Approved by {getMemberLabel(minutesApprovedBy)}
+                      {minutesApprovedAt
+                        ? ` at ${formatApprovedAt(minutesApprovedAt)}`
+                        : ""}
+                    </span>
+                  </div>
+                )}
                 <textarea
                   value={minutesDrafts[meeting.id] ?? ""}
                   onChange={(e) =>
@@ -776,6 +1027,25 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                   >
                     Save Minutes
                   </button>
+                  {canFinalize && minutes?.id && !minutesApproved && (
+                    <button
+                      onClick={() => approveMinutes(meeting.id, minutes.id)}
+                      disabled={quorumMet !== true}
+                      className="px-3 py-1 bg-purple-600 rounded text-sm hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
+                    >
+                      Approve Minutes
+                    </button>
+                  )}
+                  {canFinalize && minutesApproved && (
+                    <span className="text-xs text-gray-400">
+                      Minutes already approved.
+                    </span>
+                  )}
+                  {canFinalize && !minutes?.id && (
+                    <span className="text-xs text-gray-400">
+                      Save minutes before approving.
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

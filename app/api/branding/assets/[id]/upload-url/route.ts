@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
-import { supabaseServiceClient } from "@/utils/supabase/service-worker";
+import { supabaseAdmin } from "@/utils/supabase/service-worker";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/database.types";
 
 export async function POST(
   _req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   const supabase = await createApiClient();
+  type PublicSupabaseClient = SupabaseClient<Database, "public", "public">;
+  const supabasePublic = supabase as unknown as PublicSupabaseClient;
+
+  const supabaseAdminPublic = supabaseAdmin as unknown as PublicSupabaseClient;
+  const supabaseAdminBranding = supabaseAdminPublic.schema("branding");
+
   const { id: assetId } = await context.params;
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -14,8 +22,7 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: asset, error: assetError } = await supabaseServiceClient
-    .schema("branding")
+  const { data: asset, error: assetError } = await supabaseAdminBranding
     .from("assets")
     .select("id, entity_id, path")
     .eq("id", assetId)
@@ -32,16 +39,16 @@ export async function POST(
   if (!asset.path) {
     return NextResponse.json(
       { error: "Asset path is missing" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
-  const { data: canManage, error: permError } = await supabase.rpc(
+  const { data: canManage, error: permError } = await supabasePublic.rpc(
     "can_manage_entity_assets",
     {
       p_uid: userData.user.id,
       p_entity_id: asset.entity_id,
-    }
+    },
   );
 
   if (permError) {
@@ -52,15 +59,14 @@ export async function POST(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { data: signed, error: signedError } =
-    await supabaseServiceClient.storage
-      .from("branding-assets")
-      .createSignedUploadUrl(asset.path, { upsert: true });
+  const { data: signed, error: signedError } = await supabaseAdmin.storage
+    .from("branding-assets")
+    .createSignedUploadUrl(asset.path, { upsert: true });
 
   if (signedError || !signed) {
     return NextResponse.json(
       { error: signedError?.message ?? "Failed to sign upload" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 

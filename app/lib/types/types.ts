@@ -1,3 +1,5 @@
+import type { Database } from "@/database.types";
+
 // ----------------------------
 // Entity + User base types
 // ----------------------------
@@ -148,26 +150,25 @@ export interface BrandingLogo {
 export interface BrandingPattern {
     id: string;
     entity_id: string;
-    pattern_type: "small" | "large";
+    pattern_type: Database["branding"]["Enums"]["pattern_type"];
     allowed_colors?: string[] | null;
     file_png?: string | null;
     file_svg?: string | null;
     notes?: string | null;
-    created_at: string;
+    created_at: string | null;
     updated_at?: string | null;
 }
 
 export interface BrandingFont {
     id: string;
     entity_id: string;
-    family: string;
-    weight?: string | null;
-    style?: string | null;
-    file_ttf?: string | null;
-    file_otf?: string | null;
-    file_woff?: string | null;
-    file_woff2?: string | null;
-    created_at: string;
+    font_name: string;
+    role?: Database["branding"]["Enums"]["typography_role"];
+    availability?: string | null;
+    download_url?: string | null;
+    usage_rules?: string | null;
+    weights?: Database["branding"]["Tables"]["typography"]["Row"]["weights"];
+    created_at: string | null;
     updated_at?: string | null;
 }
 
@@ -221,10 +222,15 @@ export interface BrandingPalette {
     id: string;
     entity_id: string;
     name: string;
-    role: string;
-    colors: string[]; // HEX values
-    created_at: string;
+    role: Database["branding"]["Enums"]["color_role"];
+    colors: string[] | null; // HEX values
+    created_at: string | null;
     updated_at?: string | null;
+    hex?: string | null;
+    rgb?: Database["branding"]["Tables"]["palettes"]["Row"]["rgb"];
+    cmyk?: Database["branding"]["Tables"]["palettes"]["Row"]["cmyk"];
+    pms?: string | null;
+    usage_notes?: string | null;
 }
 
 export type FontRole =
@@ -240,15 +246,15 @@ export interface BrandingTypography {
     id: string;
     entity_id: string;
     font_name: string;
-    role?: FontRole | null;
-    availability?: FontAvailability | null;
-    weights?: string[] | null;
+    role?: Database["branding"]["Enums"]["typography_role"] | null;
+    availability?: Database["branding"]["Tables"]["typography"]["Row"]["availability"];
+    weights?: Database["branding"]["Tables"]["typography"]["Row"]["weights"];
     download_url?: string | null;
     heading_font?: string | null;
     body_font?: string | null;
     accent_font?: string | null;
     usage_rules?: string | null;
-    created_at: string;
+    created_at: string | null;
     updated_at?: string | null;
 }
 

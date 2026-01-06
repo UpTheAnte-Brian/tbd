@@ -3,12 +3,28 @@ export const dynamic = "force-static";
 import { NextResponse } from "next/server";
 import type { DistrictDetails } from "@/app/lib/types/types";
 import { createApiClient } from "@/utils/supabase/route";
+import type { Database } from "@/database.types";
+type EntityRow = Pick<
+    Database["public"]["Tables"]["entities"]["Row"],
+    "id" | "external_ids"
+>;
+type DistrictRow = Pick<
+    Database["public"]["Tables"]["districts"]["Row"],
+    | "id"
+    | "sdorgid"
+    | "shortname"
+    | "status"
+    | "properties"
+    | "centroid_lat"
+    | "centroid_lng"
+    | "entity_id"
+>;
 
 export async function GET() {
     const supabase = await createApiClient();
     console.log("API: /api/districts -> executed at", new Date().toISOString());
     console.time("sb fetch districts");
-    const { data: districts, error: districtError } = await supabase
+    const { data: districtsRaw, error: districtError } = await supabase
         .from("districts")
         .select(
             "id, sdorgid, shortname, status, properties, centroid_lat, centroid_lng, entity_id",
@@ -27,7 +43,7 @@ export async function GET() {
         return new Response("Failed to fetch data", { status: 500 });
     }
 
-    const { data: entityRows, error: entityError } = await supabase
+    const { data: entityRowsRaw, error: entityError } = await supabase
         .from("entities")
         .select("id, external_ids")
         .eq("entity_type", "district");
@@ -38,8 +54,11 @@ export async function GET() {
 
     const entityBySdorgid = new Map<string, string>();
     const entityByDistrictId = new Map<string, string>();
-    for (const row of entityRows ?? []) {
-        const externalIds = row.external_ids as Record<string, unknown> | null;
+    const entityRows = (entityRowsRaw ?? []) as EntityRow[];
+    for (const row of entityRows) {
+        const externalIds =
+            (row.external_ids as Record<string, unknown> | null) ??
+            null;
         const sdorgid = typeof externalIds?.sdorgid === "string"
             ? externalIds.sdorgid
             : null;
@@ -66,7 +85,8 @@ export async function GET() {
     ): string | null => typeof val === "string" ? val : fallback;
 
     const rows: DistrictDetails[] = [];
-    for (const row of districts ?? []) {
+    const districts = (districtsRaw ?? []) as DistrictRow[];
+    for (const row of districts) {
         const rawProps = (() => {
             if (!row.properties) return {};
             if (typeof row.properties === "string") {
