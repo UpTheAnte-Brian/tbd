@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import EntityMapExplorer from "@/app/components/maps/entity-map-explorer";
 import type { EntityFeatureCollection } from "@/app/lib/types/map";
+import { createClient } from "@/utils/supabase/server";
 
 type MapHomeResponse = {
   level: "states";
@@ -22,15 +23,32 @@ async function getHomeMapData(): Promise<MapHomeResponse> {
 }
 
 export default async function Page() {
-  let data: MapHomeResponse | null = null;
-  let error: string | null = null;
+  const supabase = await createClient();
+
+  // Home page is public. If a session exists, we'll have a user; if not, continue anonymously.
+  // We only throw on unexpected errors (NOT on missing session).
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError) {
+    const normalized = authError.message?.toLowerCase() ?? "";
+    // Missing session is normal for public pages.
+    if (!normalized.includes("auth session missing")) {
+      throw new Error(`auth.getUser failed: ${authError.message}`);
+    }
+  }
+
+  // Currently unused, but kept here for future personalization.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const user = authData?.user ?? null;
+
+  let mapData: MapHomeResponse | null = null;
+  let mapError: string | null = null;
   try {
-    data = await getHomeMapData();
+    mapData = await getHomeMapData();
   } catch (err) {
-    error = err instanceof Error ? err.message : "Failed to load states map";
+    mapError = err instanceof Error ? err.message : "Failed to load states map";
   }
   const featureCollection: EntityFeatureCollection =
-    data?.featureCollection ?? {
+    mapData?.featureCollection ?? {
       type: "FeatureCollection",
       features: [],
     };
@@ -39,7 +57,7 @@ export default async function Page() {
       initialStates={featureCollection}
       homeStatus={{
         loading: false,
-        error,
+        error: mapError,
         featureCount: featureCollection.features.length,
       }}
     />

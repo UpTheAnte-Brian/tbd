@@ -1,6 +1,6 @@
-import { type EmailOtpType } from "@supabase/supabase-js";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-// The client you created from the Server-Side Auth instructions
+
 import { createClient } from "@/utils/supabase/server";
 
 export async function GET(request: NextRequest) {
@@ -8,22 +8,29 @@ export async function GET(request: NextRequest) {
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
   const next = searchParams.get("next") ?? "/";
+
   const redirectTo = request.nextUrl.clone();
   redirectTo.pathname = next;
 
-  if (token_hash && type) {
-    const supabase = await createClient();
-
-    const { error } = await supabase.auth.verifyOtp({
-      type,
-      token_hash,
-    });
-    if (!error) {
-      return NextResponse.redirect(redirectTo);
-    }
+  if (!token_hash || !type) {
+    const errUrl = request.nextUrl.clone();
+    errUrl.pathname = "/auth/auth-code-error";
+    return NextResponse.redirect(errUrl);
   }
 
-  // return the user to an error page with some instructions
-  redirectTo.pathname = "/auth/auth-code-error";
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.verifyOtp({
+    type,
+    token_hash,
+  });
+
+  if (error) {
+    console.error("Failed to verify OTP:", error.message);
+    const errUrl = request.nextUrl.clone();
+    errUrl.pathname = "/auth/auth-code-error";
+    return NextResponse.redirect(errUrl);
+  }
+
   return NextResponse.redirect(redirectTo);
 }
