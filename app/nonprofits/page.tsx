@@ -28,6 +28,7 @@ export default function NonprofitsPage() {
   const [nonprofits, setNonprofits] = useState<Nonprofit[]>([]);
   const [searchText, setSearchText] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(0);
   const gridApiRef = useRef<FullGridApi<Nonprofit> | null>(null);
 
   const fetchNonProfits = useCallback(async () => {
@@ -52,14 +53,32 @@ export default function NonprofitsPage() {
 
   const onGridReady = useCallback((params: GridReadyEvent<Nonprofit>) => {
     gridApiRef.current = params.api as FullGridApi<Nonprofit>;
+    setVisibleCount(params.api.getDisplayedRowCount());
+    params.api.addEventListener("filterChanged", () => {
+      setVisibleCount(params.api.getDisplayedRowCount());
+    });
   }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchText(value);
-    const api = gridApiRef.current as Partial<FullGridApi<Nonprofit>> | null;
-    if (api && typeof api.setQuickFilter === "function") {
-      api.setQuickFilter(value);
+    const api = gridApiRef.current;
+    if (api) {
+      const asUnknown = api as unknown;
+      const withQuick = asUnknown as {
+        setQuickFilter?: (text: string) => void;
+      };
+      const withGridOption = asUnknown as {
+        setGridOption?: (key: string, val: unknown) => void;
+      };
+
+      if (typeof withQuick.setQuickFilter === "function") {
+        withQuick.setQuickFilter(value);
+        setVisibleCount(api.getDisplayedRowCount());
+      } else if (typeof withGridOption.setGridOption === "function") {
+        withGridOption.setGridOption("quickFilterText", value);
+        setVisibleCount(api.getDisplayedRowCount());
+      }
     }
   };
 
@@ -114,46 +133,38 @@ export default function NonprofitsPage() {
 
   const defaultColDef = {
     flex: 1,
-    cellStyle: { backgroundColor: "#1a1a1a", color: "#ffffff" },
-    headerStyle: { backgroundColor: "#1a1a1a", color: "#ffffff" },
     sortable: true,
     filter: true,
     resizable: true,
+    cellClass: "bg-[#1a1a1a] text-white",
+    headerClass: "bg-[#1a1a1a] text-white",
   };
 
   if (!nonprofits.length) return <LoadingSpinner />;
 
   return (
-    <div style={{ width: "100%" }}>
-      <div className="flex justify-between items-center mb-4 gap-3">
-        <h1 className="text-lg font-semibold text-white">Nonprofits</h1>
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-sm font-semibold rounded-full hover:bg-blue-500 shadow-sm"
-        >
-          <span className="text-base leading-none">＋</span>
-          <span>Add Nonprofit</span>
-        </button>
-      </div>
-      {/* 🔍 Search bar */}
-      <div style={{ marginBottom: "10px" }}>
+    <div className="w-full">
+      <div className="m-1 flex items-center justify-between gap-3 flex-wrap bg-brand-secondary-1 px-3 py-2 rounded">
         <input
           type="text"
           placeholder="Search foundations..."
           value={searchText}
           onChange={handleSearchChange}
-          style={{
-            width: "100%",
-            padding: "8px 12px",
-            borderRadius: "4px",
-            border: "1px solid #444",
-            backgroundColor: "#1a1a1a",
-            color: "#fff",
-          }}
+          className="flex-[1_1_55%] rounded border border-gray-700 bg-[#1a1a1a] px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
+        <div className="text-sm text-gray-300 whitespace-nowrap">
+          Showing {visibleCount} / {nonprofits.length}
+        </div>
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-sm font-semibold rounded-full hover:bg-blue-500 shadow-sm whitespace-nowrap"
+        >
+          <span className="text-base leading-none">＋</span>
+          <span>Add Nonprofit</span>
+        </button>
       </div>
 
-      <div className="ag-theme-quartz" style={{ height: 600, width: "100%" }}>
+      <div className="ag-theme-quartz h-[600px] w-full text-white bg-[#0f1116]">
         <AgGridReact<Nonprofit>
           rowData={nonprofits}
           columnDefs={columnDefs}

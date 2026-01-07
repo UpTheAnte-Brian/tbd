@@ -6,8 +6,10 @@ import {
   useContext,
   useState,
   useEffect,
+  useCallback,
   ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import { Profile } from "@/app/lib/types/types";
 
 type UserContextValue = {
@@ -31,8 +33,9 @@ export function UserProvider({ children, initialUser }: UserProviderProps) {
   const [user, setUser] = useState<Profile | null>(initialUser ?? null);
   const [loading, setLoading] = useState(!initialUser);
   const [error, setError] = useState<Error | null>(null);
+  const pathname = usePathname();
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     // if we already have an initial user, don't block UI while refreshing
     if (!initialUser) setLoading(true);
     setError(null);
@@ -50,7 +53,7 @@ export function UserProvider({ children, initialUser }: UserProviderProps) {
     } finally {
       if (!initialUser) setLoading(false);
     }
-  };
+  }, [initialUser]);
 
   const logout = () => {
     setUser(null);
@@ -72,6 +75,12 @@ export function UserProvider({ children, initialUser }: UserProviderProps) {
       ignore = true;
     };
   }, [initialUser]);
+
+  useEffect(() => {
+    if (!user) {
+      void refreshUser();
+    }
+  }, [pathname, refreshUser, user]);
 
   return (
     <UserContext.Provider

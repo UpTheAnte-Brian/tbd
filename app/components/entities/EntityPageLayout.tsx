@@ -41,7 +41,7 @@ export default function EntityPageLayout({
         activeTab={activeTab}
         onTabChange={onTabChange}
       />
-      <div className="flex-1 min-w-0 md:pl-4 md:border-l md:border-brand-secondary-1">
+      <div className="flex-1 min-w-0 md:pl-4">
         <div className="w-full space-y-6 md:space-y-0">{children}</div>
       </div>
     </div>

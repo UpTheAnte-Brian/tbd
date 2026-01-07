@@ -1,7 +1,13 @@
 "use client";
 
 import "@/app/lib/agGridSetup";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import type {
+  GridApi,
+  GridReadyEvent,
+  IClientSideRowModel,
+  FirstDataRenderedEvent,
+} from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { themeQuartz } from "ag-grid-community";
 import { Business } from "@/app/lib/types/types";
@@ -9,8 +15,16 @@ import { ColDef } from "ag-grid-community";
 import Link from "next/link";
 import type { ICellRendererParams } from "ag-grid-community";
 
+type FullGridApi<T> = GridApi<T> & {
+  getModel(): IClientSideRowModel;
+  setQuickFilter(text: string): void;
+};
+
 export default function BusinessesPage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [searchText, setSearchText] = useState("");
+  const [visibleCount, setVisibleCount] = useState(0);
+  const gridApiRef = useRef<FullGridApi<Business> | null>(null);
 
   useEffect(() => {
     async function fetchBusinesses() {
@@ -27,6 +41,51 @@ export default function BusinessesPage() {
     }
     fetchBusinesses();
   }, []);
+
+  const onGridReady = useCallback((params: GridReadyEvent<Business>) => {
+    gridApiRef.current = params.api as FullGridApi<Business>;
+    setVisibleCount(params.api.getDisplayedRowCount());
+    params.api.addEventListener("filterChanged", () => {
+      setVisibleCount(params.api.getDisplayedRowCount());
+    });
+  }, []);
+
+  const onFirstDataRendered = useCallback(
+    (params: FirstDataRenderedEvent<Business>) => {
+      setVisibleCount(params.api.getDisplayedRowCount());
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const api = gridApiRef.current;
+    if (api) {
+      setVisibleCount(api.getDisplayedRowCount());
+    }
+  }, [businesses]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchText(value);
+    const api = gridApiRef.current;
+    if (api) {
+      const asUnknown = api as unknown;
+      const withQuick = asUnknown as {
+        setQuickFilter?: (text: string) => void;
+      };
+      const withGridOption = asUnknown as {
+        setGridOption?: (key: string, val: unknown) => void;
+      };
+
+      if (typeof withQuick.setQuickFilter === "function") {
+        withQuick.setQuickFilter(value);
+        setVisibleCount(api.getDisplayedRowCount());
+      } else if (typeof withGridOption.setGridOption === "function") {
+        withGridOption.setGridOption("quickFilterText", value);
+        setVisibleCount(api.getDisplayedRowCount());
+      }
+    }
+  };
 
   const columnDefs: ColDef<Business>[] = useMemo<ColDef<Business>[]>(
     () => [
@@ -57,27 +116,38 @@ export default function BusinessesPage() {
   );
   const defaultColDef = {
     flex: 1,
-    cellStyle: {
-      backgroundColor: "#1a1a1a", // dark background
-      color: "#ffffff", // white text
-    },
-    headerStyle: {
-      backgroundColor: "#1a1a1a", // dark background
-      color: "#ffffff", // white text
-    },
     sortable: true,
     filter: true,
     resizable: true,
+    cellClass: "bg-[#1a1a1a] text-white",
+    headerClass: "bg-[#1a1a1a] text-white",
   };
 
   return (
-    <div className="ag-theme-quartz" style={{ height: 600, width: "100%" }}>
-      <AgGridReact<Business>
-        rowData={businesses}
-        columnDefs={columnDefs}
-        theme={themeQuartz}
-        defaultColDef={defaultColDef}
-      />
+    <div className="w-full">
+      <div className="m-1 flex items-center justify-between gap-4 flex-wrap bg-brand-secondary-1 px-3 py-2 rounded">
+        <input
+          type="text"
+          placeholder="Search businesses..."
+          value={searchText}
+          onChange={handleSearchChange}
+          className="flex-[1_1_60%] rounded border border-gray-700 bg-[#1a1a1a] px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+        <div className="text-sm text-gray-300 whitespace-nowrap">
+          Showing {visibleCount} / {businesses.length}
+        </div>
+      </div>
+
+      <div className="ag-theme-quartz h-[600px] w-full text-white bg-[#0f1116]">
+        <AgGridReact<Business>
+          rowData={businesses}
+          columnDefs={columnDefs}
+          theme={themeQuartz}
+          defaultColDef={defaultColDef}
+          onGridReady={onGridReady}
+          onFirstDataRendered={onFirstDataRendered}
+        />
+      </div>
     </div>
   );
 }
