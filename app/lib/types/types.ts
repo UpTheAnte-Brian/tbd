@@ -258,22 +258,12 @@ export interface BrandingTypography {
     updated_at?: string | null;
 }
 
-export interface BrandingSchool {
-    id: string;
-    entity_id: string;
-    school_name: string;
-    mascot?: string | null;
-    created_at?: string | null;
-    updated_at?: string | null;
-}
-
 export interface BrandingSummary {
     logos: BrandingLogo[];
     patterns: BrandingPattern[];
     fonts: BrandingFont[];
     palettes: BrandingPalette[];
     typography: BrandingTypography[];
-    schools?: BrandingSchool[];
 }
 
 // ----------------------------
