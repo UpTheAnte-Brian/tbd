@@ -8,12 +8,36 @@
 - Stripe
 - Google Maps JS API
 
-## Architectural Principles
+-## Architectural Principles
 - DTO layer sits between Supabase queries and UI
 - No Supabase client calls directly from React components (fetch UI → API route → DTO)
 - API routes should stay thin and delegate to DTO/service helpers
 - Shared logic belongs in `/lib` or `/services`, not in components
+
 - Districts are entity-backed; `entity_id` is required in district DTOs and must be resolved before branding/permissions
+
+## Role & Governance Model (Canonical)
+
+-- entity_users = operational access
+-- governance.board_members = fiduciary authority
+
+Principle:
+- A single user may hold multiple roles across different domains, but each table represents exactly one domain of authority.
+- Never overload governance meaning into `entity_users` roles.
+
+Tables:
+- `entity_users`
+  - Purpose: operational / administrative access
+  - Examples: admin, editor, viewer, employee
+  - Used for: branding, content, dashboards, internal tools
+
+- `governance.board_members`
+  - Purpose: fiduciary / governance authority
+  - Examples: director, chair, treasurer
+  - Used for: voting, motions, minutes, approvals
+
+Rule:
+- Multiple hats = multiple rows in different tables, never multiple meanings in one row.
 - Avoid sdorgid-based routing; use UUIDs and resolve entity context first
 - District URLs are canonicalized to `entities.id`; keep legacy keys only as metadata (`properties.district_id`, `properties.sdorgid`)
 - Home map is state-first: `/` only loads state geometries and drills into districts in-place (no navigation required)

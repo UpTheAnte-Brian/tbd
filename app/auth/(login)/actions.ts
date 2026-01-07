@@ -119,7 +119,8 @@ export const signInWithLoginCode = validatedAction(
     }
 
     // Force a fresh server navigation so layouts/server components re-read the new auth cookies.
-    redirect(data.redirect ?? "/");
+    const nextPath = data.redirect?.trim();
+    redirect(nextPath ? nextPath : "/");
   },
 );
 export const signInWithGoogle = async (

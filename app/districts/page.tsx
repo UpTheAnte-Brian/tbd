@@ -168,7 +168,7 @@ export default function DistrictsPage() {
   return (
     <div className="w-full">
       {/* 🔍 Search bar */}
-      <div className="m-1 flex items-center justify-between gap-4 flex-wrap">
+      <div className="m-1 flex items-center justify-between gap-4 flex-wrap bg-brand-secondary-1 px-3 py-2 rounded">
         <input
           type="text"
           placeholder="Search districts..."
