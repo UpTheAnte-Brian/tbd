@@ -145,29 +145,12 @@ export async function getEntityBrandingSummary(
 
   const fonts = typography ?? [];
 
-  let schools = [] as BrandingSummary["schools"];
-  const { data: schoolsData, error: schoolsErr } = await supabase
-    .schema("branding")
-    .from("schools")
-    .select("*")
-    .eq("entity_id", entityId)
-    .order("created_at", { ascending: true });
-  if (schoolsErr) {
-    const message = schoolsErr.message ?? "";
-    if (!message.includes("branding.schools")) {
-      throw new Error(`Failed to fetch schools: ${schoolsErr.message}`);
-    }
-  } else {
-    schools = schoolsData ?? [];
-  }
-
   return {
     logos,
     patterns: patterns ?? [],
     fonts,
     palettes: palettes ?? [],
     typography: typography ?? [],
-    schools,
   };
 }
 

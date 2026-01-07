@@ -1,11 +1,49 @@
+import { NextRequest, NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/database.types";
+import { createApiClient } from "@/utils/supabase/route";
 
 const isUuid = (value: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
     .test(
       value,
     );
+
+export async function GET(req: NextRequest) {
+  const supabase = await createApiClient();
+  const { searchParams } = new URL(req.url);
+  const entityKey = searchParams.get("entityId");
+
+  if (!entityKey) {
+    return NextResponse.json(
+      { error: "entityId is required" },
+      { status: 400 },
+    );
+  }
+
+  let entityId: string;
+  try {
+    entityId = await resolveEntityId(supabase, entityKey);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Entity not found";
+    const status = message.toLowerCase().includes("entity not found") ? 404 : 500;
+    return NextResponse.json({ error: message }, { status });
+  }
+
+  const { data, error } = await supabase
+    .schema("branding")
+    .from("assets")
+    .select("*")
+    .eq("entity_id", entityId)
+    .or("is_retired.is.null,is_retired.eq.false")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ assets: data ?? [] });
+}
 
 export async function resolveDistrictEntityId(
   supabase: SupabaseClient<Database>,
