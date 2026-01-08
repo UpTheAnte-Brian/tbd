@@ -75,6 +75,7 @@ export default function EntityMapExplorer({
   const [attendanceOverlay, setAttendanceOverlay] =
     useState<AttendanceFeatureCollection | null>(null);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
+  const [fitBoundsToken, setFitBoundsToken] = useState<number | null>(null);
 
   const cacheRef = useRef(new Map<string, EntityFeatureCollection>());
   // Cache attendance overlays per district so swaps are instant.
@@ -163,6 +164,7 @@ export default function EntityMapExplorer({
     setSelectedDistrictEntityId(null);
     setAttendanceOverlay(null);
     setLoadingAttendance(false);
+    setFitBoundsToken((token) => (token ?? 0) + 1);
   };
 
   useEffect(() => {
@@ -295,6 +297,7 @@ export default function EntityMapExplorer({
       <EntityMapShell
         featureCollection={featureCollection}
         selectedId={selectedId}
+        fitBoundsToken={fitBoundsToken}
         onSelect={handleSelect}
         onClearSelection={() => {
           setSelectedId(null);

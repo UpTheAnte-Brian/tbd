@@ -48,6 +48,7 @@ type Props = {
   ) => React.ReactNode;
   defaultCenter?: google.maps.LatLngLiteral;
   defaultZoom?: number;
+  fitBoundsToken?: number | null;
 };
 
 const mapContainerStyle = {
@@ -57,6 +58,8 @@ const mapContainerStyle = {
 
 const MIDWEST_CENTER = { lat: 44.5, lng: -93.5 };
 const MIDWEST_ZOOM = 5;
+const MINNESOTA_ANCHOR = { lat: 46.3, lng: -94.3 };
+const MINNESOTA_ZOOM_OFFSET = 2;
 const GOOGLE_MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAP_ID;
 
 export default function EntityMapShell({
@@ -75,6 +78,7 @@ export default function EntityMapShell({
   renderSearch,
   defaultCenter = MIDWEST_CENTER,
   defaultZoom = MIDWEST_ZOOM,
+  fitBoundsToken = null,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -155,6 +159,35 @@ export default function EntityMapShell({
     });
   };
 
+  const isMinnesota = (feature: EntityFeature) => {
+    const name = feature.properties?.name?.toLowerCase() ?? "";
+    const slug = feature.properties?.slug?.toLowerCase() ?? "";
+    return name.includes("minnesota") || slug === "minnesota" || slug === "mn";
+  };
+
+  const fitBoundsWithOffset = (
+    map: google.maps.Map,
+    bounds: google.maps.LatLngBounds,
+    options?: {
+      zoomOffset?: number;
+      center?: google.maps.LatLngLiteral;
+    }
+  ) => {
+    if (bounds.isEmpty()) return;
+    map.fitBounds(bounds);
+    if (!options?.zoomOffset && !options?.center) return;
+
+    google.maps.event.addListenerOnce(map, "idle", () => {
+      const currentZoom = map.getZoom();
+      if (options.center) {
+        map.panTo(options.center);
+      }
+      if (typeof currentZoom === "number" && options.zoomOffset) {
+        map.setZoom(currentZoom + options.zoomOffset);
+      }
+    });
+  };
+
   const panToFeature = (map: google.maps.Map, feature: EntityFeature) => {
     const geom = feature.geometry;
     if (!geom) return;
@@ -168,7 +201,11 @@ export default function EntityMapShell({
     }
     const bounds = getBoundsFromGeoJSON(feature);
     if (!bounds.isEmpty()) {
-      map.fitBounds(bounds);
+      const useMinnesotaAnchor = isMinnesota(feature);
+      fitBoundsWithOffset(map, bounds, {
+        zoomOffset: useMinnesotaAnchor ? MINNESOTA_ZOOM_OFFSET : undefined,
+        center: useMinnesotaAnchor ? MINNESOTA_ANCHOR : undefined,
+      });
     }
   };
 
@@ -240,6 +277,13 @@ export default function EntityMapShell({
     map.data.addGeoJson(featureCollection);
     applyStyle(map);
   }, [featureCollection, mapReady]);
+
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return;
+    if (fitBoundsToken === null) return;
+    mapRef.current.setCenter(defaultCenter);
+    mapRef.current.setZoom(defaultZoom);
+  }, [defaultCenter, defaultZoom, fitBoundsToken, mapReady]);
 
   useEffect(() => {
     if (!mapReady || !overlayLayerRef.current) return;
