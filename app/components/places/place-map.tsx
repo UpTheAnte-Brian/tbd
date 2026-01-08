@@ -15,6 +15,13 @@ export default function PlaceMap({ placeId }: { placeId: string }) {
 
       const map = new Map(ref.current!, {
         zoom: 15,
+        disableDefaultUI: true,
+        mapTypeControl: false,
+        zoomControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        rotateControl: false,
+        scaleControl: false,
       });
 
       const service = new google.maps.places.PlacesService(map);

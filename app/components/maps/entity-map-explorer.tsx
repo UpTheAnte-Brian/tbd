@@ -45,76 +45,13 @@ const splitNameList = (value: string) =>
     .map((name) => name.trim())
     .filter(Boolean);
 
-const extractSchoolNames = (props: GeoJsonProperties | null) => {
-  if (!props) return [];
-  const record = props as Record<string, unknown>;
-  const candidates: unknown[] = [];
-
-  const explicitKeys = [
-    "elem_name",
-    "midd_name",
-    "high_name",
-    "school_names_friendly",
-    "school_friendly_names",
-    "friendly_school_names",
-    "schools_friendly",
-    "friendly_names",
-    "school_names",
-    "school_name",
-    "schools",
-    "school",
-  ];
-
-  for (const key of explicitKeys) {
-    if (record[key] !== undefined) {
-      candidates.push(record[key]);
-    }
+const normalizeNameList = (value: unknown): string[] => {
+  if (!value) return [];
+  if (typeof value === "string") return splitNameList(value);
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => normalizeNameList(item));
   }
-
-  if (!candidates.length) {
-    for (const [key, value] of Object.entries(record)) {
-      if (/school/i.test(key) && !/id/i.test(key)) {
-        candidates.push(value);
-      }
-    }
-  }
-
-  const normalizeValue = (value: unknown): string[] => {
-    if (!value) return [];
-    if (typeof value === "string") return splitNameList(value);
-    if (Array.isArray(value)) {
-      return value.flatMap((item) => normalizeValue(item));
-    }
-    if (typeof value === "object") {
-      const nested = value as Record<string, unknown>;
-      const directKeys = [
-        "friendly_name",
-        "friendlyName",
-        "name",
-        "label",
-        "title",
-        "school_name",
-        "schoolName",
-      ];
-      for (const key of directKeys) {
-        if (typeof nested[key] === "string") {
-          return [nested[key]];
-        }
-      }
-      const fallbackKeys = ["schools", "school_names", "school_name", "school"];
-      for (const key of fallbackKeys) {
-        if (nested[key] !== undefined) {
-          return normalizeValue(nested[key]);
-        }
-      }
-    }
-    return [];
-  };
-
-  const names = candidates.flatMap((value) => normalizeValue(value));
-  return Array.from(
-    new Set(names.map((name) => name.trim()).filter(Boolean))
-  );
+  return [];
 };
 
 export default function EntityMapExplorer({
@@ -314,36 +251,17 @@ export default function EntityMapExplorer({
   const attendanceTooltipBuilder = useMemo(() => {
     return (props: GeoJsonProperties) => {
       const record = (props ?? {}) as Record<string, unknown>;
-      const districtName =
-        typeof record.sdprefname === "string" ? record.sdprefname.trim() : "";
-      const title =
-        districtName ||
-        (typeof record.name === "string" && record.name) ||
-        (typeof record.attendance_area === "string" && record.attendance_area) ||
-        (typeof record.area_name === "string" && record.area_name) ||
-        "Attendance area";
-      const elemNames = typeof record.elem_name === "string"
-        ? splitNameList(record.elem_name)
-        : [];
-      const middNames = typeof record.midd_name === "string"
-        ? splitNameList(record.midd_name)
-        : [];
-      const highNames = typeof record.high_name === "string"
-        ? splitNameList(record.high_name)
-        : [];
-      const explicitNames = [...elemNames, ...middNames, ...highNames];
-      const fallbackNames = explicitNames.length
-        ? []
-        : extractSchoolNames(props);
+      const elemNames = normalizeNameList(record.elem_name);
+      const middNames = normalizeNameList(record.midd_name);
+      const highNames = normalizeNameList(record.high_name);
       const lines = [
         elemNames.length ? `Elementary: ${elemNames.join(", ")}` : null,
         middNames.length ? `Middle: ${middNames.join(", ")}` : null,
         highNames.length ? `High: ${highNames.join(", ")}` : null,
-        fallbackNames.length ? `Schools: ${fallbackNames.join(", ")}` : null,
       ].filter((line): line is string => Boolean(line));
-      if (!lines.length && !title) return null;
+      if (!lines.length) return null;
       return {
-        title,
+        title: "Attendance area",
         lines: lines.length ? lines : undefined,
       };
     };

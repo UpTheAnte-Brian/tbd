@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { getBoundsFromGeoJSON } from "@/app/lib/getBoundsFromGeoJSON";
 import { useGoogleMapsStatus } from "@/app/lib/providers/GoogleMapsProvider";
 import { ATTENDANCE_OVERLAY_STYLE } from "@/app/components/maps/attendance-overlay-style";
+import { DEFAULT_BRAND_COLORS } from "@/app/lib/branding/resolveBranding";
 import type {
   EntityFeature,
   EntityFeatureCollection,
@@ -40,10 +41,7 @@ type Props = {
     | google.maps.Data.StylingFunction
     | google.maps.Data.StyleOptions;
   onOverlaySelect?: (feature: google.maps.Data.Feature) => void;
-  renderPopup?: (
-    feature: EntityFeature,
-    close: () => void
-  ) => React.ReactNode;
+  renderPopup?: (feature: EntityFeature, close: () => void) => React.ReactNode;
   renderSearch?: (
     features: EntityFeature[],
     onSelect: (feature: EntityFeature) => void
@@ -91,7 +89,9 @@ export default function EntityMapShell({
   });
   const hoveredPropsRef = useRef<EntityMapProperties | null>(null);
   const hoveredOverlayPropsRef = useRef<GeoJsonProperties | null>(null);
-  const hoveredOverlayFeatureRef = useRef<google.maps.Data.Feature | null>(null);
+  const hoveredOverlayFeatureRef = useRef<google.maps.Data.Feature | null>(
+    null
+  );
 
   const featureById = useMemo(() => {
     const map = new Map<string, EntityFeature>();
@@ -144,6 +144,8 @@ export default function EntityMapShell({
       }
 
       return {
+        // Keep district polygons below the attendance overlay layer so overlay hover/tooltips work.
+        zIndex: 1,
         fillColor: isSelected ? "#FFEB3B" : isHovered ? "#FFF176" : "#2196F3",
         fillOpacity: clickable ? 0.5 : 0.2,
         strokeColor: isSelected || isHovered ? "#FBC02D" : "#1976D2",
@@ -171,34 +173,62 @@ export default function EntityMapShell({
   };
 
   const getBrandAccentColor = () => {
-    if (typeof window === "undefined") return null;
-    const target = containerRef.current ?? document.body ?? document.documentElement;
+    if (typeof window === "undefined") return DEFAULT_BRAND_COLORS.accent1;
+    const target =
+      containerRef.current ?? document.body ?? document.documentElement;
     const value = getComputedStyle(target)
       .getPropertyValue("--brand-accent-1")
       .trim();
-    return value || null;
+    return value || DEFAULT_BRAND_COLORS.accent1;
   };
+
+  const overlayBaseOpacity = ATTENDANCE_OVERLAY_STYLE.fillOpacity ?? 0.25;
+  const overlayBaseStrokeWeight = ATTENDANCE_OVERLAY_STYLE.strokeWeight ?? 1;
+  const overlayHoverStyle = (brandAccent: string) => ({
+    fillColor: brandAccent,
+    strokeColor: brandAccent,
+    fillOpacity: Math.min(overlayBaseOpacity + 0.15, 0.6),
+    strokeWeight: overlayBaseStrokeWeight + 0.5,
+  });
+
+  const applyOverlayColors = (
+    style: google.maps.Data.StyleOptions,
+    brandAccent: string
+  ): google.maps.Data.StyleOptions => ({
+    ...style,
+    fillColor: style.fillColor ?? brandAccent,
+    strokeColor: style.strokeColor ?? brandAccent,
+  });
 
   const buildOverlayStyle = (
     baseStyle: google.maps.Data.StylingFunction | google.maps.Data.StyleOptions,
     highlightAll: boolean,
-    brandAccent: string | null
+    brandAccent: string
   ): google.maps.Data.StylingFunction | google.maps.Data.StyleOptions => {
-    if (!highlightAll || !brandAccent) return baseStyle;
     if (typeof baseStyle === "function") {
       return (feature) => {
-        const resolved = baseStyle(feature);
+        const resolved = applyOverlayColors(baseStyle(feature), brandAccent);
+        if (!highlightAll) return resolved;
         return {
           ...resolved,
-          fillColor: brandAccent,
-          strokeColor: brandAccent,
+          fillOpacity: Math.min(
+            (resolved.fillOpacity ?? overlayBaseOpacity) + 0.1,
+            0.6
+          ),
+          strokeWeight:
+            (resolved.strokeWeight ?? overlayBaseStrokeWeight) + 0.5,
         };
       };
     }
+    const resolved = applyOverlayColors(baseStyle, brandAccent);
+    if (!highlightAll) return resolved;
     return {
-      ...baseStyle,
-      fillColor: brandAccent,
-      strokeColor: brandAccent,
+      ...resolved,
+      fillOpacity: Math.min(
+        (resolved.fillOpacity ?? overlayBaseOpacity) + 0.1,
+        0.6
+      ),
+      strokeWeight: (resolved.strokeWeight ?? overlayBaseStrokeWeight) + 0.5,
     };
   };
 
@@ -252,12 +282,16 @@ export default function EntityMapShell({
   }, [hoveredId, selectedId, mapReady]);
 
   useEffect(() => {
-    if (!mapReady || !overlayLayerRef.current || !onOverlaySelect) return;
+    if (!mapReady || !overlayLayerRef.current) return;
     const overlayLayer = overlayLayerRef.current;
     const clickListener = overlayLayer.addListener(
       "click",
       (event: google.maps.Data.MouseEvent) => {
-        onOverlaySelect(event.feature);
+        if (event.domEvent) {
+          event.domEvent.preventDefault?.();
+          event.domEvent.stopPropagation?.();
+        }
+        onOverlaySelect?.(event.feature);
       }
     );
 
@@ -297,13 +331,11 @@ export default function EntityMapShell({
           overlayLayer.revertStyle(hoveredOverlayFeatureRef.current);
         }
         const brandAccent = getBrandAccentColor();
-        if (brandAccent) {
-          overlayLayer.overrideStyle(event.feature, {
-            fillColor: brandAccent,
-            strokeColor: brandAccent,
-          });
-          hoveredOverlayFeatureRef.current = event.feature;
-        }
+        overlayLayer.overrideStyle(
+          event.feature,
+          overlayHoverStyle(brandAccent)
+        );
+        hoveredOverlayFeatureRef.current = event.feature;
         hoveredOverlayPropsRef.current = getOverlayProperties(event.feature);
         if (
           event.domEvent &&
@@ -491,8 +523,13 @@ export default function EntityMapShell({
           options={{
             mapTypeId: "roadmap",
             ...(GOOGLE_MAP_ID ? { mapId: GOOGLE_MAP_ID } : {}),
-            zoomControl: true,
-            disableDefaultUI: false,
+            disableDefaultUI: true,
+            mapTypeControl: false,
+            zoomControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            rotateControl: false,
+            scaleControl: false,
           }}
         />
       ) : (
