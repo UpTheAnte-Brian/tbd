@@ -18,7 +18,9 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
   const priceId = searchParams.get("priceId");
-  const host = process.env.NEXT_PUBLIC_HOST;
+  const host =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    process.env.NEXT_PUBLIC_HOST; // TODO: remove NEXT_PUBLIC_HOST fallback after migration
   const handleGoogleSignIn = () => {
     const redirectTo = `${host}/auth/callback`;
     setLoading(true);

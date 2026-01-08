@@ -5,7 +5,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "../../../utils/supabase/server";
 import { AuthResponse } from "@supabase/supabase-js";
 
-const host = process.env.NEXT_PUBLIC_HOST;
+const host =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  process.env.NEXT_PUBLIC_HOST; // TODO: remove NEXT_PUBLIC_HOST fallback after migration
 // Notes
 // 	•	Why email as key?: Without IP access in actions, the email is a logical fallback.
 // 	•	For production, switch to Redis or Supabase to store request timestamps across serverless invocations.
@@ -72,7 +74,7 @@ export const signInWithMagicLink = validatedAction(
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: process.env.NEXT_PUBLIC_HOST,
+        emailRedirectTo: host,
       },
     });
     if (error) {
