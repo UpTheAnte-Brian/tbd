@@ -5,11 +5,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getBoundsFromGeoJSON } from "@/app/lib/getBoundsFromGeoJSON";
 import { useGoogleMapsStatus } from "@/app/lib/providers/GoogleMapsProvider";
+import { ATTENDANCE_OVERLAY_STYLE } from "@/app/components/maps/attendance-overlay-style";
 import type {
   EntityFeature,
   EntityFeatureCollection,
   EntityMapProperties,
 } from "@/app/lib/types/map";
+import type { FeatureCollection, GeoJsonProperties, Geometry } from "geojson";
 
 type TooltipContent = {
   title: string;
@@ -22,6 +24,8 @@ type OverlayContext = {
   loadError: string | null;
 };
 
+type OverlayFeatureCollection = FeatureCollection<Geometry, GeoJsonProperties>;
+
 type Props = {
   featureCollection: EntityFeatureCollection;
   selectedId?: string | null;
@@ -29,7 +33,13 @@ type Props = {
   onClearSelection?: () => void;
   isClickable?: (props: EntityMapProperties) => boolean;
   getTooltip?: (props: EntityMapProperties) => TooltipContent | null;
+  getOverlayTooltip?: (props: GeoJsonProperties) => TooltipContent | null;
   renderOverlay?: (ctx: OverlayContext) => React.ReactNode;
+  overlayFeatureCollection?: OverlayFeatureCollection | null;
+  overlayStyle?:
+    | google.maps.Data.StylingFunction
+    | google.maps.Data.StyleOptions;
+  onOverlaySelect?: (feature: google.maps.Data.Feature) => void;
   renderPopup?: (
     feature: EntityFeature,
     close: () => void
@@ -58,13 +68,18 @@ export default function EntityMapShell({
   onClearSelection,
   isClickable,
   getTooltip,
+  getOverlayTooltip,
   renderOverlay,
+  overlayFeatureCollection,
+  overlayStyle,
+  onOverlaySelect,
   renderPopup,
   renderSearch,
   defaultCenter = MIDWEST_CENTER,
   defaultZoom = MIDWEST_ZOOM,
 }: Props) {
   const mapRef = useRef<google.maps.Map | null>(null);
+  const overlayLayerRef = useRef<google.maps.Data | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const { isLoaded: scriptLoaded, loadError } = useGoogleMapsStatus();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -74,6 +89,7 @@ export default function EntityMapShell({
     visible: false,
   });
   const hoveredPropsRef = useRef<EntityMapProperties | null>(null);
+  const hoveredOverlayPropsRef = useRef<GeoJsonProperties | null>(null);
 
   const featureById = useMemo(() => {
     const map = new Map<string, EntityFeature>();
@@ -162,9 +178,117 @@ export default function EntityMapShell({
   }, [featureCollection, mapReady]);
 
   useEffect(() => {
+    if (!mapReady || !overlayLayerRef.current) return;
+    const overlayLayer = overlayLayerRef.current;
+
+    // Keep attendance areas in a separate Data layer so district interactions stay intact.
+    overlayLayer.forEach((feature) => overlayLayer.remove(feature));
+    if (overlayFeatureCollection) {
+      overlayLayer.addGeoJson(overlayFeatureCollection);
+    } else {
+      hoveredOverlayPropsRef.current = null;
+      hoverRef.current.visible = false;
+      setTooltipTick((tick) => tick + 1);
+    }
+    overlayLayer.setStyle(overlayStyle ?? ATTENDANCE_OVERLAY_STYLE);
+  }, [mapReady, overlayFeatureCollection, overlayStyle]);
+
+  useEffect(() => {
     if (!mapReady || !mapRef.current) return;
     applyStyle(mapRef.current);
   }, [hoveredId, selectedId, mapReady]);
+
+  useEffect(() => {
+    if (!mapReady || !overlayLayerRef.current || !onOverlaySelect) return;
+    const overlayLayer = overlayLayerRef.current;
+    const clickListener = overlayLayer.addListener(
+      "click",
+      (event: google.maps.Data.MouseEvent) => {
+        onOverlaySelect(event.feature);
+      }
+    );
+
+    return () => {
+      clickListener.remove();
+    };
+  }, [mapReady, onOverlaySelect]);
+
+  useEffect(() => {
+    if (!mapReady || !overlayLayerRef.current) return;
+    const overlayLayer = overlayLayerRef.current;
+
+    let tooltipFrame: number | null = null;
+    let tooltipVisible = false;
+
+    const updateTooltipPosition = () => {
+      setTooltipTick((tick) => tick + 1);
+    };
+
+    const getOverlayProperties = (
+      feature: google.maps.Data.Feature
+    ): GeoJsonProperties => {
+      const props: Record<string, unknown> = {};
+      feature.forEachProperty((value, key) => {
+        props[key] = value;
+      });
+      return props;
+    };
+
+    const mouseOver = overlayLayer.addListener(
+      "mouseover",
+      (event: google.maps.Data.MouseEvent) => {
+        hoveredOverlayPropsRef.current = getOverlayProperties(event.feature);
+        if (
+          event.domEvent &&
+          typeof (event.domEvent as MouseEvent).clientX === "number" &&
+          typeof (event.domEvent as MouseEvent).clientY === "number"
+        ) {
+          hoverRef.current.x = (event.domEvent as MouseEvent).clientX;
+          hoverRef.current.y = (event.domEvent as MouseEvent).clientY;
+          hoverRef.current.visible = true;
+          tooltipVisible = true;
+          if (tooltipFrame === null) {
+            tooltipFrame = requestAnimationFrame(function tick() {
+              if (tooltipVisible) {
+                updateTooltipPosition();
+                tooltipFrame = requestAnimationFrame(tick);
+              } else {
+                tooltipFrame = null;
+              }
+            });
+          }
+        }
+      }
+    );
+
+    const mouseOut = overlayLayer.addListener("mouseout", () => {
+      hoveredOverlayPropsRef.current = null;
+      hoverRef.current.visible = false;
+      tooltipVisible = false;
+      updateTooltipPosition();
+    });
+
+    const mouseMove = overlayLayer.addListener(
+      "mousemove",
+      (moveEvent: google.maps.Data.MouseEvent) => {
+        if (
+          moveEvent.domEvent &&
+          typeof (moveEvent.domEvent as MouseEvent).clientX === "number" &&
+          typeof (moveEvent.domEvent as MouseEvent).clientY === "number"
+        ) {
+          hoverRef.current.x = (moveEvent.domEvent as MouseEvent).clientX;
+          hoverRef.current.y = (moveEvent.domEvent as MouseEvent).clientY;
+          hoverRef.current.visible = true;
+        }
+      }
+    );
+
+    return () => {
+      mouseOver.remove();
+      mouseOut.remove();
+      mouseMove.remove();
+    };
+  }, [mapReady]);
 
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
@@ -255,10 +379,16 @@ export default function EntityMapShell({
   }, [featureById, isClickable, mapReady, onSelect]);
 
   const [, setTooltipTick] = useState(0);
-  const tooltip =
+  const overlayTooltip =
+    hoveredOverlayPropsRef.current && getOverlayTooltip
+      ? getOverlayTooltip(hoveredOverlayPropsRef.current)
+      : null;
+  const baseTooltip =
     hoveredPropsRef.current && getTooltip
       ? getTooltip(hoveredPropsRef.current)
       : null;
+  const tooltip =
+    overlayTooltip ?? (hoveredOverlayPropsRef.current ? null : baseTooltip);
 
   const mapCenter = useMemo(() => defaultCenter, [defaultCenter]);
   const mapZoom = useMemo(() => defaultZoom, [defaultZoom]);
@@ -272,9 +402,14 @@ export default function EntityMapShell({
           zoom={mapZoom}
           onLoad={(map) => {
             mapRef.current = map;
+            overlayLayerRef.current = new google.maps.Data({ map });
             setMapReady(true);
           }}
           onUnmount={() => {
+            if (overlayLayerRef.current) {
+              overlayLayerRef.current.setMap(null);
+              overlayLayerRef.current = null;
+            }
             mapRef.current = null;
             setMapReady(false);
           }}

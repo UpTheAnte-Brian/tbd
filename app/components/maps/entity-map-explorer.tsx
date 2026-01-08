@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import EntityMapShell from "@/app/components/maps/entity-map-shell";
 import DistrictSearch from "@/app/components/districts/district-search";
 import DistrictPopUp from "@/app/components/districts/district-pop-up";
 import LoadingSpinner from "@/app/components/loading-spinner";
+import type { FeatureCollection, GeoJsonProperties, Geometry } from "geojson";
 import type {
   EntityFeature,
   EntityFeatureCollection,
@@ -29,7 +30,92 @@ type ChildrenResponse = {
   featureCollection: EntityFeatureCollection;
 };
 
+type AttendanceFeatureCollection = FeatureCollection<Geometry, GeoJsonProperties>;
+
+type AttendanceResponse = {
+  geojson: AttendanceFeatureCollection | null;
+};
+
 const STATES_CACHE_KEY = "states:us";
+const ATTENDANCE_FETCH_DELAY_MS = 150;
+
+const splitNameList = (value: string) =>
+  value
+    .split(/[|,;]\s*/)
+    .map((name) => name.trim())
+    .filter(Boolean);
+
+const extractSchoolNames = (props: GeoJsonProperties | null) => {
+  if (!props) return [];
+  const record = props as Record<string, unknown>;
+  const candidates: unknown[] = [];
+
+  const explicitKeys = [
+    "elem_name",
+    "midd_name",
+    "high_name",
+    "school_names_friendly",
+    "school_friendly_names",
+    "friendly_school_names",
+    "schools_friendly",
+    "friendly_names",
+    "school_names",
+    "school_name",
+    "schools",
+    "school",
+  ];
+
+  for (const key of explicitKeys) {
+    if (record[key] !== undefined) {
+      candidates.push(record[key]);
+    }
+  }
+
+  if (!candidates.length) {
+    for (const [key, value] of Object.entries(record)) {
+      if (/school/i.test(key) && !/id/i.test(key)) {
+        candidates.push(value);
+      }
+    }
+  }
+
+  const normalizeValue = (value: unknown): string[] => {
+    if (!value) return [];
+    if (typeof value === "string") return splitNameList(value);
+    if (Array.isArray(value)) {
+      return value.flatMap((item) => normalizeValue(item));
+    }
+    if (typeof value === "object") {
+      const nested = value as Record<string, unknown>;
+      const directKeys = [
+        "friendly_name",
+        "friendlyName",
+        "name",
+        "label",
+        "title",
+        "school_name",
+        "schoolName",
+      ];
+      for (const key of directKeys) {
+        if (typeof nested[key] === "string") {
+          return [nested[key]];
+        }
+      }
+      const fallbackKeys = ["schools", "school_names", "school_name", "school"];
+      for (const key of fallbackKeys) {
+        if (nested[key] !== undefined) {
+          return normalizeValue(nested[key]);
+        }
+      }
+    }
+    return [];
+  };
+
+  const names = candidates.flatMap((value) => normalizeValue(value));
+  return Array.from(
+    new Set(names.map((name) => name.trim()).filter(Boolean))
+  );
+};
 
 export default function EntityMapExplorer({
   initialStates,
@@ -46,8 +132,20 @@ export default function EntityMapExplorer({
   const [selectedState, setSelectedState] =
     useState<EntityMapProperties | null>(null);
   const [emptyMessage, setEmptyMessage] = useState<string | null>(null);
+  const [selectedDistrictEntityId, setSelectedDistrictEntityId] = useState<
+    string | null
+  >(null);
+  const [attendanceOverlay, setAttendanceOverlay] =
+    useState<AttendanceFeatureCollection | null>(null);
+  const [loadingAttendance, setLoadingAttendance] = useState(false);
 
   const cacheRef = useRef(new Map<string, EntityFeatureCollection>());
+  // Cache attendance overlays per district so swaps are instant.
+  const attendanceCacheRef = useRef(
+    new Map<string, AttendanceFeatureCollection | null>()
+  );
+  const attendanceAbortRef = useRef<AbortController | null>(null);
+  const attendanceDebounceRef = useRef<number | null>(null);
   if (!cacheRef.current.has(STATES_CACHE_KEY)) {
     cacheRef.current.set(STATES_CACHE_KEY, initialStates);
   }
@@ -60,6 +158,7 @@ export default function EntityMapExplorer({
     setSelectedFeature(feature);
 
     if (activeLayer === "districts") {
+      setSelectedDistrictEntityId(feature.properties.entity_id);
       return;
     }
 
@@ -77,6 +176,9 @@ export default function EntityMapExplorer({
       setActiveLayer("districts");
       setSelectedId(null);
       setSelectedFeature(null);
+      setSelectedDistrictEntityId(null);
+      setAttendanceOverlay(null);
+      setLoadingAttendance(false);
       setEmptyMessage(cached.features.length ? null : "Coming soon.");
       return;
     }
@@ -97,6 +199,9 @@ export default function EntityMapExplorer({
       setActiveLayer("districts");
       setSelectedId(null);
       setSelectedFeature(null);
+      setSelectedDistrictEntityId(null);
+      setAttendanceOverlay(null);
+      setLoadingAttendance(false);
       setEmptyMessage(
         data.featureCollection.features.length ? null : "Coming soon."
       );
@@ -118,7 +223,83 @@ export default function EntityMapExplorer({
     setSelectedFeature(null);
     setSelectedState(null);
     setEmptyMessage(null);
+    setSelectedDistrictEntityId(null);
+    setAttendanceOverlay(null);
+    setLoadingAttendance(false);
   };
+
+  useEffect(() => {
+    if (!selectedDistrictEntityId) {
+      setAttendanceOverlay(null);
+      setLoadingAttendance(false);
+      if (attendanceAbortRef.current) {
+        attendanceAbortRef.current.abort();
+        attendanceAbortRef.current = null;
+      }
+      if (attendanceDebounceRef.current) {
+        window.clearTimeout(attendanceDebounceRef.current);
+        attendanceDebounceRef.current = null;
+      }
+      return;
+    }
+
+    if (attendanceCacheRef.current.has(selectedDistrictEntityId)) {
+      const cached =
+        attendanceCacheRef.current.get(selectedDistrictEntityId) ?? null;
+      setAttendanceOverlay(cached);
+      setLoadingAttendance(false);
+      return;
+    }
+
+    if (attendanceAbortRef.current) {
+      attendanceAbortRef.current.abort();
+    }
+    if (attendanceDebounceRef.current) {
+      window.clearTimeout(attendanceDebounceRef.current);
+    }
+
+    const controller = new AbortController();
+    attendanceAbortRef.current = controller;
+    setAttendanceOverlay(null);
+    setLoadingAttendance(true);
+
+    // Debounce rapid district clicks and abort stale requests.
+    attendanceDebounceRef.current = window.setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/entities/${selectedDistrictEntityId}/geometries?type=district_attendance_areas`,
+          { cache: "no-store", signal: controller.signal }
+        );
+        if (!res.ok) {
+          throw new Error("Failed to load attendance areas");
+        }
+        const data = (await res.json()) as AttendanceResponse;
+        if (controller.signal.aborted) return;
+        attendanceCacheRef.current.set(
+          selectedDistrictEntityId,
+          data.geojson ?? null
+        );
+        setAttendanceOverlay(data.geojson ?? null);
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
+        console.error(err);
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoadingAttendance(false);
+        }
+      }
+    }, ATTENDANCE_FETCH_DELAY_MS);
+
+    return () => {
+      controller.abort();
+      if (attendanceDebounceRef.current) {
+        window.clearTimeout(attendanceDebounceRef.current);
+        attendanceDebounceRef.current = null;
+      }
+    };
+  }, [selectedDistrictEntityId]);
 
   const tooltipBuilder = useMemo(() => {
     return (props: EntityMapProperties) => ({
@@ -128,6 +309,44 @@ export default function EntityMapExplorer({
         props.child_count ? `Children: ${props.child_count}` : null,
       ].filter((line): line is string => Boolean(line)),
     });
+  }, []);
+
+  const attendanceTooltipBuilder = useMemo(() => {
+    return (props: GeoJsonProperties) => {
+      const record = (props ?? {}) as Record<string, unknown>;
+      const districtName =
+        typeof record.sdprefname === "string" ? record.sdprefname.trim() : "";
+      const title =
+        districtName ||
+        (typeof record.name === "string" && record.name) ||
+        (typeof record.attendance_area === "string" && record.attendance_area) ||
+        (typeof record.area_name === "string" && record.area_name) ||
+        "Attendance area";
+      const elemNames = typeof record.elem_name === "string"
+        ? splitNameList(record.elem_name)
+        : [];
+      const middNames = typeof record.midd_name === "string"
+        ? splitNameList(record.midd_name)
+        : [];
+      const highNames = typeof record.high_name === "string"
+        ? splitNameList(record.high_name)
+        : [];
+      const explicitNames = [...elemNames, ...middNames, ...highNames];
+      const fallbackNames = explicitNames.length
+        ? []
+        : extractSchoolNames(props);
+      const lines = [
+        elemNames.length ? `Elementary: ${elemNames.join(", ")}` : null,
+        middNames.length ? `Middle: ${middNames.join(", ")}` : null,
+        highNames.length ? `High: ${highNames.join(", ")}` : null,
+        fallbackNames.length ? `Schools: ${fallbackNames.join(", ")}` : null,
+      ].filter((line): line is string => Boolean(line));
+      if (!lines.length && !title) return null;
+      return {
+        title,
+        lines: lines.length ? lines : undefined,
+      };
+    };
   }, []);
 
   const overlay = useMemo(() => {
@@ -163,10 +382,16 @@ export default function EntityMapExplorer({
           setSelectedId(null);
           setSelectedFeature(null);
         }}
+        overlayFeatureCollection={
+          activeLayer === "districts" ? attendanceOverlay : null
+        }
         isClickable={(props) =>
           activeLayer === "states" ? isClickable(props) : true
         }
         getTooltip={tooltipBuilder}
+        getOverlayTooltip={
+          activeLayer === "districts" ? attendanceTooltipBuilder : undefined
+        }
         renderOverlay={({ scriptLoaded, loadError }) => (
           <>
             {overlay}
@@ -174,6 +399,13 @@ export default function EntityMapExplorer({
               <div className="absolute top-4 right-4 z-50">
                 <div className="px-3 py-1 rounded bg-black/70 text-white text-sm">
                   Loading districts...
+                </div>
+              </div>
+            )}
+            {loadingAttendance && (
+              <div className="absolute top-14 right-4 z-50">
+                <div className="px-3 py-1 rounded bg-black/70 text-white text-sm">
+                  Loading attendance areas...
                 </div>
               </div>
             )}
