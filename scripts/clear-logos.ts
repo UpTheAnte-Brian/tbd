@@ -2,7 +2,7 @@
  * Deletes all objects from the Supabase "logos" bucket.
  *
  * Usage:
- *   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... pnpm ts-node scripts/clear-logos.ts [--dry-run]
+ *   NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... pnpm ts-node scripts/clear-logos.ts [--dry-run]
  *
  * The service role key is required because storage deletes need elevated perms.
  */
@@ -11,11 +11,15 @@ import { createClient } from "@supabase/supabase-js";
 const bucket = "logos";
 const dryRun = process.argv.includes("--dry-run");
 
-const url = process.env.SUPABASE_URL;
+const url =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ??
+  process.env.SUPABASE_URL; // TODO: remove SUPABASE_URL fallback after migration
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!url || !serviceKey) {
-  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env vars.");
+  console.error(
+    "Missing NEXT_PUBLIC_SUPABASE_URL (preferred) or SUPABASE_URL, or SUPABASE_SERVICE_ROLE_KEY env vars.",
+  );
   process.exit(1);
 }
 

@@ -5,18 +5,22 @@ import { createClient } from "@supabase/supabase-js";
 
 /**
  * Usage:
- *   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node scripts/import-states-geojson.js /path/to/us_states_2023.geojson
+ *   NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node scripts/import-states-geojson.js /path/to/us_states_2023.geojson
  *
  * Notes:
  * - Requires the SQL function `public.upsert_entity_geometry_from_geojson` to exist.
  * - Upserts entities by (entity_type='state', slug), where slug = lowercase USPS code.
  */
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  process.env.SUPABASE_URL; // TODO: remove SUPABASE_URL fallback after migration
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("Missing env vars: SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY");
+  console.error(
+    "Missing env vars: NEXT_PUBLIC_SUPABASE_URL (preferred) or SUPABASE_URL, and/or SUPABASE_SERVICE_ROLE_KEY",
+  );
   process.exit(1);
 }
 

@@ -11,7 +11,8 @@ export const revalidate = 86400;
 
 async function getHomeMapData(): Promise<MapHomeResponse> {
   const baseUrl =
-    process.env.NEXT_PUBLIC_HOST ??
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    process.env.NEXT_PUBLIC_HOST ?? // TODO: remove NEXT_PUBLIC_HOST fallback after migration
     `http://${(await headers()).get("host")}`;
   const res = await fetch(`${baseUrl}/api/map/home`, {
     next: { revalidate: 86400 },

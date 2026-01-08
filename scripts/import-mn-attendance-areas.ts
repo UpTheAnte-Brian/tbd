@@ -215,8 +215,9 @@ function readFeatureCollection(filePath: string): FeatureCollection {
 }
 
 function getSupabaseEnv() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ||
-        process.env.SUPABASE_URL;
+    const url =
+        process.env.NEXT_PUBLIC_SUPABASE_URL ??
+        process.env.SUPABASE_URL; // TODO: remove SUPABASE_URL fallback after migration
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!url) {

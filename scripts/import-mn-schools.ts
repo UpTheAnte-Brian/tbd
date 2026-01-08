@@ -58,7 +58,7 @@
  *
  *  Env:
  *   SUPABASE_SERVICE_ROLE_KEY=...
- *   SUPABASE_URL=...
+ *   NEXT_PUBLIC_SUPABASE_URL=...
  *
  * Run:
  *   ts-node scripts/import-mn-schools.ts
@@ -72,10 +72,14 @@ import type { Feature, MultiPolygon, Polygon } from "geojson";
 
 type SchoolFeature = Feature<Polygon | MultiPolygon, Record<string, unknown>>;
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ??
+  process.env.SUPABASE_URL; // TODO: remove SUPABASE_URL fallback after migration
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!SUPABASE_URL || !SERVICE_KEY) {
-  throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  throw new Error(
+    "Missing NEXT_PUBLIC_SUPABASE_URL (preferred) or SUPABASE_URL, or SUPABASE_SERVICE_ROLE_KEY",
+  );
 }
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);

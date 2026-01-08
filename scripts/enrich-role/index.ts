@@ -16,10 +16,16 @@ serve(async (req) => {
     const payload = JSON.parse(payloadJson);
     const user_id = payload.sub;
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const supabaseUrl =
+      Deno.env.get("NEXT_PUBLIC_SUPABASE_URL") ??
+      Deno.env.get("SUPABASE_URL"); // TODO: remove SUPABASE_URL fallback after migration
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      return new Response("Missing Supabase env vars", { status: 500 });
+    }
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const { data } = await supabase
       .from("user_roles")

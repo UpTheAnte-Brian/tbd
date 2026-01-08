@@ -58,6 +58,10 @@ export async function POST(req: Request) {
             : "Up The Ante Donation (Anonymous)")
         : (districtId ? "District Donation" : "Up The Ante Donation");
 
+    const baseUrl =
+        process.env.NEXT_PUBLIC_SITE_URL ??
+        process.env.NEXT_PUBLIC_HOST; // TODO: remove NEXT_PUBLIC_HOST fallback after migration
+
     const session = await stripe.checkout.sessions.create({
         mode: "payment",
         payment_method_types: ["card"],
@@ -74,8 +78,8 @@ export async function POST(req: Request) {
         metadata,
         invoice_creation: { enabled: true },
         success_url:
-            `${process.env.NEXT_PUBLIC_HOST}/donate/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_HOST}/donate/cancel`,
+            `${baseUrl}/donate/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/donate/cancel`,
     });
 
     return NextResponse.json({ id: session.id });
