@@ -78,6 +78,7 @@ export default function EntityMapShell({
   defaultCenter = MIDWEST_CENTER,
   defaultZoom = MIDWEST_ZOOM,
 }: Props) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const overlayLayerRef = useRef<google.maps.Data | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -90,6 +91,7 @@ export default function EntityMapShell({
   });
   const hoveredPropsRef = useRef<EntityMapProperties | null>(null);
   const hoveredOverlayPropsRef = useRef<GeoJsonProperties | null>(null);
+  const hoveredOverlayFeatureRef = useRef<google.maps.Data.Feature | null>(null);
 
   const featureById = useMemo(() => {
     const map = new Map<string, EntityFeature>();
@@ -168,6 +170,38 @@ export default function EntityMapShell({
     }
   };
 
+  const getBrandAccentColor = () => {
+    if (typeof window === "undefined") return null;
+    const target = containerRef.current ?? document.body ?? document.documentElement;
+    const value = getComputedStyle(target)
+      .getPropertyValue("--brand-accent-1")
+      .trim();
+    return value || null;
+  };
+
+  const buildOverlayStyle = (
+    baseStyle: google.maps.Data.StylingFunction | google.maps.Data.StyleOptions,
+    highlightAll: boolean,
+    brandAccent: string | null
+  ): google.maps.Data.StylingFunction | google.maps.Data.StyleOptions => {
+    if (!highlightAll || !brandAccent) return baseStyle;
+    if (typeof baseStyle === "function") {
+      return (feature) => {
+        const resolved = baseStyle(feature);
+        return {
+          ...resolved,
+          fillColor: brandAccent,
+          strokeColor: brandAccent,
+        };
+      };
+    }
+    return {
+      ...baseStyle,
+      fillColor: brandAccent,
+      strokeColor: brandAccent,
+    };
+  };
+
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
@@ -182,6 +216,10 @@ export default function EntityMapShell({
     const overlayLayer = overlayLayerRef.current;
 
     // Keep attendance areas in a separate Data layer so district interactions stay intact.
+    if (hoveredOverlayFeatureRef.current) {
+      overlayLayer.revertStyle(hoveredOverlayFeatureRef.current);
+      hoveredOverlayFeatureRef.current = null;
+    }
     overlayLayer.forEach((feature) => overlayLayer.remove(feature));
     if (overlayFeatureCollection) {
       overlayLayer.addGeoJson(overlayFeatureCollection);
@@ -190,8 +228,23 @@ export default function EntityMapShell({
       hoverRef.current.visible = false;
       setTooltipTick((tick) => tick + 1);
     }
-    overlayLayer.setStyle(overlayStyle ?? ATTENDANCE_OVERLAY_STYLE);
-  }, [mapReady, overlayFeatureCollection, overlayStyle]);
+  }, [mapReady, overlayFeatureCollection]);
+
+  useEffect(() => {
+    if (!mapReady || !overlayLayerRef.current) return;
+    const overlayLayer = overlayLayerRef.current;
+    const baseStyle = overlayStyle ?? ATTENDANCE_OVERLAY_STYLE;
+    const highlightAll =
+      Boolean(overlayFeatureCollection) &&
+      Boolean(selectedId) &&
+      Boolean(hoveredId) &&
+      hoveredId === selectedId;
+    const brandAccent = getBrandAccentColor();
+
+    overlayLayer.setStyle(
+      buildOverlayStyle(baseStyle, highlightAll, brandAccent)
+    );
+  }, [mapReady, overlayStyle, overlayFeatureCollection, hoveredId, selectedId]);
 
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
@@ -237,6 +290,20 @@ export default function EntityMapShell({
     const mouseOver = overlayLayer.addListener(
       "mouseover",
       (event: google.maps.Data.MouseEvent) => {
+        if (
+          hoveredOverlayFeatureRef.current &&
+          hoveredOverlayFeatureRef.current !== event.feature
+        ) {
+          overlayLayer.revertStyle(hoveredOverlayFeatureRef.current);
+        }
+        const brandAccent = getBrandAccentColor();
+        if (brandAccent) {
+          overlayLayer.overrideStyle(event.feature, {
+            fillColor: brandAccent,
+            strokeColor: brandAccent,
+          });
+          hoveredOverlayFeatureRef.current = event.feature;
+        }
         hoveredOverlayPropsRef.current = getOverlayProperties(event.feature);
         if (
           event.domEvent &&
@@ -262,6 +329,10 @@ export default function EntityMapShell({
     );
 
     const mouseOut = overlayLayer.addListener("mouseout", () => {
+      if (hoveredOverlayFeatureRef.current) {
+        overlayLayer.revertStyle(hoveredOverlayFeatureRef.current);
+        hoveredOverlayFeatureRef.current = null;
+      }
       hoveredOverlayPropsRef.current = null;
       hoverRef.current.visible = false;
       tooltipVisible = false;
@@ -287,6 +358,10 @@ export default function EntityMapShell({
       mouseOver.remove();
       mouseOut.remove();
       mouseMove.remove();
+      if (hoveredOverlayFeatureRef.current) {
+        overlayLayer.revertStyle(hoveredOverlayFeatureRef.current);
+        hoveredOverlayFeatureRef.current = null;
+      }
     };
   }, [mapReady]);
 
@@ -394,7 +469,7 @@ export default function EntityMapShell({
   const mapZoom = useMemo(() => defaultZoom, [defaultZoom]);
 
   return (
-    <div className="relative flex">
+    <div className="relative flex" ref={containerRef}>
       {scriptLoaded ? (
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
