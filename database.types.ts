@@ -543,18 +543,24 @@ export type Database = {
           entity_id: string
           id: string
           name: string
+          quorum_override_count: number | null
+          quorum_rule: string
         }
         Insert: {
           created_at?: string
           entity_id: string
           id?: string
           name?: string
+          quorum_override_count?: number | null
+          quorum_rule?: string
         }
         Update: {
           created_at?: string
           entity_id?: string
           id?: string
           name?: string
+          quorum_override_count?: number | null
+          quorum_rule?: string
         }
         Relationships: []
       }
@@ -762,10 +768,6 @@ export type Database = {
         }
         Returns: string
       }
-      is_quorum_met: {
-        Args: { p_meeting_id: string }
-        Returns: boolean
-      }
       is_board_chair: {
         Args: { p_entity_id: string; p_user_id?: string }
         Returns: boolean
@@ -773,6 +775,11 @@ export type Database = {
       is_board_member: {
         Args: { p_entity_id: string; p_user_id?: string }
         Returns: boolean
+      }
+      is_quorum_met: { Args: { p_meeting_id: string }; Returns: boolean }
+      quorum_required_for_meeting: {
+        Args: { p_meeting_id: string }
+        Returns: number
       }
     }
     Enums: {
@@ -1477,39 +1484,33 @@ export type Database = {
       }
       profiles: {
         Row: {
-          address: string | null
           avatar_url: string | null
           first_name: string | null
           full_name: string | null
           id: string
           last_name: string | null
-          phone_number: string | null
           role: string | null
           updated_at: string | null
           username: string | null
           website: string | null
         }
         Insert: {
-          address?: string | null
           avatar_url?: string | null
           first_name?: string | null
           full_name?: string | null
           id: string
           last_name?: string | null
-          phone_number?: string | null
           role?: string | null
           updated_at?: string | null
           username?: string | null
           website?: string | null
         }
         Update: {
-          address?: string | null
           avatar_url?: string | null
           first_name?: string | null
           full_name?: string | null
           id?: string
           last_name?: string | null
-          phone_number?: string | null
           role?: string | null
           updated_at?: string | null
           username?: string | null
@@ -2700,6 +2701,26 @@ export type Database = {
           p_simplify?: boolean
           p_source: string
           p_tolerance?: number
+        }
+        Returns: undefined
+      }
+      upsert_entity_geometry_geojson_only: {
+        Args: {
+          p_entity_id: string
+          p_geojson: Json
+          p_geometry_type: string
+          p_source?: string
+        }
+        Returns: undefined
+      }
+      upsert_entity_geometry_with_geom_geojson: {
+        Args: {
+          p_bbox?: Json
+          p_entity_id: string
+          p_geojson: Json
+          p_geom_geojson: Json
+          p_geometry_type: string
+          p_source?: string
         }
         Returns: undefined
       }

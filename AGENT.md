@@ -60,6 +60,18 @@ Rule:
 - Naming: Pages `page.tsx`; Panels `*Panels.tsx`; DTOs `*-dto.ts`; Hooks `use*`
 
 ## Supabase Usage Rules
+
+### Authorization Domains (Critical Distinction)
+- `entity_users` = **operational access**
+  - Grants permission to administer or interact with an entity operationally (branding, content, internal tools).
+  - Roles include: admin, editor, employee, viewer.
+- `governance.board_members` = **fiduciary authority**
+  - Grants governance power for nonprofit oversight.
+  - Used for: quorum checks, meetings, motions, votes, approvals, minutes.
+- A single user may appear in BOTH tables.
+- Governance permissions must NEVER be inferred from `entity_users`.
+- All governance logic (including RPCs like `is_quorum_met`) must rely exclusively on `governance.*` tables.
+
 - Clients: server routes/components use `utils/supabase/server.ts` or `utils/supabase/route.ts`; client components use `utils/supabase/client.ts`; middleware uses `utils/supabase/middleware.ts`
 - Data access: UI uses API route → DTO/service; no direct Supabase calls from components
 - Authorization intended via RLS (in progress)
