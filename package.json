@@ -6,6 +6,7 @@
     "dev": "npm run tailwind:watch & next dev --turbopack",
     "start": "next start",
     "lint": "eslint .",
+    "env:check": "tsx scripts/check-env.ts",
     "tailwind": "npx tailwindcss -i ./app/lib/styles/global.css -o ./app/lib/styles/style.css",
     "tailwind:watch": "npx tailwindcss -i ./app/lib/styles/global.css -o ./app/lib/styles/style.css --watch",
     "supabase:gen:types": "supabase gen types typescript --linked --schema public,branding,governance > database.types.ts",
