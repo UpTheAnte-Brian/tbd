@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import EntityMapExplorer from "@/app/components/maps/entity-map-explorer";
+import EntityMapExplorer from "@/app/components/map/entity-map-explorer";
 import type { EntityFeatureCollection } from "@/app/lib/types/map";
 import { createClient } from "@/utils/supabase/server";
 

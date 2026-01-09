@@ -41,3 +41,4 @@ Source of truth: ../project-structure.json
 ## Status
 - Entity UI governance calls migrated: ✅
 - Global governance endpoints retained for cross-entity admin: ✅ (still in use? yes)
+- Phase 2B map folder normalization: ✅

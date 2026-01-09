@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import EntityMapShell from "@/app/components/maps/entity-map-shell";
+import EntityMapShell from "@/app/components/map/entity-map-shell";
 import DistrictSearch from "@/app/components/districts/district-search";
 import DistrictPopUp from "@/app/components/districts/district-pop-up";
 import LoadingSpinner from "@/app/components/loading-spinner";

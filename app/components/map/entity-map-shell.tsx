@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getBoundsFromGeoJSON } from "@/app/lib/getBoundsFromGeoJSON";
 import { useGoogleMapsStatus } from "@/app/lib/providers/GoogleMapsProvider";
-import { ATTENDANCE_OVERLAY_STYLE } from "@/app/components/maps/attendance-overlay-style";
+import { ATTENDANCE_OVERLAY_STYLE } from "@/app/components/map/attendance-overlay-style";
 import { DEFAULT_BRAND_COLORS } from "@/app/lib/branding/resolveBranding";
 import type {
   EntityFeature,
