@@ -1,5 +1,5 @@
 export const revalidate = 3600; // cache this route for 1 hour
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import type { DistrictDetails } from "@/app/lib/types/types";
 import { createApiClient } from "@/utils/supabase/route";

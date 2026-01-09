@@ -13,7 +13,7 @@ const isGeometry = (value: unknown): value is Geometry =>
     "type" in value;
 
 export const revalidate = 86400;
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
     const supabase = await createApiClient();
