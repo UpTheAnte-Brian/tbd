@@ -1,10 +1,10 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { safeRoute } from "@/app/lib/api/handler";
+// DEPRECATED: Use /api/entities/[id]/users for entity-scoped operations.
+import type { NextRequest } from "next/server";
 import {
-    deleteNonprofitUserDTO,
-    getNonprofitUserDTO,
-    updateNonprofitUserDTO,
-} from "@/app/data/nonprofit-users-dto";
+    handleNonprofitUserDelete,
+    handleNonprofitUserGet,
+    handleNonprofitUserPatch,
+} from "@/app/lib/server/users/handlers";
 
 interface RouteParams {
     params: Promise<{ id: string }>;
@@ -15,11 +15,7 @@ interface RouteParams {
  * Optional convenience handler — returns a single assignment
  */
 export async function GET(req: NextRequest, context: RouteParams) {
-    return safeRoute(async () => {
-        const { id } = await context.params;
-        const data = await getNonprofitUserDTO(id);
-        return NextResponse.json(data);
-    });
+    return handleNonprofitUserGet(req, context);
 }
 
 /**
@@ -27,21 +23,12 @@ export async function GET(req: NextRequest, context: RouteParams) {
  * Body: { role? }
  */
 export async function PATCH(req: NextRequest, context: RouteParams) {
-    return safeRoute(async () => {
-        const { id } = await context.params;
-        const body = await req.json();
-        const updated = await updateNonprofitUserDTO(id, body);
-        return NextResponse.json(updated);
-    });
+    return handleNonprofitUserPatch(req, context);
 }
 
 /**
  * DELETE /api/nonprofit-users/[id]
  */
 export async function DELETE(req: NextRequest, context: RouteParams) {
-    return safeRoute(async () => {
-        const { id } = await context.params;
-        await deleteNonprofitUserDTO(id);
-        return NextResponse.json({ success: true });
-    });
+    return handleNonprofitUserDelete(req, context);
 }

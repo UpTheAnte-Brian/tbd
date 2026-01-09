@@ -1,41 +1,14 @@
+// DEPRECATED: Use /api/entities/[id]/users for entity-scoped operations.
+import type { NextRequest } from "next/server";
 import {
-    DELETE as entityUsersDelete,
-    POST as entityUsersPOST,
-} from "@/app/api/entity-users/route";
-import { NextRequest } from "next/server";
-
-type Payload = {
-    entityId?: string;
-    userId?: string;
-    role?: "admin" | "editor" | "viewer" | "employee";
-};
+    handleLegacyEntityUsersDelete,
+    handleLegacyEntityUsersPost,
+} from "@/app/lib/server/users/handlers";
 
 export async function POST(req: NextRequest) {
-    const body = (await req.json()) as Payload;
-    const forwardedRequest = new NextRequest(req.url, {
-        method: req.method,
-        headers: req.headers,
-        body: JSON.stringify({
-            entityId: body.entityId,
-            userId: body.userId,
-            role: body.role,
-        }),
-    });
-
-    return entityUsersPOST(forwardedRequest);
+    return handleLegacyEntityUsersPost(req);
 }
 
 export async function DELETE(req: NextRequest) {
-    const body = (await req.json()) as Payload;
-
-    const forwardedRequest = new NextRequest(req.url, {
-        method: req.method,
-        headers: req.headers,
-        body: JSON.stringify({
-            entityId: body.entityId,
-            userId: body.userId,
-        }),
-    });
-
-    return entityUsersDelete(forwardedRequest);
+    return handleLegacyEntityUsersDelete(req);
 }
