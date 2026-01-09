@@ -1,3 +1,4 @@
+// CANONICAL: Entity-scoped governance endpoint.
 import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
 import { resolveEntityId } from "@/app/lib/entities";

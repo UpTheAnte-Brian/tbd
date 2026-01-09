@@ -1,3 +1,4 @@
+// DEPRECATED: Prefer /api/entities/[id]/governance/* for entity-scoped workflows.
 import { NextResponse } from "next/server";
 import { castVote, listVotesByMotionIds } from "@/app/data/governance-dto";
 import { isPlatformAdminServer } from "@/app/lib/auth/platformAdmin";

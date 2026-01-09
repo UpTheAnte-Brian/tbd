@@ -1,3 +1,6 @@
+/*
+Deprecated / do not import; migrating remaining usages then deleting.
+*/
 import { sql } from "@vercel/postgres";
 import {
   CustomerField,

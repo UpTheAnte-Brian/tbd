@@ -1,3 +1,4 @@
+// DEPRECATED: Prefer /api/entities/[id]/governance/* for entity-scoped workflows.
 import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
 

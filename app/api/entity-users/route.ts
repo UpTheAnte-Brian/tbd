@@ -1,5 +1,7 @@
+// DEPRECATED: Use /api/entities/[id]/users for entity-scoped operations.
 import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
+import { deleteEntityUser } from "@/app/lib/server/entities";
 
 type Payload = {
   entityId?: string;
@@ -68,14 +70,17 @@ export async function DELETE(req: NextRequest) {
     );
   }
 
-  const { error } = await supabase
-    .from("entity_users")
-    .delete()
-    .eq("entity_id", entityId)
-    .eq("user_id", userId);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    await deleteEntityUser(supabase, entityId, userId);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to delete entity user";
+    return NextResponse.json(
+      {
+        error: message.replace(/^Failed to delete entity user: /, ""),
+      },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ success: true });

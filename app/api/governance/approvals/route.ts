@@ -1,3 +1,4 @@
+// DEPRECATED: Prefer /api/entities/[id]/governance/* for entity-scoped workflows.
 import { NextResponse } from "next/server";
 import { createApproval } from "@/app/data/governance-dto";
 import { safeRoute } from "@/app/lib/api/handler";

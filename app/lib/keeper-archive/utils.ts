@@ -1,3 +1,6 @@
+/*
+Deprecated / do not import; migrating remaining usages then deleting.
+*/
 import { Revenue } from "./definitions";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";

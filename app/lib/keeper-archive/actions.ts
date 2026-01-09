@@ -1,3 +1,6 @@
+/*
+Deprecated / do not import; migrating remaining usages then deleting.
+*/
 "use server";
 
 import { z } from "zod";
