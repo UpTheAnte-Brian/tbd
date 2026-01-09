@@ -1,4 +1,4 @@
-// CANONICAL (entity UI)
+// CANONICAL (entity UI) - shim that delegates to global governance handler
 import {
     DELETE as deleteBoardMember,
     PATCH as patchBoardMember,
@@ -9,13 +9,13 @@ interface RouteParams {
 }
 
 export async function PATCH(req: Request, context: RouteParams) {
-    const { id, memberId } = await context.params;
-    void id;
+    const { memberId } = await context.params;
     return patchBoardMember(req, { params: Promise.resolve({ id: memberId }) });
 }
 
 export async function DELETE(req: Request, context: RouteParams) {
-    const { id, memberId } = await context.params;
-    void id;
-    return deleteBoardMember(req, { params: Promise.resolve({ id: memberId }) });
+    const { memberId } = await context.params;
+    return deleteBoardMember(req, {
+        params: Promise.resolve({ id: memberId }),
+    });
 }

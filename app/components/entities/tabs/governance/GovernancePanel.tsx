@@ -51,6 +51,9 @@ const ALLOWED_MOTION_TYPES = new Set([
 ] as const);
 const MOTION_TYPE_OPTIONS = Array.from(ALLOWED_MOTION_TYPES);
 
+const isActiveBoardMember = (member: BoardMember) =>
+  member.status === "active" && !member.term_end;
+
 export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   const { user } = useUser();
   const [snapshot, setSnapshot] = useState<GovernanceSnapshot | null>(null);
@@ -89,7 +92,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   const boardId = snapshot?.board.id;
 
   const activeMembers = useMemo(
-    () => (snapshot?.members ?? []).filter((m) => m.status === "active"),
+    () => (snapshot?.members ?? []).filter(isActiveBoardMember),
     [snapshot?.members]
   );
 
@@ -99,7 +102,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
   const isChair = (snapshot?.members ?? []).some(
     (member) =>
-      member.user_id === user?.id && member.role === "chair" && member.status === "active"
+      member.user_id === user?.id && member.role === "chair" && isActiveBoardMember(member)
   );
 
   const canFinalize = isEntityAdmin || isChair;
@@ -345,20 +348,22 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     }
   }
 
-  async function removeMember(memberId: string) {
-    if (!confirm("Remove this board member?")) return;
+  async function endMemberTerm(memberId: string) {
+    if (!confirm("End this member's term? This keeps vote history.")) return;
     try {
       const res = await fetch(
         `/api/entities/${nonprofitId}/governance/board-members/${memberId}`,
         {
-          method: "DELETE",
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ term_end: new Date().toISOString() }),
         }
       );
-      if (!res.ok) throw new Error("Failed to remove member");
-      toast.success("Removed");
+      if (!res.ok) throw new Error("Failed to end term");
+      toast.success("Term ended");
       await loadSnapshot();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to remove member";
+      const message = err instanceof Error ? err.message : "Failed to end term";
       toast.error(message);
     }
   }
@@ -714,10 +719,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                 </select>
 
                 <button
-                  onClick={() => removeMember(member.id)}
+                  onClick={() => endMemberTerm(member.id)}
                   className="text-red-400 hover:text-red-300 text-sm"
                 >
-                  Remove
+                  End term
                 </button>
               </div>
             </div>

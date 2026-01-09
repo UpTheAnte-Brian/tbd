@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { safeRoute } from "@/app/lib/api/handler";
 import { getGovernanceSnapshot } from "@/app/data/governance-dto";
-import { getNonprofitDTO } from "@/app/data/nonprofit-dto";
+import { getNonprofitDTO } from "@/domain/nonprofits/nonprofit-dto";
 import { isPlatformAdminServer } from "@/app/lib/auth/platformAdmin";
 
 interface RouteParams {

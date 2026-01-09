@@ -1,7 +1,7 @@
 /// app/api/nonprofits/route.ts
 import { type NextRequest, NextResponse } from "next/server";
 import { safeRoute } from "@/app/lib/api/handler";
-import { createNonprofitDTO, listNonprofitDTO } from "@/app/data/nonprofit-dto";
+import { createNonprofitDTO, listNonprofitDTO } from "@/domain/nonprofits/nonprofit-dto";
 
 export async function GET() {
     return safeRoute(async () => {

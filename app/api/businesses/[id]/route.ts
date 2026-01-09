@@ -2,7 +2,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 // The client you created from the Server-Side Auth instructions
-import { getBusiness } from "@/app/data/businesses-dto";
+import { getBusiness } from "@/domain/businesses/businesses-dto";
 
 export async function GET(
     request: NextRequest,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { NonprofitDTO } from "@/app/data/nonprofit-dto";
+import { NonprofitDTO } from "@/domain/nonprofits/nonprofit-dto";
 
 export function useNonprofit(id: string) {
     const [nonprofit, setNonprofit] = useState<NonprofitDTO | null>(null);

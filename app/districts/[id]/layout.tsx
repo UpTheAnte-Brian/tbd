@@ -1,4 +1,4 @@
-import { getDistrictDTOCached } from "@/app/data/districts-dto";
+import { getDistrictDTOCached } from "@/domain/districts/districts-dto";
 import EntityThemeProvider from "@/app/providers/EntityThemeProvider";
 
 interface DistrictLayoutProps {

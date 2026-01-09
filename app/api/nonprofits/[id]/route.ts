@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { type NextRequest } from "next/server";
 import { safeRoute } from "@/app/lib/api/handler";
-import { getNonprofitDTO, updateNonprofitDTO } from "@/app/data/nonprofit-dto";
+import { getNonprofitDTO, updateNonprofitDTO } from "@/domain/nonprofits/nonprofit-dto";
 
 export async function GET(
     req: NextRequest,

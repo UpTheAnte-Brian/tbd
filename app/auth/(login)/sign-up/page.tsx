@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/app/data/auth";
+import { getCurrentUser } from "@/domain/auth/auth";
 import { Login } from "../login";
 import { redirect } from "next/navigation";
 

@@ -1,4 +1,4 @@
-import { getReceiptBySessionId } from "@/app/data/receipt-dto";
+import { getReceiptBySessionId } from "@/domain/receipts/receipt-dto";
 import { Receipt } from "@/app/lib/types/types";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";

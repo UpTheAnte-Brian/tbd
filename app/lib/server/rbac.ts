@@ -89,6 +89,8 @@ export async function requireBoardMember({
     .select("id")
     .eq("user_id", userId)
     .in("board_id", boardIds)
+    .eq("status", "active")
+    .is("term_end", null)
     .maybeSingle();
 
   if (memberError) {

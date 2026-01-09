@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { rejectBusiness } from "@/app/data/businesses-dto";
+import { rejectBusiness } from "@/domain/businesses/businesses-dto";
 
 export async function POST(req: Request) {
     try {

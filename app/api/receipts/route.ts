@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getReceipts } from "@/app/data/receipt-dto";
+import { getReceipts } from "@/domain/receipts/receipt-dto";
 
 export async function GET() {
     try {
