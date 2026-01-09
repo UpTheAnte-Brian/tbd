@@ -1,8 +1,6 @@
 import "server-only";
 
 import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
-import { safeRoute } from "@/app/lib/api/handler";
 import {
   getServerClient,
   jsonError,
@@ -15,13 +13,6 @@ import {
   upsertEntityUser,
 } from "@/app/lib/server/entities";
 import type { EntityUserRole, EntityUserStatus } from "@/domain/entities/types";
-import {
-  createNonprofitUserDTO,
-  deleteNonprofitUserDTO,
-  getNonprofitUserDTO,
-  listNonprofitUsersDTO,
-  updateNonprofitUserDTO,
-} from "@/domain/users/nonprofit-users-dto";
 
 interface EntityUsersRouteParams {
   params: Promise<{ id: string }>;
@@ -129,134 +120,4 @@ export async function handleEntityUsersDelete(
       : 500;
     return jsonError(message, status);
   }
-}
-
-type LegacyEntityUsersPayload = {
-  entityId?: string;
-  userId?: string;
-  role?: EntityUserRole;
-};
-
-export async function handleLegacyEntityUsersPost(req: NextRequest) {
-  const supabase = await getServerClient();
-  const body = (await req.json()) as LegacyEntityUsersPayload;
-  const { entityId, userId, role } = body;
-
-  if (!entityId || !userId || !role) {
-    return NextResponse.json(
-      { error: "entityId, userId, and role are required" },
-      { status: 400 },
-    );
-  }
-
-  const { data: existing, error: existingError } = await supabase
-    .from("entity_users")
-    .select("id")
-    .eq("entity_id", entityId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (existingError) {
-    return NextResponse.json({ error: existingError.message }, { status: 500 });
-  }
-
-  if (existing?.id) {
-    const { error } = await supabase
-      .from("entity_users")
-      .update({ role })
-      .eq("id", existing.id);
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-  } else {
-    const { error } = await supabase
-      .from("entity_users")
-      .insert({
-        entity_id: entityId,
-        user_id: userId,
-        role,
-      });
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-  }
-
-  return NextResponse.json({ success: true });
-}
-
-export async function handleLegacyEntityUsersDelete(req: NextRequest) {
-  const supabase = await getServerClient();
-  const body = (await req.json()) as LegacyEntityUsersPayload;
-  const { entityId, userId } = body;
-
-  if (!entityId || !userId) {
-    return NextResponse.json(
-      { error: "entityId and userId are required" },
-      { status: 400 },
-    );
-  }
-
-  try {
-    await deleteEntityUser(supabase, entityId, userId);
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to delete entity user";
-    return NextResponse.json(
-      {
-        error: message.replace(/^Failed to delete entity user: /, ""),
-      },
-      { status: 500 },
-    );
-  }
-
-  return NextResponse.json({ success: true });
-}
-
-export async function handleNonprofitUsersGet() {
-  return safeRoute(async () => {
-    const data = await listNonprofitUsersDTO();
-    return NextResponse.json(data);
-  });
-}
-
-export async function handleNonprofitUsersPost(req: NextRequest) {
-  return safeRoute(async () => {
-    const body = await req.json();
-    const created = await createNonprofitUserDTO(body);
-    return NextResponse.json(created, { status: 201 });
-  });
-}
-
-export async function handleNonprofitUserGet(
-  _req: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
-  return safeRoute(async () => {
-    const { id } = await context.params;
-    const data = await getNonprofitUserDTO(id);
-    return NextResponse.json(data);
-  });
-}
-
-export async function handleNonprofitUserPatch(
-  req: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
-  return safeRoute(async () => {
-    const { id } = await context.params;
-    const body = await req.json();
-    const updated = await updateNonprofitUserDTO(id, body);
-    return NextResponse.json(updated);
-  });
-}
-
-export async function handleNonprofitUserDelete(
-  _req: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
-  return safeRoute(async () => {
-    const { id } = await context.params;
-    await deleteNonprofitUserDTO(id);
-    return NextResponse.json({ success: true });
-  });
 }

@@ -42,3 +42,4 @@ Source of truth: ../project-structure.json
 - Entity UI governance calls migrated: ✅
 - Global governance endpoints retained for cross-entity admin: ✅ (still in use? yes)
 - Phase 2B map folder normalization: ✅
+- Phase 3D legacy user endpoints removed: ✅ (deleted `app/api/entity-users`, `app/api/nonprofit-users`, `app/api/business-users`, `app/api/district-users`, `app/api/user-districts`; canonical `/api/entities/[id]/users`)
