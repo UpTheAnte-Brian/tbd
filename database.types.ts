@@ -449,6 +449,8 @@ export type Database = {
       board_meetings: {
         Row: {
           board_id: string
+          board_packet_document_id: string | null
+          board_packet_version_id: string | null
           created_at: string
           created_by: string
           id: string
@@ -462,6 +464,8 @@ export type Database = {
         }
         Insert: {
           board_id: string
+          board_packet_document_id?: string | null
+          board_packet_version_id?: string | null
           created_at?: string
           created_by: string
           id?: string
@@ -475,6 +479,8 @@ export type Database = {
         }
         Update: {
           board_id?: string
+          board_packet_document_id?: string | null
+          board_packet_version_id?: string | null
           created_at?: string
           created_by?: string
           id?: string
@@ -750,6 +756,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_document_version: {
+        Args: {
+          p_approval_method?: string
+          p_document_version_id: string
+          p_ip?: unknown
+          p_meeting_id?: string
+          p_signature_hash?: string
+        }
+        Returns: string
+      }
       approve_meeting_minutes: {
         Args: {
           p_approval_method?: string
@@ -2746,6 +2762,7 @@ export type Database = {
         | "state_annual_report"
         | "meeting_minutes"
         | "other"
+        | "board_packet"
       document_version_status:
         | "draft"
         | "in_review"
@@ -2966,6 +2983,7 @@ export const Constants = {
         "state_annual_report",
         "meeting_minutes",
         "other",
+        "board_packet",
       ],
       document_version_status: [
         "draft",
