@@ -11,7 +11,7 @@ import type {
   EntityFeature,
   EntityFeatureCollection,
   EntityMapProperties,
-} from "@/app/lib/types/map";
+} from "@/domain/map/types";
 import type { FeatureCollection, GeoJsonProperties, Geometry } from "geojson";
 
 type TooltipContent = {

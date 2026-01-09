@@ -11,7 +11,7 @@ import type {
   EntityFeature,
   EntityFeatureCollection,
   EntityMapProperties,
-} from "@/app/lib/types/map";
+} from "@/domain/map/types";
 
 type Layer = "states" | "districts";
 

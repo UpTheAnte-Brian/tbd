@@ -5,7 +5,7 @@ import type {
   EntityFeature,
   EntityFeatureCollection,
   EntityMapProperties,
-} from "@/app/lib/types/map";
+} from "@/domain/map/types";
 
 const isGeometry = (value: unknown): value is Geometry =>
   typeof value === "object" &&
