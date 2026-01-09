@@ -7,7 +7,8 @@ import BusinessOverview from "@/app/components/businesses/overview";
 import NonprofitOverview, {
   type NonprofitOverviewData,
 } from "@/app/components/nonprofits/overview";
-import type { Business, DistrictDetails, EntityType } from "@/app/lib/types/types";
+import type { Business, DistrictDetails } from "@/app/lib/types/types";
+import type { EntityType } from "@/domain/entities/types";
 
 type Props = {
   entityId: string;

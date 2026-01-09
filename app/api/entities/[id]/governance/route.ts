@@ -1,6 +1,6 @@
 // CANONICAL (entity UI)
 import { safeRoute } from "@/app/lib/api/handler";
-import { getGovernanceSnapshot } from "@/app/data/governance-dto";
+import { getGovernanceSnapshot } from "@/domain/governance/governance-dto";
 import {
     getServerClient,
     jsonOk,

@@ -1,6 +1,6 @@
 "use client";
 
-import type { EntityType } from "@/app/lib/types/types";
+import type { EntityType } from "@/domain/entities/types";
 
 type Props = {
   entityId: string;

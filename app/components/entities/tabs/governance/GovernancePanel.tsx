@@ -14,8 +14,8 @@ import {
   type MeetingMinutes,
   type Motion,
   type Vote,
-} from "@/app/lib/types/governance";
-import type { BoardPacketSnapshot } from "@/app/lib/types/governance-approvals";
+} from "@/domain/governance/governance";
+import type { BoardPacketSnapshot } from "@/domain/governance/governance-approvals";
 
 interface GovernancePanelProps {
   nonprofitId: string;

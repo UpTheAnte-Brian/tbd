@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import LoadingSpinner from "@/app/components/loading-spinner";
 import { SmallAvatar } from "@/app/components/ui/avatar";
 import { toast } from "react-hot-toast";
-import type { EntityUser } from "@/app/lib/types/types";
+import type { EntityUser } from "@/domain/entities/types";
 
 interface Props {
   entityId: string;

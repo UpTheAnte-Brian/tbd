@@ -570,7 +570,9 @@
         ]},
         {"type":"directory","name":"server","contents":[
           {"type":"file","name":"entities.ts"},
-          {"type":"file","name":"entity-geometries.ts"}
+          {"type":"file","name":"entity-geometries.ts"},
+          {"type":"file","name":"rbac.ts"},
+          {"type":"file","name":"route-context.ts"}
         ]},
         {"type":"directory","name":"storage"},
         {"type":"directory","name":"styles","contents":[
@@ -773,5 +775,5 @@
     ]}
   ]}
 ,
-  {"type":"report","directories":210,"files":365}
+  {"type":"report","directories":210,"files":367}
 ]

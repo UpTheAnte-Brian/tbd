@@ -2,7 +2,7 @@
 
 import { ReactNode } from "react";
 import type { TabKey } from "@/app/components/entities/hooks/useEntityTabParam";
-import type { EntityType } from "@/app/lib/types/types";
+import type { EntityType } from "@/domain/entities/types";
 import EntitySidebar from "@/app/components/entities/shared/EntitySidebar";
 
 type Props = {

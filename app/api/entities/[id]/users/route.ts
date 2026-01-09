@@ -11,7 +11,7 @@ import {
   getEntityUsers,
   upsertEntityUser,
 } from "@/app/lib/server/entities";
-import type { EntityUserRole, EntityUserStatus } from "@/app/lib/types/types";
+import type { EntityUserRole, EntityUserStatus } from "@/domain/entities/types";
 
 // GET /api/entities/[id]/users
 export async function GET(

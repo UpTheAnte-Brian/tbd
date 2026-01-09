@@ -5,7 +5,7 @@ import LoadingSpinner from "@/app/components/loading-spinner";
 import type {
   BoardMember,
   GovernanceSnapshot,
-} from "@/app/lib/types/governance";
+} from "@/domain/governance/governance";
 
 interface BoardOfDirectorsProps {
   nonprofitId?: string;

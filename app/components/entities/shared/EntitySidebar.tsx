@@ -3,7 +3,7 @@
 import { EntityLogo } from "@/app/components/branding/EntityLogo";
 import BrandPaletteCube from "@/app/components/branding/BrandPaletteCube";
 import type { TabKey } from "@/app/components/entities/hooks/useEntityTabParam";
-import type { EntityType } from "@/app/lib/types/types";
+import type { EntityType } from "@/domain/entities/types";
 
 type Props = {
   entityId: string;

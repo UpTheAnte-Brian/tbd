@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { EntityType } from "@/app/lib/types/types";
+import type { EntityType } from "@/domain/entities/types";
 
 export type TabKey = "overview" | "branding" | "users" | "map" | "governance";
 

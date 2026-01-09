@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import EntityMapShell from "@/app/components/map/entity-map-shell";
 import type { EntityFeatureCollection } from "@/app/lib/types/map";
-import type { EntityType } from "@/app/lib/types/types";
+import type { EntityType } from "@/domain/entities/types";
 
 type Props = {
   entityId: string;

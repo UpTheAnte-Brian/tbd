@@ -1,11 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Geometry } from "geojson";
+import type { BrandingSummary } from "@/app/lib/types/types";
 import type {
-  BrandingSummary,
   EntityUser,
   EntityUserRole,
   ProfilePreview,
-} from "@/app/lib/types/types";
+} from "@/domain/entities/types";
 import type {
   EntityFeature,
   EntityFeatureCollection,

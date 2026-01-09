@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { EntityType } from "@/app/lib/types/types";
+import type { EntityType } from "@/domain/entities/types";
 import EntityOverviewTab from "@/app/components/entities/tabs/overview/EntityOverviewTab";
 import EntityBrandingTab from "@/app/components/entities/tabs/branding/EntityBrandingTab";
 import EntityUsersTab from "@/app/components/entities/tabs/users/EntityUsersTab";
