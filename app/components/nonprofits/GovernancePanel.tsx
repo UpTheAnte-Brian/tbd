@@ -177,7 +177,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   async function loadSnapshot() {
     try {
       setLoading(true);
-      const res = await fetch(`/api/nonprofits/${nonprofitId}/governance`);
+      const res = await fetch(`/api/entities/${nonprofitId}/governance`);
       if (!res.ok) throw new Error("Failed to load governance");
       const json: GovernanceSnapshot = await res.json();
       setSnapshot(json);
@@ -266,7 +266,9 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
   async function loadQuorum(meetingId: string) {
     try {
-      const res = await fetch(`/api/governance/meetings/${meetingId}/quorum`);
+      const res = await fetch(
+        `/api/entities/${nonprofitId}/governance/meetings/${meetingId}/quorum`
+      );
       if (!res.ok) throw new Error("Failed to load quorum");
       const json = (await res.json()) as { quorumMet: boolean };
       setQuorumByMeetingId((prev) => ({ ...prev, [meetingId]: json.quorumMet }));
@@ -293,17 +295,20 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     }
     try {
       setMemberLoading(true);
-      const res = await fetch(`/api/governance/boards/${boardId}/members`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: selectedUserId,
-          role: selectedRole,
-          status: selectedStatus,
-          term_start: termStart,
-          term_end: termEnd || null,
-        }),
-      });
+      const res = await fetch(
+        `/api/entities/${nonprofitId}/governance/boards/${boardId}/members`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: selectedUserId,
+            role: selectedRole,
+            status: selectedStatus,
+            term_start: termStart,
+            term_end: termEnd || null,
+          }),
+        }
+      );
       if (!res.ok) throw new Error("Could not add board member");
       toast.success("Board member added");
       setSelectedUserId("");
@@ -321,14 +326,17 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
   async function updateMember(memberId: string, updates: Partial<BoardMember>) {
     try {
-      const res = await fetch(`/api/governance/board-members/${memberId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          role: updates.role,
-          status: updates.status,
-        }),
-      });
+      const res = await fetch(
+        `/api/entities/${nonprofitId}/governance/board-members/${memberId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            role: updates.role,
+            status: updates.status,
+          }),
+        }
+      );
       if (!res.ok) throw new Error("Failed to update member");
       await loadSnapshot();
     } catch (err: unknown) {
@@ -340,9 +348,12 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   async function removeMember(memberId: string) {
     if (!confirm("Remove this board member?")) return;
     try {
-      const res = await fetch(`/api/governance/board-members/${memberId}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/entities/${nonprofitId}/governance/board-members/${memberId}`,
+        {
+          method: "DELETE",
+        }
+      );
       if (!res.ok) throw new Error("Failed to remove member");
       toast.success("Removed");
       await loadSnapshot();
@@ -356,11 +367,14 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     if (!boardId) return;
     try {
       setMeetingLoading(true);
-      const res = await fetch(`/api/governance/boards/${boardId}/meetings`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(meetingDraft),
-      });
+      const res = await fetch(
+        `/api/entities/${nonprofitId}/governance/boards/${boardId}/meetings`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(meetingDraft),
+        }
+      );
       if (!res.ok) throw new Error("Failed to create meeting");
       toast.success("Meeting scheduled");
       setMeetingDraft({ meeting_type: "", scheduled_start: "", scheduled_end: "" });
@@ -376,11 +390,14 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   async function createMotion(meetingId: string) {
     const draft = motionDrafts[meetingId] ?? {};
     try {
-      const res = await fetch(`/api/governance/meetings/${meetingId}/motions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(draft),
-      });
+      const res = await fetch(
+        `/api/entities/${nonprofitId}/governance/meetings/${meetingId}/motions`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(draft),
+        }
+      );
       if (!res.ok) throw new Error("Failed to create motion");
       toast.success("Motion added");
       setMotionDrafts((prev) => ({ ...prev, [meetingId]: {} }));
@@ -397,11 +414,14 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     status: "present" | "absent"
   ) {
     try {
-      const res = await fetch(`/api/governance/meetings/${meetingId}/attendance`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ board_member_id: boardMemberId, status }),
-      });
+      const res = await fetch(
+        `/api/entities/${nonprofitId}/governance/meetings/${meetingId}/attendance`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ board_member_id: boardMemberId, status }),
+        }
+      );
       if (!res.ok) throw new Error("Failed to update attendance");
       await loadSnapshot();
       await loadQuorum(meetingId);
@@ -456,11 +476,14 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       return;
     }
     try {
-      const res = await fetch(`/api/governance/motions/${motionId}/votes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(draft),
-      });
+      const res = await fetch(
+        `/api/entities/${nonprofitId}/governance/motions/${motionId}/votes`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(draft),
+        }
+      );
       if (!res.ok) throw new Error("Failed to record vote");
       toast.success("Vote recorded");
       setVoteDrafts((prev) => ({ ...prev, [motionId]: { board_member_id: "", vote: "yes" } }));
@@ -475,15 +498,18 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     const content = minutesDrafts[meetingId] ?? "";
     const current = minutesByMeeting[meetingId];
     try {
-      const res = await fetch(`/api/governance/meetings/${meetingId}/minutes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: current?.id,
-          content,
-          meeting_id: meetingId,
-        }),
-      });
+      const res = await fetch(
+        `/api/entities/${nonprofitId}/governance/meetings/${meetingId}/minutes`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: current?.id,
+            content,
+            meeting_id: meetingId,
+          }),
+        }
+      );
       if (!res.ok) throw new Error("Failed to save minutes");
       toast.success("Minutes saved");
       await loadSnapshot();

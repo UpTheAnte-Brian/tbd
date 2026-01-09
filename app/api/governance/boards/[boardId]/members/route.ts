@@ -1,4 +1,4 @@
-// DEPRECATED: Prefer /api/entities/[id]/governance/* for entity-scoped workflows.
+// DEPRECATED (global): Prefer /api/entities/[id]/governance/* for entity-scoped workflows.
 import { NextResponse } from "next/server";
 import {
     addBoardMember,

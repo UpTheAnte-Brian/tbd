@@ -49,7 +49,7 @@ export default function BoardOfDirectors({
         return;
       }
 
-      const res = await fetch(`/api/nonprofits/${nonprofitId}/governance`);
+      const res = await fetch(`/api/entities/${nonprofitId}/governance`);
       if (!res.ok) throw new Error("Failed to load board");
       const snapshot: GovernanceSnapshot = await res.json();
 

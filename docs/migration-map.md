@@ -37,3 +37,7 @@ Source of truth: ../project-structure.json
 ## Decisions
 - Canonical governance API surface: entity-scoped `/api/entities/[id]/governance/*` for entity UI; keep `/api/governance/*` only for cross-entity admin workflows until parity.
 - Canonical branding assets endpoints:
+
+## Status
+- Entity UI governance calls migrated: ✅
+- Global governance endpoints retained for cross-entity admin: ✅ (still in use? yes)

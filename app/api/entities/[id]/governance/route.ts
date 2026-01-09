@@ -1,9 +1,10 @@
-// DEPRECATED: Prefer /api/entities/[id]/governance for entity-scoped workflows.
+// CANONICAL (entity UI)
 import { NextResponse } from "next/server";
 import { safeRoute } from "@/app/lib/api/handler";
 import { getGovernanceSnapshot } from "@/app/data/governance-dto";
-import { getNonprofitDTO } from "@/app/data/nonprofit-dto";
 import { isPlatformAdminServer } from "@/app/lib/auth/platformAdmin";
+import { createApiClient } from "@/utils/supabase/route";
+import { resolveEntityId } from "@/app/lib/entities";
 
 interface RouteParams {
     params: Promise<{ id: string }>;
@@ -11,18 +12,11 @@ interface RouteParams {
 
 export async function GET(req: Request, context: RouteParams) {
     return safeRoute(async () => {
+        const supabase = await createApiClient();
         const { id } = await context.params;
+        const entityId = await resolveEntityId(supabase, id);
         const elevated = await isPlatformAdminServer();
-        const nonprofit = await getNonprofitDTO(id);
-
-        // Governance is keyed by entity_id; nonprofit.id is not an entities.id
-        if (!nonprofit?.entity_id) {
-            throw new Error(`Nonprofit ${id} is missing entity_id`);
-        }
-
-        const snapshot = await getGovernanceSnapshot(nonprofit.entity_id, {
-            elevated,
-        });
+        const snapshot = await getGovernanceSnapshot(entityId, { elevated });
         return NextResponse.json(snapshot);
     });
 }

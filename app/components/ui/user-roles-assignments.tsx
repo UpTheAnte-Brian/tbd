@@ -31,6 +31,7 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
 
   const makeKey = (row: EntityUser) =>
     `${entityType}:${row.user_id}:${entityId}`;
+  const entityUsersEndpoint = `/api/entities/${entityId}/users`;
 
   const handleRoleChange = async (
     userId: string,
@@ -38,7 +39,7 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
     displayName: string
   ) => {
     try {
-      const response = await fetch(`/api/entity-users`, {
+      const response = await fetch(entityUsersEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ entityId, userId, role: newRole }),
@@ -65,7 +66,7 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
     }
     setAdding(true);
     try {
-      const response = await fetch(`/api/entity-users`, {
+      const response = await fetch(entityUsersEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -185,16 +186,13 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
                 <button
                   onClick={async () => {
                     if (!confirm(`Remove ${displayName}'s role?`)) return;
-                    const payload = {
-                      entityId,
-                      userId: assignment.user_id,
-                    };
                     try {
-                      const response = await fetch(`/api/entity-users`, {
-                        method: "DELETE",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(payload),
-                      });
+                      const response = await fetch(
+                        `${entityUsersEndpoint}?userId=${encodeURIComponent(
+                          assignment.user_id
+                        )}`,
+                        { method: "DELETE" }
+                      );
                       const result = await response.json();
                       if (!response.ok) {
                         alert(
