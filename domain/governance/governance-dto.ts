@@ -3,6 +3,7 @@ import {
     type Board,
     type BoardMeeting,
     type BoardMember,
+    type BoardMemberComputedStatus,
     type GovernanceApproval,
     type GovernanceSnapshot,
     type MeetingAttendance,
@@ -135,6 +136,28 @@ function mapBoard(row: Record<string, unknown> | null): Board | null {
     };
 }
 
+function normalizeTermDate(value: string | null | undefined): string | null {
+    if (!value) return null;
+    return value.slice(0, 10);
+}
+
+function computeBoardMemberActivity(
+    termStart: string | null,
+    termEnd: string | null,
+    today = new Date().toISOString().slice(0, 10),
+): { is_active: boolean; computed_status: BoardMemberComputedStatus } {
+    const start = normalizeTermDate(termStart);
+    const end = normalizeTermDate(termEnd);
+    const isActive = Boolean(start && start <= today && (!end || end > today));
+    let computedStatus: BoardMemberComputedStatus = "active";
+    if (!start || today < start) {
+        computedStatus = "upcoming";
+    } else if (end && end <= today) {
+        computedStatus = "ended";
+    }
+    return { is_active: isActive, computed_status: computedStatus };
+}
+
 function mapBoardMember(
     row: Record<string, unknown> | null,
     profile?: ProfilePreview | null,
@@ -143,14 +166,23 @@ function mapBoardMember(
         return null;
     }
 
+    const termStart = (row.term_start as string | null | undefined) ?? null;
+    const termEnd = (row.term_end as string | null | undefined) ?? null;
+    const { is_active, computed_status } = computeBoardMemberActivity(
+        termStart,
+        termEnd,
+    );
+
     return {
         id: String(row.id),
         board_id: String(row.board_id),
         user_id: String(row.user_id),
         role: row.role as BoardMember["role"],
-        term_start: (row.term_start as string | null | undefined) ?? null,
-        term_end: (row.term_end as string | null | undefined) ?? null,
+        term_start: termStart,
+        term_end: termEnd,
         status: (row.status as BoardMember["status"]) ?? "active",
+        is_active,
+        computed_status,
         profile: profile ?? null,
         created_at: (row.created_at as string | null | undefined) ?? null,
     };

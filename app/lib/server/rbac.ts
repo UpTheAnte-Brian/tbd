@@ -83,14 +83,15 @@ export async function requireBoardMember({
     throw new Error("Unauthorized");
   }
 
+  const today = new Date().toISOString().slice(0, 10);
   const { data: member, error: memberError } = await supabase
     .schema("governance")
     .from("board_members")
     .select("id")
     .eq("user_id", userId)
     .in("board_id", boardIds)
-    .eq("status", "active")
-    .is("term_end", null)
+    .lte("term_start", today)
+    .or(`term_end.is.null,term_end.gt.${today}`)
     .maybeSingle();
 
   if (memberError) {

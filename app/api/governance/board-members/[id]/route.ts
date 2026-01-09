@@ -15,10 +15,22 @@ function asMaybePostgresError(
 ): { code?: string; message?: string } {
     if (typeof err !== "object" || err === null) return {};
 
-    // use safe property access
-    const rec = err as Record<string, unknown>;
-    const code = typeof rec.code === "string" ? rec.code : undefined;
-    const message = typeof rec.message === "string" ? rec.message : undefined;
+    let code: string | undefined;
+    let message: string | undefined;
+
+    if ("code" in err) {
+        const value = (err as { code?: unknown }).code;
+        if (typeof value === "string") {
+            code = value;
+        }
+    }
+
+    if ("message" in err) {
+        const value = (err as { message?: unknown }).message;
+        if (typeof value === "string") {
+            message = value;
+        }
+    }
 
     return { code, message };
 }

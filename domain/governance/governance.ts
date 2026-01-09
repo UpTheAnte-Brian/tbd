@@ -9,6 +9,7 @@ export type BoardOfficerRole =
     | "director";
 
 export type BoardMemberStatus = "active" | "expired" | "resigned" | "removed";
+export type BoardMemberComputedStatus = "upcoming" | "active" | "ended";
 
 export interface Board {
     id: string;
@@ -25,6 +26,8 @@ export interface BoardMember {
     term_start: string | null;
     term_end: string | null;
     status: BoardMemberStatus;
+    is_active?: boolean;
+    computed_status?: BoardMemberComputedStatus;
     profile?: ProfilePreview | null;
     created_at?: string | null;
 }

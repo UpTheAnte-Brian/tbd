@@ -51,8 +51,21 @@ const ALLOWED_MOTION_TYPES = new Set([
 ] as const);
 const MOTION_TYPE_OPTIONS = Array.from(ALLOWED_MOTION_TYPES);
 
-const isActiveBoardMember = (member: BoardMember) =>
-  member.status === "active" && !member.term_end;
+const normalizeTermDate = (value: string | null | undefined) =>
+  value ? value.slice(0, 10) : null;
+
+const getMemberActivity = (member: BoardMember, today: string) => {
+  const termStart = normalizeTermDate(member.term_start);
+  const termEnd = normalizeTermDate(member.term_end);
+  const isActive = Boolean(termStart && termStart <= today && (!termEnd || termEnd > today));
+  let computedStatus: "upcoming" | "active" | "ended" = "active";
+  if (!termStart || today < termStart) {
+    computedStatus = "upcoming";
+  } else if (termEnd && termEnd <= today) {
+    computedStatus = "ended";
+  }
+  return { isActive, computedStatus, termStart, termEnd };
+};
 
 export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   const { user } = useUser();
@@ -69,6 +82,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     new Date().toISOString().slice(0, 10)
   );
   const [termEnd, setTermEnd] = useState("");
+  const [showEnded, setShowEnded] = useState(false);
   const [meetingDraft, setMeetingDraft] = useState({
     meeting_type: "",
     scheduled_start: "",
@@ -90,11 +104,30 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   >({});
 
   const boardId = snapshot?.board.id;
+  const today = new Date().toISOString().slice(0, 10);
+  const resolveMemberActivity = (member: BoardMember) => {
+    const activity = getMemberActivity(member, today);
+    return {
+      isActive: activity.isActive,
+      computedStatus: member.computed_status ?? activity.computedStatus,
+      termStart: activity.termStart,
+      termEnd: activity.termEnd,
+    };
+  };
 
   const activeMembers = useMemo(
-    () => (snapshot?.members ?? []).filter(isActiveBoardMember),
-    [snapshot?.members]
+    () =>
+      (snapshot?.members ?? []).filter(
+        (member) => resolveMemberActivity(member).isActive
+      ),
+    [snapshot?.members, today]
   );
+
+  const rosterMembers = useMemo(() => {
+    const members = snapshot?.members ?? [];
+    if (showEnded) return members;
+    return members.filter((member) => resolveMemberActivity(member).isActive);
+  }, [snapshot?.members, showEnded, today]);
 
   const isEntityAdmin =
     user?.global_role === "admin" ||
@@ -102,7 +135,9 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
   const isChair = (snapshot?.members ?? []).some(
     (member) =>
-      member.user_id === user?.id && member.role === "chair" && isActiveBoardMember(member)
+      member.user_id === user?.id &&
+      member.role === "chair" &&
+      resolveMemberActivity(member).isActive
   );
 
   const canFinalize = isEntityAdmin || isChair;
@@ -349,18 +384,23 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   }
 
   async function endMemberTerm(memberId: string) {
-    if (!confirm("End this member's term? This keeps vote history.")) return;
+    if (
+      !confirm(
+        "End this member's term today? This stops board access immediately. Vote history remains."
+      )
+    )
+      return;
     try {
       const res = await fetch(
         `/api/entities/${nonprofitId}/governance/board-members/${memberId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ term_end: new Date().toISOString() }),
+          body: JSON.stringify({ term_end: new Date().toISOString().slice(0, 10) }),
         }
       );
       if (!res.ok) throw new Error("Failed to end term");
-      toast.success("Term ended");
+      toast.success("Term ended.");
       await loadSnapshot();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to end term";
@@ -667,66 +707,86 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
           Governance is separate from operational roles. Only board members below can vote on
           motions and approve minutes.
         </p>
+        <label className="mt-3 flex items-center gap-2 text-sm text-gray-300">
+          <input
+            type="checkbox"
+            checked={showEnded}
+            onChange={(e) => setShowEnded(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-700 bg-gray-950 text-blue-500"
+          />
+          Show ended
+        </label>
 
         <div className="mt-4 space-y-3">
           {(snapshot.members ?? []).length === 0 && (
             <p className="text-gray-400">No board members yet.</p>
           )}
+          {(snapshot.members ?? []).length > 0 && rosterMembers.length === 0 && (
+            <p className="text-gray-400">No active board members.</p>
+          )}
 
-          {snapshot.members.map((member) => (
-            <div
-              key={member.id}
-              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-gray-700 rounded p-3 bg-gray-900/60"
-            >
-              <div>
-                <p className="font-semibold">
-                  {member.profile?.full_name ?? member.user_id}
-                </p>
-                <p className="text-sm text-gray-400">
-                  {member.role.replace("_", " ")} · {member.status}
-                </p>
+          {rosterMembers.map((member) => {
+            const activity = resolveMemberActivity(member);
+            const termStartLabel = activity.termStart ?? "—";
+            const termEndLabel = activity.termEnd ?? "—";
+            return (
+              <div
+                key={member.id}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-gray-700 rounded p-3 bg-gray-900/60"
+              >
+                <div>
+                  <p className="font-semibold">
+                    {member.profile?.full_name ?? member.user_id}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    {member.role.replace("_", " ")} · {activity.computedStatus}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Term: {termStartLabel} → {termEndLabel}
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                  <select
+                    value={member.role}
+                    onChange={(e) =>
+                      updateMember(member.id, { role: e.target.value as BoardMember["role"] })
+                    }
+                    className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
+                  >
+                    {ROLE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={member.status}
+                    onChange={(e) =>
+                      updateMember(member.id, {
+                        status: e.target.value as BoardMember["status"],
+                      })
+                    }
+                    className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
+                  >
+                    {STATUS_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    onClick={() => endMemberTerm(member.id)}
+                    className="text-red-400 hover:text-red-300 text-sm"
+                  >
+                    End term
+                  </button>
+                </div>
               </div>
-
-              <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-                <select
-                  value={member.role}
-                  onChange={(e) =>
-                    updateMember(member.id, { role: e.target.value as BoardMember["role"] })
-                  }
-                  className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
-                >
-                  {ROLE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={member.status}
-                  onChange={(e) =>
-                    updateMember(member.id, {
-                      status: e.target.value as BoardMember["status"],
-                    })
-                  }
-                  className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
-                >
-                  {STATUS_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  onClick={() => endMemberTerm(member.id)}
-                  className="text-red-400 hover:text-red-300 text-sm"
-                >
-                  End term
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="mt-6 p-4 border border-gray-700 rounded space-y-3 bg-gray-900/60">

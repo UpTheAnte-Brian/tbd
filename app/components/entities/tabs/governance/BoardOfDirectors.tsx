@@ -33,9 +33,14 @@ export default function BoardOfDirectors({
   };
 
   const sortedMembers = useMemo(() => {
-    const activeMembers = members.filter(
-      (member) => member.status === "active" && !member.term_end
-    );
+    const today = new Date().toISOString().slice(0, 10);
+    const activeMembers = members.filter((member) => {
+      const termStart = member.term_start?.slice(0, 10) ?? null;
+      const termEnd = member.term_end?.slice(0, 10) ?? null;
+      return Boolean(
+        termStart && termStart <= today && (!termEnd || termEnd > today)
+      );
+    });
     return [...activeMembers].sort((a, b) => {
       const aOrder = a.role ? ROLE_ORDER[a.role] ?? 99 : 99;
       const bOrder = b.role ? ROLE_ORDER[b.role] ?? 99 : 99;
