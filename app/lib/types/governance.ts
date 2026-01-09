@@ -1,3 +1,4 @@
+import type { BoardPacketSnapshot } from "@/app/lib/types/governance-approvals";
 import type { ProfilePreview } from "@/app/lib/types/types";
 
 export type BoardOfficerRole =
@@ -35,6 +36,8 @@ export interface BoardMeeting {
     scheduled_start: string | null;
     scheduled_end: string | null;
     status: string | null;
+    board_packet_document_id?: string | null;
+    board_packet_version_id?: string | null;
     created_at?: string | null;
     updated_at?: string | null;
 }
@@ -42,6 +45,7 @@ export interface BoardMeeting {
 export interface Motion {
     id: string;
     meeting_id: string;
+    motion_type: string | null;
     title?: string | null;
     description?: string | null;
     moved_by: string | null;
@@ -108,4 +112,5 @@ export interface GovernanceSnapshot {
     minutes: MeetingMinutes[];
     approvals: GovernanceApproval[];
     attendance: MeetingAttendance[];
+    boardPacketsByMeetingId?: Record<string, BoardPacketSnapshot | null>;
 }

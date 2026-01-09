@@ -5,12 +5,13 @@ import {
     type BoardMember,
     type GovernanceApproval,
     type GovernanceSnapshot,
-    type MeetingMinutes,
     type MeetingAttendance,
+    type MeetingMinutes,
     type Motion,
     type Vote,
 } from "@/app/lib/types/governance";
 import type { ProfilePreview } from "@/app/lib/types/types";
+import type { BoardPacketSnapshot } from "@/app/lib/types/governance-approvals";
 import { createApiClient } from "@/utils/supabase/route";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -50,6 +51,7 @@ export interface MeetingInput {
 
 export interface MotionInput {
     meeting_id: string;
+    motion_type?: string | null;
     title?: string | null;
     description?: string | null;
     moved_by?: string | null;
@@ -196,6 +198,14 @@ function mapMeeting(
             null,
         scheduled_end: (row.scheduled_end as string | null | undefined) ?? null,
         status: (row.status as string | null | undefined) ?? null,
+        board_packet_document_id: (row.board_packet_document_id as
+            | string
+            | null
+            | undefined) ?? null,
+        board_packet_version_id: (row.board_packet_version_id as
+            | string
+            | null
+            | undefined) ?? null,
         created_at: (row.created_at as string | null | undefined) ?? null,
         updated_at: (row.updated_at as string | null | undefined) ?? null,
     };
@@ -206,6 +216,7 @@ function mapMotion(row: Record<string, unknown> | null): Motion | null {
     return {
         id: String(row.id),
         meeting_id: String(row.meeting_id),
+        motion_type: (row.motion_type as string | null | undefined) ?? null,
         title: (row.title as string | null | undefined) ?? null,
         description: (row.description as string | null | undefined) ?? null,
         moved_by: (row.moved_by as string | null | undefined) ?? null,
@@ -573,6 +584,7 @@ export async function createMotion(
     const supabase = await getGovernanceClient(options);
     const payload: Record<string, unknown> = {
         meeting_id: input.meeting_id,
+        motion_type: input.motion_type ?? "other",
         title: input.title ?? null,
         description: input.description ?? null,
         moved_by: input.moved_by ?? null,
@@ -630,7 +642,7 @@ export async function listVotesByMotionIds(
     const { data, error } = await governanceTable(supabase, "votes")
         .select("*")
         .in("motion_id", motionIds)
-        .order("created_at", { ascending: true });
+        .order("signed_at", { ascending: true });
 
     if (error) throw error;
     return (data ?? [])
@@ -643,12 +655,38 @@ export async function castVote(
     options?: GovernanceClientOptions,
 ): Promise<Vote> {
     const supabase = await getGovernanceClient(options);
+    const { data: motion, error: motionError } = await governanceTable(
+        supabase,
+        "motions",
+    )
+        .select("status, finalized_at")
+        .eq("id", payload.motion_id)
+        .maybeSingle();
+
+    if (motionError) throw motionError;
+    if (!motion) {
+        throw new Error("Motion not found");
+    }
+
+    const status = (motion.status as string | null | undefined) ?? null;
+    const isFinalized =
+        Boolean(motion.finalized_at) ||
+        status === "finalized" ||
+        status === "passed" ||
+        status === "failed" ||
+        status === "tabled";
+    if (isFinalized) {
+        throw new Error("Voting is closed for this motion");
+    }
+
+    const signedAt =
+        payload.signed_at ?? new Date().toISOString();
     const { data, error } = await governanceTable(supabase, "votes")
         .insert({
             motion_id: payload.motion_id,
             board_member_id: payload.board_member_id,
             vote: payload.vote,
-            signed_at: payload.signed_at ?? null,
+            signed_at: signedAt,
         })
         .select("*")
         .single();
@@ -681,7 +719,10 @@ export async function listMeetingAttendanceByMeetingIds(
 ): Promise<MeetingAttendance[]> {
     if (meetingIds.length === 0) return [];
     const supabase = await getGovernanceClient(options);
-    const { data, error } = await governanceTable(supabase, "meeting_attendance")
+    const { data, error } = await governanceTable(
+        supabase,
+        "meeting_attendance",
+    )
         .select("*")
         .in("meeting_id", meetingIds);
 
@@ -815,6 +856,13 @@ export async function getGovernanceSnapshot(
     ]);
 
     const motionIds = motions.map((m) => m.id);
+    const boardPacketVersionIds = Array.from(
+        new Set(
+            meetings
+                .map((meeting) => meeting.board_packet_version_id)
+                .filter((id): id is string => Boolean(id)),
+        ),
+    );
     const approvals = await listApprovalsByTargets(
         [
             ...motionIds.map((id) => ({
@@ -825,10 +873,107 @@ export async function getGovernanceSnapshot(
                 target_type: "meeting_minutes" as const,
                 target_id: m.id,
             })),
+            ...boardPacketVersionIds.map((id) => ({
+                target_type: "document_version" as const,
+                target_id: id,
+            })),
         ],
         options,
     );
     const votes = await listVotesByMotionIds(motionIds, options);
+
+    let boardPacketsByMeetingId: Record<
+        string,
+        BoardPacketSnapshot | null
+    > = {};
+    if (meetings.length) {
+        const approvalByTarget = new Map<string, GovernanceApproval>();
+        approvals.forEach((approval) => {
+            const key = `${approval.target_type}:${approval.target_id}`;
+            const existing = approvalByTarget.get(key);
+            if (!existing) {
+                approvalByTarget.set(key, approval);
+                return;
+            }
+            const existingTime = existing.approved_at
+                ? new Date(existing.approved_at).getTime()
+                : 0;
+            const nextTime = approval.approved_at
+                ? new Date(approval.approved_at).getTime()
+                : 0;
+            if (nextTime >= existingTime) {
+                approvalByTarget.set(key, approval);
+            }
+        });
+
+        const versionMap = new Map<
+            string,
+            {
+                document_id: string;
+                status: BoardPacketSnapshot["status"];
+                content_md: string | null;
+                approved_at: string | null;
+                approved_by: string | null;
+            }
+        >();
+        if (boardPacketVersionIds.length) {
+            const supabase = await getGovernanceClient(options);
+            const { data, error } = await supabase
+                .from("document_versions")
+                .select(
+                    "id, document_id, status, content_md, approved_at, approved_by, documents:document_versions_document_id_fkey!inner(entity_id)",
+                )
+                .in("id", boardPacketVersionIds)
+                .eq("documents.entity_id", entityId);
+
+            if (error) throw error;
+            (data ?? []).forEach((row) => {
+                const record = row as {
+                    id: string;
+                    document_id: string;
+                    status: BoardPacketSnapshot["status"];
+                    content_md: string | null;
+                    approved_at: string | null;
+                    approved_by: string | null;
+                };
+                if (!record.id) return;
+                versionMap.set(record.id, {
+                    document_id: record.document_id,
+                    status: record.status ?? null,
+                    content_md: record.content_md ?? null,
+                    approved_at: record.approved_at ?? null,
+                    approved_by: record.approved_by ?? null,
+                });
+            });
+        }
+
+        boardPacketsByMeetingId = meetings.reduce<
+            Record<string, BoardPacketSnapshot | null>
+        >((acc, meeting) => {
+            const versionId = meeting.board_packet_version_id ?? null;
+            const documentId = meeting.board_packet_document_id ?? null;
+            if (!versionId) {
+                acc[meeting.id] = null;
+                return acc;
+            }
+            const version = versionMap.get(versionId);
+            const approval =
+                approvalByTarget.get(`document_version:${versionId}`) ??
+                    null;
+            acc[meeting.id] = {
+                documentId: version?.document_id ?? documentId,
+                versionId,
+                status: version?.status ?? null,
+                contentMd: version?.content_md ?? null,
+                approvedAt: approval?.approved_at ?? version?.approved_at ??
+                    null,
+                approvedBy: approval?.board_member_id ?? version?.approved_by ??
+                    null,
+                approvalId: approval?.id ?? null,
+            };
+            return acc;
+        }, {});
+    }
 
     return {
         board,
@@ -839,5 +984,6 @@ export async function getGovernanceSnapshot(
         minutes,
         approvals,
         attendance,
+        boardPacketsByMeetingId,
     };
 }

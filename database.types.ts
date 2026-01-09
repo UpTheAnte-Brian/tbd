@@ -667,7 +667,7 @@ export type Database = {
           finalized_at?: string | null
           id?: string
           meeting_id: string
-          motion_type: string
+          motion_type?: string
           moved_by: string
           seconded_by?: string | null
           status?: string
@@ -722,7 +722,7 @@ export type Database = {
           board_member_id: string
           id?: string
           motion_id: string
-          signature_hash: string
+          signature_hash?: string
           signed_at?: string
           vote: string
         }
@@ -775,12 +775,16 @@ export type Database = {
         }
         Returns: string
       }
+      create_board_packet_for_meeting: {
+        Args: { p_meeting_id: string; p_title?: string }
+        Returns: Json
+      }
       finalize_motion: {
         Args: {
           p_approval_method?: string
           p_ip?: unknown
           p_motion_id: string
-          p_signature_hash: string
+          p_signature_hash?: string
         }
         Returns: string
       }
@@ -796,6 +800,10 @@ export type Database = {
       quorum_required_for_meeting: {
         Args: { p_meeting_id: string }
         Returns: number
+      }
+      set_board_packet_version: {
+        Args: { p_document_version_id: string; p_meeting_id: string }
+        Returns: boolean
       }
     }
     Enums: {
