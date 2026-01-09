@@ -43,3 +43,4 @@ Source of truth: ../project-structure.json
 - Global governance endpoints retained for cross-entity admin: ✅ (still in use? yes)
 - Phase 2B map folder normalization: ✅
 - Phase 3D legacy user endpoints removed: ✅ (deleted `app/api/entity-users`, `app/api/nonprofit-users`, `app/api/business-users`, `app/api/district-users`, `app/api/user-districts`; canonical `/api/entities/[id]/users`)
+- Phase 4A cleanup: ✅ (removed `.storybook`, `public/customers`, `public/hero-desktop.png`, `public/hero-mobile.png`, `public/opengraph-image.png`, `public/AnteUpNation`, `public/UTALogos`, `public/districtLogos`)
