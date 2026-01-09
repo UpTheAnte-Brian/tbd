@@ -1,7 +1,11 @@
 // CANONICAL: Entity-scoped users endpoint.
-import { NextRequest, NextResponse } from "next/server";
-import { createApiClient } from "@/utils/supabase/route";
-import { resolveEntityId } from "@/app/lib/entities";
+import { NextRequest } from "next/server";
+import {
+  getServerClient,
+  jsonError,
+  jsonOk,
+  parseEntityId,
+} from "@/app/lib/server/route-context";
 import {
   deleteEntityUser,
   getEntityUsers,
@@ -14,13 +18,12 @@ export async function GET(
   _req: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
-  const supabase = await createApiClient();
-  const { id: entityKey } = await context.params;
+  const supabase = await getServerClient();
 
   try {
-    const entityId = await resolveEntityId(supabase, entityKey);
+    const entityId = await parseEntityId(supabase, context.params);
     const users = await getEntityUsers(supabase, entityId);
-    return NextResponse.json(users);
+    return jsonOk(users);
   } catch (err) {
     const message = err instanceof Error
       ? err.message
@@ -28,7 +31,7 @@ export async function GET(
     const status = message.toLowerCase().includes("entity not found")
       ? 404
       : 500;
-    return NextResponse.json({ error: message }, { status });
+    return jsonError(message, status);
   }
 }
 
@@ -38,8 +41,7 @@ export async function POST(
   req: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
-  const supabase = await createApiClient();
-  const { id: entityKey } = await context.params;
+  const supabase = await getServerClient();
 
   let body: {
     userId?: string;
@@ -53,14 +55,11 @@ export async function POST(
       status?: EntityUserStatus | null;
     };
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return jsonError("Invalid JSON", 400);
   }
 
   if (!body.userId || !body.role) {
-    return NextResponse.json(
-      { error: "userId and role are required" },
-      { status: 400 },
-    );
+    return jsonError("userId and role are required", 400);
   }
 
   // Defensive validation in case callers send arbitrary strings
@@ -70,14 +69,11 @@ export async function POST(
     "removed",
   ]);
   if (body.status != null && !allowedStatuses.has(body.status)) {
-    return NextResponse.json(
-      { error: "status must be one of: active, invited, removed" },
-      { status: 400 },
-    );
+    return jsonError("status must be one of: active, invited, removed", 400);
   }
 
   try {
-    const entityId = await resolveEntityId(supabase, entityKey);
+    const entityId = await parseEntityId(supabase, context.params);
     const user = await upsertEntityUser(
       supabase,
       entityId,
@@ -85,7 +81,7 @@ export async function POST(
       body.role,
       body.status ?? null,
     );
-    return NextResponse.json(user, { status: 201 });
+    return jsonOk(user, { status: 201 });
   } catch (err) {
     const message = err instanceof Error
       ? err.message
@@ -93,7 +89,7 @@ export async function POST(
     const status = message.toLowerCase().includes("entity not found")
       ? 404
       : 500;
-    return NextResponse.json({ error: message }, { status });
+    return jsonError(message, status);
   }
 }
 
@@ -102,19 +98,18 @@ export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
-  const supabase = await createApiClient();
-  const { id: entityKey } = await context.params;
+  const supabase = await getServerClient();
   const { searchParams } = new URL(req.url);
   const userId = searchParams.get("userId");
 
   if (!userId) {
-    return NextResponse.json({ error: "userId is required" }, { status: 400 });
+    return jsonError("userId is required", 400);
   }
 
   try {
-    const entityId = await resolveEntityId(supabase, entityKey);
+    const entityId = await parseEntityId(supabase, context.params);
     await deleteEntityUser(supabase, entityId, userId);
-    return NextResponse.json({ success: true });
+    return jsonOk({ success: true });
   } catch (err) {
     const message = err instanceof Error
       ? err.message
@@ -122,6 +117,6 @@ export async function DELETE(
     const status = message.toLowerCase().includes("entity not found")
       ? 404
       : 500;
-    return NextResponse.json({ error: message }, { status });
+    return jsonError(message, status);
   }
 }
