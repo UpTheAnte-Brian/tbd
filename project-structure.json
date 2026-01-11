@@ -725,10 +725,13 @@
       {"type":"file","name":"test.ts"}
     ]},
     {"type":"directory","name":"supabase","contents":[
+      {"type":"directory","name":"_db_backups","contents":[
+        {"type":"file","name":"test_pre_migrations.sql"}
+      ]},
+      {"type":"directory","name":"_old_migrations_backup"},
       {"type":"directory","name":".branches","contents":[
         {"type":"file","name":"_current_branch"}
       ]},
-      {"type":"file","name":".gitignore"},
       {"type":"directory","name":".temp","contents":[
         {"type":"file","name":"cli-latest"},
         {"type":"file","name":"gotrue-version"},
@@ -749,7 +752,17 @@
         {"type":"file","name":"20251220001000_clear_legacy_district_metadata.sql"},
         {"type":"file","name":"20251220002000_drop_district_metadata.sql"},
         {"type":"file","name":"20251220004000_branding_entity_ref_reset.sql"},
-        {"type":"file","name":"20260102000000_seed_brand_asset_slots_non_district.sql"}
+        {"type":"file","name":"20260102000000_seed_brand_asset_slots_non_district.sql"},
+        {"type":"directory","name":"20260110061802_supabase","contents":[
+          {"type":"directory","name":"migrations","contents":[
+            {"type":"file","name":"20260110_reconcile_remote.sql.sql"}
+          ]}
+        ]},
+        {"type":"directory","name":"20260110152635_supabase","contents":[
+          {"type":"directory","name":"migrations","contents":[
+            {"type":"file","name":"20260110_reconcile_remote.sql.sql"}
+          ]}
+        ]}
       ]}
     ]},
     {"type":"file","name":"tailwind.config.ts"},
@@ -770,5 +783,5 @@
     ]}
   ]}
 ,
-  {"type":"report","directories":206,"files":364}
+  {"type":"report","directories":212,"files":366}
 ]
