@@ -775,10 +775,19 @@ export type Database = {
         }
         Returns: string
       }
+      assert_can_adjourn_meeting: {
+        Args: { p_board_id: string; p_presiding_user_id: string }
+        Returns: undefined
+      }
+      assert_can_start_meeting: {
+        Args: { p_board_id: string }
+        Returns: undefined
+      }
       create_board_packet_for_meeting: {
         Args: { p_meeting_id: string; p_title?: string }
         Returns: Json
       }
+      current_user_id: { Args: never; Returns: string }
       finalize_motion: {
         Args: {
           p_approval_method?: string
@@ -796,7 +805,23 @@ export type Database = {
         Args: { p_entity_id: string; p_user_id?: string }
         Returns: boolean
       }
+      is_board_member_current: {
+        Args: { p_board_id: string }
+        Returns: boolean
+      }
+      is_board_officer: {
+        Args: { p_board_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_board_officer_current: {
+        Args: { p_board_id: string }
+        Returns: boolean
+      }
       is_quorum_met: { Args: { p_meeting_id: string }; Returns: boolean }
+      meeting_is_adjourned_for_motion: {
+        Args: { p_motion_id: string }
+        Returns: boolean
+      }
       quorum_required_for_meeting: {
         Args: { p_meeting_id: string }
         Returns: number
@@ -808,6 +833,8 @@ export type Database = {
     }
     Enums: {
       approval_target_type: "meeting_minutes" | "document_version" | "motion"
+      meeting_status: "scheduled" | "in_session" | "adjourned" | "cancelled"
+      minutes_status: "draft" | "finalized" | "amended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2967,6 +2994,8 @@ export const Constants = {
   governance: {
     Enums: {
       approval_target_type: ["meeting_minutes", "document_version", "motion"],
+      meeting_status: ["scheduled", "in_session", "adjourned", "cancelled"],
+      minutes_status: ["draft", "finalized", "amended"],
     },
   },
   public: {

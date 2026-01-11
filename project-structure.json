@@ -762,7 +762,8 @@
           {"type":"directory","name":"migrations","contents":[
             {"type":"file","name":"20260110_reconcile_remote.sql.sql"}
           ]}
-        ]}
+        ]},
+        {"type":"file","name":"20260111051815_governance_meeting_enforcement.sql"}
       ]}
     ]},
     {"type":"file","name":"tailwind.config.ts"},
@@ -783,5 +784,5 @@
     ]}
   ]}
 ,
-  {"type":"report","directories":212,"files":366}
+  {"type":"report","directories":212,"files":367}
 ]

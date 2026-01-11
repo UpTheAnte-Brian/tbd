@@ -3,6 +3,7 @@
 import eslint from '@eslint/js';
 import nextPlugin from '@next/eslint-plugin-next';
 import tseslint from 'typescript-eslint';
+import reactHooks from 'eslint-plugin-react-hooks';
 
 // The Next plugin's exported config types don't line up perfectly with FlatConfig typing under @ts-check.
 // Cast to `any` so VS Code doesn't flag the spread in the `rules` object.
@@ -25,12 +26,20 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    // Global plugin registration + base rules. Keep this config unscoped so
+    // rules are resolvable for every file type Next runs ESLint against.
     plugins: {
       '@next/next': nextPlugin,
+      'react-hooks': reactHooks,
     },
     rules: {
       ...nextRecommendedRules,
       ...nextCoreWebVitalsRules,
+
+      // React Hooks rules (explicit to avoid rule-resolution issues)
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+
       '@next/next/no-img-element': 'off',
     },
   },
