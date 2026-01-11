@@ -15,6 +15,7 @@
 supabase/.temp/
 supabase/.branches/
 supabase/_old_migrations_backup/
+supabase/_db_backups/
 
 # next.js
 /.next/
