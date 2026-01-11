@@ -11,8 +11,10 @@
 # scratch files
 /scratchfiles
 
-# Local Supabase
-/supabase
+# Supabase local-only artifacts
+supabase/.temp/
+supabase/.branches/
+supabase/_old_migrations_backup/
 
 # next.js
 /.next/

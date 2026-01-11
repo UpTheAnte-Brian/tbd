@@ -76,6 +76,21 @@ Rule:
 - Data access: UI uses API route → DTO/service; no direct Supabase calls from components
 - Authorization intended via RLS (in progress)
 
+
+Rule 1 — Supabase CLI never reads .env
+	•	Dev/Test/Prod chosen via supabase link
+	•	Migrations & schema are environment-agnostic
+
+Rule 2 — App code always uses env-specific files
+	•	.env.local → dev runtime
+	•	.env.test.local → test runtime
+	•	.env.production → prod runtime later
+
+Rule 3 — No DB passwords in app env files
+	•	Only URLs + keys
+	•	Service role keys only for scripts that truly need them
+
+  
 ## CSS / Tailwind Rules
 - Utility-first Tailwind
 - Avoid inline styles except when computed values require it
