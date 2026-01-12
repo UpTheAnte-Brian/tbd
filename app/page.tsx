@@ -1,7 +1,8 @@
 import { headers } from "next/headers";
 import EntityMapExplorer from "@/app/components/map/entity-map-explorer";
 import type { EntityFeatureCollection } from "@/app/lib/types/map";
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/app/data/auth";
+import { isBuildTime } from "@/utils/build";
 
 type MapHomeResponse = {
   level: "states";
@@ -11,6 +12,12 @@ type MapHomeResponse = {
 export const revalidate = 86400;
 
 async function getHomeMapData(): Promise<MapHomeResponse> {
+  if (isBuildTime()) {
+    return {
+      level: "states",
+      featureCollection: { type: "FeatureCollection", features: [] },
+    };
+  }
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL ??
     process.env.NEXT_PUBLIC_HOST ?? // TODO: remove NEXT_PUBLIC_HOST fallback after migration
@@ -25,22 +32,9 @@ async function getHomeMapData(): Promise<MapHomeResponse> {
 }
 
 export default async function Page() {
-  const supabase = await createClient();
-
-  // Home page is public. If a session exists, we'll have a user; if not, continue anonymously.
-  // We only throw on unexpected errors (NOT on missing session).
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError) {
-    const normalized = authError.message?.toLowerCase() ?? "";
-    // Missing session is normal for public pages.
-    if (!normalized.includes("auth session missing")) {
-      throw new Error(`auth.getUser failed: ${authError.message}`);
-    }
-  }
-
   // Currently unused, but kept here for future personalization.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const user = authData?.user ?? null;
+  const user = await getCurrentUser();
 
   let mapData: MapHomeResponse | null = null;
   let mapError: string | null = null;

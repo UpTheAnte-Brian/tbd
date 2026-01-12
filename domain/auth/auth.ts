@@ -1,12 +1,16 @@
 import "server-only";
 import { cache } from "react";
 import { createClient } from "@/utils/supabase/server";
+import { isBuildTime } from "@/utils/build";
 
 // Cached helper methods makes it easy to get the same value in many places
 // without manually passing it around. This discourages passing it from Server
 // Component to Server Component which minimizes risk of passing it to a Client
 // Component.
 export const getCurrentUser = cache(async () => {
+    if (isBuildTime()) {
+        return null;
+    }
     const supabase = await createClient();
     // const token = (await cookies()).get("sb-access-token");
     // const decodedToken = await decryptAndValidate(token);

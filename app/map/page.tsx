@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import EntityMapExplorer from "@/app/components/map/entity-map-explorer";
 import type { EntityFeatureCollection } from "@/app/lib/types/map";
+import { isBuildTime } from "@/utils/build";
 
 type MapHomeResponse = {
   level: "states";
@@ -10,6 +11,12 @@ type MapHomeResponse = {
 export const revalidate = 86400;
 
 async function getHomeMapData(): Promise<MapHomeResponse> {
+  if (isBuildTime()) {
+    return {
+      level: "states",
+      featureCollection: { type: "FeatureCollection", features: [] },
+    };
+  }
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL ??
     process.env.NEXT_PUBLIC_HOST ?? // TODO: remove NEXT_PUBLIC_HOST fallback after migration

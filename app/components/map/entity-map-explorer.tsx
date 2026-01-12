@@ -88,6 +88,40 @@ export default function EntityMapExplorer({
     cacheRef.current.set(STATES_CACHE_KEY, initialStates);
   }
 
+  useEffect(() => {
+    if (initialStates.features.length > 0) return;
+    let cancelled = false;
+
+    async function loadStates() {
+      try {
+        const res = await fetch("/api/map/home", { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error("Failed to load states map");
+        }
+        const data = (await res.json()) as {
+          featureCollection?: EntityFeatureCollection;
+        };
+        if (cancelled) return;
+        const nextCollection = data.featureCollection ?? {
+          type: "FeatureCollection",
+          features: [],
+        };
+        cacheRef.current.set(STATES_CACHE_KEY, nextCollection);
+        setFeatureCollection(nextCollection);
+      } catch (err) {
+        if (!cancelled) {
+          console.error(err);
+        }
+      }
+    }
+
+    void loadStates();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialStates]);
+
   const isClickable = (props: EntityMapProperties) =>
     props.active === true && props.child_count > 0;
 
