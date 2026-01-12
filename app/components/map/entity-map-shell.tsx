@@ -58,7 +58,7 @@ const mapContainerStyle = {
 
 const MIDWEST_CENTER = { lat: 44.5, lng: -93.5 };
 const MIDWEST_ZOOM = 5;
-const MINNESOTA_ANCHOR = { lat: 46.3, lng: -94.3 };
+const MINNESOTA_ANCHOR = { lat: 45.3, lng: -94.3 };
 const MINNESOTA_ZOOM_OFFSET = 2;
 const GOOGLE_MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAP_ID;
 

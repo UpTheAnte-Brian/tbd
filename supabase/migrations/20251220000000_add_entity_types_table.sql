@@ -30,6 +30,13 @@ begin
         from information_schema.tables
         where table_schema = 'public'
           and table_name = 'entity_users'
+    )
+    and exists (
+        select 1
+        from information_schema.columns
+        where table_schema = 'public'
+          and table_name = 'entity_users'
+          and column_name = 'entity_type'
     ) then
         -- Normalize existing rows
         update public.entity_users
@@ -70,5 +77,7 @@ begin
                 add constraint entity_users_unique_assignment
                 unique (entity_type, entity_id, user_id);
         end if;
+    else
+        raise notice 'Skipping entity_users normalization: entity_type column not present in this environment.';
     end if;
 end$$;
