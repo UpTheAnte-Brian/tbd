@@ -42,6 +42,15 @@ const STATUS_OPTIONS: { value: BoardMember["status"]; label: string }[] = [
   { value: "removed", label: "Removed" },
 ];
 
+const MEETING_TYPE_OPTIONS = [
+  { value: "regular", label: "Regular" },
+  { value: "special", label: "Special" },
+  { value: "emergency", label: "Emergency" },
+  { value: "annual", label: "Annual" },
+  { value: "committee", label: "Committee" },
+  { value: "other", label: "Other" },
+];
+
 const ALLOWED_MOTION_TYPES = new Set([
   "resolution",
   "policy",
@@ -84,6 +93,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   const [termEnd, setTermEnd] = useState("");
   const [showEnded, setShowEnded] = useState(false);
   const [meetingDraft, setMeetingDraft] = useState({
+    title: "",
     meeting_type: "",
     scheduled_start: "",
     scheduled_end: "",
@@ -142,6 +152,12 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
   const canFinalize = isEntityAdmin || isChair;
   const canManagePackets = canFinalize;
+  const canAddMember = Boolean(selectedUserId && termStart);
+  const trimmedMeetingTitle = meetingDraft.title.trim();
+  const trimmedMeetingType = meetingDraft.meeting_type.trim();
+  const canCreateMeeting = Boolean(
+    trimmedMeetingTitle && trimmedMeetingType && meetingDraft.scheduled_start
+  );
 
   const buildSignatureHash = async (...parts: string[]) => {
     if (!crypto?.subtle) {
@@ -410,6 +426,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
   async function createMeeting() {
     if (!boardId) return;
+    if (!canCreateMeeting) {
+      toast.error("Add a title, meeting type, and start time");
+      return;
+    }
     try {
       setMeetingLoading(true);
       const res = await fetch(
@@ -417,12 +437,23 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(meetingDraft),
+          body: JSON.stringify({
+            ...meetingDraft,
+            title: trimmedMeetingTitle,
+            meeting_type: trimmedMeetingType,
+            scheduled_start: meetingDraft.scheduled_start || null,
+            scheduled_end: meetingDraft.scheduled_end || null,
+          }),
         }
       );
       if (!res.ok) throw new Error("Failed to create meeting");
       toast.success("Meeting scheduled");
-      setMeetingDraft({ meeting_type: "", scheduled_start: "", scheduled_end: "" });
+      setMeetingDraft({
+        title: "",
+        meeting_type: "",
+        scheduled_start: "",
+        scheduled_end: "",
+      });
       await loadSnapshot();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to create meeting";
@@ -866,8 +897,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
           <button
             onClick={addMember}
-            disabled={memberLoading}
-            className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500 disabled:bg-gray-700"
+            disabled={memberLoading || !canAddMember}
+            className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500 disabled:bg-gray-700 disabled:cursor-not-allowed"
           >
             {memberLoading ? <LoadingSpinner /> : "Add Member"}
           </button>
@@ -878,13 +909,29 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
         <h2 className="text-xl font-semibold">Meetings, Motions & Votes</h2>
         <div className="p-4 border border-gray-700 rounded space-y-3 bg-gray-900/60">
           <h3 className="font-semibold">Schedule Meeting</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <input
-              value={meetingDraft.meeting_type}
-              onChange={(e) => setMeetingDraft((prev) => ({ ...prev, meeting_type: e.target.value }))}
-              placeholder="Meeting type (regular, special...)"
+              value={meetingDraft.title}
+              onChange={(e) =>
+                setMeetingDraft((prev) => ({ ...prev, title: e.target.value }))
+              }
+              placeholder="Meeting title"
               className="p-2 rounded bg-gray-950 border border-gray-700 text-gray-100 placeholder:text-gray-400"
             />
+            <select
+              value={meetingDraft.meeting_type}
+              onChange={(e) =>
+                setMeetingDraft((prev) => ({ ...prev, meeting_type: e.target.value }))
+              }
+              className="p-2 rounded bg-gray-950 border border-gray-700 text-gray-100"
+            >
+              <option value="">Meeting type</option>
+              {MEETING_TYPE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
             <input
               type="datetime-local"
               value={meetingDraft.scheduled_start}
@@ -904,8 +951,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
           </div>
           <button
             onClick={createMeeting}
-            disabled={meetingLoading}
-            className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500 disabled:bg-gray-700"
+            disabled={meetingLoading || !canCreateMeeting}
+            className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500 disabled:bg-gray-700 disabled:cursor-not-allowed"
           >
             {meetingLoading ? <LoadingSpinner /> : "Create Meeting"}
           </button>
@@ -963,7 +1010,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <div>
                   <p className="font-semibold">
-                    {meeting.meeting_type ?? "Meeting"} ·{" "}
+                    {meeting.title ?? "Meeting"} ·{" "}
+                    {meeting.meeting_type ?? "General"} ·{" "}
                     {meeting.scheduled_start
                       ? new Date(meeting.scheduled_start).toLocaleString()
                       : "Unscheduled"}

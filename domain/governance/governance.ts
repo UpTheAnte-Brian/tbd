@@ -36,6 +36,7 @@ export interface BoardMeeting {
     id: string;
     board_id: string;
     meeting_type: string | null;
+    title: string | null;
     scheduled_start: string | null;
     scheduled_end: string | null;
     status: string | null;
