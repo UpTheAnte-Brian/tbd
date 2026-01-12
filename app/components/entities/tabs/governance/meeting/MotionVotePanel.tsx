@@ -37,7 +37,12 @@ export function MotionVotePanel(props: {
     const [votes, setVotes] = useState<VoteDTO[]>([]);
     const [loading, setLoading] = useState(false);
 
-    const locked = isMeetingLockedForVotes(meeting.status);
+    const locked =
+        isMeetingLockedForVotes(meeting.status) ||
+        Boolean(meeting.finalized_at);
+    const lockMessage = meeting.finalized_at
+        ? "This meeting is finalized. Votes are locked."
+        : `This meeting is ${meeting.status}. Votes are immutable.`;
 
     const myVote = useMemo(() => {
         if (!myUserId) return undefined;
@@ -105,7 +110,7 @@ export function MotionVotePanel(props: {
 
             {locked && (
                 <div className="rounded bg-red-50 border border-red-200 p-3 text-sm text-red-800">
-                    This meeting is {meeting.status}. Votes are immutable.
+                    {lockMessage}
                 </div>
             )}
 

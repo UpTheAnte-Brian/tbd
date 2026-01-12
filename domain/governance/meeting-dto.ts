@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/database.types";
 import { createApiClient } from "@/utils/supabase/route";
 import {
@@ -74,8 +74,10 @@ type ExtendedGovernanceTables = GovernanceTables & {
             entity_id?: string | null;
             status?: string | null;
             content_md?: string | null;
+            content_json?: unknown | null;
             created_at?: string | null;
             finalized_at?: string | null;
+            locked_at?: string | null;
             amended_from_minutes_id?: string | null;
             version?: number | null;
             finalized_by_user_id?: string | null;
@@ -84,8 +86,10 @@ type ExtendedGovernanceTables = GovernanceTables & {
             entity_id?: string | null;
             status?: string | null;
             content_md?: string | null;
+            content_json?: unknown | null;
             created_at?: string | null;
             finalized_at?: string | null;
+            locked_at?: string | null;
             amended_from_minutes_id?: string | null;
             version?: number | null;
             finalized_by_user_id?: string | null;
@@ -94,8 +98,10 @@ type ExtendedGovernanceTables = GovernanceTables & {
             entity_id?: string | null;
             status?: string | null;
             content_md?: string | null;
+            content_json?: unknown | null;
             created_at?: string | null;
             finalized_at?: string | null;
+            locked_at?: string | null;
             amended_from_minutes_id?: string | null;
             version?: number | null;
             finalized_by_user_id?: string | null;
@@ -125,6 +131,7 @@ type MeetingRecord = {
     scheduled_at: string | null;
     started_at: string | null;
     adjourned_at: string | null;
+    finalized_at: string | null;
     presiding_user_id: string | null;
     created_at: string | null;
 };
@@ -159,6 +166,17 @@ type MinutesRecord = {
     amended_from_minutes_id: string | null;
 };
 
+type MinutesExpandedRecord = {
+    id: string;
+    meeting_id: string;
+    status: MinutesStatus;
+    content_md: string | null;
+    content_json: unknown | null;
+    created_at: string | null;
+    finalized_at: string | null;
+    locked_at: string | null;
+};
+
 type PermissionsRecord = {
     isBoardMember: boolean;
     isBoardOfficer: boolean;
@@ -184,6 +202,7 @@ function mapMeeting(row: RawRecord, entityId: string): MeetingRecord {
         scheduled_at: scheduledAt,
         started_at: (row.started_at as string | null | undefined) ?? null,
         adjourned_at: (row.adjourned_at as string | null | undefined) ?? null,
+        finalized_at: (row.finalized_at as string | null | undefined) ?? null,
         presiding_user_id:
             (row.presiding_user_id as string | null | undefined) ??
                 null,
@@ -225,6 +244,30 @@ function mapMinutes(row: RawRecord, entityId: string): MinutesRecord {
         finalized_at: finalizedAt,
         amended_from_minutes_id:
             (row.amended_from_minutes_id as string | null | undefined) ?? null,
+    };
+}
+
+function mapMinutesExpanded(row: RawRecord): MinutesExpandedRecord {
+    const status = (row.status as MinutesStatus | null | undefined) ??
+        ((row.draft as boolean | null | undefined) === false
+            ? MINUTES_STATUS.FINALIZED
+            : MINUTES_STATUS.DRAFT);
+    const contentMd = (row.content_md as string | null | undefined) ??
+        (row.content as string | null | undefined) ??
+        null;
+    const finalizedAt = (row.finalized_at as string | null | undefined) ??
+        (row.approved_at as string | null | undefined) ??
+        null;
+    const contentJson: unknown | null = row["content_json"] ?? null;
+    return {
+        id: String(row.id),
+        meeting_id: String(row.meeting_id),
+        status,
+        content_md: contentMd,
+        content_json: contentJson,
+        created_at: (row.created_at as string | null | undefined) ?? null,
+        finalized_at: finalizedAt,
+        locked_at: (row.locked_at as string | null | undefined) ?? null,
     };
 }
 
@@ -441,6 +484,39 @@ export async function adjournMeeting(
     return mapMeeting(data as RawRecord, entityId);
 }
 
+export async function finalizeMeeting(
+    entityId: string,
+    meetingId: string,
+    signatureHash?: string | null,
+): Promise<MeetingRecord> {
+    const supabase = await getGovernanceClient();
+    const meetingInfo = await getMeetingRowForEntity(
+        supabase,
+        entityId,
+        meetingId,
+    );
+    if (!meetingInfo) {
+        throw new Error("Meeting not found");
+    }
+
+    const { data, error } = await supabase
+        .schema("governance")
+        // NOTE: typed Database Functions may lag behind; keep RPC names stable.
+        .rpc(
+            "finalize_meeting" as never,
+            {
+                p_meeting_id: meetingId,
+                p_signature_hash: signatureHash ?? null,
+            } as never,
+        );
+
+    if (error) throw error;
+    if (!data) {
+        throw new Error("Finalize meeting failed");
+    }
+    return mapMeeting(data as RawRecord, entityId);
+}
+
 export async function listMeetingMotions(
     entityId: string,
     meetingId: string,
@@ -654,6 +730,92 @@ export async function listMeetingMinutes(
 
     if (error) throw error;
     return (data ?? []).map((row) => mapMinutes(row as RawRecord, entityId));
+}
+
+type MinutesExpandedQuery = {
+    select: (columns: string) => MinutesExpandedQuery;
+    eq: (column: string, value: string) => MinutesExpandedQuery;
+    order: (
+        column: string,
+        options: { ascending: boolean },
+    ) => MinutesExpandedQuery;
+    limit: (
+        count: number,
+    ) => Promise<{ data: RawRecord[] | null; error: PostgrestError | null }>;
+};
+
+export async function getMeetingMinutesExpanded(
+    entityId: string,
+    meetingId: string,
+): Promise<MinutesExpandedRecord | null> {
+    const supabase = await getGovernanceClient();
+    const meetingInfo = await getMeetingRowForEntity(
+        supabase,
+        entityId,
+        meetingId,
+    );
+    if (!meetingInfo) {
+        throw new Error("Meeting not found");
+    }
+
+    const columns =
+        "id, meeting_id, status, content_md, content_json, created_at, finalized_at, locked_at";
+    const baseQuery = () =>
+        supabase
+            .schema("governance")
+            .from("meeting_minutes_expanded" as never)
+            .select(columns)
+            .eq("meeting_id", meetingId) as unknown as MinutesExpandedQuery;
+
+    let { data, error } = await baseQuery()
+        .order("created_at", { ascending: false })
+        .limit(1);
+    if (error && error.message.toLowerCase().includes("created_at")) {
+        ({ data, error } = await baseQuery()
+            .order("approved_at", { ascending: false })
+            .limit(1));
+    }
+    if (error && error.message.toLowerCase().includes("approved_at")) {
+        ({ data, error } = await baseQuery()
+            .order("finalized_at", { ascending: false })
+            .limit(1));
+    }
+
+    if (error) throw error;
+    const row = data?.[0];
+    return row ? mapMinutesExpanded(row as RawRecord) : null;
+}
+
+export async function lockMeetingMinutes(
+    entityId: string,
+    meetingId: string,
+    minutesId: string,
+): Promise<MinutesExpandedRecord> {
+    const supabase = await getGovernanceClient();
+    const meetingInfo = await getMeetingRowForEntity(
+        supabase,
+        entityId,
+        meetingId,
+    );
+    if (!meetingInfo) {
+        throw new Error("Meeting not found");
+    }
+
+    // TODO: replace with a governance.approve_meeting_minutes RPC.
+    const { data, error } = await supabase
+        .schema("governance")
+        .from("meeting_minutes")
+        .update({
+            locked_at: new Date().toISOString(),
+            status: MINUTES_STATUS.FINALIZED,
+        })
+        .eq("id", minutesId)
+        .eq("meeting_id", meetingId)
+        .select("*")
+        .single();
+
+    if (error) throw error;
+    return mapMinutesExpanded(data as RawRecord);
 }
 
 export async function updateMeetingMinutes(

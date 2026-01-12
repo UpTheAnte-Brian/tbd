@@ -5,6 +5,7 @@ import type {
     MeetingDTO,
     MotionDTO,
     MinutesDTO,
+    MinutesExpandedDTO,
     PermissionsDTO,
 } from "./types";
 import { MeetingStatusHeader } from "./MeetingStatusHeader";
@@ -16,6 +17,20 @@ import toast from "react-hot-toast";
 
 async function getJSON<T>(url: string): Promise<T> {
     const res = await fetch(url);
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error ?? "Request failed");
+    return json as T;
+}
+
+async function postJSON<T>(
+    url: string,
+    body: Record<string, unknown>,
+): Promise<T> {
+    const res = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+    });
     const json = await res.json();
     if (!res.ok) throw new Error(json?.error ?? "Request failed");
     return json as T;
@@ -35,6 +50,10 @@ export function MeetingDetail(props: {
     });
     const [motions, setMotions] = useState<MotionDTO[]>([]);
     const [minutesVersions, setMinutesVersions] = useState<MinutesDTO[]>([]);
+    const [minutesExpanded, setMinutesExpanded] =
+        useState<MinutesExpandedDTO | null>(null);
+    const [minutesExpandedLoaded, setMinutesExpandedLoaded] = useState(false);
+    const [minutesApproving, setMinutesApproving] = useState(false);
     const [selectedMinutesId, setSelectedMinutesId] = useState<string | null>(
         null,
     );
@@ -46,6 +65,28 @@ export function MeetingDetail(props: {
             null,
         [minutesVersions, selectedMinutesId],
     );
+
+    async function refreshMinutesExpanded() {
+        setMinutesExpandedLoaded(false);
+        setMinutesExpanded(null);
+        try {
+            const minutesResponse = await getJSON<{
+                minutes: MinutesExpandedDTO | null;
+            }>(
+                `/api/entities/${entityId}/governance/meetings/${meetingId}/minutes/expanded`,
+            );
+            setMinutesExpanded(minutesResponse.minutes ?? null);
+        } catch (err: unknown) {
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : "Failed to load minutes";
+            toast.error(message);
+            setMinutesExpanded(null);
+        } finally {
+            setMinutesExpandedLoaded(true);
+        }
+    }
 
     async function refreshAll() {
         try {
@@ -76,6 +117,8 @@ export function MeetingDetail(props: {
                     setSelectedMinutesId(minutesResponse.versions[0].id);
                 }
             }
+
+            await refreshMinutesExpanded();
         } catch (err: unknown) {
             const message =
                 err instanceof Error ? err.message : "Failed to load meeting";
@@ -92,6 +135,8 @@ export function MeetingDetail(props: {
         return <div className="p-4 text-slate-600">Loading meeting...</div>;
     }
 
+    const meetingFinalized = Boolean(meeting.finalized_at);
+
     return (
         <div className="space-y-4">
             <div className="border rounded p-4 space-y-3">
@@ -103,10 +148,18 @@ export function MeetingDetail(props: {
                     adjournedAt={meeting.adjourned_at}
                 />
 
+                {meeting.finalized_at && (
+                    <div className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                        Finalized on{" "}
+                        {new Date(meeting.finalized_at).toLocaleString()}
+                    </div>
+                )}
+
                 <MeetingActions
                     entityId={entityId}
                     meeting={meeting}
                     permissions={permissions}
+                    myUserId={myUserId}
                     onChanged={refreshAll}
                 />
             </div>
@@ -121,12 +174,13 @@ export function MeetingDetail(props: {
                             value={newMotionTitle}
                             onChange={(event) =>
                                 setNewMotionTitle(event.target.value)}
+                            disabled={meetingFinalized}
                         />
                     </div>
 
                     <button
                         className="px-3 py-2 rounded bg-slate-900 text-white disabled:bg-slate-300"
-                        disabled={!newMotionTitle.trim()}
+                        disabled={!newMotionTitle.trim() || meetingFinalized}
                         onClick={async () => {
                             try {
                                 const res = await fetch(
@@ -179,6 +233,96 @@ export function MeetingDetail(props: {
                         </div>
                     )}
                 </div>
+            </div>
+
+            <div className="border rounded p-4 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                    <div className="font-semibold">Minutes</div>
+                    {minutesExpandedLoaded && minutesExpanded && (
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700">
+                            {minutesExpanded.status}
+                        </span>
+                    )}
+                </div>
+
+                {!minutesExpandedLoaded && (
+                    <div className="text-sm text-slate-500">
+                        Loading minutes...
+                    </div>
+                )}
+                {minutesExpandedLoaded && !minutesExpanded && (
+                    <div className="text-sm text-slate-500">
+                        No minutes generated yet.
+                    </div>
+                )}
+                {minutesExpandedLoaded && minutesExpanded && (
+                    <>
+                        <div className="rounded border bg-slate-50 p-3 text-sm text-slate-800 whitespace-pre-wrap">
+                            {minutesExpanded.content_md ??
+                                "No minutes content available."}
+                        </div>
+                        <details className="rounded border bg-white p-3 text-sm">
+                            <summary className="cursor-pointer text-slate-600">
+                                Raw JSON
+                            </summary>
+                            <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap text-xs text-slate-700">
+                                {JSON.stringify(
+                                    minutesExpanded.content_json ?? {},
+                                    null,
+                                    2,
+                                )}
+                            </pre>
+                        </details>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                className="px-3 py-2 rounded bg-slate-900 text-white disabled:bg-slate-300"
+                                disabled={
+                                    minutesApproving ||
+                                    Boolean(minutesExpanded.locked_at)
+                                }
+                                onClick={async () => {
+                                    if (
+                                        !confirm(
+                                            "Lock minutes? This prevents edits.",
+                                        )
+                                    ) {
+                                        return;
+                                    }
+                                    setMinutesApproving(true);
+                                    try {
+                                        await postJSON(
+                                            `/api/entities/${entityId}/governance/meetings/${meetingId}/minutes/lock`,
+                                            { minutesId: minutesExpanded.id },
+                                        );
+                                        toast.success("Minutes locked");
+                                        await refreshAll();
+                                    } catch (err: unknown) {
+                                        const message =
+                                            err instanceof Error
+                                                ? err.message
+                                                : "Failed to lock minutes";
+                                        toast.error(message);
+                                    } finally {
+                                        setMinutesApproving(false);
+                                    }
+                                }}
+                            >
+                                {minutesApproving
+                                    ? "Locking..."
+                                    : "Approve Minutes"}
+                            </button>
+                            {minutesExpanded.locked_at && (
+                                <span className="text-sm text-slate-600">
+                                    Locked{" "}
+                                    {new Date(
+                                        minutesExpanded.locked_at,
+                                    ).toLocaleString()}
+                                </span>
+                            )}
+                        </div>
+                    </>
+                )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

@@ -14,6 +14,7 @@ export type MeetingDTO = {
     scheduled_at: string | null;
     started_at: string | null;
     adjourned_at: string | null;
+    finalized_at: string | null;
     presiding_user_id: string | null;
 };
 
@@ -50,4 +51,15 @@ export type MinutesDTO = {
     created_at: string | null;
     finalized_at: string | null;
     amended_from_minutes_id: string | null;
+};
+
+export type MinutesExpandedDTO = {
+    id: string;
+    meeting_id: string;
+    status: MinutesStatus;
+    content_md: string | null;
+    content_json: unknown | null;
+    created_at: string | null;
+    finalized_at: string | null;
+    locked_at: string | null;
 };

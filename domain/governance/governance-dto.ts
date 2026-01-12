@@ -225,19 +225,16 @@ function mapMeeting(
     return {
         id: String(row.id),
         board_id: String(row.board_id),
+        title: String(row.title), // ✅ REQUIRED
         meeting_type: (row.meeting_type as string | null | undefined) ?? null,
         scheduled_start: (row.scheduled_start as string | null | undefined) ??
             null,
         scheduled_end: (row.scheduled_end as string | null | undefined) ?? null,
         status: (row.status as string | null | undefined) ?? null,
-        board_packet_document_id: (row.board_packet_document_id as
-            | string
-            | null
-            | undefined) ?? null,
-        board_packet_version_id: (row.board_packet_version_id as
-            | string
-            | null
-            | undefined) ?? null,
+        board_packet_document_id:
+            (row.board_packet_document_id as string | null | undefined) ?? null,
+        board_packet_version_id:
+            (row.board_packet_version_id as string | null | undefined) ?? null,
         created_at: (row.created_at as string | null | undefined) ?? null,
         updated_at: (row.updated_at as string | null | undefined) ?? null,
     };
@@ -701,8 +698,7 @@ export async function castVote(
     }
 
     const status = (motion.status as string | null | undefined) ?? null;
-    const isFinalized =
-        Boolean(motion.finalized_at) ||
+    const isFinalized = Boolean(motion.finalized_at) ||
         status === "finalized" ||
         status === "passed" ||
         status === "failed" ||
@@ -711,8 +707,7 @@ export async function castVote(
         throw new Error("Voting is closed for this motion");
     }
 
-    const signedAt =
-        payload.signed_at ?? new Date().toISOString();
+    const signedAt = payload.signed_at ?? new Date().toISOString();
     const { data, error } = await governanceTable(supabase, "votes")
         .insert({
             motion_id: payload.motion_id,

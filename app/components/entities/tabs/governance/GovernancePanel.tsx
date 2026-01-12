@@ -66,7 +66,9 @@ const normalizeTermDate = (value: string | null | undefined) =>
 const getMemberActivity = (member: BoardMember, today: string) => {
   const termStart = normalizeTermDate(member.term_start);
   const termEnd = normalizeTermDate(member.term_end);
-  const isActive = Boolean(termStart && termStart <= today && (!termEnd || termEnd > today));
+  const isActive = Boolean(
+    termStart && termStart <= today && (!termEnd || termEnd > today)
+  );
   let computedStatus: "upcoming" | "active" | "ended" = "active";
   if (!termStart || today < termStart) {
     computedStatus = "upcoming";
@@ -85,8 +87,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState<ProfileSearchResult[]>([]);
   const [selectedUserId, setSelectedUserId] = useState("");
-  const [selectedRole, setSelectedRole] = useState<BoardMember["role"]>("director");
-  const [selectedStatus, setSelectedStatus] = useState<BoardMember["status"]>("active");
+  const [selectedRole, setSelectedRole] =
+    useState<BoardMember["role"]>("director");
+  const [selectedStatus, setSelectedStatus] =
+    useState<BoardMember["status"]>("active");
   const [termStart, setTermStart] = useState(() =>
     new Date().toISOString().slice(0, 10)
   );
@@ -98,11 +102,21 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     scheduled_start: "",
     scheduled_end: "",
   });
-  const [motionDrafts, setMotionDrafts] = useState<Record<string, Partial<Motion>>>({});
-  const [minutesDrafts, setMinutesDrafts] = useState<Record<string, string>>({});
-  const [boardPacketDrafts, setBoardPacketDrafts] = useState<Record<string, string>>({});
-  const [boardPacketCreating, setBoardPacketCreating] = useState<Record<string, boolean>>({});
-  const [boardPacketSaving, setBoardPacketSaving] = useState<Record<string, boolean>>({});
+  const [motionDrafts, setMotionDrafts] = useState<
+    Record<string, Partial<Motion>>
+  >({});
+  const [minutesDrafts, setMinutesDrafts] = useState<Record<string, string>>(
+    {}
+  );
+  const [boardPacketDrafts, setBoardPacketDrafts] = useState<
+    Record<string, string>
+  >({});
+  const [boardPacketCreating, setBoardPacketCreating] = useState<
+    Record<string, boolean>
+  >({});
+  const [boardPacketSaving, setBoardPacketSaving] = useState<
+    Record<string, boolean>
+  >({});
   const [boardPacketApproving, setBoardPacketApproving] = useState<
     Record<string, boolean>
   >({});
@@ -141,7 +155,9 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
   const isEntityAdmin =
     user?.global_role === "admin" ||
-    hasEntityRole(user?.entity_users ?? [], "nonprofit", nonprofitId, ["admin"]);
+    hasEntityRole(user?.entity_users ?? [], "nonprofit", nonprofitId, [
+      "admin",
+    ]);
 
   const isChair = (snapshot?.members ?? []).some(
     (member) =>
@@ -244,14 +260,18 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       Object.entries(json.boardPacketsByMeetingId ?? {}).forEach(
         ([meetingId, packet]) => {
           const snapshot = packet as BoardPacketSnapshot | null;
-          if (snapshot?.contentMd !== null && snapshot?.contentMd !== undefined) {
+          if (
+            snapshot?.contentMd !== null &&
+            snapshot?.contentMd !== undefined
+          ) {
             packetMap[meetingId] = snapshot.contentMd;
           }
         }
       );
       setBoardPacketDrafts(packetMap);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to load governance";
+      const message =
+        err instanceof Error ? err.message : "Failed to load governance";
       toast.error(message);
     } finally {
       setLoading(false);
@@ -270,9 +290,12 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
         return;
       }
       try {
-        const res = await fetch(`/api/profiles/search?q=${encodeURIComponent(searchText)}`, {
-          signal: controller.signal,
-        });
+        const res = await fetch(
+          `/api/profiles/search?q=${encodeURIComponent(searchText)}`,
+          {
+            signal: controller.signal,
+          }
+        );
         if (!res.ok) return;
         const json = (await res.json()) as ProfileSearchResult[];
         setSearchResults(json);
@@ -325,7 +348,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       );
       if (!res.ok) throw new Error("Failed to load quorum");
       const json = (await res.json()) as { quorumMet: boolean };
-      setQuorumByMeetingId((prev) => ({ ...prev, [meetingId]: json.quorumMet }));
+      setQuorumByMeetingId((prev) => ({
+        ...prev,
+        [meetingId]: json.quorumMet,
+      }));
     } catch {
       setQuorumByMeetingId((prev) => ({ ...prev, [meetingId]: false }));
     }
@@ -371,7 +397,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       setTermEnd("");
       await loadSnapshot();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to add member";
+      const message =
+        err instanceof Error ? err.message : "Failed to add member";
       toast.error(message);
     } finally {
       setMemberLoading(false);
@@ -394,7 +421,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       if (!res.ok) throw new Error("Failed to update member");
       await loadSnapshot();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to update member";
+      const message =
+        err instanceof Error ? err.message : "Failed to update member";
       toast.error(message);
     }
   }
@@ -412,7 +440,9 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ term_end: new Date().toISOString().slice(0, 10) }),
+          body: JSON.stringify({
+            term_end: new Date().toISOString().slice(0, 10),
+          }),
         }
       );
       if (!res.ok) throw new Error("Failed to end term");
@@ -456,7 +486,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       });
       await loadSnapshot();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to create meeting";
+      const message =
+        err instanceof Error ? err.message : "Failed to create meeting";
       toast.error(message);
     } finally {
       setMeetingLoading(false);
@@ -479,7 +510,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       setMotionDrafts((prev) => ({ ...prev, [meetingId]: {} }));
       await loadSnapshot();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to create motion";
+      const message =
+        err instanceof Error ? err.message : "Failed to create motion";
       toast.error(message);
     }
   }
@@ -502,7 +534,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       await loadSnapshot();
       await loadQuorum(meetingId);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to update attendance";
+      const message =
+        err instanceof Error ? err.message : "Failed to update attendance";
       toast.error(message);
     }
   }
@@ -540,7 +573,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       toast.success("Motion finalized");
       await loadSnapshot();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to finalize motion";
+      const message =
+        err instanceof Error ? err.message : "Failed to finalize motion";
       toast.error(message);
     }
   }
@@ -562,10 +596,14 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       );
       if (!res.ok) throw new Error("Failed to record vote");
       toast.success("Vote recorded");
-      setVoteDrafts((prev) => ({ ...prev, [motionId]: { board_member_id: "", vote: "yes" } }));
+      setVoteDrafts((prev) => ({
+        ...prev,
+        [motionId]: { board_member_id: "", vote: "yes" },
+      }));
       await loadSnapshot();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to record vote";
+      const message =
+        err instanceof Error ? err.message : "Failed to record vote";
       toast.error(message);
     }
   }
@@ -590,7 +628,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       toast.success("Minutes saved");
       await loadSnapshot();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to save minutes";
+      const message =
+        err instanceof Error ? err.message : "Failed to save minutes";
       toast.error(message);
     }
   }
@@ -630,7 +669,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       await loadSnapshot();
       await loadQuorum(meetingId);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to approve minutes";
+      const message =
+        err instanceof Error ? err.message : "Failed to approve minutes";
       toast.error(message);
     }
   }
@@ -735,8 +775,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       <div>
         <h2 className="text-xl font-semibold">Board Roster</h2>
         <p className="text-sm text-gray-400">
-          Governance is separate from operational roles. Only board members below can vote on
-          motions and approve minutes.
+          Governance is separate from operational roles. Only board members
+          below can vote on motions and approve minutes.
         </p>
         <label className="mt-3 flex items-center gap-2 text-sm text-gray-300">
           <input
@@ -752,9 +792,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
           {(snapshot.members ?? []).length === 0 && (
             <p className="text-gray-400">No board members yet.</p>
           )}
-          {(snapshot.members ?? []).length > 0 && rosterMembers.length === 0 && (
-            <p className="text-gray-400">No active board members.</p>
-          )}
+          {(snapshot.members ?? []).length > 0 &&
+            rosterMembers.length === 0 && (
+              <p className="text-gray-400">No active board members.</p>
+            )}
 
           {rosterMembers.map((member) => {
             const activity = resolveMemberActivity(member);
@@ -781,7 +822,9 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                   <select
                     value={member.role}
                     onChange={(e) =>
-                      updateMember(member.id, { role: e.target.value as BoardMember["role"] })
+                      updateMember(member.id, {
+                        role: e.target.value as BoardMember["role"],
+                      })
                     }
                     className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
                   >
@@ -851,7 +894,9 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
           <div className="flex flex-col sm:flex-row gap-2">
             <select
               value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value as BoardMember["role"])}
+              onChange={(e) =>
+                setSelectedRole(e.target.value as BoardMember["role"])
+              }
               className="bg-gray-950 border border-gray-700 rounded px-2 py-2 text-gray-100"
             >
               {ROLE_OPTIONS.map((opt) => (
@@ -863,7 +908,9 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
             <select
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value as BoardMember["status"])}
+              onChange={(e) =>
+                setSelectedStatus(e.target.value as BoardMember["status"])
+              }
               className="bg-gray-950 border border-gray-700 rounded px-2 py-2 text-gray-100"
             >
               {STATUS_OPTIONS.map((opt) => (
@@ -885,7 +932,9 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-sm text-gray-300">Term end (optional)</label>
+              <label className="text-sm text-gray-300">
+                Term end (optional)
+              </label>
               <input
                 type="date"
                 value={termEnd}
@@ -921,7 +970,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
             <select
               value={meetingDraft.meeting_type}
               onChange={(e) =>
-                setMeetingDraft((prev) => ({ ...prev, meeting_type: e.target.value }))
+                setMeetingDraft((prev) => ({
+                  ...prev,
+                  meeting_type: e.target.value,
+                }))
               }
               className="p-2 rounded bg-gray-950 border border-gray-700 text-gray-100"
             >
@@ -936,7 +988,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
               type="datetime-local"
               value={meetingDraft.scheduled_start}
               onChange={(e) =>
-                setMeetingDraft((prev) => ({ ...prev, scheduled_start: e.target.value }))
+                setMeetingDraft((prev) => ({
+                  ...prev,
+                  scheduled_start: e.target.value,
+                }))
               }
               className="p-2 rounded bg-gray-950 border border-gray-700 text-gray-100"
             />
@@ -944,7 +999,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
               type="datetime-local"
               value={meetingDraft.scheduled_end}
               onChange={(e) =>
-                setMeetingDraft((prev) => ({ ...prev, scheduled_end: e.target.value }))
+                setMeetingDraft((prev) => ({
+                  ...prev,
+                  scheduled_end: e.target.value,
+                }))
               }
               className="p-2 rounded bg-gray-950 border border-gray-700 text-gray-100"
             />
@@ -984,9 +1042,11 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
           const boardPacketVersionId =
             meeting.board_packet_version_id ?? boardPacket?.versionId ?? null;
           const boardPacketStatus = boardPacket?.status ?? null;
-          const boardPacketIsDraft = !boardPacketStatus || boardPacketStatus === "draft";
+          const boardPacketIsDraft =
+            !boardPacketStatus || boardPacketStatus === "draft";
           const boardPacketApproved =
-            boardPacketStatus === "approved" || Boolean(boardPacket?.approvedAt);
+            boardPacketStatus === "approved" ||
+            Boolean(boardPacket?.approvedAt);
           const boardPacketStatusLabel = boardPacketStatus
             ? boardPacketStatus.replace("_", " ")
             : "draft";
@@ -994,9 +1054,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
             ? "bg-green-900/40 text-green-300 border-green-700/60"
             : "bg-yellow-900/40 text-yellow-300 border-yellow-700/60";
           const boardPacketContent =
-            boardPacketDrafts[meeting.id] ??
-            boardPacket?.contentMd ??
-            "";
+            boardPacketDrafts[meeting.id] ?? boardPacket?.contentMd ?? "";
           const boardPacketApprovedAt = boardPacket?.approvedAt ?? null;
           const boardPacketApprovedBy = boardPacket?.approvedBy ?? null;
           const packetSaving = boardPacketSaving[meeting.id] ?? false;
@@ -1016,7 +1074,9 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                       ? new Date(meeting.scheduled_start).toLocaleString()
                       : "Unscheduled"}
                   </p>
-                  <p className="text-sm text-gray-400">Status: {meeting.status ?? "draft"}</p>
+                  <p className="text-sm text-gray-400">
+                    Status: {meeting.status ?? "draft"}
+                  </p>
                 </div>
                 <span
                   className={`px-2 py-1 text-xs rounded border ${quorumBadgeClass}`}
@@ -1033,7 +1093,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                 {activeMembers.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {activeMembers.map((member) => {
-                      const status = attendanceForMeeting[member.id] ?? "absent";
+                      const status =
+                        attendanceForMeeting[member.id] ?? "absent";
                       const isPresent = status === "present";
                       return (
                         <label
@@ -1060,7 +1121,9 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                               }`}
                             />
                           )}
-                          <span>{member.profile?.full_name ?? member.user_id}</span>
+                          <span>
+                            {member.profile?.full_name ?? member.user_id}
+                          </span>
                           <span className="text-xs text-gray-400">
                             {isPresent ? "Present" : "Absent"}
                           </span>
@@ -1090,7 +1153,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                   const motionApproval = getLatestApproval("motion", motion.id);
                   const motionApproved = isFinalized && Boolean(motionApproval);
                   const motionApprovedAt = motionApproval?.approved_at ?? null;
-                  const motionApprovedBy = motionApproval?.board_member_id ?? null;
+                  const motionApprovedBy =
+                    motionApproval?.board_member_id ?? null;
                   const disableFinalize =
                     !canFinalize || isFinalized || quorumMet !== true;
                   return (
@@ -1101,7 +1165,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                         <div>
                           <p className="font-semibold">
-                            {motion.title ?? "Motion"} ({motion.status ?? "draft"})
+                            {motion.title ?? "Motion"} (
+                            {motion.status ?? "draft"})
                           </p>
                           {motionApproved && (
                             <div className="flex flex-wrap items-center gap-2 text-xs text-green-300">
@@ -1117,12 +1182,16 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                             </div>
                           )}
                           {motion.description && (
-                            <p className="text-sm text-gray-300">{motion.description}</p>
+                            <p className="text-sm text-gray-300">
+                              {motion.description}
+                            </p>
                           )}
                         </div>
                         {canFinalize && !isFinalized && (
                           <button
-                            onClick={() => finalizeMotion(motion.id, meeting.id)}
+                            onClick={() =>
+                              finalizeMotion(motion.id, meeting.id)
+                            }
                             disabled={disableFinalize}
                             className="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500 disabled:bg-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
                           >
@@ -1138,7 +1207,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                             .map(
                               (v) =>
                                 `${v.vote} by ${
-                                  membersById[v.board_member_id]?.profile?.full_name ??
+                                  membersById[v.board_member_id]?.profile
+                                    ?.full_name ??
                                   membersById[v.board_member_id]?.user_id ??
                                   v.board_member_id
                                 }`
@@ -1178,8 +1248,12 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                               setVoteDrafts((prev) => ({
                                 ...prev,
                                 [motion.id]: {
-                                  board_member_id: prev[motion.id]?.board_member_id ?? "",
-                                  vote: e.target.value as "yes" | "no" | "abstain",
+                                  board_member_id:
+                                    prev[motion.id]?.board_member_id ?? "",
+                                  vote: e.target.value as
+                                    | "yes"
+                                    | "no"
+                                    | "abstain",
                                 },
                               }))
                             }
@@ -1212,7 +1286,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                   onChange={(e) =>
                     setMotionDrafts((prev) => ({
                       ...prev,
-                      [meeting.id]: { ...(prev[meeting.id] ?? {}), title: e.target.value },
+                      [meeting.id]: {
+                        ...(prev[meeting.id] ?? {}),
+                        title: e.target.value,
+                      },
                     }))
                   }
                   placeholder="Motion title"
@@ -1223,7 +1300,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                   onChange={(e) =>
                     setMotionDrafts((prev) => ({
                       ...prev,
-                      [meeting.id]: { ...(prev[meeting.id] ?? {}), description: e.target.value },
+                      [meeting.id]: {
+                        ...(prev[meeting.id] ?? {}),
+                        description: e.target.value,
+                      },
                     }))
                   }
                   placeholder="Description"
@@ -1235,7 +1315,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                     onChange={(e) =>
                       setMotionDrafts((prev) => ({
                         ...prev,
-                        [meeting.id]: { ...(prev[meeting.id] ?? {}), motion_type: e.target.value },
+                        [meeting.id]: {
+                          ...(prev[meeting.id] ?? {}),
+                          motion_type: e.target.value,
+                        },
                       }))
                     }
                     className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
@@ -1251,7 +1334,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                     onChange={(e) =>
                       setMotionDrafts((prev) => ({
                         ...prev,
-                        [meeting.id]: { ...(prev[meeting.id] ?? {}), moved_by: e.target.value },
+                        [meeting.id]: {
+                          ...(prev[meeting.id] ?? {}),
+                          moved_by: e.target.value,
+                        },
                       }))
                     }
                     className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
@@ -1268,7 +1354,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                     onChange={(e) =>
                       setMotionDrafts((prev) => ({
                         ...prev,
-                        [meeting.id]: { ...(prev[meeting.id] ?? {}), seconded_by: e.target.value },
+                        [meeting.id]: {
+                          ...(prev[meeting.id] ?? {}),
+                          seconded_by: e.target.value,
+                        },
                       }))
                     }
                     className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
@@ -1342,7 +1431,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                         <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
                           <button
                             onClick={() =>
-                              saveBoardPacketContent(meeting.id, boardPacketVersionId)
+                              saveBoardPacketContent(
+                                meeting.id,
+                                boardPacketVersionId
+                              )
                             }
                             disabled={packetSaving}
                             className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-500 disabled:bg-gray-700"
@@ -1351,12 +1443,17 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                           </button>
                           <button
                             onClick={() =>
-                              approveBoardPacket(meeting.id, boardPacketVersionId)
+                              approveBoardPacket(
+                                meeting.id,
+                                boardPacketVersionId
+                              )
                             }
                             disabled={packetApproving}
                             className="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500 disabled:bg-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
                           >
-                            {packetApproving ? "Approving..." : "Approve Packet"}
+                            {packetApproving
+                              ? "Approving..."
+                              : "Approve Packet"}
                           </button>
                         </div>
                       </>
@@ -1387,7 +1484,10 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                 <textarea
                   value={minutesDrafts[meeting.id] ?? ""}
                   onChange={(e) =>
-                    setMinutesDrafts((prev) => ({ ...prev, [meeting.id]: e.target.value }))
+                    setMinutesDrafts((prev) => ({
+                      ...prev,
+                      [meeting.id]: e.target.value,
+                    }))
                   }
                   className="w-full p-2 rounded bg-gray-950 border border-gray-700 text-gray-100 placeholder:text-gray-400"
                   placeholder="Meeting minutes..."
