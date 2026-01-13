@@ -8,6 +8,82 @@
 begin;
 
 -- -----------------------------------------------------------------------------
+-- Bootstrap: ensure core governance tables exist in fresh environments.
+-- These CREATE TABLE IF NOT EXISTS statements are intentionally minimal and
+-- are only meant to support running later ALTER/constraint steps safely.
+-- -----------------------------------------------------------------------------
+
+create schema if not exists governance;
+
+create table if not exists governance.boards (
+  id uuid primary key default gen_random_uuid(),
+  entity_id uuid null,
+  name text null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists governance.board_members (
+  id uuid primary key default gen_random_uuid(),
+  board_id uuid not null,
+  user_id uuid not null,
+  role text not null default 'member',
+  term_start date null,
+  term_end date null,
+  status text not null default 'active',
+  created_at timestamptz not null default now(),
+  constraint board_members_board_id_fkey foreign key (board_id) references governance.boards(id)
+);
+
+create table if not exists governance.board_meetings (
+  id uuid primary key default gen_random_uuid(),
+  board_id uuid not null,
+  title text null,
+  meeting_type text not null default 'regular',
+  status text not null default 'scheduled',
+  scheduled_start timestamptz null,
+  scheduled_end timestamptz null,
+  started_at timestamptz null,
+  adjourned_at timestamptz null,
+  cancelled_at timestamptz null,
+  presiding_user_id uuid null,
+  called_by_user_id uuid null,
+  finalized_at timestamptz null,
+  finalized_by uuid null,
+  finalized_signature_hash text null,
+  created_at timestamptz not null default now(),
+  constraint board_meetings_board_id_fkey foreign key (board_id) references governance.boards(id)
+);
+
+create table if not exists governance.meeting_minutes (
+  id uuid primary key default gen_random_uuid(),
+  meeting_id uuid not null,
+  content text null,
+  draft boolean null,
+  created_at timestamptz not null default now(),
+  constraint meeting_minutes_meeting_id_fkey foreign key (meeting_id) references governance.board_meetings(id)
+);
+
+create table if not exists governance.motions (
+  id uuid primary key default gen_random_uuid(),
+  meeting_id uuid not null,
+  title text null,
+  status text null,
+  created_at timestamptz not null default now(),
+  constraint motions_meeting_id_fkey foreign key (meeting_id) references governance.board_meetings(id)
+);
+
+create table if not exists governance.votes (
+  id uuid primary key default gen_random_uuid(),
+  motion_id uuid not null,
+  board_member_id uuid null,
+  user_id uuid null,
+  vote text null,
+  vote_value text null,
+  created_at timestamptz not null default now(),
+  constraint votes_motion_id_fkey foreign key (motion_id) references governance.motions(id)
+);
+
+-- -----------------------------------------------------------------------------
 -- 0) Enums (idempotent)
 -- -----------------------------------------------------------------------------
 

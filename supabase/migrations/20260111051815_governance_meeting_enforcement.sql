@@ -51,10 +51,16 @@ BEGIN
     EXECUTE $fn$
       create function governance.is_board_member(p_board_id uuid, p_user_id uuid)
       returns boolean
-      language sql
+      language plpgsql
       stable
-      as $sql$
-        select exists (
+      as $plpgsql$
+      begin
+        -- If the table isn't present in this environment yet, treat as not a member.
+        if to_regclass('governance.board_members') is null then
+          return false;
+        end if;
+
+        return exists (
           select 1
           from governance.board_members bm
           where bm.board_id = p_board_id
@@ -63,7 +69,8 @@ BEGIN
             and (bm.term_start is null or bm.term_start <= now())
             and (bm.term_end   is null or bm.term_end   >= now())
         );
-      $sql$;
+      end;
+      $plpgsql$;
     $fn$;
   END IF;
 END $do$;
@@ -96,10 +103,16 @@ BEGIN
     EXECUTE $fn$
       create function governance.is_board_officer(p_board_id uuid, p_user_id uuid)
       returns boolean
-      language sql
+      language plpgsql
       stable
-      as $sql$
-        select exists (
+      as $plpgsql$
+      begin
+        -- If the table isn't present in this environment yet, treat as not an officer.
+        if to_regclass('governance.board_members') is null then
+          return false;
+        end if;
+
+        return exists (
           select 1
           from governance.board_members bm
           where bm.board_id = p_board_id
@@ -108,7 +121,8 @@ BEGIN
             and (bm.term_end   is null or bm.term_end   >= now())
             and bm.role in ('chair','vice_chair','president','secretary')
         );
-      $sql$;
+      end;
+      $plpgsql$;
     $fn$;
   END IF;
 END $do$;
@@ -240,31 +254,42 @@ begin
   return new;
 end $$;
 
-drop trigger if exists board_meetings_enforce_lifecycle on governance.board_meetings;
-create trigger board_meetings_enforce_lifecycle
-before insert or update on governance.board_meetings
-for each row
-execute function governance.trg_board_meetings_enforce_lifecycle();
+do $$
+begin
+  if to_regclass('governance.board_meetings') is null then
+    raise notice 'Skipping board_meetings_enforce_lifecycle trigger; governance.board_meetings does not exist.';
+  else
+    execute 'drop trigger if exists board_meetings_enforce_lifecycle on governance.board_meetings';
+    execute 'create trigger board_meetings_enforce_lifecycle before insert or update on governance.board_meetings for each row execute function governance.trg_board_meetings_enforce_lifecycle()';
+  end if;
+end $$;
 
--- ----------------------------
 -- 7) Votes become immutable at adjournment
 -- Assumes:
 --   governance.motions(id, meeting_id, status, finalized_at)
 --   governance.votes(id, motion_id, user_id, vote_value, created_at)
--- and board_meetings(id, status)
--- ----------------------------
+--   governance.board_meetings(id, status)
+-- This version is replay-safe if motions/board_meetings do not exist.
 create or replace function governance.meeting_is_adjourned_for_motion(p_motion_id uuid)
 returns boolean
-language sql
+language plpgsql
 stable
 as $$
-  select exists (
+begin
+  -- If the required tables aren't present in this environment yet, treat as not adjourned.
+  if to_regclass('governance.motions') is null
+     or to_regclass('governance.board_meetings') is null then
+    return false;
+  end if;
+
+  return exists (
     select 1
     from governance.motions m
     join governance.board_meetings bm on bm.id = m.meeting_id
     where m.id = p_motion_id
-      and bm.status = 'adjourned'
+      and bm.status::text = 'adjourned'
   );
+end;
 $$;
 
 create or replace function governance.trg_votes_block_after_adjournment()
@@ -279,11 +304,15 @@ begin
   return new;
 end $$;
 
-drop trigger if exists votes_block_after_adjournment on governance.votes;
-create trigger votes_block_after_adjournment
-before insert or update or delete on governance.votes
-for each row
-execute function governance.trg_votes_block_after_adjournment();
+do $$
+begin
+  if to_regclass('governance.votes') is null then
+    raise notice 'Skipping votes_block_after_adjournment trigger; governance.votes does not exist.';
+  else
+    execute 'drop trigger if exists votes_block_after_adjournment on governance.votes';
+    execute 'create trigger votes_block_after_adjournment before insert or update or delete on governance.votes for each row execute function governance.trg_votes_block_after_adjournment()';
+  end if;
+end $$;
 
 -- ----------------------------
 -- 8) Minutes versioning: finalized minutes are immutable
@@ -329,11 +358,15 @@ begin
   return new;
 end $$;
 
-drop trigger if exists minutes_immutable_if_finalized on governance.meeting_minutes;
-create trigger minutes_immutable_if_finalized
-before insert or update on governance.meeting_minutes
-for each row
-execute function governance.trg_minutes_immutable_if_finalized();
+do $$
+begin
+  if to_regclass('governance.meeting_minutes') is null then
+    raise notice 'Skipping minutes_immutable_if_finalized trigger; governance.meeting_minutes does not exist.';
+  else
+    execute 'drop trigger if exists minutes_immutable_if_finalized on governance.meeting_minutes';
+    execute 'create trigger minutes_immutable_if_finalized before insert or update on governance.meeting_minutes for each row execute function governance.trg_minutes_immutable_if_finalized()';
+  end if;
+end $$;
 
 -- Optional: enforce version increments per meeting
 create or replace function governance.trg_minutes_auto_version()
@@ -357,8 +390,12 @@ begin
   return new;
 end $$;
 
-drop trigger if exists minutes_auto_version on governance.meeting_minutes;
-create trigger minutes_auto_version
-before insert on governance.meeting_minutes
-for each row
-execute function governance.trg_minutes_auto_version();
+do $$
+begin
+  if to_regclass('governance.meeting_minutes') is null then
+    raise notice 'Skipping minutes_auto_version trigger; governance.meeting_minutes does not exist.';
+  else
+    execute 'drop trigger if exists minutes_auto_version on governance.meeting_minutes';
+    execute 'create trigger minutes_auto_version before insert on governance.meeting_minutes for each row execute function governance.trg_minutes_auto_version()';
+  end if;
+end $$;
