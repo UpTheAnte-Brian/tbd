@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { Type as TypeIcon } from "lucide-react";
 import AccordionCard from "@/app/components/user/AccordionCard";
 import TypographyEditor from "@/app/components/branding/TypographyEditor";
-import { TypographyShowcase } from "@/app/components/branding/TypographyShowcase";
 import type {
   BrandingTypography,
   FontRole,
@@ -200,7 +199,6 @@ export default function BrandTypographySection({
         )}
       </AccordionCard>
 
-      <TypographyShowcase />
     </>
   );
 }

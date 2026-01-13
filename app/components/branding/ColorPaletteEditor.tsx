@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export type ColorPalette = {
   id?: string;
@@ -12,6 +12,8 @@ export type ColorPalette = {
 type Props = {
   initial: ColorPalette;
   entityName: string;
+  fixedRole?: string;
+  slotCount?: number;
   onSave: (palette: ColorPalette) => Promise<void>;
   onCancel: () => void;
 };
@@ -19,20 +21,31 @@ type Props = {
 export default function ColorPaletteEditor({
   initial,
   entityName,
+  fixedRole,
+  slotCount,
   onSave,
   onCancel,
 }: Props) {
   const [colors, setColors] = useState<string[]>(initial.colors || []);
   const [newColor, setNewColor] = useState("#000000");
-  const [role, setRole] = useState(initial.role || "");
+  const [role, setRole] = useState(fixedRole ?? initial.role ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const isFixedRole = Boolean(fixedRole);
+  const isFixedSlots = typeof slotCount === "number";
+
+  useEffect(() => {
+    if (fixedRole) {
+      setRole(fixedRole);
+    }
+  }, [fixedRole]);
 
   const isValidHex = (value: string) =>
     /^#([0-9A-Fa-f]{6})$/.test(value.trim());
 
   const addColor = () => {
+    if (isFixedSlots) return;
     if (!newColor || !isValidHex(newColor)) {
       setError("Color must be a valid hex value like #RRGGBB");
       return;
@@ -43,6 +56,7 @@ export default function ColorPaletteEditor({
   };
 
   const removeColor = (index: number) => {
+    if (isFixedSlots) return;
     setColors((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -60,7 +74,8 @@ export default function ColorPaletteEditor({
   };
 
   const handleSave = async () => {
-    if (!role.trim()) {
+    const resolvedRole = fixedRole ?? role;
+    if (!resolvedRole.trim()) {
       setError("Role is required.");
       return;
     }
@@ -73,22 +88,30 @@ export default function ColorPaletteEditor({
 
     const cleanShortname = entityName?.trim() || "Palette";
     const roleLabel =
-      role === "primary"
+      resolvedRole === "primary"
         ? "Primary"
-        : role === "secondary"
+        : resolvedRole === "secondary"
           ? "Secondary"
-          : role === "tertiary"
+          : resolvedRole === "tertiary"
             ? "Tertiary"
-            : role === "accent"
+            : resolvedRole === "accent"
               ? "Accent"
-              : role;
+              : resolvedRole;
     const nameToSave = `${cleanShortname} ${roleLabel}`.trim();
 
     setSaving(true);
     setError(null);
 
     try {
-      await onSave({ id: initial.id, name: nameToSave, colors, role });
+      const colorsToSave = isFixedSlots
+        ? colors.slice(0, slotCount ?? colors.length)
+        : colors;
+      await onSave({
+        id: initial.id,
+        name: nameToSave,
+        colors: colorsToSave,
+        role: resolvedRole,
+      });
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -128,18 +151,32 @@ export default function ColorPaletteEditor({
       {error && <div className="text-sm text-brand-primary-2">{error}</div>}
 
       <div className="flex flex-col gap-2">
-        <select
-          className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-brand-secondary-0"
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          aria-label="Palette role"
-        >
-          <option value="">Select a role</option>
-          <option value="primary">Primary</option>
-          <option value="secondary">Secondary</option>
-          <option value="tertiary">Tertiary</option>
-          <option value="accent">Accent</option>
-        </select>
+        {isFixedRole ? (
+          <div className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-sm text-brand-secondary-0">
+            Role:{" "}
+            <span className="font-semibold">
+              {{
+                primary: "Primary",
+                secondary: "Secondary",
+                tertiary: "Tertiary",
+                accent: "Accent",
+              }[role] ?? role}
+            </span>
+          </div>
+        ) : (
+          <select
+            className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-brand-secondary-0"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            aria-label="Palette role"
+          >
+            <option value="">Select a role</option>
+            <option value="primary">Primary</option>
+            <option value="secondary">Secondary</option>
+            <option value="tertiary">Tertiary</option>
+            <option value="accent">Accent</option>
+          </select>
+        )}
         <div className="text-xs text-brand-secondary-0 opacity-70">
           Palette name will be:{" "}
           <span className="font-semibold text-brand-secondary-0">
@@ -185,36 +222,40 @@ export default function ColorPaletteEditor({
                 className="w-28 rounded border border-brand-secondary-1 bg-brand-secondary-2 px-2 py-1 text-brand-secondary-0"
                 placeholder="#RRGGBB"
               />
-              <button
-                onClick={() => removeColor(i)}
-                className="text-xs text-brand-primary-2 hover:underline"
-              >
-                remove
-              </button>
+              {isFixedSlots ? null : (
+                <button
+                  onClick={() => removeColor(i)}
+                  className="text-xs text-brand-primary-2 hover:underline"
+                >
+                  remove
+                </button>
+              )}
             </div>
           ))}
         </div>
 
-        <div className="flex items-center gap-2 mt-2">
-          <input
-            type="color"
-            value={newColor}
-            onChange={(e) => setNewColor(e.target.value)}
-            className="h-10 w-10 rounded border border-brand-secondary-1 bg-brand-secondary-2"
-          />
-          <input
-            type="text"
-            className="w-32 rounded border border-brand-secondary-1 bg-brand-secondary-2 px-2 py-1 text-brand-secondary-0"
-            value={newColor}
-            onChange={(e) => setNewColor(e.target.value)}
-          />
-          <button
-            onClick={addColor}
-            className="rounded bg-brand-secondary-0 px-3 py-2 text-brand-secondary-2 hover:bg-brand-secondary-1"
-          >
-            Add Color
-          </button>
-        </div>
+        {isFixedSlots ? null : (
+          <div className="flex items-center gap-2 mt-2">
+            <input
+              type="color"
+              value={newColor}
+              onChange={(e) => setNewColor(e.target.value)}
+              className="h-10 w-10 rounded border border-brand-secondary-1 bg-brand-secondary-2"
+            />
+            <input
+              type="text"
+              className="w-32 rounded border border-brand-secondary-1 bg-brand-secondary-2 px-2 py-1 text-brand-secondary-0"
+              value={newColor}
+              onChange={(e) => setNewColor(e.target.value)}
+            />
+            <button
+              onClick={addColor}
+              className="rounded bg-brand-secondary-0 px-3 py-2 text-brand-secondary-2 hover:bg-brand-secondary-1"
+            >
+              Add Color
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-3 mt-4">

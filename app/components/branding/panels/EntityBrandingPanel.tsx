@@ -5,6 +5,9 @@ import { useState } from "react";
 import BrandAssetsSection from "@/app/components/branding/panels/BrandAssetsSection";
 import BrandPalettesSection from "@/app/components/branding/panels/BrandPalettesSection";
 import BrandTypographySection from "@/app/components/branding/panels/BrandTypographySection";
+import BrandingTips from "@/app/components/branding/panels/BrandingTips";
+import { TypographyShowcase } from "@/app/components/branding/TypographyShowcase";
+import AccordionCard from "@/app/components/user/AccordionCard";
 import { useBrandingAssets } from "@/app/hooks/useBrandingAssets";
 import { useEntityBranding } from "@/app/hooks/useEntityBranding";
 import { useUser } from "@/app/hooks/useUser";
@@ -109,6 +112,16 @@ export default function EntityBrandingPanel({
         canEdit={canEdit}
         onRefresh={handleRefresh}
       />
+
+      <AccordionCard title="Brand Usage & Setup Help">
+        <div className="space-y-6">
+          <BrandingTips
+            palettes={branding?.palettes ?? []}
+            entityName={entityName}
+          />
+          <TypographyShowcase />
+        </div>
+      </AccordionCard>
     </div>
   );
 }

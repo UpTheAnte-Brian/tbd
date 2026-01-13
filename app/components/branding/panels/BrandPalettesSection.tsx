@@ -3,9 +3,15 @@
 import { useMemo, useState } from "react";
 import { Palette as PaletteIcon } from "lucide-react";
 import AccordionCard from "@/app/components/user/AccordionCard";
+import BrandPaletteGrid from "@/app/components/branding/BrandPaletteGrid";
 import ColorPaletteEditor, {
   type ColorPalette,
 } from "@/app/components/branding/ColorPaletteEditor";
+import {
+  toPaletteMap,
+  type CanonicalPalette,
+  type CanonicalPalettes,
+} from "@/app/lib/branding/resolveBranding";
 import type { BrandingPalette } from "@/app/lib/types/types";
 
 interface Props {
@@ -23,18 +29,14 @@ export default function BrandPalettesSection({
   canEdit,
   onRefresh,
 }: Props) {
-  const [editingPalette, setEditingPalette] = useState<ColorPalette | null>(
+  const [editingPalette, setEditingPalette] = useState<CanonicalPalette | null>(
     null
   );
 
-  const colorColumns = useMemo(() => {
-    if (!palettes?.length) return 0;
-    return Math.max(
-      0,
-      ...palettes.map((p) => (Array.isArray(p.colors) ? p.colors.length : 0))
-    );
-  }, [palettes]);
-  const paletteGridTemplate = `minmax(220px, 2fr) 90px repeat(${colorColumns}, minmax(52px, 1fr))`;
+  const paletteMap = useMemo<CanonicalPalettes>(
+    () => toPaletteMap(palettes, entityName),
+    [palettes, entityName]
+  );
 
   return (
     <>
@@ -47,7 +49,7 @@ export default function BrandPalettesSection({
           <div className="relative z-10 w-full max-w-md max-h-[calc(100vh-2rem)] bg-brand-secondary-2 text-brand-secondary-0 border border-brand-secondary-1 shadow-xl p-4 overflow-y-auto rounded-lg mr-2">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">
-                {editingPalette.id ? "Edit Palette" : "Create Palette"}
+                {editingPalette.id ? "Edit Palette" : "Initialize Palette"}
               </h3>
               <button
                 className="text-brand-secondary-0 hover:text-brand-primary-2"
@@ -58,25 +60,25 @@ export default function BrandPalettesSection({
             </div>
 
             <ColorPaletteEditor
-              initial={editingPalette}
+              initial={editingPalette as ColorPalette}
               entityName={entityName}
+              fixedRole={editingPalette.role}
+              slotCount={3}
               onCancel={() => setEditingPalette(null)}
               onSave={async (palette) => {
                 if (!entityId) return;
-                const method = palette.id ? "PATCH" : "POST";
-                const url = palette.id
-                  ? `/api/entities/${entityId}/branding/palettes/${palette.id}`
-                  : `/api/entities/${entityId}/branding/palettes`;
-
-                const res = await fetch(url, {
-                  method,
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    name: palette.name,
-                    role: palette.role,
-                    colors: palette.colors,
-                  }),
-                });
+                const res = await fetch(
+                  `/api/entities/${entityId}/branding/palettes`,
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      name: palette.name,
+                      role: palette.role,
+                      colors: palette.colors,
+                    }),
+                  }
+                );
 
                 if (!res.ok) {
                   const err = await res.json().catch(() => null);
@@ -103,108 +105,19 @@ export default function BrandPalettesSection({
           <div className="text-sm text-brand-primary-2">
             Missing entity mapping for this entity.
           </div>
-        ) : palettes?.length ? (
-          <div className="mt-2 overflow-x-auto rounded border border-brand-secondary-1 bg-brand-secondary-2">
-            <div className="grid gap-2 min-w-max text-sm text-brand-secondary-0">
-              <div
-                className="grid items-center gap-3 px-2 py-2 text-xs uppercase tracking-wide border-b border-brand-secondary-1 bg-brand-secondary-1"
-                style={{ gridTemplateColumns: paletteGridTemplate }}
-              >
-                <div>Name</div>
-                <div className="text-center">Edit</div>
-                {Array.from({ length: colorColumns }).map((_, idx) => (
-                  <div
-                    key={`header-${idx}`}
-                    className="text-center text-xs uppercase tracking-wide"
-                  >
-                    {idx}
-                  </div>
-                ))}
-              </div>
-
-              {palettes.map((palette) => (
-                <div
-                  key={palette.id}
-                  className="grid items-center gap-3 px-2 py-2 border-b border-brand-secondary-1"
-                  style={{ gridTemplateColumns: paletteGridTemplate }}
-                >
-                  <div className="flex items-center">
-                    <h3 className="text-md font-medium text-brand-secondary-0">
-                      {palette.name}
-                    </h3>
-                  </div>
-                  <div className="flex justify-center">
-                    <button
-                      className="rounded bg-brand-secondary-0 px-3 py-1 text-xs text-brand-secondary-2 hover:bg-brand-secondary-1 disabled:opacity-50"
-                      onClick={() =>
-                        setEditingPalette({
-                          id: palette.id,
-                          name: palette.name,
-                          colors: Array.isArray(palette.colors)
-                            ? palette.colors
-                            : [],
-                          role: palette.role,
-                        })
-                      }
-                      disabled={!canEdit}
-                    >
-                      Edit
-                    </button>
-                  </div>
-                  {Array.from({ length: colorColumns }).map((_, idx) => {
-                    const paletteColors = Array.isArray(palette.colors)
-                      ? palette.colors
-                      : [];
-                    const color = paletteColors[idx];
-                    return (
-                      <div
-                        key={`${palette.id}-color-${idx}`}
-                        className="flex items-center justify-center"
-                      >
-                        {color ? (
-                          <div
-                            className="w-12 h-12 rounded border border-brand-secondary-1"
-                            style={{ backgroundColor: color }}
-                            title={color}
-                          />
-                        ) : (
-                          <div className="flex h-12 w-12 items-center justify-center rounded border border-dashed border-brand-secondary-1 text-xs text-brand-secondary-0">
-                            -
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
         ) : (
-          <div className="text-brand-secondary-0">
-            No color palettes defined.
-          </div>
+          <BrandPaletteGrid
+            palettes={paletteMap}
+            canEdit={canEdit}
+            onEditPalette={(palette) => setEditingPalette(palette)}
+          />
         )}
 
-        {entityId &&
-          (canEdit ? (
-            <button
-              className="mt-4 rounded bg-brand-primary-0 px-3 py-2 text-brand-secondary-2 hover:bg-brand-primary-2"
-              onClick={() =>
-                setEditingPalette({
-                  id: undefined,
-                  name: "",
-                  colors: [],
-                  role: undefined,
-                })
-              }
-            >
-              + Add Palette
-            </button>
-          ) : (
-            <div className="mt-4 text-xs text-brand-secondary-0">
-              You do not have permission to edit palettes.
-            </div>
-          ))}
+        {entityId && !canEdit ? (
+          <div className="mt-4 text-xs text-brand-secondary-0">
+            You do not have permission to edit palettes.
+          </div>
+        ) : null}
       </AccordionCard>
     </>
   );

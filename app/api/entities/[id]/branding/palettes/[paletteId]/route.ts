@@ -85,6 +85,10 @@ export async function PATCH(
     if (typeof body.role !== "string") {
       return NextResponse.json({ error: "role must be a string" }, { status: 400 });
     }
+    const roleOptions = ["primary", "secondary", "accent"];
+    if (!roleOptions.includes(body.role)) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    }
     update.role = body.role;
   }
 

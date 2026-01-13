@@ -56,9 +56,6 @@ export async function POST(
   const colorsRaw = body.colors;
   const roleRaw = body.role;
 
-  if (typeof name !== "string" || name.trim().length === 0) {
-    return NextResponse.json({ error: "name is required" }, { status: 400 });
-  }
   if (typeof roleRaw !== "string") {
     return NextResponse.json({ error: "role is required" }, { status: 400 });
   }
@@ -66,7 +63,7 @@ export async function POST(
     return NextResponse.json({ error: "colors must be an array" }, { status: 400 });
   }
 
-  const roleOptions: ColorRole[] = ["primary", "secondary", "tertiary", "accent"];
+  const roleOptions: ColorRole[] = ["primary", "secondary", "accent"];
   if (!roleOptions.includes(roleRaw as ColorRole)) {
     return NextResponse.json({ error: "Invalid role" }, { status: 400 });
   }
@@ -83,15 +80,21 @@ export async function POST(
     colors.push(c);
   }
 
+  const resolvedName =
+    typeof name === "string" && name.trim().length > 0 ? name.trim() : role;
+
   const { data, error } = await supabase
     .schema("branding")
     .from("palettes")
-    .insert({
-      entity_id: entityId,
-      name,
-      colors,
-      role,
-    })
+    .upsert(
+      {
+        entity_id: entityId,
+        name: resolvedName,
+        colors,
+        role,
+      },
+      { onConflict: "entity_id,role" }
+    )
     .select("*")
     .single();
 

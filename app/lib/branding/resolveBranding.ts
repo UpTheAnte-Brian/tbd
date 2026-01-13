@@ -2,6 +2,32 @@ import type {
   BrandingPalette,
   BrandingTypography,
 } from "@/app/lib/types/types";
+import { normalizeHex } from "@/app/lib/branding/colorUtils";
+
+export type PaletteRole = "primary" | "secondary" | "accent";
+export const PALETTE_ROLES: PaletteRole[] = ["primary", "secondary", "accent"];
+
+export type PaletteInput = {
+  id?: string;
+  name: string;
+  role: PaletteRole;
+  colors: string[];
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type CanonicalPalette = {
+  key: PaletteRole;
+  label: string;
+  role: PaletteRole;
+  id?: string;
+  name: string;
+  colors: [string, string, string];
+  isPlaceholder: boolean;
+  isIncomplete: boolean;
+};
+
+export type CanonicalPalettes = Record<PaletteRole, CanonicalPalette>;
 
 export type BrandColorTokens = {
   primary0: string;
@@ -39,6 +65,33 @@ export const DEFAULT_BRAND_COLORS: BrandColorTokens = {
   accent0: "#245ef0",
   accent1: "#ed37cb",
   accent2: "#f52a1f",
+};
+
+export const DEFAULT_BRAND_PALETTES: Record<
+  PaletteRole,
+  [string, string, string]
+> = {
+  primary: [
+    DEFAULT_BRAND_COLORS.primary0,
+    DEFAULT_BRAND_COLORS.primary1,
+    DEFAULT_BRAND_COLORS.primary2,
+  ],
+  secondary: [
+    DEFAULT_BRAND_COLORS.secondary0,
+    DEFAULT_BRAND_COLORS.secondary1,
+    DEFAULT_BRAND_COLORS.secondary2,
+  ],
+  accent: [
+    DEFAULT_BRAND_COLORS.accent0,
+    DEFAULT_BRAND_COLORS.accent1,
+    DEFAULT_BRAND_COLORS.accent2,
+  ],
+};
+
+export const DEFAULT_BRAND_PALETTE_LABELS: Record<PaletteRole, string> = {
+  primary: "Primary",
+  secondary: "Secondary",
+  accent: "Accent",
 };
 
 export const DEFAULT_BRAND_TYPOGRAPHY: BrandTypographyTokens = {
@@ -94,6 +147,106 @@ const resolveTypography = (
     display,
     logo,
   };
+};
+
+const normalizePaletteRole = (palette: BrandingPalette): PaletteRole | null => {
+  const role = palette.role === "tertiary" ? "accent" : palette.role;
+  if (role === "primary" || role === "secondary" || role === "accent") {
+    return role;
+  }
+
+  const name = palette.name?.toLowerCase() ?? "";
+  if (name.includes("primary")) return "primary";
+  if (name.includes("secondary")) return "secondary";
+  if (name.includes("accent") || name.includes("tertiary")) return "accent";
+
+  return null;
+};
+
+const paletteTimestamp = (palette: BrandingPalette): number => {
+  const updated = palette.updated_at ? Date.parse(palette.updated_at) : NaN;
+  if (Number.isFinite(updated)) return updated;
+  const created = palette.created_at ? Date.parse(palette.created_at) : NaN;
+  if (Number.isFinite(created)) return created;
+  return 0;
+};
+
+const normalizePaletteColors = (colors: unknown): string[] => {
+  if (!Array.isArray(colors)) return [];
+  return colors
+    .map((color) => (typeof color === "string" ? normalizeHex(color) : null))
+    .filter((color): color is string => Boolean(color));
+};
+
+const fillPaletteColors = (
+  role: PaletteRole,
+  rawColors: string[],
+  defaults: [string, string, string],
+): [string, string, string] => {
+  const colors: [string, string, string] = [...defaults];
+
+  for (let i = 0; i < 3; i += 1) {
+    if (rawColors[i]) colors[i] = rawColors[i];
+  }
+
+  if (role === "primary") {
+    if (!rawColors[1]) {
+      colors[1] = defaults[1];
+    }
+    if (rawColors.length > 0 && rawColors.length < 3) {
+      colors[2] = colors[0];
+    }
+  }
+
+  return colors;
+};
+
+const buildPaletteName = (entityName: string, label: string): string => {
+  const clean = entityName.trim();
+  if (!clean) return label;
+  return `${clean} ${label}`.trim();
+};
+
+export const toPaletteMap = (
+  raw: BrandingPalette[] | null | undefined,
+  entityName = "",
+): CanonicalPalettes => {
+  const paletteMap = new Map<PaletteRole, BrandingPalette>();
+
+  for (const palette of raw ?? []) {
+    const role = normalizePaletteRole(palette);
+    if (!role) continue;
+    const existing = paletteMap.get(role);
+    if (!existing || paletteTimestamp(palette) > paletteTimestamp(existing)) {
+      paletteMap.set(role, palette);
+    }
+  }
+
+  const result = {} as CanonicalPalettes;
+
+  for (const role of PALETTE_ROLES) {
+    const defaults = DEFAULT_BRAND_PALETTES[role];
+    const palette = paletteMap.get(role);
+    const normalized = normalizePaletteColors(palette?.colors);
+    const colors = fillPaletteColors(role, normalized, defaults);
+    const isPlaceholder = !palette;
+    const isIncomplete = Boolean(palette && normalized.length < 3);
+    const label = DEFAULT_BRAND_PALETTE_LABELS[role];
+    const name = palette?.name ?? buildPaletteName(entityName, label);
+
+    result[role] = {
+      key: role,
+      label,
+      role,
+      id: palette?.id,
+      name,
+      colors,
+      isPlaceholder,
+      isIncomplete,
+    };
+  }
+
+  return result;
 };
 
 export const resolveBrandingTokens = (

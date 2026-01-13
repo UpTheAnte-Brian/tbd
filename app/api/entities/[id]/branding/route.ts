@@ -16,7 +16,12 @@ export async function GET(
   try {
     const entityId = await parseEntityId(supabase, context.params);
     const summary = await getEntityBrandingSummary(supabase, entityId);
-    return NextResponse.json(summary, {
+    const palettesByRole = {
+      primary: summary.palettes.find((palette) => palette.role === "primary") ?? null,
+      secondary: summary.palettes.find((palette) => palette.role === "secondary") ?? null,
+      accent: summary.palettes.find((palette) => palette.role === "accent") ?? null,
+    };
+    return NextResponse.json({ ...summary, palettesByRole }, {
       status: 200,
       headers: {
         "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600",
