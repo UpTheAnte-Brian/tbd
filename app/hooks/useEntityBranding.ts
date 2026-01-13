@@ -39,6 +39,7 @@ export function useEntityBranding(entityId: string | null, refreshKey = 0) {
               const body = await res.json().catch(() => ({}));
               throw new Error(body.error || "Failed to load branding");
             }
+            console.log("palettes: ", res);
             return (await res.json()) as EntityBrandingResponse;
           })();
           brandingRequests.set(entityId, pending);
