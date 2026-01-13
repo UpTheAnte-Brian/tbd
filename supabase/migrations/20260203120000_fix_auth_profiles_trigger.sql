@@ -9,9 +9,31 @@ security definer
 set search_path = public
 as $$
 begin
-  -- Adjust columns/values to match your table exactly
-  insert into public.profiles (id, username, role, updated_at)
-  values (new.id, new.id::text, 'Patron', now())
+  insert into public.profiles (
+    id,
+    updated_at,
+    full_name,
+    first_name,
+    last_name,
+    avatar_url,
+    role
+  )
+  values (
+    new.id,
+    now(),
+    coalesce(
+      new.raw_user_meta_data->>'full_name',
+      nullif(trim(concat(
+        new.raw_user_meta_data->>'first_name',
+        ' ',
+        new.raw_user_meta_data->>'last_name'
+      )), '')
+    ),
+    new.raw_user_meta_data->>'first_name',
+    new.raw_user_meta_data->>'last_name',
+    new.raw_user_meta_data->>'avatar_url',
+    coalesce(new.raw_user_meta_data->>'role', 'user')
+  )
   on conflict (id) do nothing;
 
   return new;

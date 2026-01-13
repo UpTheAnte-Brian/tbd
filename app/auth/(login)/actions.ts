@@ -61,7 +61,7 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
   }
   redirect("/welcome");
 });
-export const signInWithMagicLink = validatedAction(
+export const requestLoginCode = validatedAction(
   z.object({
     email: z.string().email(),
     redirect: z.string().optional(),
@@ -78,14 +78,14 @@ export const signInWithMagicLink = validatedAction(
       },
     });
     if (error) {
-      console.error("Error sending magic link:", error);
+      console.error("Error sending login code:", error);
       return { error: error.message };
     }
 
-    return { success: "Magic link sent to your email." };
+    return { success: "Login code sent to your email." };
   },
 );
-export const signInWithLoginCode = validatedAction(
+export const verifyLoginCode = validatedAction(
   z.object({
     email: z.string().email(),
     loginCode: z.string(),
@@ -102,9 +102,6 @@ export const signInWithLoginCode = validatedAction(
         email,
         token: loginCode,
         type: "email",
-        options: {
-          redirectTo: `${host}/auth/callback`,
-        },
       });
 
       if (response.error) {

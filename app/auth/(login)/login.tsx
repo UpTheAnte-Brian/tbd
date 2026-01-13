@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Input } from "@/app/components/ui/input";
 import { Loader2 } from "lucide-react";
-import { signInWithLoginCode, signInWithMagicLink } from "./actions";
+import { requestLoginCode, verifyLoginCode } from "./actions";
 import { useActionState, useState } from "react";
 import { ActionState } from "@/app/lib/auth/middleware";
 // import config from "../../../config";
@@ -34,13 +34,15 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
     setLoading(false);
   };
 
-  const [magicLinkState, magicLinkAction, pending] = useActionState<
+  const [requestCodeState, requestCodeAction, requestPending] = useActionState<
     ActionState,
     FormData
-  >(signInWithMagicLink, { error: "", success: "" });
+  >(requestLoginCode, { error: "", success: "" });
 
-  const [otpLoginCodeState, otpLoginCodeAction, otpLoginCodePending] =
-    useActionState<ActionState, FormData>(signInWithLoginCode, {
+  const [verifyCodeState, verifyCodeAction, verifyPending] = useActionState<
+    ActionState,
+    FormData
+  >(verifyLoginCode, {
       error: "",
       success: "",
     });
@@ -62,7 +64,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
         </p>
 
         <div className="mt-10">
-          {magicLinkState?.success ? (
+          {requestCodeState?.success ? (
             <div className="p-6 text-center bg-green-50 rounded-lg">
               <h3 className="text-sm font-medium text-green-800">
                 Check your email
@@ -71,7 +73,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                 We&apos;ve sent you a login code to your account.
               </p>
 
-              <form action={otpLoginCodeAction} className="space-y-4">
+              <form action={verifyCodeAction} className="space-y-4">
                 <Input
                   name="email"
                   type="email"
@@ -92,7 +94,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                   type="submit"
                   className="w-full h-12 font-medium text-white bg-blue-600 rounded-lg transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
-                  {otpLoginCodePending ? (
+                  {verifyPending ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
                     "Login with Code"
@@ -102,7 +104,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
             </div>
           ) : (
             <div className="space-y-6">
-              <form action={magicLinkAction} className="space-y-4">
+              <form action={requestCodeAction} className="space-y-4">
                 <Input
                   name="email"
                   type="email"
@@ -118,7 +120,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                   type="submit"
                   className="w-full h-12 font-medium text-white bg-blue-600 rounded-lg transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
-                  {pending ? (
+                  {requestPending ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
                     "Continue with Email"
@@ -170,15 +172,15 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
             </div>
           )}
 
-          {magicLinkState?.error && (
+          {requestCodeState?.error && (
             <div className="mt-4 text-sm text-red-600">
-              {magicLinkState.error}
+              {requestCodeState.error}
             </div>
           )}
 
-          {otpLoginCodeState?.error && (
+          {verifyCodeState?.error && (
             <div className="mt-4 text-sm text-red-600">
-              {otpLoginCodeState.error}
+              {verifyCodeState.error}
             </div>
           )}
 
