@@ -9,11 +9,6 @@ import type {
   BrandingTypography,
 } from "@/app/lib/types/types";
 
-const normalizePaletteColors = (value: unknown): string[] | null => {
-  if (!Array.isArray(value)) return null;
-  return value.filter((color): color is string => typeof color === "string");
-};
-
 export type ResolvedEntityBranding = ResolvedBranding & {
   entityId: string;
   palettes: BrandingPalette[];
@@ -34,9 +29,29 @@ export async function getResolvedEntityBranding(entityKey: string) {
   } = await supabase
     .schema("branding")
     .from("palettes")
-    .select("*")
+    .select(
+      `
+        id,
+        name,
+        role,
+        usage_notes,
+        created_at,
+        updated_at,
+        entity_id,
+        palette_colors (
+          id,
+          slot,
+          hex,
+          label,
+          usage_notes,
+          created_at,
+          updated_at
+        )
+      `
+    )
     .eq("entity_id", entityId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("slot", { foreignTable: "palette_colors", ascending: true });
   if (palettesError) warnQuery("palettes", palettesError);
 
   const {
@@ -52,8 +67,24 @@ export async function getResolvedEntityBranding(entityKey: string) {
 
   const normalizedPalettes: BrandingPalette[] = (palettes ?? []).map(
     (palette) => ({
-      ...palette,
-      colors: normalizePaletteColors(palette.colors),
+      id: String(palette.id),
+      entity_id: String(palette.entity_id),
+      name: palette.name ?? palette.role ?? "",
+      role: palette.role,
+      usage_notes: palette.usage_notes ?? null,
+      created_at: palette.created_at ?? null,
+      updated_at: palette.updated_at ?? null,
+      colors: Array.isArray(palette.palette_colors)
+        ? palette.palette_colors
+            .map((color) => ({
+              id: color.id ?? undefined,
+              slot: Number(color.slot ?? 0),
+              hex: String(color.hex ?? ""),
+              label: color.label ?? null,
+              usage_notes: color.usage_notes ?? null,
+            }))
+            .sort((a, b) => a.slot - b.slot)
+        : [],
     }),
   );
 

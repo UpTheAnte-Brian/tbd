@@ -53,13 +53,19 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const update: Record<string, unknown> = {};
+  const paletteUpdate: Record<string, unknown> = {};
+  let colorsUpdate: Array<{
+    slot: number;
+    hex: string;
+    label: string | null;
+    usage_notes: string | null;
+  }> | null = null;
 
   if (body.name !== undefined) {
     if (typeof body.name !== "string") {
       return NextResponse.json({ error: "name must be a string" }, { status: 400 });
     }
-    update.name = body.name;
+    paletteUpdate.name = body.name;
   }
 
   if (body.colors !== undefined) {
@@ -67,18 +73,50 @@ export async function PATCH(
       return NextResponse.json({ error: "colors must be an array" }, { status: 400 });
     }
 
-    const colors: string[] = [];
-    for (const c of body.colors) {
-      if (typeof c !== "string" || !/^#([0-9A-Fa-f]{6})$/.test(c)) {
-        return NextResponse.json(
-          { error: "Invalid color format. Must be hex #RRGGBB" },
-          { status: 400 }
-        );
+    const colors = body.colors.map((color, index) => {
+      if (typeof color === "string") {
+        if (!/^#([0-9A-Fa-f]{6})$/.test(color)) {
+          return null;
+        }
+        return {
+          slot: index,
+          hex: color.toUpperCase(),
+          label: null,
+          usage_notes: null,
+        };
       }
-      colors.push(c);
+
+      if (!color || typeof color !== "object") return null;
+      const { hex, label, usage_notes } = color as {
+        hex?: unknown;
+        label?: unknown;
+        usage_notes?: unknown;
+      };
+      if (typeof hex !== "string" || !/^#([0-9A-Fa-f]{6})$/.test(hex)) {
+        return null;
+      }
+
+      return {
+        slot: index,
+        hex: hex.toUpperCase(),
+        label: typeof label === "string" ? label : null,
+        usage_notes: typeof usage_notes === "string" ? usage_notes : null,
+      };
+    });
+
+    if (colors.some((color) => !color)) {
+      return NextResponse.json(
+        { error: "Invalid color format. Must be hex #RRGGBB" },
+        { status: 400 }
+      );
     }
 
-    update.colors = colors;
+    colorsUpdate = colors as Array<{
+      slot: number;
+      hex: string;
+      label: string | null;
+      usage_notes: string | null;
+    }>;
   }
 
   if (body.role !== undefined) {
@@ -89,21 +127,32 @@ export async function PATCH(
     if (!roleOptions.includes(body.role)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
-    update.role = body.role;
+    paletteUpdate.role = body.role;
   }
 
-  if (Object.keys(update).length === 0) {
+  const hasPaletteUpdates = Object.keys(paletteUpdate).length > 0;
+  const hasColorsUpdate = colorsUpdate !== null;
+
+  if (!hasPaletteUpdates && !hasColorsUpdate) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }
 
-  const { data, error } = await supabase
+  const paletteQuery = supabase
     .schema("branding")
-    .from("palettes")
-    .update(update)
-    .eq("id", paletteId)
-    .eq("entity_id", entityId)
-    .select("*")
-    .single();
+    .from("palettes");
+
+  const { data, error } = hasPaletteUpdates
+    ? await paletteQuery
+        .update(paletteUpdate)
+        .eq("id", paletteId)
+        .eq("entity_id", entityId)
+        .select("id, entity_id, role, name, usage_notes, created_at, updated_at")
+        .single()
+    : await paletteQuery
+        .select("id, entity_id, role, name, usage_notes, created_at, updated_at")
+        .eq("id", paletteId)
+        .eq("entity_id", entityId)
+        .single();
 
   if (error) {
     if (error.code === "PGRST116") {
@@ -112,7 +161,75 @@ export async function PATCH(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ palette: data });
+  let colors = [] as Array<{
+    id?: string;
+    slot: number;
+    hex: string;
+    label?: string | null;
+    usage_notes?: string | null;
+  }>;
+
+  if (hasColorsUpdate && colorsUpdate) {
+    const { error: deleteErr } = await supabase
+      .schema("branding")
+      .from("palette_colors")
+      .delete()
+      .eq("palette_id", data.id);
+
+    if (deleteErr) {
+      return NextResponse.json({ error: deleteErr.message }, { status: 500 });
+    }
+
+    if (colorsUpdate.length > 0) {
+      const { data: paletteColors, error: colorsErr } = await supabase
+        .schema("branding")
+        .from("palette_colors")
+        .insert(
+          colorsUpdate.map((color) => ({
+            palette_id: data.id,
+            slot: color.slot,
+            hex: color.hex,
+            label: color.label,
+            usage_notes: color.usage_notes,
+          }))
+        )
+        .select("id, slot, hex, label, usage_notes")
+        .order("slot", { ascending: true });
+
+      if (colorsErr) {
+        return NextResponse.json({ error: colorsErr.message }, { status: 500 });
+      }
+
+      colors = (paletteColors ?? []).map((color) => ({
+        id: color.id ?? undefined,
+        slot: Number(color.slot ?? 0),
+        hex: String(color.hex ?? ""),
+        label: color.label ?? null,
+        usage_notes: color.usage_notes ?? null,
+      }));
+    }
+  } else {
+    const { data: paletteColors, error: colorsErr } = await supabase
+      .schema("branding")
+      .from("palette_colors")
+      .select("id, slot, hex, label, usage_notes")
+      .eq("palette_id", data.id)
+      .order("slot", { ascending: true });
+
+    if (colorsErr) {
+      return NextResponse.json({ error: colorsErr.message }, { status: 500 });
+    }
+
+    colors = (paletteColors ?? []).map((color) => ({
+      id: color.id ?? undefined,
+      slot: Number(color.slot ?? 0),
+      hex: String(color.hex ?? ""),
+      label: color.label ?? null,
+      usage_notes: color.usage_notes ?? null,
+    }));
+  }
+
+  return NextResponse.json({ palette: { ...data, colors } });
 }
 
 // DELETE /api/entities/[id]/branding/palettes/[paletteId]

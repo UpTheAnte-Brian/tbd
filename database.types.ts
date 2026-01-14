@@ -226,45 +226,71 @@ export type Database = {
           },
         ]
       }
+      palette_colors: {
+        Row: {
+          created_at: string
+          hex: string
+          id: string
+          label: string | null
+          palette_id: string
+          slot: number
+          updated_at: string
+          usage_notes: string | null
+        }
+        Insert: {
+          created_at?: string
+          hex: string
+          id?: string
+          label?: string | null
+          palette_id: string
+          slot: number
+          updated_at?: string
+          usage_notes?: string | null
+        }
+        Update: {
+          created_at?: string
+          hex?: string
+          id?: string
+          label?: string | null
+          palette_id?: string
+          slot?: number
+          updated_at?: string
+          usage_notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "palette_colors_palette_fk"
+            columns: ["palette_id"]
+            isOneToOne: false
+            referencedRelation: "palettes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       palettes: {
         Row: {
-          cmyk: Json | null
-          colors: Json | null
           created_at: string | null
           entity_id: string
-          hex: string | null
           id: string
           name: string
-          pms: string | null
-          rgb: Json | null
           role: Database["branding"]["Enums"]["color_role"]
           updated_at: string | null
           usage_notes: string | null
         }
         Insert: {
-          cmyk?: Json | null
-          colors?: Json | null
           created_at?: string | null
           entity_id: string
-          hex?: string | null
           id?: string
           name: string
-          pms?: string | null
-          rgb?: Json | null
           role: Database["branding"]["Enums"]["color_role"]
           updated_at?: string | null
           usage_notes?: string | null
         }
         Update: {
-          cmyk?: Json | null
-          colors?: Json | null
           created_at?: string | null
           entity_id?: string
-          hex?: string | null
           id?: string
           name?: string
-          pms?: string | null
-          rgb?: Json | null
           role?: Database["branding"]["Enums"]["color_role"]
           updated_at?: string | null
           usage_notes?: string | null
@@ -448,46 +474,64 @@ export type Database = {
       }
       board_meetings: {
         Row: {
+          adjourned_at: string | null
           board_id: string
           board_packet_document_id: string | null
           board_packet_version_id: string | null
+          cancelled_at: string | null
           created_at: string
           created_by: string
+          finalized_at: string | null
+          finalized_by: string | null
+          finalized_signature_hash: string | null
           id: string
           location: string | null
           meeting_type: string
           scheduled_end: string | null
           scheduled_start: string
+          started_at: string | null
           status: string
           title: string
           virtual_link: string | null
         }
         Insert: {
+          adjourned_at?: string | null
           board_id: string
           board_packet_document_id?: string | null
           board_packet_version_id?: string | null
+          cancelled_at?: string | null
           created_at?: string
           created_by: string
+          finalized_at?: string | null
+          finalized_by?: string | null
+          finalized_signature_hash?: string | null
           id?: string
           location?: string | null
           meeting_type: string
           scheduled_end?: string | null
           scheduled_start: string
+          started_at?: string | null
           status?: string
           title: string
           virtual_link?: string | null
         }
         Update: {
+          adjourned_at?: string | null
           board_id?: string
           board_packet_document_id?: string | null
           board_packet_version_id?: string | null
+          cancelled_at?: string | null
           created_at?: string
           created_by?: string
+          finalized_at?: string | null
+          finalized_by?: string | null
+          finalized_signature_hash?: string | null
           id?: string
           location?: string | null
           meeting_type?: string
           scheduled_end?: string | null
           scheduled_start?: string
+          started_at?: string | null
           status?: string
           title?: string
           virtual_link?: string | null
@@ -498,6 +542,13 @@ export type Database = {
             columns: ["board_id"]
             isOneToOne: false
             referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "board_meetings_finalized_by_fkey"
+            columns: ["finalized_by"]
+            isOneToOne: false
+            referencedRelation: "board_members"
             referencedColumns: ["id"]
           },
         ]
@@ -608,30 +659,68 @@ export type Database = {
       }
       meeting_minutes: {
         Row: {
+          amended_from_id: string | null
           approved_at: string | null
           approved_by: string | null
           content: string
+          content_json: Json | null
+          content_md: string | null
           draft: boolean
+          finalized_at: string | null
+          finalized_by: string | null
           id: string
+          locked_at: string | null
           meeting_id: string
+          status: Database["governance"]["Enums"]["minutes_status"]
+          version_number: number
         }
         Insert: {
+          amended_from_id?: string | null
           approved_at?: string | null
           approved_by?: string | null
           content: string
+          content_json?: Json | null
+          content_md?: string | null
           draft?: boolean
+          finalized_at?: string | null
+          finalized_by?: string | null
           id?: string
+          locked_at?: string | null
           meeting_id: string
+          status?: Database["governance"]["Enums"]["minutes_status"]
+          version_number?: number
         }
         Update: {
+          amended_from_id?: string | null
           approved_at?: string | null
           approved_by?: string | null
           content?: string
+          content_json?: Json | null
+          content_md?: string | null
           draft?: boolean
+          finalized_at?: string | null
+          finalized_by?: string | null
           id?: string
+          locked_at?: string | null
           meeting_id?: string
+          status?: Database["governance"]["Enums"]["minutes_status"]
+          version_number?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "meeting_minutes_amended_from_fkey"
+            columns: ["amended_from_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_minutes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_minutes_amended_from_fkey"
+            columns: ["amended_from_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_minutes_expanded"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "meeting_minutes_approved_by_fkey"
             columns: ["approved_by"]
@@ -640,9 +729,16 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "meeting_minutes_finalized_by_fkey"
+            columns: ["finalized_by"]
+            isOneToOne: false
+            referencedRelation: "board_members"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "meeting_minutes_meeting_id_fkey"
             columns: ["meeting_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "board_meetings"
             referencedColumns: ["id"]
           },
@@ -753,9 +849,80 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      meeting_minutes_expanded: {
+        Row: {
+          amended_from_id: string | null
+          approved_at: string | null
+          approved_by: string | null
+          board_id: string | null
+          content: string | null
+          content_json: Json | null
+          content_md: string | null
+          draft: boolean | null
+          finalized_at: string | null
+          finalized_by: string | null
+          id: string | null
+          locked_at: string | null
+          meeting_id: string | null
+          meeting_status: string | null
+          meeting_title: string | null
+          meeting_type: string | null
+          scheduled_end: string | null
+          scheduled_start: string | null
+          status: Database["governance"]["Enums"]["minutes_status"] | null
+          version_number: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_meetings_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_minutes_amended_from_fkey"
+            columns: ["amended_from_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_minutes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_minutes_amended_from_fkey"
+            columns: ["amended_from_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_minutes_expanded"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_minutes_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "board_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_minutes_finalized_by_fkey"
+            columns: ["finalized_by"]
+            isOneToOne: false
+            referencedRelation: "board_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_minutes_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: true
+            referencedRelation: "board_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      _object_exists: {
+        Args: { p_kind: string; p_name: string; p_schema: string }
+        Returns: boolean
+      }
       approve_document_version: {
         Args: {
           p_approval_method?: string
@@ -788,6 +955,36 @@ export type Database = {
         Returns: Json
       }
       current_user_id: { Args: never; Returns: string }
+      finalize_meeting: {
+        Args: { p_meeting_id: string; p_signature_hash?: string }
+        Returns: {
+          adjourned_at: string | null
+          board_id: string
+          board_packet_document_id: string | null
+          board_packet_version_id: string | null
+          cancelled_at: string | null
+          created_at: string
+          created_by: string
+          finalized_at: string | null
+          finalized_by: string | null
+          finalized_signature_hash: string | null
+          id: string
+          location: string | null
+          meeting_type: string
+          scheduled_end: string | null
+          scheduled_start: string
+          started_at: string | null
+          status: string
+          title: string
+          virtual_link: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "board_meetings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       finalize_motion: {
         Args: {
           p_approval_method?: string

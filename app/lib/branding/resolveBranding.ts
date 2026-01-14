@@ -110,13 +110,14 @@ const fillPalette = (
   colors: unknown,
   fallback: [string, string, string],
 ): [string, string, string] => {
-  if (!Array.isArray(colors) || colors.length === 0) {
+  const normalized = normalizePaletteColors(colors);
+  if (normalized.length === 0) {
     return fallback;
   }
   const resolved = [
-    asColor(colors[0]) ?? fallback[0],
-    asColor(colors[1]) ?? fallback[1],
-    asColor(colors[2]) ?? fallback[2],
+    asColor(normalized[0]) ?? fallback[0],
+    asColor(normalized[1]) ?? fallback[1],
+    asColor(normalized[2]) ?? fallback[2],
   ] as [string, string, string];
   return resolved;
 };
@@ -171,12 +172,38 @@ const paletteTimestamp = (palette: BrandingPalette): number => {
   return 0;
 };
 
-const normalizePaletteColors = (colors: unknown): string[] => {
+function normalizePaletteColors(colors: unknown): string[] {
   if (!Array.isArray(colors)) return [];
-  return colors
-    .map((color) => (typeof color === "string" ? normalizeHex(color) : null))
+
+  const hasSlot = colors.some((color) => {
+    if (!color || typeof color !== "object") return false;
+    const slot = (color as { slot?: unknown }).slot;
+    return typeof slot === "number" && Number.isFinite(slot);
+  });
+
+  const ordered = hasSlot
+    ? [...colors].sort((a, b) => {
+        const slotA =
+          typeof (a as { slot?: unknown })?.slot === "number"
+            ? ((a as { slot?: number }).slot as number)
+            : Number.MAX_SAFE_INTEGER;
+        const slotB =
+          typeof (b as { slot?: unknown })?.slot === "number"
+            ? ((b as { slot?: number }).slot as number)
+            : Number.MAX_SAFE_INTEGER;
+        return slotA - slotB;
+      })
+    : colors;
+
+  return ordered
+    .map((color) => {
+      if (typeof color === "string") return normalizeHex(color);
+      if (!color || typeof color !== "object") return null;
+      const hex = (color as { hex?: unknown }).hex;
+      return typeof hex === "string" ? normalizeHex(hex) : null;
+    })
     .filter((color): color is string => Boolean(color));
-};
+}
 
 const fillPaletteColors = (
   role: PaletteRole,

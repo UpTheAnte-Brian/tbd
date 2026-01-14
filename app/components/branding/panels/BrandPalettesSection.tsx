@@ -29,9 +29,30 @@ export default function BrandPalettesSection({
   canEdit,
   onRefresh,
 }: Props) {
-  const [editingPalette, setEditingPalette] = useState<CanonicalPalette | null>(
+  const [editingPalette, setEditingPalette] = useState<ColorPalette | null>(
     null
   );
+
+  const paletteColorsToHex = (palette: BrandingPalette | null) => {
+    if (!palette?.colors) return [];
+    return [...palette.colors]
+      .sort((a, b) => a.slot - b.slot)
+      .map((color) => color.hex)
+      .filter((color) => typeof color === "string" && color.trim().length > 0);
+  };
+
+  const toEditorPalette = (palette: CanonicalPalette): ColorPalette => {
+    const rawPalette =
+      palettes.find((entry) => entry.role === palette.role) ?? null;
+    const rawColors = paletteColorsToHex(rawPalette);
+
+    return {
+      id: rawPalette?.id ?? palette.id,
+      name: rawPalette?.name ?? palette.name,
+      role: palette.role,
+      colors: rawColors.length > 0 ? rawColors : [...palette.colors],
+    };
+  };
 
   const paletteMap = useMemo<CanonicalPalettes>(
     () => toPaletteMap(palettes, entityName),
@@ -60,10 +81,9 @@ export default function BrandPalettesSection({
             </div>
 
             <ColorPaletteEditor
-              initial={editingPalette as ColorPalette}
+              initial={editingPalette}
               entityName={entityName}
               fixedRole={editingPalette.role}
-              slotCount={3}
               onCancel={() => setEditingPalette(null)}
               onSave={async (palette) => {
                 if (!entityId) return;
@@ -109,7 +129,7 @@ export default function BrandPalettesSection({
           <BrandPaletteGrid
             palettes={paletteMap}
             canEdit={canEdit}
-            onEditPalette={(palette) => setEditingPalette(palette)}
+            onEditPalette={(palette) => setEditingPalette(toEditorPalette(palette))}
           />
         )}
 

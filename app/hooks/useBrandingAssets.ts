@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createCachedResource } from "@/app/lib/fetch/createCachedResource";
 
 export type AssetSlot = {
   id: string;
@@ -53,8 +54,15 @@ type BrandingAssetsCacheEntry = {
   assets: BrandingAsset[];
 };
 
-const brandingAssetsCache = new Map<string, BrandingAssetsCacheEntry>();
-const brandingAssetsRequests = new Map<string, Promise<BrandingAssetsCacheEntry>>();
+const BRANDING_ASSETS_CACHE_TTL_MS = 5 * 60_000;
+
+const brandingAssetsResource = createCachedResource<
+  { entityType: string; entityId: string },
+  BrandingAssetsCacheEntry
+>(
+  ({ entityType, entityId }) => `${entityType}:${entityId}`,
+  { cacheTTLms: BRANDING_ASSETS_CACHE_TTL_MS }
+);
 
 export function useBrandingAssets(
   entityId: string | null,
@@ -71,29 +79,13 @@ export function useBrandingAssets(
   useEffect(() => {
     if (!entityId || !entityType) return;
     let cancelled = false;
-    const cacheKey = `${entityType}:${entityId}`;
-
-    if (refreshKey === 0 && brandingAssetsCache.has(cacheKey)) {
-      const cached = brandingAssetsCache.get(cacheKey);
-      if (cached) {
-        setSlots(cached.slots);
-        setCategories(cached.categories);
-        setSubcategories(cached.subcategories);
-        setAssets(cached.assets);
-        setLoading(false);
-        return () => {
-          cancelled = true;
-        };
-      }
-    }
-
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
-        let pending = brandingAssetsRequests.get(cacheKey);
-        if (!pending || refreshKey !== 0) {
-          pending = (async () => {
+        const data = await brandingAssetsResource.get(
+          { entityType, entityId },
+          async () => {
             const [slotsRes, assetsRes] = await Promise.all([
               fetch(`/api/branding/slots?entityType=${entityType}`, {
                 cache: "no-store",
@@ -121,13 +113,9 @@ export function useBrandingAssets(
               subcategories: (slotsData?.subcategories ?? []) as AssetSubcategory[],
               assets: (assetsData?.assets ?? []) as BrandingAsset[],
             } satisfies BrandingAssetsCacheEntry;
-          })();
-          brandingAssetsRequests.set(cacheKey, pending);
-        }
-
-        const data = await pending;
-        brandingAssetsRequests.delete(cacheKey);
-        brandingAssetsCache.set(cacheKey, data);
+          },
+          { force: refreshKey !== 0 }
+        );
 
         if (cancelled) return;
         setSlots(data.slots);
@@ -135,7 +123,6 @@ export function useBrandingAssets(
         setSubcategories(data.subcategories);
         setAssets(data.assets);
       } catch (err) {
-        brandingAssetsRequests.delete(cacheKey);
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Error");
           setSlots([]);

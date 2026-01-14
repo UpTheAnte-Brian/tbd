@@ -36,7 +36,6 @@ export default function ColorPaletteEditor({
   onCancel,
 }: Props) {
   const [colors, setColors] = useState<string[]>(initial.colors || []);
-  const [newColor, setNewColor] = useState("#000000");
   const [role, setRole] = useState(fixedRole ?? initial.role ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,22 +63,6 @@ export default function ColorPaletteEditor({
 
   const isValidHex = (value: string) =>
     /^#([0-9A-Fa-f]{6})$/.test(value.trim());
-
-  const addColor = () => {
-    if (isFixedSlots) return;
-    if (!newColor || !isValidHex(newColor)) {
-      setError("Color must be a valid hex value like #RRGGBB");
-      return;
-    }
-    setColors((prev) => [...prev, newColor]);
-    setNewColor("#000000");
-    setError(null);
-  };
-
-  const removeColor = (index: number) => {
-    if (isFixedSlots) return;
-    setColors((prev) => prev.filter((_, i) => i !== index));
-  };
 
   const updateColor = (index: number, value: string) => {
     const candidate = value.trim();
@@ -224,40 +207,9 @@ export default function ColorPaletteEditor({
                 className="w-28 rounded border border-brand-secondary-1 bg-brand-secondary-2 px-2 py-1 text-brand-secondary-0"
                 placeholder="#RRGGBB"
               />
-              {isFixedSlots ? null : (
-                <button
-                  onClick={() => removeColor(i)}
-                  className="text-xs text-brand-primary-2 hover:underline"
-                >
-                  remove
-                </button>
-              )}
             </div>
           ))}
         </div>
-
-        {isFixedSlots ? null : (
-          <div className="flex items-center gap-2 mt-2">
-            <input
-              type="color"
-              value={newColor}
-              onChange={(e) => setNewColor(e.target.value)}
-              className="h-10 w-10 rounded border border-brand-secondary-1 bg-brand-secondary-2"
-            />
-            <input
-              type="text"
-              className="w-32 rounded border border-brand-secondary-1 bg-brand-secondary-2 px-2 py-1 text-brand-secondary-0"
-              value={newColor}
-              onChange={(e) => setNewColor(e.target.value)}
-            />
-            <button
-              onClick={addColor}
-              className="rounded bg-brand-secondary-0 px-3 py-2 text-brand-secondary-2 hover:bg-brand-secondary-1"
-            >
-              Add Color
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="flex gap-3 mt-4">

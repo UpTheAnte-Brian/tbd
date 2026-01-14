@@ -43,7 +43,17 @@ export async function POST(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  type PaletteInput = { name?: string; colors?: unknown; role?: unknown };
+  type PaletteColorInput = {
+    hex?: unknown;
+    label?: unknown;
+    usage_notes?: unknown;
+  };
+
+  type PaletteInput = {
+    name?: string;
+    colors?: unknown;
+    role?: unknown;
+  };
 
   let body: PaletteInput;
   try {
@@ -69,41 +79,103 @@ export async function POST(
   }
 
   const role = roleRaw as ColorRole;
-  const colors: string[] = [];
-  for (const c of colorsRaw) {
-    if (typeof c !== "string" || !/^#([0-9A-Fa-f]{6})$/.test(c)) {
-      return NextResponse.json(
-        { error: "Invalid color format. Must be hex #RRGGBB" },
-        { status: 400 }
-      );
+  const colors = colorsRaw.map((color, index) => {
+    if (typeof color === "string") {
+      if (!/^#([0-9A-Fa-f]{6})$/.test(color)) {
+        return null;
+      }
+      return {
+        slot: index,
+        hex: color.toUpperCase(),
+        label: null,
+        usage_notes: null,
+      };
     }
-    colors.push(c);
+
+    if (!color || typeof color !== "object") return null;
+    const { hex, label, usage_notes } = color as PaletteColorInput;
+    if (typeof hex !== "string" || !/^#([0-9A-Fa-f]{6})$/.test(hex)) {
+      return null;
+    }
+
+    return {
+      slot: index,
+      hex: hex.toUpperCase(),
+      label: typeof label === "string" ? label : null,
+      usage_notes: typeof usage_notes === "string" ? usage_notes : null,
+    };
+  });
+
+  if (colors.some((color) => !color)) {
+    return NextResponse.json(
+      { error: "Invalid color format. Must be hex #RRGGBB" },
+      { status: 400 }
+    );
   }
 
   const resolvedName =
     typeof name === "string" && name.trim().length > 0 ? name.trim() : role;
 
-  const { data, error } = await supabase
+  const { data: palette, error } = await supabase
     .schema("branding")
     .from("palettes")
     .upsert(
       {
         entity_id: entityId,
         name: resolvedName,
-        colors,
         role,
       },
       { onConflict: "entity_id,role" }
     )
-    .select("*")
+    .select("id, entity_id, role, name, usage_notes, created_at, updated_at")
     .single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  const { error: deleteErr } = await supabase
+    .schema("branding")
+    .from("palette_colors")
+    .delete()
+    .eq("palette_id", palette.id);
+
+  if (deleteErr) {
+    return NextResponse.json({ error: deleteErr.message }, { status: 500 });
+  }
+
+  let insertedColors = colors as Exclude<(typeof colors)[number], null>[];
+  if (insertedColors.length > 0) {
+    const { data: paletteColors, error: colorsErr } = await supabase
+      .schema("branding")
+      .from("palette_colors")
+      .insert(
+        insertedColors.map((color) => ({
+          palette_id: palette.id,
+          slot: color.slot,
+          hex: color.hex,
+          label: color.label,
+          usage_notes: color.usage_notes,
+        }))
+      )
+      .select("id, slot, hex, label, usage_notes")
+      .order("slot", { ascending: true });
+
+    if (colorsErr) {
+      return NextResponse.json({ error: colorsErr.message }, { status: 500 });
+    }
+
+    insertedColors = (paletteColors ?? []).map((color) => ({
+      id: color.id ?? undefined,
+      slot: Number(color.slot ?? 0),
+      hex: String(color.hex ?? ""),
+      label: color.label ?? null,
+      usage_notes: color.usage_notes ?? null,
+    }));
+  }
+
   return NextResponse.json(
-    { palette: data },
+    { palette: { ...palette, colors: insertedColors } },
     { status: 201, headers: { "Cache-Control": "no-store" } }
   );
 }

@@ -34,17 +34,26 @@ interface Props {
   children: React.ReactNode;
 }
 
+const paletteToHexes = (palette: BrandingSummary["palettes"][number] | null) => {
+  if (!palette?.colors) return [];
+  return [...palette.colors]
+    .sort((a, b) => a.slot - b.slot)
+    .map((color) => color.hex)
+    .filter((color) => typeof color === "string" && color.trim().length > 0);
+};
+
 function buildColorVars(data: BrandingSummary | null) {
   if (!data?.palettes || data.palettes.length === 0) return {};
 
   const vars: Record<string, string> = {};
 
   // Resolve primary palette (role=primary else first)
-  const primaryPalette =
-    data.palettes.find((p) => p.role === "primary")?.colors ??
-    data.palettes[0]?.colors;
-  const secondaryPalette =
-    data.palettes.find((p) => p.role === "secondary")?.colors ?? null;
+  const primaryPalette = paletteToHexes(
+    data.palettes.find((p) => p.role === "primary") ?? data.palettes[0] ?? null
+  );
+  const secondaryPalette = paletteToHexes(
+    data.palettes.find((p) => p.role === "secondary") ?? null
+  );
 
   if (primaryPalette && primaryPalette.length > 0) {
     const primary0 = primaryPalette[0];
@@ -67,17 +76,16 @@ function buildColorVars(data: BrandingSummary | null) {
     }
 
     // Resolve accent palette (role=accent else fallback to primary)
-    const accentPalette =
-      data.palettes.find((p) => p.role === "accent")?.colors ?? primaryPalette;
+    const accentPalette = paletteToHexes(
+      data.palettes.find((p) => p.role === "accent") ?? null
+    );
     vars["--district-accent-0"] = accentPalette[0] ?? primary0;
     vars["--district-accent-1"] = accentPalette[1] ?? primary1;
     vars["--district-accent-2"] = accentPalette[2] ?? primary2;
   }
 
   data.palettes.forEach((palette) => {
-    const paletteColors = Array.isArray(palette.colors)
-      ? palette.colors
-      : [];
+    const paletteColors = paletteToHexes(palette);
     paletteColors.forEach((color, idx) => {
       const varName = `--district-${palette.name
         .toLowerCase()

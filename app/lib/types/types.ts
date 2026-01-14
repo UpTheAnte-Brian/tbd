@@ -1,4 +1,5 @@
 import type { Database } from "@/database.types";
+import type { PaletteVM } from "@/app/lib/branding/paletteTypes";
 import type { EntityUser } from "@/domain/entities/types";
 
 export * from "@/domain/entities/types";
@@ -177,20 +178,7 @@ export const BRANDING_LOGO_CATEGORY_LABELS: Record<
     district_secondary: "Secondary Logo",
 };
 
-export interface BrandingPalette {
-    id: string;
-    entity_id: string;
-    name: string;
-    role: Database["branding"]["Enums"]["color_role"];
-    colors: string[] | null; // HEX values
-    created_at: string | null;
-    updated_at?: string | null;
-    hex?: string | null;
-    rgb?: Database["branding"]["Tables"]["palettes"]["Row"]["rgb"];
-    cmyk?: Database["branding"]["Tables"]["palettes"]["Row"]["cmyk"];
-    pms?: string | null;
-    usage_notes?: string | null;
-}
+export type BrandingPalette = PaletteVM;
 
 export type FontRole =
     | "body"

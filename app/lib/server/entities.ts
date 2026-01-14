@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Geometry } from "geojson";
+import type { PaletteVM } from "@/app/lib/branding/paletteTypes";
 import type { BrandingSummary } from "@/app/lib/types/types";
 import type {
   EntityUser,
@@ -123,15 +124,54 @@ export async function getEntityBrandingSummary(
     throw new Error(`Failed to fetch patterns: ${patternsErr.message}`);
   }
 
-  const { data: palettes, error: palettesErr } = await supabase
+  const { data: palettesRaw, error: palettesErr } = await supabase
     .schema("branding")
     .from("palettes")
-    .select("*")
+    .select(
+      `
+        id,
+        entity_id,
+        role,
+        name,
+        usage_notes,
+        created_at,
+        updated_at,
+        palette_colors (
+          id,
+          slot,
+          hex,
+          label,
+          usage_notes
+        )
+      `
+    )
     .eq("entity_id", entityId)
-    .order("created_at", { ascending: true });
+    .order("role", { ascending: true })
+    .order("slot", { foreignTable: "palette_colors", ascending: true });
   if (palettesErr) {
     throw new Error(`Failed to fetch palettes: ${palettesErr.message}`);
   }
+
+  const palettes: PaletteVM[] = (palettesRaw ?? []).map((palette) => ({
+    id: String(palette.id),
+    entity_id: String(palette.entity_id),
+    role: palette.role,
+    name: palette.name ?? palette.role ?? "",
+    usage_notes: palette.usage_notes ?? null,
+    created_at: palette.created_at ?? null,
+    updated_at: palette.updated_at ?? null,
+    colors: Array.isArray(palette.palette_colors)
+      ? palette.palette_colors
+          .map((color) => ({
+            id: color.id ?? undefined,
+            slot: Number(color.slot ?? 0),
+            hex: String(color.hex ?? ""),
+            label: color.label ?? null,
+            usage_notes: color.usage_notes ?? null,
+          }))
+          .sort((a, b) => a.slot - b.slot)
+      : [],
+  }));
 
   const { data: typography, error: typographyErr } = await supabase
     .schema("branding")
@@ -149,7 +189,7 @@ export async function getEntityBrandingSummary(
     logos,
     patterns: patterns ?? [],
     fonts,
-    palettes: palettes ?? [],
+    palettes,
     typography: typography ?? [],
   };
 }
