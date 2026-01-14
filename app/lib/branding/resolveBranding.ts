@@ -281,7 +281,7 @@ export const resolveBrandingTokens = (
   typography: BrandingTypography[] = [],
 ): ResolvedBranding => {
   const primaryPalette =
-    palettes.find((p) => p.role === "primary") || palettes[0] || null;
+    palettes.find((p) => p.role === "primary") || null;
   const primaryColors = fillPalette(primaryPalette?.colors, [
     DEFAULT_BRAND_COLORS.primary0,
     DEFAULT_BRAND_COLORS.primary1,
