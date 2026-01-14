@@ -18,6 +18,15 @@ type Props = {
   onCancel: () => void;
 };
 
+const formatRoleLabel = (value: string) => {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "primary") return "Primary";
+  if (normalized === "secondary") return "Secondary";
+  if (normalized === "tertiary") return "Tertiary";
+  if (normalized === "accent") return "Accent";
+  return value.trim();
+};
+
 export default function ColorPaletteEditor({
   initial,
   entityName,
@@ -34,6 +43,18 @@ export default function ColorPaletteEditor({
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const isFixedRole = Boolean(fixedRole);
   const isFixedSlots = typeof slotCount === "number";
+  const resolvedRole = (fixedRole ?? role).trim();
+  const roleLabel = resolvedRole ? formatRoleLabel(resolvedRole) : "";
+  const namePrefix = entityName?.trim() || "Palette";
+  const paletteName = resolvedRole
+    ? `${namePrefix} ${roleLabel}`.trim()
+    : "";
+  const title = paletteName
+    ? `${paletteName} Colors`
+    : initial.id
+      ? "Edit Color Palette"
+      : "Create Color Palette";
+  const showPrimaryGuidance = resolvedRole === "primary" && isFixedSlots;
 
   useEffect(() => {
     if (fixedRole) {
@@ -74,7 +95,6 @@ export default function ColorPaletteEditor({
   };
 
   const handleSave = async () => {
-    const resolvedRole = fixedRole ?? role;
     if (!resolvedRole.trim()) {
       setError("Role is required.");
       return;
@@ -86,18 +106,7 @@ export default function ColorPaletteEditor({
       return;
     }
 
-    const cleanShortname = entityName?.trim() || "Palette";
-    const roleLabel =
-      resolvedRole === "primary"
-        ? "Primary"
-        : resolvedRole === "secondary"
-          ? "Secondary"
-          : resolvedRole === "tertiary"
-            ? "Tertiary"
-            : resolvedRole === "accent"
-              ? "Accent"
-              : resolvedRole;
-    const nameToSave = `${cleanShortname} ${roleLabel}`.trim();
+    const nameToSave = `${namePrefix} ${formatRoleLabel(resolvedRole)}`.trim();
 
     setSaving(true);
     setError(null);
@@ -144,9 +153,7 @@ export default function ColorPaletteEditor({
 
   return (
     <div className="flex max-w-lg flex-col gap-4 rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-4 text-brand-secondary-0">
-      <h2 className="text-xl font-semibold text-brand-secondary-0">
-        {initial.id ? "Edit Color Palette" : "Create Color Palette"}
-      </h2>
+      <h2 className="text-xl font-semibold text-brand-secondary-0">{title}</h2>
 
       {error && <div className="text-sm text-brand-primary-2">{error}</div>}
 
@@ -155,12 +162,7 @@ export default function ColorPaletteEditor({
           <div className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-sm text-brand-secondary-0">
             Role:{" "}
             <span className="font-semibold">
-              {{
-                primary: "Primary",
-                secondary: "Secondary",
-                tertiary: "Tertiary",
-                accent: "Accent",
-              }[role] ?? role}
+              {roleLabel || resolvedRole}
             </span>
           </div>
         ) : (
@@ -180,28 +182,28 @@ export default function ColorPaletteEditor({
         <div className="text-xs text-brand-secondary-0 opacity-70">
           Palette name will be:{" "}
           <span className="font-semibold text-brand-secondary-0">
-            {role
-              ? `${entityName} ${
-                  {
-                    primary: "Primary",
-                    secondary: "Secondary",
-                    tertiary: "Tertiary",
-                    accent: "Accent",
-                  }[role] ?? role
-                }`
-              : "Select a role to generate the name"}
+            {paletteName || "Select a role to generate the name"}
           </span>
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="font-medium text-brand-secondary-0">Colors</label>
+        <label className="text-xs font-semibold uppercase tracking-widest text-brand-secondary-0">
+          Colors
+        </label>
 
-        <div className="flex flex-wrap gap-2">
+        {showPrimaryGuidance ? (
+          <div className="grid gap-2 text-xs text-brand-secondary-0 opacity-70 sm:grid-cols-2">
+            <div>Up to 2 Dark Primary Colors</div>
+            <div>One white or light Color</div>
+          </div>
+        ) : null}
+
+        <div className="grid gap-2 sm:grid-cols-2">
           {colors.map((c, i) => (
             <div
               key={i}
-              className={`flex items-center gap-2 rounded border border-brand-secondary-1 bg-brand-secondary-2 px-2 py-1 ${
+              className={`flex items-center gap-2 rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 ${
                 dragIndex === i ? "ring-2 ring-brand-primary-1" : ""
               }`}
               draggable

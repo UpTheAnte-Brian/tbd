@@ -32,7 +32,8 @@ export function useEntityBranding(entityId: string | null, refreshKey = 0) {
         let pending = brandingRequests.get(entityId);
         if (!pending || refreshKey !== 0) {
           pending = (async () => {
-            const res = await fetch(`/api/entities/${entityId}/branding`, {
+            const cacheBuster = refreshKey > 0 ? `?t=${refreshKey}` : "";
+            const res = await fetch(`/api/entities/${entityId}/branding${cacheBuster}`, {
               cache: "no-store",
             });
             if (!res.ok) {
