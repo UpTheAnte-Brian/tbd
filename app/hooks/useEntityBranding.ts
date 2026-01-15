@@ -13,6 +13,14 @@ const brandingResource = createCachedResource<string, EntityBrandingResponse>(
   { cacheTTLms: BRANDING_CACHE_TTL_MS }
 );
 
+export const clearEntityBrandingCache = (entityId?: string | null) => {
+  if (!entityId) {
+    brandingResource.clear();
+    return;
+  }
+  brandingResource.clear(entityId);
+};
+
 export function useEntityBranding(entityId: string | null, refreshKey = 0) {
   const [data, setData] = useState<EntityBrandingResponse | null>(null);
   const [loading, setLoading] = useState(false);

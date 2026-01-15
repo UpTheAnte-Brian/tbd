@@ -9,7 +9,7 @@ import BrandingTips from "@/app/components/branding/panels/BrandingTips";
 import { TypographyShowcase } from "@/app/components/branding/TypographyShowcase";
 import AccordionCard from "@/app/components/user/AccordionCard";
 import { useBrandingAssets } from "@/app/hooks/useBrandingAssets";
-import { useEntityBranding } from "@/app/hooks/useEntityBranding";
+import { clearEntityBrandingCache, useEntityBranding } from "@/app/hooks/useEntityBranding";
 import { useUser } from "@/app/hooks/useUser";
 import { hasEntityRole } from "@/app/lib/auth/entityRoles";
 import type { EntityType } from "@/app/lib/types/types";
@@ -55,6 +55,7 @@ export default function EntityBrandingPanel({
       : false);
 
   const handleRefresh = () => {
+    clearEntityBrandingCache(entityId);
     setRefreshKey((k) => k + 1);
     onRefresh?.();
   };

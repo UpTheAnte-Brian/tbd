@@ -22,7 +22,6 @@ const formatRoleLabel = (value: string) => {
   const normalized = value.trim().toLowerCase();
   if (normalized === "primary") return "Primary";
   if (normalized === "secondary") return "Secondary";
-  if (normalized === "tertiary") return "Tertiary";
   if (normalized === "accent") return "Accent";
   return value.trim();
 };
@@ -45,14 +44,12 @@ export default function ColorPaletteEditor({
   const resolvedRole = (fixedRole ?? role).trim();
   const roleLabel = resolvedRole ? formatRoleLabel(resolvedRole) : "";
   const namePrefix = entityName?.trim() || "Palette";
-  const paletteName = resolvedRole
-    ? `${namePrefix} ${roleLabel}`.trim()
-    : "";
+  const paletteName = resolvedRole ? `${namePrefix} ${roleLabel}`.trim() : "";
   const title = paletteName
     ? `${paletteName} Colors`
     : initial.id
-      ? "Edit Color Palette"
-      : "Create Color Palette";
+    ? "Edit Color Palette"
+    : "Create Color Palette";
   const showPrimaryGuidance = resolvedRole === "primary" && isFixedSlots;
 
   useEffect(() => {
@@ -66,9 +63,7 @@ export default function ColorPaletteEditor({
 
   const updateColor = (index: number, value: string) => {
     const candidate = value.trim();
-    setColors((prev) =>
-      prev.map((c, i) => (i === index ? candidate : c)),
-    );
+    setColors((prev) => prev.map((c, i) => (i === index ? candidate : c)));
     // Only show error when attempting to persist invalid hex
     if (!isValidHex(candidate)) {
       setError("Color must be a valid hex value like #RRGGBB");
@@ -116,7 +111,14 @@ export default function ColorPaletteEditor({
   };
 
   const reorder = (from: number, to: number) => {
-    if (from === to || from < 0 || to < 0 || from >= colors.length || to >= colors.length) return;
+    if (
+      from === to ||
+      from < 0 ||
+      to < 0 ||
+      from >= colors.length ||
+      to >= colors.length
+    )
+      return;
     setColors((prev) => {
       const next = [...prev];
       const [moved] = next.splice(from, 1);
@@ -126,7 +128,10 @@ export default function ColorPaletteEditor({
   };
 
   const handleDragStart = (index: number) => setDragIndex(index);
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+  const handleDragOver = (
+    e: React.DragEvent<HTMLDivElement>,
+    index: number
+  ) => {
     e.preventDefault();
     if (dragIndex === null || dragIndex === index) return;
     reorder(dragIndex, index);
@@ -144,9 +149,7 @@ export default function ColorPaletteEditor({
         {isFixedRole ? (
           <div className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-sm text-brand-secondary-0">
             Role:{" "}
-            <span className="font-semibold">
-              {roleLabel || resolvedRole}
-            </span>
+            <span className="font-semibold">{roleLabel || resolvedRole}</span>
           </div>
         ) : (
           <select
@@ -158,7 +161,6 @@ export default function ColorPaletteEditor({
             <option value="">Select a role</option>
             <option value="primary">Primary</option>
             <option value="secondary">Secondary</option>
-            <option value="tertiary">Tertiary</option>
             <option value="accent">Accent</option>
           </select>
         )}
@@ -212,7 +214,7 @@ export default function ColorPaletteEditor({
         </div>
       </div>
 
-      <div className="flex gap-3 mt-4">
+      <div className="mt-4 flex gap-3">
         <button
           onClick={handleSave}
           disabled={saving}

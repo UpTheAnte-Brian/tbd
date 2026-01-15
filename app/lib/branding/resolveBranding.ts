@@ -16,6 +16,14 @@ export type PaletteInput = {
   updated_at?: string | null;
 };
 
+export type PaletteSlotVM = {
+  slot: number;
+  hex: string;
+  isOverride: boolean;
+  overrideHex?: string | null;
+  defaultHex: string;
+};
+
 export type CanonicalPalette = {
   key: PaletteRole;
   label: string;
@@ -23,6 +31,7 @@ export type CanonicalPalette = {
   id?: string;
   name: string;
   colors: [string, string, string];
+  slots: PaletteSlotVM[];
   isPlaceholder: boolean;
   isIncomplete: boolean;
 };
@@ -205,6 +214,36 @@ function normalizePaletteColors(colors: unknown): string[] {
     .filter((color): color is string => Boolean(color));
 }
 
+const buildOverrideMap = (colors: unknown): Map<number, string> => {
+  const overrides = new Map<number, string>();
+  if (!Array.isArray(colors)) return overrides;
+
+  colors.forEach((color, index) => {
+    if (typeof color === "string") {
+      const normalized = normalizeHex(color);
+      if (normalized) overrides.set(index, normalized);
+      return;
+    }
+
+    if (!color || typeof color !== "object") return;
+    const slotValue = (color as { slot?: unknown }).slot;
+    const slot =
+      typeof slotValue === "number" && Number.isFinite(slotValue)
+        ? slotValue
+        : index;
+    if (!Number.isInteger(slot) || slot < 0) return;
+
+    const hexValue = (color as { hex?: unknown }).hex;
+    const normalized =
+      typeof hexValue === "string" ? normalizeHex(hexValue) : null;
+    if (normalized) {
+      overrides.set(slot, normalized);
+    }
+  });
+
+  return overrides;
+};
+
 const fillPaletteColors = (
   role: PaletteRole,
   rawColors: string[],
@@ -256,6 +295,17 @@ export const toPaletteMap = (
     const palette = paletteMap.get(role);
     const normalized = normalizePaletteColors(palette?.colors);
     const colors = fillPaletteColors(role, normalized, defaults);
+    const overrideMap = buildOverrideMap(palette?.colors);
+    const slots: PaletteSlotVM[] = colors.map((hex, index) => {
+      const overrideHex = overrideMap.get(index) ?? null;
+      return {
+        slot: index,
+        hex,
+        isOverride: overrideMap.has(index),
+        overrideHex,
+        defaultHex: defaults[index] ?? hex,
+      };
+    });
     const isPlaceholder = !palette;
     const isIncomplete = Boolean(palette && normalized.length < 3);
     const label = DEFAULT_BRAND_PALETTE_LABELS[role];
@@ -268,6 +318,7 @@ export const toPaletteMap = (
       id: palette?.id,
       name,
       colors,
+      slots,
       isPlaceholder,
       isIncomplete,
     };
