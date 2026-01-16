@@ -46,6 +46,7 @@ type Props = {
     features: EntityFeature[],
     onSelect: (feature: EntityFeature) => void
   ) => React.ReactNode;
+  mapChildren?: React.ReactNode;
   defaultCenter?: google.maps.LatLngLiteral;
   defaultZoom?: number;
   fitBoundsToken?: number | null;
@@ -76,6 +77,7 @@ export default function EntityMapShell({
   onOverlaySelect,
   renderPopup,
   renderSearch,
+  mapChildren,
   defaultCenter = MIDWEST_CENTER,
   defaultZoom = MIDWEST_ZOOM,
   fitBoundsToken = null,
@@ -575,7 +577,9 @@ export default function EntityMapShell({
             rotateControl: false,
             scaleControl: false,
           }}
-        />
+        >
+          {mapChildren}
+        </GoogleMap>
       ) : (
         <div style={mapContainerStyle} />
       )}

@@ -20,7 +20,9 @@
     "importSchoolProgramLocs": "dotenv -e .env.local -- tsx scripts/import-mn-school-program-locs.ts",
     "importSchoolProgramLocs:test": "dotenv -e .env.test.local -- tsx scripts/import-mn-school-program-locs.ts",
     "importDistrictBoundaries": "dotenv -e .env.local -- tsx scripts/import-mn-district-boundaries.ts",
-    "importDistrictBoundaries:test": "dotenv -e .env.test.local -- tsx scripts/import-mn-district-boundaries.ts"
+    "importDistrictBoundaries:test": "dotenv -e .env.test.local -- tsx scripts/import-mn-district-boundaries.ts",
+    "linkSchoolsToDistricts": "dotenv -e .env.local -- tsx scripts/link-schools-to-districts.ts",
+    "linkSchoolsToDistricts:test": "dotenv -e .env.test.local -- tsx scripts/link-schools-to-districts.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

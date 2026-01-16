@@ -2306,6 +2306,10 @@ export type Database = {
             Returns: boolean
           }
       is_global_admin: { Args: { p_user_id?: string }; Returns: boolean }
+      link_schools_to_districts: {
+        Args: { p_limit: number; p_offset: number }
+        Returns: Json
+      }
       longtransactionsenabled: { Args: never; Returns: boolean }
       nonprofit_admin: { Args: { target_nonprofit: string }; Returns: boolean }
       populate_geometry_columns:
