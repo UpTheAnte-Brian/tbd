@@ -100,6 +100,24 @@ async function downloadFile(url: string, outPath: string) {
     await run("curl", ["-L", "-o", outPath, url]);
 }
 
+async function writeMetadata(params: {
+    metadataJSON: string;
+    datasetVersion: string;
+    sourceTag: string;
+    zipUrl: string;
+    inputGeoJSON: string;
+}) {
+    const payload = {
+        dataset_key: DATASET_DIR,
+        dataset_version: params.datasetVersion,
+        source_tag: params.sourceTag,
+        zip_url: params.zipUrl,
+        generated_at: new Date().toISOString(),
+        output_geojson: path.relative(process.cwd(), params.inputGeoJSON),
+    };
+    await fs.writeFile(params.metadataJSON, JSON.stringify(payload, null, 2));
+}
+
 function pick(props: any, keys: string[]) {
     for (const k of keys) {
         const v = props?.[k];
@@ -183,60 +201,73 @@ async function main() {
 
     const inputGeojsonPath = path.join(outDir, "input.geojson");
     const displayGeojsonPath = path.join(outDir, "display.geojson");
+    const metadataJsonPath = path.join(outDir, "metadata.json");
 
     // ----- Generate artifacts -----
     if (!args.uploadOnly) {
         const runId = crypto.randomUUID();
         const workDir = path.join(tmpdir(), `us_states_${runId}`);
         await ensureDir(workDir);
+        try {
+            const zipPath = path.join(workDir, "tl_2023_us_state.zip");
+            console.log("⬇️  Downloading TIGER states shapefile ZIP...");
+            console.log(`  URL: ${TIGER_ZIP_URL}`);
+            await downloadFile(TIGER_ZIP_URL, zipPath);
 
-        const zipPath = path.join(workDir, "tl_2023_us_state.zip");
-        console.log("⬇️  Downloading TIGER states shapefile ZIP...");
-        console.log(`  URL: ${TIGER_ZIP_URL}`);
-        await downloadFile(TIGER_ZIP_URL, zipPath);
+            console.log("📦 Unzipping...");
+            await run("unzip", ["-o", zipPath, "-d", workDir]);
 
-        console.log("📦 Unzipping...");
-        await run("unzip", ["-o", zipPath, "-d", workDir]);
+            const shpPath = await findFirstShp(workDir);
+            if (!shpPath) {
+                throw new Error(
+                    `Could not find a .shp file after unzip in ${workDir}`,
+                );
+            }
 
-        const shpPath = await findFirstShp(workDir);
-        if (!shpPath) {
-            throw new Error(
-                `Could not find a .shp file after unzip in ${workDir}`,
-            );
-        }
+            console.log("🗺️  Converting shapefile → GeoJSON (EPSG:4326)...");
+            console.log(`  Shapefile: ${shpPath}`);
+            await run("ogr2ogr", [
+                "-f",
+                "GeoJSON",
+                "-t_srs",
+                "EPSG:4326",
+                inputGeojsonPath,
+                shpPath,
+            ]);
 
-        console.log("🗺️  Converting shapefile → GeoJSON (EPSG:4326)...");
-        console.log(`  Shapefile: ${shpPath}`);
-        await run("ogr2ogr", [
-            "-f",
-            "GeoJSON",
-            "-t_srs",
-            "EPSG:4326",
-            inputGeojsonPath,
-            shpPath,
-        ]);
+            console.log("✨ Generating display (simplified) GeoJSON...");
+            await run("ogr2ogr", [
+                "-f",
+                "GeoJSON",
+                "-t_srs",
+                "EPSG:4326",
+                "-simplify",
+                String(args.tolerance),
+                displayGeojsonPath,
+                shpPath,
+            ]);
 
-        console.log("✨ Generating display (simplified) GeoJSON...");
-        await run("ogr2ogr", [
-            "-f",
-            "GeoJSON",
-            "-t_srs",
-            "EPSG:4326",
-            "-simplify",
-            String(args.tolerance),
-            displayGeojsonPath,
-            shpPath,
-        ]);
+            const sourceLabel = `${SOURCE_TAG_PREFIX}_${args.vintage}`;
+            await writeMetadata({
+                metadataJSON: metadataJsonPath,
+                datasetVersion: args.vintage,
+                sourceTag: sourceLabel,
+                zipUrl: TIGER_ZIP_URL,
+                inputGeoJSON: inputGeojsonPath,
+            });
 
-        console.log("✅ GeoJSON artifacts created:");
-        console.log(`  input:   ${inputGeojsonPath}`);
-        console.log(`  display: ${displayGeojsonPath}`);
+            console.log("✅ GeoJSON artifacts created:");
+            console.log(`  input:   ${inputGeojsonPath}`);
+            console.log(`  display: ${displayGeojsonPath}`);
 
-        if (args.generateOnly) {
-            console.log(
-                "--generate-only specified; stopping after file generation.",
-            );
-            return;
+            if (args.generateOnly) {
+                console.log(
+                    "--generate-only specified; stopping after file generation.",
+                );
+                return;
+            }
+        } finally {
+            await fs.rm(workDir, { recursive: true, force: true });
         }
     }
 

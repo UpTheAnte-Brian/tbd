@@ -1,0 +1,8 @@
+{
+  "dataset_key": "mn_mde_bdry_school_attendance_areas",
+  "dataset_version": "SY2025_26",
+  "source_tag": "mn_mde_bdry_school_attendance_areas_SY2025_26",
+  "zip_url": "https://resources.gisdata.mn.gov/pub/gdrs/data/pub/us_mn_state_mde/bdry_school_attendance_areas/shp_bdry_school_attendance_areas.zip",
+  "generated_at": "2026-01-16T04:51:11.000Z",
+  "output_geojson": "scripts/geojson/mn_mde_bdry_school_attendance_areas/SY2025_26/input.geojson"
+}

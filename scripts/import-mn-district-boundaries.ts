@@ -156,6 +156,7 @@ function artifactPaths(versionTag: string) {
         dir,
         inputGeoJSON: path.join(dir, "input.geojson"),
         displayGeoJSON: path.join(dir, "display.geojson"),
+        metadataJSON: path.join(dir, "metadata.json"),
     };
 }
 
@@ -200,6 +201,23 @@ function readGeoJSON(p: string): FeatureCollection {
 
 function writeGeoJSON(p: string, fc: FeatureCollection) {
     fs.writeFileSync(p, JSON.stringify(fc));
+}
+
+function writeMetadata(params: {
+    metadataJSON: string;
+    versionTag: string;
+    sourceTag: string;
+    inputGeoJSON: string;
+}) {
+    const payload = {
+        dataset_key: DATASET_KEY,
+        dataset_version: params.versionTag,
+        source_tag: params.sourceTag,
+        zip_url: DOWNLOAD_URL,
+        generated_at: new Date().toISOString(),
+        output_geojson: path.relative(process.cwd(), params.inputGeoJSON),
+    };
+    fs.writeFileSync(params.metadataJSON, JSON.stringify(payload, null, 2));
 }
 
 // ----------------------------
@@ -626,7 +644,9 @@ async function uploadPerDistrict(
 
 async function main() {
     const args = parseArgs(process.argv.slice(2));
-    const { dir, inputGeoJSON, displayGeoJSON } = artifactPaths(args.versionTag);
+    const { dir, inputGeoJSON, displayGeoJSON, metadataJSON } = artifactPaths(
+        args.versionTag,
+    );
     ensureDir(dir);
 
     const sourceTag = `${DATASET_KEY}_${args.versionTag}`;
@@ -637,6 +657,7 @@ async function main() {
     console.log(`• version_tag: ${args.versionTag}`);
     console.log(`• input_geojson: ${inputGeoJSON}`);
     console.log(`• display_geojson: ${displayGeoJSON}`);
+    console.log(`• metadata_json: ${metadataJSON}`);
 
     if (!args.uploadOnly) {
         console.log("⬇️  Downloading district boundaries GeoPackage ZIP...");
@@ -679,6 +700,13 @@ async function main() {
                     "ℹ️  --no-display specified; skipping display generation.",
                 );
             }
+
+            writeMetadata({
+                metadataJSON,
+                versionTag: args.versionTag,
+                sourceTag,
+                inputGeoJSON,
+            });
         } finally {
             try {
                 fs.rmSync(workdir, { recursive: true, force: true });

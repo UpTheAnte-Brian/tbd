@@ -168,6 +168,7 @@ function artifactPaths(versionTag: string) {
         dir,
         inputGeoJSON: path.join(dir, "input.geojson"),
         displayGeoJSON: path.join(dir, "display.geojson"),
+        metadataJSON: path.join(dir, "metadata.json"),
     };
 }
 
@@ -249,9 +250,29 @@ function downloadAndConvertInputGeoJSON(inputGeoJSON: string) {
     }
 }
 
+function writeMetadata(params: {
+    metadataJSON: string;
+    versionTag: string;
+    sourceTag: string;
+    inputGeoJSON: string;
+}) {
+    const payload = {
+        dataset_key: DATASET_KEY,
+        dataset_version: params.versionTag,
+        source_tag: params.sourceTag,
+        zip_url: ZIP_URL,
+        generated_at: new Date().toISOString(),
+        output_geojson: path.relative(PROJECT_ROOT, params.inputGeoJSON),
+    };
+    fs.writeFileSync(params.metadataJSON, JSON.stringify(payload, null, 2));
+}
+
 function generateDisplayGeoJSON(
     inputGeoJSON: string,
     displayGeoJSON: string,
+    metadataJSON: string,
+    versionTag: string,
+    source: string,
 ) {
     if (!fs.existsSync(inputGeoJSON)) {
         downloadAndConvertInputGeoJSON(inputGeoJSON);
@@ -276,6 +297,13 @@ function generateDisplayGeoJSON(
     ].join(" ");
 
     execSync(command, { stdio: "inherit" });
+
+    writeMetadata({
+        metadataJSON,
+        versionTag,
+        sourceTag: source,
+        inputGeoJSON,
+    });
 
     console.log("✅ Display GeoJSON generated.");
 }
@@ -529,7 +557,8 @@ async function main() {
     const { generateOnly, uploadOnly, concurrency, versionTag } = parseArgs(
         process.argv,
     );
-    const { dir, inputGeoJSON, displayGeoJSON } = artifactPaths(versionTag);
+    const { dir, inputGeoJSON, displayGeoJSON, metadataJSON } =
+        artifactPaths(versionTag);
     const source = sourceTag(versionTag);
 
     ensureDir(dir);
@@ -539,10 +568,17 @@ async function main() {
     console.log(`• version_tag: ${versionTag}`);
     console.log(`• input_geojson: ${inputGeoJSON}`);
     console.log(`• display_geojson: ${displayGeoJSON}`);
+    console.log(`• metadata_json: ${metadataJSON}`);
 
     if (!uploadOnly) {
         try {
-            generateDisplayGeoJSON(inputGeoJSON, displayGeoJSON);
+            generateDisplayGeoJSON(
+                inputGeoJSON,
+                displayGeoJSON,
+                metadataJSON,
+                versionTag,
+                source,
+            );
         } catch (err: any) {
             console.error("❌ ogr2ogr failed.");
             console.error(err?.message ?? err);
