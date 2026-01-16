@@ -13,8 +13,11 @@
     "supabase:gen:types:check": "node -e \"console.log('Run: npm run supabase:gen:types')\"",
     "importDistricts": "dotenv -e .env.local -- node --loader ts-node/esm scripts/import-sd-mn.ts",
     "importDistricts:test": "dotenv -e .env.test.local -- node --loader ts-node/esm scripts/import-sd-mn.ts",
-    "importStates": "dotenv -e .env.test.local -- node scripts/import-states-geojson.js scripts/geojson/us_states_2023.geojson",
-    "importAttendanceAreas": "dotenv -e .env.test.local -- tsx scripts/import-mn-attendance-areas.ts"
+    "importStates": "dotenv -e .env.local -- tsx scripts/import-us-states.ts",
+    "importStates:test": "dotenv -e .env.test.local -- tsx scripts/import-us-states.ts",
+    "importAttendanceAreas": "dotenv -e .env.local -- tsx scripts/import-mn-attendance-areas.ts",
+    "importSchoolProgramLocs": "dotenv -e .env.local -- tsx scripts/import-mn-school-program-locs.ts",
+    "importDistrictBoundaries": "dotenv -e .env.local -- tsx scripts/import-mn-district-boundaries.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

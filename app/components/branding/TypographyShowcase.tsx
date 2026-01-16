@@ -64,7 +64,7 @@ export function TypographyShowcase() {
               fontFamily: headingFont,
             }}
           >
-            Westonka
+            Minnesota
             <br />
             Public Schools
           </div>

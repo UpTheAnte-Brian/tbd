@@ -2,15 +2,18 @@
  * import-mn-attendance-areas.ts
  *
  * End-to-end pipeline for MN school attendance areas:
- * 1) Generate a render-optimized GeoJSON using ogr2ogr (simplify + select props)
- * 2) Upload per-district FeatureCollections into Supabase via RPC upsert_entity_geometry_with_geom_geojson
+ * 1) Download MN attendance areas shapefile ZIP and convert to GeoJSON (EPSG:4326)
+ * 2) Generate a render-optimized GeoJSON using ogr2ogr (simplify + select props)
+ * 3) Upload per-district FeatureCollections into Supabase via RPC upsert_entity_geometry_with_geom_geojson
  *
  * Notes:
  * - public.entity_geometries.geom is NOT NULL in this project, so we must populate geom.
  * - We add ogr2ogr -makevalid during generation to reduce PostGIS conversion failures.
  *
  * Prerequisites:
- * - GDAL installed (ogr2ogr available on PATH) unless using --upload-only
+ * - GDAL installed (ogr2ogr available on PATH)
+ * - unzip installed and available on PATH
+ * - curl installed and available on PATH
  * - Env vars:
  *    NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL)
  *    SUPABASE_SERVICE_ROLE_KEY
@@ -124,15 +127,20 @@ function bboxJsonFromGeometry(bboxGeom: GeoJSONGeometry) {
 
 const PROJECT_ROOT = process.cwd();
 
-const INPUT_GEOJSON = path.join(
+// Dataset versioning
+const DATASET_FOLDER = path.join(
     PROJECT_ROOT,
-    "scripts/geojson/mn_attendance_areas.geojson",
+    "scripts/geojson/mn_mde_bdry_school_attendance_areas/SY2025_26",
 );
 
-const OUTPUT_GEOJSON = path.join(
-    PROJECT_ROOT,
-    "scripts/geojson/attendance_areas_display.geojson",
-);
+const INPUT_GEOJSON = path.join(DATASET_FOLDER, "input.geojson");
+const OUTPUT_GEOJSON = path.join(DATASET_FOLDER, "display.geojson");
+
+const ZIP_URL =
+    "https://resources.gisdata.mn.gov/pub/gdrs/data/pub/us_mn_state_mde/bdry_school_attendance_areas/shp_bdry_school_attendance_areas.zip";
+
+// Scratch space for unzip/shapefile conversion
+const TMP_WORKDIR_BASE = path.join(DATASET_FOLDER, "tmp");
 
 // OGR simplify tolerance (degrees, EPSG:4326)
 const SIMPLIFY_TOLERANCE = "0.001";
@@ -150,7 +158,7 @@ const SELECT_FIELDS = [
 ];
 
 const GEOMETRY_TYPE = "district_attendance_areas";
-const SOURCE_TAG = "mn_gis_bdry_school_attendance_areas_SY2025_26";
+const SOURCE_TAG = "mn_mde_bdry_school_attendance_areas_SY2025_26";
 
 function assertFileExists(filePath: string) {
     if (!fs.existsSync(filePath)) {
@@ -158,21 +166,93 @@ function assertFileExists(filePath: string) {
     }
 }
 
-function parseArgs(argv: string[]) {
-    const args = new Set(argv.slice(2));
-    const concurrencyArg = argv.find((a) => a.startsWith("--concurrency="));
-    const concurrency = concurrencyArg
-        ? Math.max(1, Number(concurrencyArg.split("=")[1] ?? "5"))
-        : 5;
+function ensureDir(dirPath: string) {
+    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+}
 
-    return {
-        generateOnly: args.has("--generate-only"),
-        uploadOnly: args.has("--upload-only"),
-        concurrency,
-    };
+function rmDirIfExists(dirPath: string) {
+    try {
+        if (fs.existsSync(dirPath)) {
+            fs.rmSync(dirPath, { recursive: true, force: true });
+        }
+    } catch {
+        // best-effort cleanup; ignore
+    }
+}
+
+function rmDirIfEmpty(dirPath: string) {
+    try {
+        if (!fs.existsSync(dirPath)) return;
+        const entries = fs.readdirSync(dirPath);
+        if (entries.length === 0) fs.rmdirSync(dirPath);
+    } catch {
+        // ignore
+    }
+}
+
+function downloadAndConvertInputGeoJSON() {
+    ensureDir(DATASET_FOLDER);
+    ensureDir(TMP_WORKDIR_BASE);
+
+    const runId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const workdir = path.join(TMP_WORKDIR_BASE, runId);
+    ensureDir(workdir);
+
+    const zipPath = path.join(workdir, "attendance_areas.zip");
+
+    console.log("⬇️  Downloading attendance areas shapefile ZIP...");
+    console.log(`• URL: ${ZIP_URL}`);
+    console.log(`• Workdir: ${workdir}`);
+
+    try {
+        execSync(`curl -L -o "${zipPath}" "${ZIP_URL}"`, { stdio: "inherit" });
+        execSync(`unzip -o "${zipPath}" -d "${workdir}"`, { stdio: "inherit" });
+
+        // Find a .shp file in the extracted contents
+        const files = fs.readdirSync(workdir);
+        const shpCandidates = files.filter((f) =>
+            f.toLowerCase().endsWith(".shp")
+        );
+
+        if (shpCandidates.length === 0) {
+            throw new Error(`No .shp file found after unzip in: ${workdir}`);
+        }
+
+        const preferred = shpCandidates.find((f) =>
+            f.toLowerCase().includes("attendance") ||
+            f.toLowerCase().includes("school")
+        );
+        const shpFile = preferred ?? shpCandidates[0];
+        const shpPath = path.join(workdir, shpFile);
+
+        console.log("🗺️  Converting shapefile to GeoJSON (EPSG:4326)...");
+        console.log(`• Shapefile: ${shpPath}`);
+        console.log(`• Output: ${INPUT_GEOJSON}`);
+
+        // Convert to RFC 7946-friendly GeoJSON (EPSG:4326). Keep geometry as multipolygon.
+        const cmd = [
+            "ogr2ogr",
+            "-f GeoJSON",
+            "-t_srs EPSG:4326",
+            `"${INPUT_GEOJSON}"`,
+            `"${shpPath}"`,
+            "-nlt MULTIPOLYGON",
+        ].join(" ");
+
+        execSync(cmd, { stdio: "inherit" });
+
+        console.log("✅ Input GeoJSON created.");
+    } finally {
+        // Keep only the versioned artifacts; clean up temp extraction folder(s)
+        rmDirIfExists(workdir);
+        rmDirIfEmpty(TMP_WORKDIR_BASE);
+    }
 }
 
 function generateDisplayGeoJSON() {
+    if (!fs.existsSync(INPUT_GEOJSON)) {
+        downloadAndConvertInputGeoJSON();
+    }
     assertFileExists(INPUT_GEOJSON);
 
     console.log("🔧 Generating simplified attendance areas GeoJSON...");
@@ -215,8 +295,7 @@ function readFeatureCollection(filePath: string): FeatureCollection {
 }
 
 function getSupabaseEnv() {
-    const url =
-        process.env.NEXT_PUBLIC_SUPABASE_URL ??
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ??
         process.env.SUPABASE_URL; // TODO: remove SUPABASE_URL fallback after migration
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -450,7 +529,7 @@ async function main() {
         }
     } else {
         console.log(
-            "↪️  --upload-only specified; skipping ogr2ogr generation.",
+            "↪️  --upload-only specified; skipping download/conversion and ogr2ogr generation.",
         );
     }
 
@@ -470,6 +549,20 @@ async function main() {
         console.error(err?.message ?? err);
         process.exit(1);
     }
+}
+
+function parseArgs(argv: string[]) {
+    const args = new Set(argv.slice(2));
+    const concurrencyArg = argv.find((a) => a.startsWith("--concurrency="));
+    const concurrency = concurrencyArg
+        ? Math.max(1, Number(concurrencyArg.split("=")[1] ?? "5"))
+        : 5;
+
+    return {
+        generateOnly: args.has("--generate-only"),
+        uploadOnly: args.has("--upload-only"),
+        concurrency,
+    };
 }
 
 main();
