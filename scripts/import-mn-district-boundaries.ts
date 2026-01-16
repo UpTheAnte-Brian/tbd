@@ -11,7 +11,7 @@
  *  - This script assumes district entities already exist (from your district import).
  *    We map geometry features to districts using sdorgid -> entity_id.
  *  - We write versioned GeoJSON artifacts under:
- *      scripts/geojson/mn_mde_bdry_school_district_boundaries/<VINTAGE>/
+ *      scripts/geojson/mn_mde_bdry_school_district_boundaries/<VERSION_TAG>/
  *
  * Prereqs:
  *  - GDAL installed (ogr2ogr available on PATH) unless using --upload-only
@@ -25,28 +25,32 @@
  *  npm run importDistrictBoundaries -- --upload-only --concurrency=8
  *
  * Optional flags:
- *  --vintage=SY2025_26                (defaults to SY2025_26)
+ *  --version=SY2025_26                (defaults to SY2025_26)
+ *  --vintage=SY2025_26                (deprecated; alias for --version)
  *  --no-display                       (skip display/simplify generation)
  *  --simplify=0.001                   (display simplify tolerance; defaults 0.001)
  *  --upload-simplified                (also upload geometry_type=boundary_simplified)
  *
  * Download source:
  *  https://resources.gisdata.mn.gov/pub/gdrs/data/pub/us_mn_state_mde/bdry_school_district_boundaries/gpkg_bdry_school_district_boundaries.zip
+ *
+ * Source + versioning:
+ * - URL: https://resources.gisdata.mn.gov/pub/gdrs/data/pub/us_mn_state_mde/bdry_school_district_boundaries/gpkg_bdry_school_district_boundaries.zip
+ * - source_tag: `${DATASET_KEY}_${versionTag}`
+ * - version_tag: defaults to SY2025_26; override with --version=SY2025_26
  */
 
 import fs from "fs";
 import path from "path";
 import os from "os";
-import crypto from "crypto";
 import { execSync } from "child_process";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { v5 as uuidv5 } from "uuid";
 
 // ----------------------------
 // Config
 // ----------------------------
 
-const DEFAULT_VINTAGE = "SY2025_26";
+const DEFAULT_VERSION = "SY2025_26";
 const DATASET_KEY = "mn_mde_bdry_school_district_boundaries";
 const DOWNLOAD_URL =
     "https://resources.gisdata.mn.gov/pub/gdrs/data/pub/us_mn_state_mde/bdry_school_district_boundaries/gpkg_bdry_school_district_boundaries.zip";
@@ -69,7 +73,7 @@ type Args = {
     noDisplay: boolean;
     uploadSimplified: boolean;
     concurrency: number;
-    vintage: string;
+    versionTag: string;
     simplify: number;
 };
 
@@ -80,7 +84,7 @@ function parseArgs(argv: string[]): Args {
         noDisplay: false,
         uploadSimplified: false,
         concurrency: 8,
-        vintage: DEFAULT_VINTAGE,
+        versionTag: DEFAULT_VERSION,
         simplify: 0.001,
     };
 
@@ -98,10 +102,16 @@ function parseArgs(argv: string[]): Args {
             args.concurrency = Math.floor(n);
         }
 
+        if (a.startsWith("--version=")) {
+            const v = a.split("=")[1]?.trim();
+            if (!v) throw new Error(`Invalid --version: ${a}`);
+            args.versionTag = v;
+        }
+
         if (a.startsWith("--vintage=")) {
             const v = a.split("=")[1]?.trim();
             if (!v) throw new Error(`Invalid --vintage: ${a}`);
-            args.vintage = v;
+            args.versionTag = v;
         }
 
         if (a.startsWith("--simplify=")) {
@@ -130,12 +140,18 @@ function ensureDir(p: string) {
     fs.mkdirSync(p, { recursive: true });
 }
 
-function artifactDir(vintage: string) {
-    return path.join(process.cwd(), "scripts", "geojson", DATASET_KEY, vintage);
+function artifactDir(versionTag: string) {
+    return path.join(
+        process.cwd(),
+        "scripts",
+        "geojson",
+        DATASET_KEY,
+        versionTag,
+    );
 }
 
-function artifactPaths(vintage: string) {
-    const dir = artifactDir(vintage);
+function artifactPaths(versionTag: string) {
+    const dir = artifactDir(versionTag);
     return {
         dir,
         inputGeoJSON: path.join(dir, "input.geojson"),
@@ -199,13 +215,7 @@ function shOut(cmd: string): string {
 }
 
 function tmpWorkdir(prefix: string) {
-    const rand = crypto.randomBytes(8).toString("hex");
-    const dir = path.join(
-        process.cwd(),
-        "scripts",
-        "geojson",
-        `tmp_${prefix}_${Date.now()}_${rand}`,
-    );
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), `${prefix}_`));
     ensureDir(dir);
     return dir;
 }
@@ -401,48 +411,51 @@ function buildDisplayGeoJSON(
     const tmpDir = tmpWorkdir("mn_district_boundaries_display");
     const inPath = path.join(tmpDir, "in.geojson");
     const outPath = path.join(tmpDir, "out.geojson");
-    writeGeoJSON(inPath, input);
-
-    // -simplify with preserve topology is not guaranteed, but for district boundaries it has been fine.
-    // We also select properties by keeping them in the output JSON post-process.
-    sh(`ogr2ogr -f GeoJSON -t_srs EPSG:4326 -makevalid -simplify ${simplifyTolerance} "${outPath}" "${inPath}"`);
-
-    const simplified = readGeoJSON(outPath);
-
-    const features: GeoJSONFeature[] = simplified.features.map((f) => {
-        const props: Record<string, any> = {};
-        for (const [k, v] of Object.entries(f.properties || {})) {
-            if (keepKeys.has(k)) props[k] = v;
-        }
-
-        // Ensure sdorgid survives in normalized form if present under any casing.
-        if (props.sdorgid == null) {
-            const sd = (f.properties as any)?.sdorgid ??
-                (f.properties as any)?.SDORGID;
-            if (sd != null) props.sdorgid = sd;
-        }
-
-        // Attempt to fill a name-like field
-        if (!props.sdprefname) {
-            const nameCandidate = (f.properties as any)?.sdprefname ||
-                (f.properties as any)?.SDPREFNAME ||
-                (f.properties as any)?.sdname ||
-                (f.properties as any)?.isdname ||
-                (f.properties as any)?.name;
-            if (nameCandidate) props.sdprefname = nameCandidate;
-        }
-
-        return { type: "Feature", geometry: f.geometry, properties: props };
-    });
-
-    // cleanup temp dir
     try {
-        fs.rmSync(tmpDir, { recursive: true, force: true });
-    } catch {
-        // ignore
-    }
+        writeGeoJSON(inPath, input);
 
-    return { type: "FeatureCollection", features };
+        // -simplify with preserve topology is not guaranteed, but for district boundaries it has been fine.
+        // We also select properties by keeping them in the output JSON post-process.
+        sh(
+            `ogr2ogr -f GeoJSON -t_srs EPSG:4326 -makevalid -simplify ${simplifyTolerance} "${outPath}" "${inPath}"`,
+        );
+
+        const simplified = readGeoJSON(outPath);
+
+        const features: GeoJSONFeature[] = simplified.features.map((f) => {
+            const props: Record<string, any> = {};
+            for (const [k, v] of Object.entries(f.properties || {})) {
+                if (keepKeys.has(k)) props[k] = v;
+            }
+
+            // Ensure sdorgid survives in normalized form if present under any casing.
+            if (props.sdorgid == null) {
+                const sd = (f.properties as any)?.sdorgid ??
+                    (f.properties as any)?.SDORGID;
+                if (sd != null) props.sdorgid = sd;
+            }
+
+            // Attempt to fill a name-like field
+            if (!props.sdprefname) {
+                const nameCandidate = (f.properties as any)?.sdprefname ||
+                    (f.properties as any)?.SDPREFNAME ||
+                    (f.properties as any)?.sdname ||
+                    (f.properties as any)?.isdname ||
+                    (f.properties as any)?.name;
+                if (nameCandidate) props.sdprefname = nameCandidate;
+            }
+
+            return { type: "Feature", geometry: f.geometry, properties: props };
+        });
+
+        return { type: "FeatureCollection", features };
+    } finally {
+        try {
+            fs.rmSync(tmpDir, { recursive: true, force: true });
+        } catch {
+            // ignore
+        }
+    }
 }
 
 function toBbox(fcOrGeom: any) {
@@ -613,10 +626,17 @@ async function uploadPerDistrict(
 
 async function main() {
     const args = parseArgs(process.argv.slice(2));
-    const { dir, inputGeoJSON, displayGeoJSON } = artifactPaths(args.vintage);
+    const { dir, inputGeoJSON, displayGeoJSON } = artifactPaths(args.versionTag);
     ensureDir(dir);
 
-    const sourceTag = `${DATASET_KEY}_${args.vintage}`;
+    const sourceTag = `${DATASET_KEY}_${args.versionTag}`;
+
+    console.log("Dataset info:");
+    console.log(`• source_url: ${DOWNLOAD_URL}`);
+    console.log(`• source_tag: ${sourceTag}`);
+    console.log(`• version_tag: ${args.versionTag}`);
+    console.log(`• input_geojson: ${inputGeoJSON}`);
+    console.log(`• display_geojson: ${displayGeoJSON}`);
 
     if (!args.uploadOnly) {
         console.log("⬇️  Downloading district boundaries GeoPackage ZIP...");
@@ -625,45 +645,46 @@ async function main() {
         const workdir = tmpWorkdir("mn_district_boundaries");
         const zipPath = path.join(workdir, "district_boundaries.zip");
 
-        // download
-        sh(`curl -L -o "${zipPath}" "${DOWNLOAD_URL}"`);
-
-        // unzip
-        sh(`unzip -o "${zipPath}" -d "${workdir}"`);
-
-        const gpkgPath = detectGpkgFile(workdir);
-        console.log(`• GeoPackage: ${gpkgPath}`);
-
-        console.log("🗺️  Converting GeoPackage → GeoJSON (EPSG:4326)...");
-        convertGpkgToGeoJSON(gpkgPath, inputGeoJSON);
-
-        assertFileExists(inputGeoJSON);
-        const inputFC = readGeoJSON(inputGeoJSON);
-        console.log(
-            `✓ Input GeoJSON created. Features in file: ${inputFC.features.length}`,
-        );
-
-        if (!args.noDisplay) {
-            console.log(
-                "🧪 Generating display (simplified) district boundaries GeoJSON...",
-            );
-            console.log(`• Simplify tolerance: ${args.simplify}`);
-            const displayFC = buildDisplayGeoJSON(inputFC, args.simplify);
-            writeGeoJSON(displayGeoJSON, displayFC);
-            console.log(
-                `✓ Display GeoJSON created. Features in file: ${displayFC.features.length}`,
-            );
-        } else {
-            console.log(
-                "ℹ️  --no-display specified; skipping display generation.",
-            );
-        }
-
-        // cleanup workdir
         try {
-            fs.rmSync(workdir, { recursive: true, force: true });
-        } catch {
-            // ignore
+            // download
+            sh(`curl -L -o "${zipPath}" "${DOWNLOAD_URL}"`);
+
+            // unzip
+            sh(`unzip -o "${zipPath}" -d "${workdir}"`);
+
+            const gpkgPath = detectGpkgFile(workdir);
+            console.log(`• GeoPackage: ${gpkgPath}`);
+
+            console.log("🗺️  Converting GeoPackage → GeoJSON (EPSG:4326)...");
+            convertGpkgToGeoJSON(gpkgPath, inputGeoJSON);
+
+            assertFileExists(inputGeoJSON);
+            const inputFC = readGeoJSON(inputGeoJSON);
+            console.log(
+                `✓ Input GeoJSON created. Features in file: ${inputFC.features.length}`,
+            );
+
+            if (!args.noDisplay) {
+                console.log(
+                    "🧪 Generating display (simplified) district boundaries GeoJSON...",
+                );
+                console.log(`• Simplify tolerance: ${args.simplify}`);
+                const displayFC = buildDisplayGeoJSON(inputFC, args.simplify);
+                writeGeoJSON(displayGeoJSON, displayFC);
+                console.log(
+                    `✓ Display GeoJSON created. Features in file: ${displayFC.features.length}`,
+                );
+            } else {
+                console.log(
+                    "ℹ️  --no-display specified; skipping display generation.",
+                );
+            }
+        } finally {
+            try {
+                fs.rmSync(workdir, { recursive: true, force: true });
+            } catch {
+                // ignore
+            }
         }
     } else {
         console.log(

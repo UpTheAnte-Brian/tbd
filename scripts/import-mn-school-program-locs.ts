@@ -22,7 +22,12 @@
  *  - Upload only:
  *      npm run importSchoolProgramLocs -- --upload-only --concurrency=8
  *  - Full run:
- *      npm run importSchoolProgramLocs -- --concurrency=8
+ *      npm run importSchoolProgramLocs -- --concurrency=8 --version=SY2025_26
+ *
+ * Source + versioning:
+ * - URL: https://resources.gisdata.mn.gov/pub/gdrs/data/pub/us_mn_state_mde/struc_school_program_locs/shp_struc_school_program_locs.zip
+ * - source_tag: `${DATASET_KEY}_${versionTag}`
+ * - version_tag: defaults to SY2025_26; override with --version=SY2025_26
  */
 
 import fs from "node:fs";
@@ -45,19 +50,26 @@ const ZIP_URL =
 // Keep artifacts committed for debug/repeatability.
 // Folder convention: scripts/geojson/<dataset>/<version>/
 const DATASET_KEY = "mn_mde_struc_school_program_locs";
-const DATASET_VERSION = "SY2025_26";
-
-const SOURCE_TAG = `${DATASET_KEY}_${DATASET_VERSION}`;
+const DEFAULT_VERSION = "SY2025_26";
 const GEOMETRY_TYPE = "school_program_locations";
+function artifactPaths(versionTag: string) {
+    const dir = path.join(
+        PROJECT_ROOT,
+        "scripts/geojson",
+        DATASET_KEY,
+        versionTag,
+    );
+    return {
+        dir,
+        inputGeoJSON: path.join(dir, "input.geojson"),
+        displayGeoJSON: path.join(dir, "display.geojson"),
+        metadataJSON: path.join(dir, "metadata.json"),
+    };
+}
 
-const OUTPUT_DIR = path.join(
-    PROJECT_ROOT,
-    "scripts/geojson",
-    DATASET_KEY,
-    DATASET_VERSION,
-);
-const INPUT_GEOJSON = path.join(OUTPUT_DIR, "input.geojson");
-const METADATA_JSON = path.join(OUTPUT_DIR, "metadata.json");
+function sourceTag(versionTag: string) {
+    return `${DATASET_KEY}_${versionTag}`;
+}
 
 // Namespace UUID (v5). Any stable UUID string is fine.
 // This makes entity IDs deterministic across environments (dev/test/prod)
@@ -108,6 +120,7 @@ function parseArgs(argv: string[]) {
         generateOnly: flags.has("--generate-only"),
         uploadOnly: flags.has("--upload-only"),
         concurrency,
+        versionTag: kv["--version"]?.trim() || DEFAULT_VERSION,
     };
 }
 
@@ -165,13 +178,19 @@ function uuidv5(name: string, namespaceUuid: string) {
 // Download + convert
 // -----------------------------
 
-function downloadAndConvertToGeoJSON() {
+function downloadAndConvertToGeoJSON(params: {
+    inputGeoJSON: string;
+    displayGeoJSON: string;
+    metadataJSON: string;
+    versionTag: string;
+    sourceTag: string;
+}) {
     const workdir = fs.mkdtempSync(
         path.join(os.tmpdir(), "mn_school_program_locs_"),
     );
 
     try {
-        ensureDir(OUTPUT_DIR);
+        ensureDir(path.dirname(params.inputGeoJSON));
 
         const zipPath = path.join(workdir, "school_program_locs.zip");
 
@@ -200,30 +219,35 @@ function downloadAndConvertToGeoJSON() {
 
         console.log("🗺️  Converting shapefile to GeoJSON (EPSG:4326)...");
         console.log(`• Shapefile: ${shpPath}`);
-        console.log(`• Output: ${INPUT_GEOJSON}`);
+        console.log(`• Output: ${params.inputGeoJSON}`);
 
         // Generate RFC7946-friendly GeoJSON in WGS84.
         const cmd = [
             "ogr2ogr",
             "-f GeoJSON",
             "-t_srs EPSG:4326",
-            `"${INPUT_GEOJSON}"`,
+            `"${params.inputGeoJSON}"`,
             `"${shpPath}"`,
         ].join(" ");
 
         execSync(cmd, { stdio: "inherit" });
 
+        fs.copyFileSync(params.inputGeoJSON, params.displayGeoJSON);
+
         // Write lightweight provenance metadata alongside the GeoJSON.
         fs.writeFileSync(
-            METADATA_JSON,
+            params.metadataJSON,
             JSON.stringify(
                 {
                     dataset_key: DATASET_KEY,
-                    dataset_version: DATASET_VERSION,
-                    source_tag: SOURCE_TAG,
+                    dataset_version: params.versionTag,
+                    source_tag: params.sourceTag,
                     zip_url: ZIP_URL,
                     generated_at: new Date().toISOString(),
-                    output_geojson: path.relative(PROJECT_ROOT, INPUT_GEOJSON),
+                    output_geojson: path.relative(
+                        PROJECT_ROOT,
+                        params.inputGeoJSON,
+                    ),
                 },
                 null,
                 2,
@@ -242,9 +266,9 @@ function downloadAndConvertToGeoJSON() {
     }
 }
 
-function readGeoJSON(): GeoJSONFC {
-    assertFileExists(INPUT_GEOJSON);
-    const raw = fs.readFileSync(INPUT_GEOJSON, "utf8");
+function readGeoJSON(inputGeoJSON: string): GeoJSONFC {
+    assertFileExists(inputGeoJSON);
+    const raw = fs.readFileSync(inputGeoJSON, "utf8");
     const parsed = JSON.parse(raw) as GeoJSONFC;
     if (
         parsed.type !== "FeatureCollection" || !Array.isArray(parsed.features)
@@ -404,6 +428,7 @@ async function upsertSchoolEntities(
     supabase: ReturnType<typeof createClient>,
     schoolTypeKey: string,
     features: GeoJSONFeature[],
+    source: string,
 ) {
     // Deduplicate by orgid
     const byOrgId = new Map<string, GeoJSONFeature>();
@@ -425,7 +450,7 @@ async function upsertSchoolEntities(
             orgtype: f.properties?.orgtype ?? null,
             orgnumber: f.properties?.orgnumber ?? null,
             schnumber: f.properties?.schnumber ?? null,
-            source: SOURCE_TAG,
+            source,
         };
 
         return {
@@ -511,6 +536,7 @@ async function upsertSchoolGeometries(
     features: GeoJSONFeature[],
     idByOrgId: Map<string, string>,
     concurrency: number,
+    source: string,
 ) {
     // Build tasks
     const tasks: Array<() => Promise<void>> = [];
@@ -550,7 +576,7 @@ async function upsertSchoolGeometries(
                 p_geojson: fc,
                 p_geom_geojson: pointGeom,
                 p_bbox: bbox,
-                p_source: SOURCE_TAG,
+                p_source: source,
             };
 
             const { error } = await supabase.rpc(
@@ -605,12 +631,28 @@ async function upsertSchoolGeometries(
 // -----------------------------
 
 async function main() {
-    const { generateOnly, uploadOnly, concurrency } = parseArgs(
+    const { generateOnly, uploadOnly, concurrency, versionTag } = parseArgs(
         process.argv.slice(2),
     );
+    const paths = artifactPaths(versionTag);
+    const source = sourceTag(versionTag);
+
+    ensureDir(paths.dir);
+    console.log("Dataset info:");
+    console.log(`• source_url: ${ZIP_URL}`);
+    console.log(`• source_tag: ${source}`);
+    console.log(`• version_tag: ${versionTag}`);
+    console.log(`• input_geojson: ${paths.inputGeoJSON}`);
+    console.log(`• display_geojson: ${paths.displayGeoJSON}`);
 
     if (!uploadOnly) {
-        downloadAndConvertToGeoJSON();
+        downloadAndConvertToGeoJSON({
+            inputGeoJSON: paths.inputGeoJSON,
+            displayGeoJSON: paths.displayGeoJSON,
+            metadataJSON: paths.metadataJSON,
+            versionTag,
+            sourceTag: source,
+        });
     } else {
         console.log(
             "↪️  --upload-only specified; skipping download/conversion.",
@@ -625,9 +667,9 @@ async function main() {
     }
 
     // Upload path
-    assertFileExists(INPUT_GEOJSON);
+    assertFileExists(paths.inputGeoJSON);
 
-    const fc = readGeoJSON();
+    const fc = readGeoJSON(paths.inputGeoJSON);
     console.log(`• Features in file: ${fc.features.length}`);
 
     const { url, servicekey } = getSupabaseEnv();
@@ -642,10 +684,17 @@ async function main() {
         supabase,
         schoolTypeKey,
         fc.features,
+        source,
     );
 
     // 2) Upsert geometries
-    await upsertSchoolGeometries(supabase, fc.features, idByOrgId, concurrency);
+    await upsertSchoolGeometries(
+        supabase,
+        fc.features,
+        idByOrgId,
+        concurrency,
+        source,
+    );
 
     console.log("🎉 Done.");
 }

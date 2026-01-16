@@ -16,8 +16,11 @@
     "importStates": "dotenv -e .env.local -- tsx scripts/import-us-states.ts",
     "importStates:test": "dotenv -e .env.test.local -- tsx scripts/import-us-states.ts",
     "importAttendanceAreas": "dotenv -e .env.local -- tsx scripts/import-mn-attendance-areas.ts",
+    "importAttendanceAreas:test": "dotenv -e .env.test.local -- tsx scripts/import-mn-attendance-areas.ts",
     "importSchoolProgramLocs": "dotenv -e .env.local -- tsx scripts/import-mn-school-program-locs.ts",
-    "importDistrictBoundaries": "dotenv -e .env.local -- tsx scripts/import-mn-district-boundaries.ts"
+    "importSchoolProgramLocs:test": "dotenv -e .env.test.local -- tsx scripts/import-mn-school-program-locs.ts",
+    "importDistrictBoundaries": "dotenv -e .env.local -- tsx scripts/import-mn-district-boundaries.ts",
+    "importDistrictBoundaries:test": "dotenv -e .env.test.local -- tsx scripts/import-mn-district-boundaries.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

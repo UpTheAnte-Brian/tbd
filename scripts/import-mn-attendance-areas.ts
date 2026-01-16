@@ -23,11 +23,18 @@
  *   tsx scripts/import-mn-attendance-areas.ts --generate-only
  *   tsx scripts/import-mn-attendance-areas.ts --upload-only
  *   tsx scripts/import-mn-attendance-areas.ts --concurrency=8
+ *   tsx scripts/import-mn-attendance-areas.ts --version=SY2025_26
+ *
+ * Source + versioning:
+ * - URL: https://resources.gisdata.mn.gov/pub/gdrs/data/pub/us_mn_state_mde/bdry_school_attendance_areas/shp_bdry_school_attendance_areas.zip
+ * - source_tag: `${DATASET_KEY}_${versionTag}`
+ * - version_tag: defaults to SY2025_26; override with --version=SY2025_26
  */
 
 import { execSync } from "node:child_process";
 import path from "node:path";
 import fs from "node:fs";
+import os from "node:os";
 import { createClient } from "@supabase/supabase-js";
 
 type GeoJSONPosition = [number, number] | [number, number, number];
@@ -128,19 +135,11 @@ function bboxJsonFromGeometry(bboxGeom: GeoJSONGeometry) {
 const PROJECT_ROOT = process.cwd();
 
 // Dataset versioning
-const DATASET_FOLDER = path.join(
-    PROJECT_ROOT,
-    "scripts/geojson/mn_mde_bdry_school_attendance_areas/SY2025_26",
-);
-
-const INPUT_GEOJSON = path.join(DATASET_FOLDER, "input.geojson");
-const OUTPUT_GEOJSON = path.join(DATASET_FOLDER, "display.geojson");
+const DATASET_KEY = "mn_mde_bdry_school_attendance_areas";
+const DEFAULT_VERSION = "SY2025_26";
 
 const ZIP_URL =
     "https://resources.gisdata.mn.gov/pub/gdrs/data/pub/us_mn_state_mde/bdry_school_attendance_areas/shp_bdry_school_attendance_areas.zip";
-
-// Scratch space for unzip/shapefile conversion
-const TMP_WORKDIR_BASE = path.join(DATASET_FOLDER, "tmp");
 
 // OGR simplify tolerance (degrees, EPSG:4326)
 const SIMPLIFY_TOLERANCE = "0.001";
@@ -158,7 +157,23 @@ const SELECT_FIELDS = [
 ];
 
 const GEOMETRY_TYPE = "district_attendance_areas";
-const SOURCE_TAG = "mn_mde_bdry_school_attendance_areas_SY2025_26";
+function artifactPaths(versionTag: string) {
+    const dir = path.join(
+        PROJECT_ROOT,
+        "scripts/geojson",
+        DATASET_KEY,
+        versionTag,
+    );
+    return {
+        dir,
+        inputGeoJSON: path.join(dir, "input.geojson"),
+        displayGeoJSON: path.join(dir, "display.geojson"),
+    };
+}
+
+function sourceTag(versionTag: string) {
+    return `${DATASET_KEY}_${versionTag}`;
+}
 
 function assertFileExists(filePath: string) {
     if (!fs.existsSync(filePath)) {
@@ -180,24 +195,10 @@ function rmDirIfExists(dirPath: string) {
     }
 }
 
-function rmDirIfEmpty(dirPath: string) {
-    try {
-        if (!fs.existsSync(dirPath)) return;
-        const entries = fs.readdirSync(dirPath);
-        if (entries.length === 0) fs.rmdirSync(dirPath);
-    } catch {
-        // ignore
-    }
-}
-
-function downloadAndConvertInputGeoJSON() {
-    ensureDir(DATASET_FOLDER);
-    ensureDir(TMP_WORKDIR_BASE);
-
-    const runId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const workdir = path.join(TMP_WORKDIR_BASE, runId);
-    ensureDir(workdir);
-
+function downloadAndConvertInputGeoJSON(inputGeoJSON: string) {
+    const workdir = fs.mkdtempSync(
+        path.join(os.tmpdir(), "mn_attendance_areas_"),
+    );
     const zipPath = path.join(workdir, "attendance_areas.zip");
 
     console.log("⬇️  Downloading attendance areas shapefile ZIP...");
@@ -227,14 +228,14 @@ function downloadAndConvertInputGeoJSON() {
 
         console.log("🗺️  Converting shapefile to GeoJSON (EPSG:4326)...");
         console.log(`• Shapefile: ${shpPath}`);
-        console.log(`• Output: ${INPUT_GEOJSON}`);
+        console.log(`• Output: ${inputGeoJSON}`);
 
         // Convert to RFC 7946-friendly GeoJSON (EPSG:4326). Keep geometry as multipolygon.
         const cmd = [
             "ogr2ogr",
             "-f GeoJSON",
             "-t_srs EPSG:4326",
-            `"${INPUT_GEOJSON}"`,
+            `"${inputGeoJSON}"`,
             `"${shpPath}"`,
             "-nlt MULTIPOLYGON",
         ].join(" ");
@@ -245,27 +246,29 @@ function downloadAndConvertInputGeoJSON() {
     } finally {
         // Keep only the versioned artifacts; clean up temp extraction folder(s)
         rmDirIfExists(workdir);
-        rmDirIfEmpty(TMP_WORKDIR_BASE);
     }
 }
 
-function generateDisplayGeoJSON() {
-    if (!fs.existsSync(INPUT_GEOJSON)) {
-        downloadAndConvertInputGeoJSON();
+function generateDisplayGeoJSON(
+    inputGeoJSON: string,
+    displayGeoJSON: string,
+) {
+    if (!fs.existsSync(inputGeoJSON)) {
+        downloadAndConvertInputGeoJSON(inputGeoJSON);
     }
-    assertFileExists(INPUT_GEOJSON);
+    assertFileExists(inputGeoJSON);
 
     console.log("🔧 Generating simplified attendance areas GeoJSON...");
-    console.log(`• Input:  ${INPUT_GEOJSON}`);
-    console.log(`• Output: ${OUTPUT_GEOJSON}`);
+    console.log(`• Input:  ${inputGeoJSON}`);
+    console.log(`• Output: ${displayGeoJSON}`);
     console.log(`• Simplify tolerance: ${SIMPLIFY_TOLERANCE}`);
     console.log(`• Properties kept: ${SELECT_FIELDS.join(", ")}`);
 
     const command = [
         "ogr2ogr",
         "-f GeoJSON",
-        `"${OUTPUT_GEOJSON}"`,
-        `"${INPUT_GEOJSON}"`,
+        `"${displayGeoJSON}"`,
+        `"${inputGeoJSON}"`,
         "-nlt MULTIPOLYGON",
         "-makevalid",
         `-simplify ${SIMPLIFY_TOLERANCE}`,
@@ -394,6 +397,7 @@ async function upsertDistrictAttendanceAreas(
     supabase: ReturnType<typeof createClient>,
     districtEntityId: string,
     features: GeoJSONFeature[],
+    source: string,
 ) {
     const fc: FeatureCollection = { type: "FeatureCollection", features };
 
@@ -412,14 +416,18 @@ async function upsertDistrictAttendanceAreas(
             p_geojson: fc, // full FeatureCollection for rendering
             p_geom_geojson: bboxGeom, // bbox polygon for geom
             p_bbox: bbox, // optional convenience bbox json
-            p_source: SOURCE_TAG,
+            p_source: source,
         },
     );
 
     if (error) throw error;
 }
 
-async function uploadToSupabase(concurrency: number) {
+async function uploadToSupabase(
+    outputGeoJSON: string,
+    source: string,
+    concurrency: number,
+) {
     console.log("☁️  Uploading per-district attendance areas to Supabase...");
 
     const { url, serviceKey } = getSupabaseEnv();
@@ -430,7 +438,7 @@ async function uploadToSupabase(concurrency: number) {
     const districtIndex = await fetchDistrictIndex(supabase);
     console.log(`• Districts indexed: ${districtIndex.size}`);
 
-    const fc = readFeatureCollection(OUTPUT_GEOJSON);
+    const fc = readFeatureCollection(outputGeoJSON);
     console.log(`• Attendance area features in file: ${fc.features.length}`);
 
     const { groups, unmatchedSdorgids } = groupFeaturesByDistrictEntityId(
@@ -489,6 +497,7 @@ async function uploadToSupabase(concurrency: number) {
                         supabase,
                         districtEntityId,
                         features,
+                        source,
                     );
                     ok++;
                     if (ok % 25 === 0) {
@@ -517,11 +526,23 @@ async function uploadToSupabase(concurrency: number) {
 }
 
 async function main() {
-    const { generateOnly, uploadOnly, concurrency } = parseArgs(process.argv);
+    const { generateOnly, uploadOnly, concurrency, versionTag } = parseArgs(
+        process.argv,
+    );
+    const { dir, inputGeoJSON, displayGeoJSON } = artifactPaths(versionTag);
+    const source = sourceTag(versionTag);
+
+    ensureDir(dir);
+    console.log("Dataset info:");
+    console.log(`• source_url: ${ZIP_URL}`);
+    console.log(`• source_tag: ${source}`);
+    console.log(`• version_tag: ${versionTag}`);
+    console.log(`• input_geojson: ${inputGeoJSON}`);
+    console.log(`• display_geojson: ${displayGeoJSON}`);
 
     if (!uploadOnly) {
         try {
-            generateDisplayGeoJSON();
+            generateDisplayGeoJSON(inputGeoJSON, displayGeoJSON);
         } catch (err: any) {
             console.error("❌ ogr2ogr failed.");
             console.error(err?.message ?? err);
@@ -540,10 +561,10 @@ async function main() {
         return;
     }
 
-    assertFileExists(OUTPUT_GEOJSON);
+    assertFileExists(displayGeoJSON);
 
     try {
-        await uploadToSupabase(concurrency);
+        await uploadToSupabase(displayGeoJSON, source, concurrency);
     } catch (err: any) {
         console.error("❌ Upload failed.");
         console.error(err?.message ?? err);
@@ -553,15 +574,20 @@ async function main() {
 
 function parseArgs(argv: string[]) {
     const args = new Set(argv.slice(2));
+    const versionArg = argv.find((a) => a.startsWith("--version="));
     const concurrencyArg = argv.find((a) => a.startsWith("--concurrency="));
     const concurrency = concurrencyArg
         ? Math.max(1, Number(concurrencyArg.split("=")[1] ?? "5"))
         : 5;
+    const versionTag = versionArg
+        ? versionArg.split("=")[1]?.trim() || DEFAULT_VERSION
+        : DEFAULT_VERSION;
 
     return {
         generateOnly: args.has("--generate-only"),
         uploadOnly: args.has("--upload-only"),
         concurrency,
+        versionTag,
     };
 }
 
