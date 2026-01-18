@@ -4,7 +4,9 @@
  * End-to-end pipeline for MN MDE "School Program Locations" (point locations):
  *  1) Download shapefile ZIP and convert to GeoJSON (EPSG:4326)
  *  2) Upsert School entities (entity_type = "school") keyed by deterministic UUID derived from MDE orgid
- *  3) Upsert point geometry into public.entity_geometries via RPC upsert_entity_geometry_with_geom_geojson
+ *  3) Upsert curated MDE attributes into public.entity_attributes (namespace = "mde")
+ *  4) Store full source payload into public.entity_source_records (source = source_tag)
+ *  5) Upsert point geometry into public.entity_geometries via RPC upsert_entity_geometry_with_geom_geojson
  *
  * Why:
  *  - Attendance areas reference schools by orgid (elem_orgid / midd_orgid / high_orgid)
@@ -303,7 +305,7 @@ function coerceOrgId(value: unknown): string | null {
 function pickSchoolName(p: Record<string, any>): string {
     return (
         p.gisname ??
-            p.mdname ??
+            p.mdename ??
             p.altname ??
             p.name ??
             "Unnamed school"
@@ -339,94 +341,63 @@ function pointFeatureCollection(
     };
 }
 
+function stripNullish(obj: Record<string, any>) {
+    const out: Record<string, any> = {};
+    for (const [k, v] of Object.entries(obj)) {
+        if (v === null || v === undefined) continue;
+        if (typeof v === "string" && v.trim() === "") continue;
+        out[k] = v;
+    }
+    return out;
+}
+
+function curatedMdeAttrs(p: Record<string, any>, source: string) {
+    // Keep only attributes we expect to use in the app UI/search.
+    // Raw payload is preserved separately in entity_source_records.
+    return stripNullish({
+        source,
+        // Names
+        gisname: p.gisname ?? null,
+        mdename: p.mdename ?? null,
+        altname: p.altname ?? null,
+
+        // Classification / flags
+        class: p.class ?? null,
+        pubpriv: p.pubpriv ?? null,
+        loctype: p.loctype ?? null,
+        magnet: p.magnet ?? null,
+        graderange: p.graderange ?? null,
+
+        // District linkage (kept as attributes for now; can be promoted to entity_relationships later)
+        locdistid: coerceOrgId(p.locdistid) ?? null,
+        locdistname: p.locdistname ?? null,
+
+        // Address / location-ish
+        gisaddr: p.gisaddr ?? null,
+        mdeaddr: p.mdeaddr ?? null,
+        countycode: p.countycode ?? null,
+        countyname: p.countyname ?? null,
+
+        // Other identifiers that are often useful in UI/debugging
+        formid: p.formid ?? null,
+        fed_schnum: p.fed_schnum ?? null,
+
+        // Source timestamps / version
+        createdt: p.createdt ?? null,
+        updatedt: p.updatedt ?? null,
+        year: p.year ?? null,
+
+        // Links
+        web_url: p.web_url ?? null,
+    });
+}
+
 // -----------------------------
 // DB ops
 // -----------------------------
 
-async function getSchoolEntityTypeKey(
-    supabase: ReturnType<typeof createClient>,
-) {
-    // IMPORTANT:
-    // Your entity_types table does not have standard columns like id/slug.
-    // So we must NOT reference any specific column names in the query.
-    // Fetch a small set and match client-side.
-
-    const { data, error } = await supabase
-        .from("entity_types")
-        .select("*")
-        .limit(500);
-
-    if (error) throw error;
-    if (!data || data.length === 0) {
-        throw new Error(
-            "entity_types is empty; cannot resolve 'school' entity type.",
-        );
-    }
-
-    const isSchoolish = (row: any) => {
-        // Scan all values for something that looks like "school"
-        for (const v of Object.values(row)) {
-            if (typeof v === "string") {
-                const s = v.toLowerCase();
-                if (s === "school" || s.includes("school")) return true;
-            }
-        }
-        return false;
-    };
-
-    const schoolRow: any = data.find(isSchoolish);
-
-    if (!schoolRow) {
-        // Print a sample so we can decide the right key column name
-        console.error(
-            "Could not find a 'school' row in entity_types. Sample row:",
-        );
-        console.error(JSON.stringify(data[0], null, 2));
-        throw new Error(
-            "Could not find an entity_types row representing 'school'. Add one, or tell me which column is the key.",
-        );
-    }
-
-    // Choose a stable identifier from whatever columns exist.
-    // Preference order:
-    // - id (if it exists)
-    // - key-ish fields (type/code/slug/name/label)
-    // - otherwise: first string value
-    const preferredKeys = [
-        "id",
-        "type",
-        "code",
-        "slug",
-        "key",
-        "name",
-        "label",
-        "title",
-    ];
-
-    for (const k of preferredKeys) {
-        if (
-            k in schoolRow && typeof schoolRow[k] === "string" &&
-            schoolRow[k].trim()
-        ) {
-            return schoolRow[k].trim();
-        }
-        if (k in schoolRow && typeof schoolRow[k] === "number") {
-            return String(schoolRow[k]);
-        }
-    }
-
-    const firstString = Object.values(schoolRow).find((v) =>
-        typeof v === "string" && v.trim()
-    );
-    if (firstString) return String(firstString).trim();
-
-    // Last resort: stringify the whole row (not ideal, but prevents hard failure)
-    return JSON.stringify(schoolRow);
-}
-
 async function upsertSchoolEntities(
     supabase: ReturnType<typeof createClient>,
-    schoolTypeKey: string,
     features: GeoJSONFeature[],
     source: string,
 ) {
@@ -479,46 +450,20 @@ async function upsertSchoolEntities(
     for (let i = 0; i < rows.length; i += chunkSize) {
         const chunk = rows.slice(i, i + chunkSize);
 
-        const attempts = [
-            {
-                label: "entity_type_id",
-                rows: chunk.map((r) => ({
-                    ...r,
-                    entity_type_id: schoolTypeKey,
-                })),
-            },
-            {
-                label: "entity_type",
-                rows: chunk.map((r) => ({ ...r, entity_type: "school" })),
-            },
-            {
-                label: "type",
-                rows: chunk.map((r) => ({ ...r, type: "school" })),
-            },
-            { label: "no type column", rows: chunk },
-        ];
-
-        let lastError: any = null;
-        for (const attempt of attempts) {
-            const { error } = await supabase
-                .from("entities")
-                .upsert(attempt.rows as any, { onConflict: "id" });
-
-            if (!error) {
-                lastError = null;
-                break;
-            }
-
-            lastError = error;
-            console.warn(
-                `⚠️ entities upsert failed (${attempt.label}): ${error.message}`,
+        const { error: upsertError } = await supabase
+            .from("entities")
+            .upsert(
+                chunk.map((r) => ({ ...r, entity_type: "school" })) as any,
+                { onConflict: "id" },
             );
-        }
 
-        if (lastError) {
+        if (upsertError) {
+            console.warn(
+                `⚠️ entities upsert failed (entity_type): ${upsertError.message}`,
+            );
             console.error("❌ All entity upsert attempts failed. First row:");
             console.error(JSON.stringify(chunk[0], null, 2));
-            throw lastError;
+            throw upsertError;
         }
 
         console.log(
@@ -531,6 +476,94 @@ async function upsertSchoolEntities(
     return { idByOrgId };
 }
 
+async function upsertSchoolAttributesAndSourceRecords(
+    supabase: ReturnType<typeof createClient>,
+    features: GeoJSONFeature[],
+    idByOrgId: Map<string, string>,
+    source: string,
+) {
+    // Deduplicate by orgid
+    const byOrgId = new Map<string, GeoJSONFeature>();
+    for (const f of features) {
+        const orgid = coerceOrgId(f.properties?.orgid);
+        if (!orgid) continue;
+        if (!byOrgId.has(orgid)) byOrgId.set(orgid, f);
+    }
+
+    const attrRows: Array<
+        { entity_id: string; namespace: string; attrs: AnyJson }
+    > = [];
+    const sourceRows: Array<
+        {
+            entity_id: string;
+            source: string;
+            external_key: string;
+            payload: AnyJson;
+        }
+    > = [];
+
+    for (const [orgid, f] of byOrgId.entries()) {
+        const entityId = idByOrgId.get(orgid);
+        if (!entityId) continue;
+
+        const props = (f.properties ?? {}) as Record<string, any>;
+
+        // Curated attributes (shared table)
+        attrRows.push({
+            entity_id: entityId,
+            namespace: "mde",
+            attrs: curatedMdeAttrs(props, source),
+        });
+
+        // Full raw payload for future remapping/debugging
+        sourceRows.push({
+            entity_id: entityId,
+            source,
+            external_key: orgid,
+            payload: props as AnyJson,
+        });
+    }
+
+    console.log(`🧾 Attributes queued: ${attrRows.length}`);
+    console.log(`🗃️  Source records queued: ${sourceRows.length}`);
+
+    const chunkSize = 500;
+
+    for (let i = 0; i < attrRows.length; i += chunkSize) {
+        const chunk = attrRows.slice(i, i + chunkSize);
+        const { error } = await supabase
+            .from("entity_attributes")
+            .upsert(chunk as any, { onConflict: "entity_id,namespace" });
+        if (error) {
+            console.error("❌ entity_attributes upsert failed. First row:");
+            console.error(JSON.stringify(chunk[0], null, 2));
+            throw error;
+        }
+        console.log(
+            `✅ Upserted entity_attributes: ${
+                Math.min(i + chunkSize, attrRows.length)
+            }/${attrRows.length}`,
+        );
+    }
+
+    for (let i = 0; i < sourceRows.length; i += chunkSize) {
+        const chunk = sourceRows.slice(i, i + chunkSize);
+        const { error } = await supabase
+            .from("entity_source_records")
+            .upsert(chunk as any, { onConflict: "entity_id,source" });
+        if (error) {
+            console.error("❌ entity_source_records upsert failed. First row:");
+            console.error(JSON.stringify(chunk[0], null, 2));
+            throw error;
+        }
+        console.log(
+            `✅ Upserted entity_source_records: ${
+                Math.min(i + chunkSize, sourceRows.length)
+            }/${sourceRows.length}`,
+        );
+    }
+}
+
 async function upsertSchoolGeometries(
     supabase: ReturnType<typeof createClient>,
     features: GeoJSONFeature[],
@@ -538,6 +571,8 @@ async function upsertSchoolGeometries(
     concurrency: number,
     source: string,
 ) {
+    console.log("Using geometry_type:", GEOMETRY_TYPE);
+
     // Build tasks
     const tasks: Array<() => Promise<void>> = [];
 
@@ -677,17 +712,22 @@ async function main() {
         auth: { persistSession: false },
     });
 
-    const schoolTypeKey = await getSchoolEntityTypeKey(supabase);
-
     // 1) Upsert entities
     const { idByOrgId } = await upsertSchoolEntities(
         supabase,
-        schoolTypeKey,
         fc.features,
         source,
     );
 
-    // 2) Upsert geometries
+    // 2) Upsert curated attributes + raw source payload
+    await upsertSchoolAttributesAndSourceRecords(
+        supabase,
+        fc.features,
+        idByOrgId,
+        source,
+    );
+
+    // 3) Upsert geometries
     await upsertSchoolGeometries(
         supabase,
         fc.features,
