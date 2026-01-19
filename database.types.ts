@@ -1373,6 +1373,35 @@ export type Database = {
           },
         ]
       }
+      entity_attributes: {
+        Row: {
+          attrs: Json
+          entity_id: string
+          namespace: string
+          updated_at: string
+        }
+        Insert: {
+          attrs?: Json
+          entity_id: string
+          namespace: string
+          updated_at?: string
+        }
+        Update: {
+          attrs?: Json
+          entity_id?: string
+          namespace?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_attributes_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entity_geometries: {
         Row: {
           bbox: Json | null
@@ -1457,6 +1486,64 @@ export type Database = {
             foreignKeyName: "entity_relationships_parent_entity_id_fkey"
             columns: ["parent_entity_id"]
             isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_source_records: {
+        Row: {
+          entity_id: string
+          external_key: string | null
+          fetched_at: string
+          payload: Json
+          source: string
+        }
+        Insert: {
+          entity_id: string
+          external_key?: string | null
+          fetched_at?: string
+          payload: Json
+          source: string
+        }
+        Update: {
+          entity_id?: string
+          external_key?: string | null
+          fetched_at?: string
+          payload?: Json
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_source_records_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_status: {
+        Row: {
+          entity_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          entity_id: string
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          entity_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_status_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: true
             referencedRelation: "entities"
             referencedColumns: ["id"]
           },
