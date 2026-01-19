@@ -1,0 +1,75 @@
+
+
+{
+  "states": {
+    "AL": { "name": "Alabama", "fips": "01", "dataSources": {} },
+    "AK": { "name": "Alaska", "fips": "02", "dataSources": {} },
+    "AZ": { "name": "Arizona", "fips": "04", "dataSources": {} },
+    "AR": { "name": "Arkansas", "fips": "05", "dataSources": {} },
+    "CA": { "name": "California", "fips": "06", "dataSources": {} },
+    "CO": { "name": "Colorado", "fips": "08", "dataSources": {} },
+    "CT": { "name": "Connecticut", "fips": "09", "dataSources": {} },
+    "DE": { "name": "Delaware", "fips": "10", "dataSources": {} },
+    "DC": { "name": "District of Columbia", "fips": "11", "dataSources": {} },
+    "FL": { "name": "Florida", "fips": "12", "dataSources": {} },
+    "GA": { "name": "Georgia", "fips": "13", "dataSources": {} },
+    "HI": { "name": "Hawaii", "fips": "15", "dataSources": {} },
+    "ID": { "name": "Idaho", "fips": "16", "dataSources": {} },
+    "IL": { "name": "Illinois", "fips": "17", "dataSources": {} },
+    "IN": { "name": "Indiana", "fips": "18", "dataSources": {} },
+    "IA": { "name": "Iowa", "fips": "19", "dataSources": {} },
+    "KS": { "name": "Kansas", "fips": "20", "dataSources": {} },
+    "KY": { "name": "Kentucky", "fips": "21", "dataSources": {} },
+    "LA": { "name": "Louisiana", "fips": "22", "dataSources": {} },
+    "ME": { "name": "Maine", "fips": "23", "dataSources": {} },
+    "MD": { "name": "Maryland", "fips": "24", "dataSources": {} },
+    "MA": { "name": "Massachusetts", "fips": "25", "dataSources": {} },
+    "MI": { "name": "Michigan", "fips": "26", "dataSources": {} },
+    "MN": {
+      "name": "Minnesota",
+      "fips": "27",
+      "dataSources": {
+        "district_boundaries": {
+          "provider": "MN Geospatial Commons",
+          "dataset": "School district boundaries",
+          "formats": ["Shapefile", "GeoJSON"],
+          "usedFor": ["District boundaries", "Map overlays", "Entity geometries"],
+          "notes": "Official Minnesota school district boundaries used so far; source shapefile converted to GeoJSON and loaded into Supabase entities/entity_geometries."
+        },
+        "schools_and_program_locations": {
+          "provider": "Minnesota Department of Education (MDE)",
+          "dataset": "School/program location & directory data",
+          "usedFor": ["School points", "Program locations", "School metadata enrichment"],
+          "notes": "MDE data used so far for school/program locations; ingested via project import/link scripts (e.g., importSchoolProgramLocs + linkSchoolsToDistricts)."
+        }
+      }
+    },
+    "MS": { "name": "Mississippi", "fips": "28", "dataSources": {} },
+    "MO": { "name": "Missouri", "fips": "29", "dataSources": {} },
+    "MT": { "name": "Montana", "fips": "30", "dataSources": {} },
+    "NE": { "name": "Nebraska", "fips": "31", "dataSources": {} },
+    "NV": { "name": "Nevada", "fips": "32", "dataSources": {} },
+    "NH": { "name": "New Hampshire", "fips": "33", "dataSources": {} },
+    "NJ": { "name": "New Jersey", "fips": "34", "dataSources": {} },
+    "NM": { "name": "New Mexico", "fips": "35", "dataSources": {} },
+    "NY": { "name": "New York", "fips": "36", "dataSources": {} },
+    "NC": { "name": "North Carolina", "fips": "37", "dataSources": {} },
+    "ND": { "name": "North Dakota", "fips": "38", "dataSources": {} },
+    "OH": { "name": "Ohio", "fips": "39", "dataSources": {} },
+    "OK": { "name": "Oklahoma", "fips": "40", "dataSources": {} },
+    "OR": { "name": "Oregon", "fips": "41", "dataSources": {} },
+    "PA": { "name": "Pennsylvania", "fips": "42", "dataSources": {} },
+    "RI": { "name": "Rhode Island", "fips": "44", "dataSources": {} },
+    "SC": { "name": "South Carolina", "fips": "45", "dataSources": {} },
+    "SD": { "name": "South Dakota", "fips": "46", "dataSources": {} },
+    "TN": { "name": "Tennessee", "fips": "47", "dataSources": {} },
+    "TX": { "name": "Texas", "fips": "48", "dataSources": {} },
+    "UT": { "name": "Utah", "fips": "49", "dataSources": {} },
+    "VT": { "name": "Vermont", "fips": "50", "dataSources": {} },
+    "VA": { "name": "Virginia", "fips": "51", "dataSources": {} },
+    "WA": { "name": "Washington", "fips": "53", "dataSources": {} },
+    "WV": { "name": "West Virginia", "fips": "54", "dataSources": {} },
+    "WI": { "name": "Wisconsin", "fips": "55", "dataSources": {} },
+    "WY": { "name": "Wyoming", "fips": "56", "dataSources": {} }
+  }
+}

@@ -1039,51 +1039,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      business_campaigns: {
-        Row: {
-          business_id: string
-          campaign_type: string
-          created_at: string | null
-          district_id: string
-          id: string
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          business_id: string
-          campaign_type: string
-          created_at?: string | null
-          district_id: string
-          id?: string
-          status?: string
-          updated_at?: string | null
-        }
-        Update: {
-          business_id?: string
-          campaign_type?: string
-          created_at?: string | null
-          district_id?: string
-          id?: string
-          status?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_campaigns_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_campaigns_district_id_fkey"
-            columns: ["district_id"]
-            isOneToOne: false
-            referencedRelation: "districts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       businesses: {
         Row: {
           address: string | null
@@ -1160,55 +1115,6 @@ export type Database = {
           slug?: string
         }
         Relationships: []
-      }
-      district_signups: {
-        Row: {
-          action: string
-          created_at: string | null
-          details: Json | null
-          district_id: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          action: string
-          created_at?: string | null
-          details?: Json | null
-          district_id: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          action?: string
-          created_at?: string | null
-          details?: Json | null
-          district_id?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "district_signups_district_id_fkey"
-            columns: ["district_id"]
-            isOneToOne: false
-            referencedRelation: "districts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "district_signups_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "district_signups_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles_with_roles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       districts: {
         Row: {
