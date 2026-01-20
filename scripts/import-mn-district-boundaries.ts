@@ -5,7 +5,10 @@
  *  1) Download MN MDE district boundaries GeoPackage ZIP
  *  2) Convert to GeoJSON (EPSG:4326)
  *  3) Generate a render/display GeoJSON (optional simplify + keep props)
- *  4) Upload per-district geometries to Supabase via RPC `upsert_entity_geometry_with_geom_geojson`
+ *  4) Upsert district identity keys into public.entities.external_ids (sdorgid/sdnumber/sdtype/formid)
+ *  5) Upsert curated district attributes into public.entity_attributes (namespace = "mde")
+ *  6) Store full source payload into public.entity_source_records (source = source_tag)
+ *  7) Upload per-district geometries to Supabase via RPC `upsert_entity_geometry_with_geom_geojson`
  *
  * Notes:
  *  - This script assumes district entities already exist (from your district import).
@@ -261,6 +264,7 @@ function supabaseAdmin(): SupabaseClient {
 type DistrictIndex = {
     // key is sdorgid normalized string
     bySdorgid: Map<string, string>; // entity_id
+    byEntityIdExternalIds: Map<string, Record<string, any>>; // entity_id -> external_ids
 };
 
 function normalizeSdorgid(v: any): string {
@@ -280,6 +284,7 @@ async function fetchDistrictIndex(
     supabase: SupabaseClient,
 ): Promise<DistrictIndex> {
     const bySdorgid = new Map<string, string>();
+    const byEntityIdExternalIds = new Map<string, Record<string, any>>();
 
     const { data, error } = await supabase
         .from("entities")
@@ -295,14 +300,21 @@ async function fetchDistrictIndex(
         const externalIds =
             (r as { external_ids?: Record<string, unknown> }).external_ids ??
             null;
+        const entityId = (r as { id?: string }).id;
+        if (entityId) {
+            byEntityIdExternalIds.set(
+                entityId,
+                (externalIds ?? {}) as Record<string, any>,
+            );
+        }
         const sdorgid =
             externalIds?.sdorgid ??
             externalIds?.sd_org_id ??
             externalIds?.district_id ??
             null;
         const key = normalizeSdorgid(sdorgid);
-        if (key && (r as { id?: string }).id) {
-            bySdorgid.set(key, (r as { id: string }).id);
+        if (key && entityId) {
+            bySdorgid.set(key, entityId as string);
         }
     }
 
@@ -312,7 +324,7 @@ async function fetchDistrictIndex(
         );
     }
 
-    return { bySdorgid };
+    return { bySdorgid, byEntityIdExternalIds };
 }
 
 // ----------------------------
@@ -505,6 +517,114 @@ async function upsertGeometry(
     if (error) throw error;
 }
 
+function stripNullish(obj: Record<string, any>) {
+    const out: Record<string, any> = {};
+    for (const [k, v] of Object.entries(obj)) {
+        if (v === null || v === undefined) continue;
+        if (typeof v === "string" && v.trim() === "") continue;
+        out[k] = v;
+    }
+    return out;
+}
+
+function numOrNull(v: any): number | null {
+    if (v === null || v === undefined) return null;
+    const n = typeof v === "number" ? v : Number(String(v).replace(/,/g, ""));
+    return Number.isFinite(n) ? n : null;
+}
+
+function curatedDistrictAttrs(props: Record<string, any>, source: string) {
+    // Normalize common MDE keys from varying casing.
+    const sdorgid = normalizeSdorgid(props.sdorgid ?? props.SDORGID);
+    const formid = String(props.formid ?? props.FORMID ?? "").trim() || null;
+    const sdnumber = String(props.sdnumber ?? props.SDNUMBER ?? "").trim() ||
+        null;
+    const sdtype = String(props.sdtype ?? props.SDTYPE ?? "").trim() || null;
+    const prefname = String(props.prefname ?? props.PREFNAME ?? "").trim() ||
+        null;
+    const shortname =
+        String(props.shortname ?? props.SHORTNAME ?? "").trim() || null;
+    const web_url = String(props.web_url ?? props.WEB_URL ?? "").trim() || null;
+
+    return stripNullish({
+        source,
+        sdorgid,
+        formid,
+        sdnumber,
+        sdtype,
+        prefname,
+        shortname,
+        web_url,
+        acres: numOrNull(props.acres ?? props.ACRES),
+        sqmiles: numOrNull(props.sqmiles ?? props.SQMILES),
+    });
+}
+
+async function upsertEntityExternalIds(
+    supabase: SupabaseClient,
+    params: {
+        entityId: string;
+        existingExternalIds: Record<string, any>;
+        patch: Record<string, any>;
+    },
+) {
+    const merged = { ...(params.existingExternalIds ?? {}) };
+    for (const [k, v] of Object.entries(params.patch)) {
+        if (v === null || v === undefined) continue;
+        if (typeof v === "string" && v.trim() === "") continue;
+        merged[k] = v;
+    }
+
+    const { error } = await supabase
+        .from("entities")
+        .update({ external_ids: merged } as any)
+        .eq("id", params.entityId);
+
+    if (error) throw error;
+}
+
+async function upsertEntityAttributes(
+    supabase: SupabaseClient,
+    params: { entityId: string; namespace: string; attrs: Record<string, any> },
+) {
+    const { error } = await supabase
+        .from("entity_attributes")
+        .upsert(
+            {
+                entity_id: params.entityId,
+                namespace: params.namespace,
+                attrs: params.attrs,
+            } as any,
+            { onConflict: "entity_id,namespace" },
+        );
+
+    if (error) throw error;
+}
+
+async function upsertEntitySourceRecord(
+    supabase: SupabaseClient,
+    params: {
+        entityId: string;
+        source: string;
+        externalKey: string | null;
+        payload: Record<string, any>;
+    },
+) {
+    const { error } = await supabase
+        .from("entity_source_records")
+        .upsert(
+            {
+                entity_id: params.entityId,
+                source: params.source,
+                external_key: params.externalKey,
+                payload: params.payload,
+            } as any,
+            { onConflict: "entity_id,source" },
+        );
+
+    if (error) throw error;
+}
+
 async function uploadPerDistrict(
     supabase: SupabaseClient,
     fc: FeatureCollection,
@@ -582,6 +702,59 @@ async function uploadPerDistrict(
                 geojson: perDistrictFC, // keep FC for client rendering
                 geomGeoJSON, // geometry only for PostGIS
                 bbox,
+            });
+
+            // --- 4/5/6: external_ids + entity_attributes + entity_source_records ---
+            const first = features[0];
+            const props = (first?.properties ?? {}) as Record<string, any>;
+
+            // identity keys
+            const sdorgid = normalizeSdorgid(props.sdorgid ?? props.SDORGID);
+            const formid = String(props.formid ?? props.FORMID ?? "").trim() ||
+                null;
+            const sdnumber =
+                String(props.sdnumber ?? props.SDNUMBER ?? "").trim() || null;
+            const sdtype = String(props.sdtype ?? props.SDTYPE ?? "").trim() ||
+                null;
+
+            const existingExternalIds =
+                districtIndex.byEntityIdExternalIds.get(entityId) ?? {};
+
+            await upsertEntityExternalIds(supabase, {
+                entityId,
+                existingExternalIds,
+                patch: {
+                    source,
+                    sdorgid,
+                    formid,
+                    sdnumber,
+                    sdtype,
+                },
+            });
+
+            // refresh cache
+            districtIndex.byEntityIdExternalIds.set(entityId, {
+                ...existingExternalIds,
+                source,
+                sdorgid,
+                formid,
+                sdnumber,
+                sdtype,
+            });
+
+            // curated attrs
+            await upsertEntityAttributes(supabase, {
+                entityId,
+                namespace: "mde",
+                attrs: curatedDistrictAttrs(props, source),
+            });
+
+            // full payload
+            await upsertEntitySourceRecord(supabase, {
+                entityId,
+                source,
+                externalKey: sdorgid || null,
+                payload: props,
             });
 
             done++;

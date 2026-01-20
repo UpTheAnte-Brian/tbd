@@ -1578,6 +1578,72 @@ export type Database = {
           },
         ]
       }
+      mde_org_types: {
+        Row: {
+          code: string
+          description: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          description: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          description?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mde_school_class_types: {
+        Row: {
+          code: string
+          description: string
+          program_school: string | null
+          short_description: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          description: string
+          program_school?: string | null
+          short_description?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          description?: string
+          program_school?: string | null
+          short_description?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mde_states: {
+        Row: {
+          code: string
+          country: string | null
+          fips_code: number | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          country?: string | null
+          fips_code?: number | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          country?: string | null
+          fips_code?: number | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           channel_id: number

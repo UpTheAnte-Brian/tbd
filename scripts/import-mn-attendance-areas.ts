@@ -4,7 +4,9 @@
  * End-to-end pipeline for MN school attendance areas:
  * 1) Download MN attendance areas shapefile ZIP and convert to GeoJSON (EPSG:4326)
  * 2) Generate a render-optimized GeoJSON using ogr2ogr (simplify + select props)
- * 3) Upload per-district FeatureCollections into Supabase via RPC upsert_entity_geometry_with_geom_geojson
+ * 3) Upsert curated MDE attributes into public.entity_attributes (namespace = "mde")
+ * 4) Store full source payload into public.entity_source_records (source = source_tag)
+ * 5) Upload per-district FeatureCollections into Supabase via RPC upsert_entity_geometry_with_geom_geojson
  *
  * Notes:
  * - public.entity_geometries.geom is NOT NULL in this project, so we must populate geom.
@@ -130,6 +132,64 @@ function bboxJsonFromGeometry(bboxGeom: GeoJSONGeometry) {
     const [minX, minY] = ring[0] as [number, number];
     const [maxX, maxY] = ring[2] as [number, number];
     return { minX, minY, maxX, maxY };
+}
+
+function coerceOrgId(value: unknown): string | null {
+    if (value === null || value === undefined) return null;
+    // orgid sometimes appears as number (float) in GIS exports. Make it an integer string.
+    if (typeof value === "number") {
+        if (!Number.isFinite(value)) return null;
+        return String(Math.trunc(value));
+    }
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (!trimmed) return null;
+        // remove trailing .0 if present
+        return trimmed.replace(/\.0+$/, "");
+    }
+    return null;
+}
+
+function stripNullish(obj: Record<string, any>) {
+    const out: Record<string, any> = {};
+    for (const [k, v] of Object.entries(obj)) {
+        if (v === null || v === undefined) continue;
+        if (typeof v === "string" && v.trim() === "") continue;
+        out[k] = v;
+    }
+    return out;
+}
+
+function curatedMdeAttendanceAreaAttrs(p: Record<string, any>, source: string) {
+    return stripNullish({
+        source,
+
+        // District
+        sdorgid: (typeof coerceOrgId === "function"
+            ? coerceOrgId(p.sdorgid ?? p.SDORGID)
+            : null) ?? null,
+
+        // Elementary
+        elem_multi: p.elem_multi ?? p.ELEM_MULTI ?? null,
+        elem_name: p.elem_name ?? p.ELEM_NAME ?? null,
+        elem_orgid: (typeof coerceOrgId === "function"
+            ? coerceOrgId(p.elem_orgid ?? p.ELEM_ORGID)
+            : null) ?? null,
+
+        // Middle
+        midd_multi: p.midd_multi ?? p.MIDD_MULTI ?? null,
+        midd_name: p.midd_name ?? p.MIDD_NAME ?? null,
+        midd_orgid: (typeof coerceOrgId === "function"
+            ? coerceOrgId(p.midd_orgid ?? p.MIDD_ORGID)
+            : null) ?? null,
+
+        // High
+        high_multi: p.high_multi ?? p.HIGH_MULTI ?? null,
+        high_name: p.high_name ?? p.HIGH_NAME ?? null,
+        high_orgid: (typeof coerceOrgId === "function"
+            ? coerceOrgId(p.high_orgid ?? p.HIGH_ORGID)
+            : null) ?? null,
+    });
 }
 
 const PROJECT_ROOT = process.cwd();
@@ -344,7 +404,14 @@ function getSupabaseEnv() {
     return { url, serviceKey };
 }
 
-async function fetchDistrictIndex(supabase: ReturnType<typeof createClient>) {
+type DistrictIndex = {
+    bySdorgid: Map<string, string>;
+    byEntityIdExternalIds: Map<string, Record<string, any>>;
+};
+
+async function fetchDistrictIndex(
+    supabase: ReturnType<typeof createClient>,
+): Promise<DistrictIndex> {
     // Build sdorgid -> entity_id index
     const { data, error } = await supabase
         .from("entities")
@@ -355,9 +422,16 @@ async function fetchDistrictIndex(supabase: ReturnType<typeof createClient>) {
     if (!data) throw new Error("No districts returned from Supabase.");
 
     const index = new Map<string, string>();
+    const byEntityIdExternalIds = new Map<string, Record<string, any>>();
     for (const row of data as Array<{ id: string; external_ids: unknown }>) {
         const externalIds =
             (row.external_ids as Record<string, unknown> | null) ?? null;
+        if (row.id) {
+            byEntityIdExternalIds.set(
+                row.id,
+                (externalIds ?? {}) as Record<string, any>,
+            );
+        }
         const sdorgid =
             externalIds?.sdorgid ??
             externalIds?.sd_org_id ??
@@ -368,7 +442,7 @@ async function fetchDistrictIndex(supabase: ReturnType<typeof createClient>) {
         }
     }
 
-    return index;
+    return { bySdorgid: index, byEntityIdExternalIds };
 }
 
 function groupFeaturesByDistrictEntityId(
@@ -429,6 +503,71 @@ function createLimiter(concurrency: number) {
     };
 }
 
+async function upsertEntityExternalIds(
+    supabase: ReturnType<typeof createClient>,
+    params: {
+        entityId: string;
+        existingExternalIds: Record<string, any>;
+        patch: Record<string, any>;
+    },
+) {
+    const merged = { ...(params.existingExternalIds ?? {}) };
+    for (const [k, v] of Object.entries(params.patch)) {
+        if (v === null || v === undefined) continue;
+        if (typeof v === "string" && v.trim() === "") continue;
+        merged[k] = v;
+    }
+
+    const { error } = await supabase
+        .from("entities")
+        .update({ external_ids: merged } as any)
+        .eq("id", params.entityId);
+
+    if (error) throw error;
+}
+
+async function upsertEntityAttributes(
+    supabase: ReturnType<typeof createClient>,
+    params: { entityId: string; namespace: string; attrs: Record<string, any> },
+) {
+    const { error } = await supabase
+        .from("entity_attributes")
+        .upsert(
+            {
+                entity_id: params.entityId,
+                namespace: params.namespace,
+                attrs: params.attrs,
+            } as any,
+            { onConflict: "entity_id,namespace" },
+        );
+
+    if (error) throw error;
+}
+
+async function upsertEntitySourceRecord(
+    supabase: ReturnType<typeof createClient>,
+    params: {
+        entityId: string;
+        source: string;
+        externalKey: string | null;
+        payload: Record<string, any>;
+    },
+) {
+    const { error } = await supabase
+        .from("entity_source_records")
+        .upsert(
+            {
+                entity_id: params.entityId,
+                source: params.source,
+                external_key: params.externalKey,
+                payload: params.payload,
+            } as any,
+            { onConflict: "entity_id,source" },
+        );
+
+    if (error) throw error;
+}
+
 async function upsertDistrictAttendanceAreas(
     supabase: ReturnType<typeof createClient>,
     districtEntityId: string,
@@ -472,14 +611,14 @@ async function uploadToSupabase(
     });
 
     const districtIndex = await fetchDistrictIndex(supabase);
-    console.log(`• Districts indexed: ${districtIndex.size}`);
+    console.log(`• Districts indexed: ${districtIndex.bySdorgid.size}`);
 
     const fc = readFeatureCollection(outputGeoJSON);
     console.log(`• Attendance area features in file: ${fc.features.length}`);
 
     const { groups, unmatchedSdorgids } = groupFeaturesByDistrictEntityId(
         fc,
-        districtIndex,
+        districtIndex.bySdorgid,
     );
 
     if (unmatchedSdorgids.size > 0) {
@@ -535,6 +674,50 @@ async function uploadToSupabase(
                         features,
                         source,
                     );
+
+                    // Curated attributes + raw payload + external IDs
+                    const first = features[0];
+                    const props = (first?.properties ?? {}) as Record<
+                        string,
+                        any
+                    >;
+                    const sdorgid = coerceOrgId(props.sdorgid ?? props.SDORGID) ??
+                        null;
+
+                    const existingExternalIds =
+                        districtIndex.byEntityIdExternalIds.get(
+                            districtEntityId,
+                        ) ?? {};
+
+                    await upsertEntityExternalIds(supabase, {
+                        entityId: districtEntityId,
+                        existingExternalIds,
+                        patch: {
+                            source,
+                            sdorgid,
+                        },
+                    });
+
+                    // refresh cache
+                    districtIndex.byEntityIdExternalIds.set(districtEntityId, {
+                        ...existingExternalIds,
+                        source,
+                        sdorgid,
+                    });
+
+                    await upsertEntityAttributes(supabase, {
+                        entityId: districtEntityId,
+                        namespace: "mde",
+                        attrs: curatedMdeAttendanceAreaAttrs(props, source),
+                    });
+
+                    await upsertEntitySourceRecord(supabase, {
+                        entityId: districtEntityId,
+                        source,
+                        externalKey: sdorgid || null,
+                        payload: props,
+                    });
+
                     ok++;
                     if (ok % 25 === 0) {
                         console.log(

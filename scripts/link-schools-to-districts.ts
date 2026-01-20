@@ -1,16 +1,17 @@
 /* scripts/link-schools-to-districts.ts
  *
- * Links school entities to district entities using point-in-polygon (ST_Covers).
+ * Runs relationship-defining jobs (RPCs) that upsert rows into public.entity_relationships.
  * - school geom: entity_geometries.geometry_type = 'school_program_locations'
  * - district geom: prefer 'boundary_simplified', fallback 'boundary'
  * - relationship: entity_relationships (parent=district, child=school, relationship_type='contains', is_primary=true)
  *
- * Usage:
- *   npm run linkSchoolsToDistricts
+ * Tasks:
+ *  - schools_to_districts (default): calls RPC link_schools_to_districts
+ *  - attendance_areas_to_districts: calls RPC link_attendance_areas_to_districts
+ *  - attendance_areas_to_schools: calls RPC link_attendance_areas_to_schools
  *
- * Optional flags:
- *   --limit=5000
- *   --offset=0
+ * Usage:
+ *   npm run linkRelationships -- --task=schools_to_districts --limit=5000 --offset=0
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -23,6 +24,7 @@ function getArg(name: string): string | undefined {
 
 const LIMIT = Number(getArg("limit") ?? "1000");
 const OFFSET = Number(getArg("offset") ?? "0");
+const TASK = (getArg("task") ?? "schools_to_districts").trim();
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -39,22 +41,33 @@ const supabase = createClient(url, serviceRole, {
 });
 
 async function main() {
-    console.log("Link schools -> districts");
-    console.log({ LIMIT, OFFSET });
+    console.log("Define entity relationships");
+    console.log({ TASK, LIMIT, OFFSET });
 
-    // Call the dedicated DB function to compute + upsert relationships for this batch.
-    // NOTE: This assumes the DB function performs the PostGIS matching and handles
-    // upsert semantics for (child_entity_id, relationship_type) where is_primary.
-    const { data, error } = await supabase.rpc("link_schools_to_districts", {
+    const rpcByTask: Record<string, string> = {
+        schools_to_districts: "link_schools_to_districts",
+        attendance_areas_to_districts: "link_attendance_areas_to_districts",
+        attendance_areas_to_schools: "link_attendance_areas_to_schools",
+    };
+
+    const rpc = rpcByTask[TASK];
+    if (!rpc) {
+        console.error(
+            `Unknown --task=${TASK}. Valid tasks: ${
+                Object.keys(rpcByTask).join(", ")
+            }`,
+        );
+        process.exit(1);
+    }
+
+    const { data, error } = await supabase.rpc(rpc, {
         p_limit: LIMIT,
         p_offset: OFFSET,
     });
 
     if (error) throw error;
 
-    // The function can return anything helpful (e.g., rows_processed, rows_upserted).
-    // We just log what we got back.
-    console.log("link_schools_to_districts result:", data);
+    console.log(`${rpc} result:`, data);
     console.log("Done.");
 }
 

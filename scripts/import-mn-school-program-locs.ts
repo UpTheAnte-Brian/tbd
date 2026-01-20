@@ -352,40 +352,32 @@ function stripNullish(obj: Record<string, any>) {
 }
 
 function curatedMdeAttrs(p: Record<string, any>, source: string) {
-    // Keep only attributes we expect to use in the app UI/search.
+    // Curated attributes used by the app UI/search.
     // Raw payload is preserved separately in entity_source_records.
     return stripNullish({
         source,
-        // Names
-        gisname: p.gisname ?? null,
-        mdename: p.mdename ?? null,
-        altname: p.altname ?? null,
 
-        // Classification / flags
-        class: p.class ?? null,
-        pubpriv: p.pubpriv ?? null,
+        // Location / classification
+        countycode: p.countycode ?? null,
+        formid: p.formid ?? null,
+        graderange: p.graderange ?? null,
         loctype: p.loctype ?? null,
         magnet: p.magnet ?? null,
-        graderange: p.graderange ?? null,
+        pubpriv: p.pubpriv ?? null,
 
         // District linkage (kept as attributes for now; can be promoted to entity_relationships later)
         locdistid: coerceOrgId(p.locdistid) ?? null,
         locdistname: p.locdistname ?? null,
 
-        // Address / location-ish
-        gisaddr: p.gisaddr ?? null,
+        // Address / name
         mdeaddr: p.mdeaddr ?? null,
-        countycode: p.countycode ?? null,
-        countyname: p.countyname ?? null,
+        mdename: p.mdename ?? null,
 
-        // Other identifiers that are often useful in UI/debugging
-        formid: p.formid ?? null,
-        fed_schnum: p.fed_schnum ?? null,
-
-        // Source timestamps / version
-        createdt: p.createdt ?? null,
-        updatedt: p.updatedt ?? null,
-        year: p.year ?? null,
+        // Identifiers (also present in entities.external_ids, but useful for filtering/sorting)
+        orgid: coerceOrgId(p.orgid) ?? null,
+        orgnumber: p.orgnumber ?? null,
+        orgtype: p.orgtype ?? null,
+        schnumber: p.schnumber ?? null,
 
         // Links
         web_url: p.web_url ?? null,

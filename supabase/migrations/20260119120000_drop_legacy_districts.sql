@@ -1,6 +1,11 @@
 -- Drop legacy districts table + dependent columns / constraints
 -- Safe to run multiple times (uses IF EXISTS checks)
 
+-- 0) Drop legacy dependent tables that have FKs pointing at public.districts
+-- These existed from older experiments and can block dropping districts.
+DROP TABLE IF EXISTS public.business_campaigns CASCADE;
+DROP TABLE IF EXISTS public.district_signups CASCADE;
+
 -- 1) Drop FKs that reference public.districts (if they still exist)
 DO $$
 BEGIN
