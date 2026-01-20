@@ -625,6 +625,37 @@ async function upsertEntitySourceRecord(
     if (error) throw error;
 }
 
+async function upsertDistrictMetadata(
+    supabase: SupabaseClient,
+    params: { entityId: string; curated: Record<string, any> },
+) {
+    const curated = params.curated ?? {};
+    const { error } = await supabase
+        .from("district_metadata")
+        .upsert(
+            {
+                entity_id: params.entityId,
+                sdorgid: (curated as any).SDORGID ?? curated.sdorgid ?? null,
+                formid: (curated as any).FORMID ?? curated.formid ?? null,
+                sdnumber: (curated as any).SDNUMBER ?? curated.sdnumber ?? null,
+                sdtype: (curated as any).SDTYPE ?? curated.sdtype ?? null,
+                prefname: (curated as any).PREFNAME ??
+                    (curated as any).sdprefname ??
+                    curated.prefname ??
+                    null,
+                shortname: (curated as any).SHORTNAME ??
+                    curated.shortname ??
+                    null,
+                web_url: (curated as any).WEB_URL ?? curated.web_url ?? null,
+                acres: (curated as any).ACRES ?? curated.acres ?? null,
+                sqmiles: (curated as any).SQMILES ?? curated.sqmiles ?? null,
+            } as any,
+            { onConflict: "entity_id" },
+        );
+
+    if (error) throw error;
+}
+
 async function uploadPerDistrict(
     supabase: SupabaseClient,
     fc: FeatureCollection,
@@ -743,10 +774,15 @@ async function uploadPerDistrict(
             });
 
             // curated attrs
+            const curated = curatedDistrictAttrs(props, source);
             await upsertEntityAttributes(supabase, {
                 entityId,
                 namespace: "mde",
-                attrs: curatedDistrictAttrs(props, source),
+                attrs: curated,
+            });
+            await upsertDistrictMetadata(supabase, {
+                entityId,
+                curated,
             });
 
             // full payload

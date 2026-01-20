@@ -705,10 +705,11 @@ async function uploadToSupabase(
                         sdorgid,
                     });
 
+                    const curated = curatedMdeAttendanceAreaAttrs(props, source);
                     await upsertEntityAttributes(supabase, {
                         entityId: districtEntityId,
                         namespace: "mde",
-                        attrs: curatedMdeAttendanceAreaAttrs(props, source),
+                        attrs: curated,
                     });
 
                     await upsertEntitySourceRecord(supabase, {

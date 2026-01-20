@@ -7,8 +7,6 @@
  *
  * Tasks:
  *  - schools_to_districts (default): calls RPC link_schools_to_districts
- *  - attendance_areas_to_districts: calls RPC link_attendance_areas_to_districts
- *  - attendance_areas_to_schools: calls RPC link_attendance_areas_to_schools
  *
  * Usage:
  *   npm run linkRelationships -- --task=schools_to_districts --limit=5000 --offset=0
@@ -46,8 +44,6 @@ async function main() {
 
     const rpcByTask: Record<string, string> = {
         schools_to_districts: "link_schools_to_districts",
-        attendance_areas_to_districts: "link_attendance_areas_to_districts",
-        attendance_areas_to_schools: "link_attendance_areas_to_schools",
     };
 
     const rpc = rpcByTask[TASK];

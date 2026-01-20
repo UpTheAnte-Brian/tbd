@@ -493,6 +493,26 @@ async function upsertSchoolAttributesAndSourceRecords(
             payload: AnyJson;
         }
     > = [];
+    const metadataRows: Array<
+        {
+            entity_id: string;
+            orgid: string | null;
+            formid: string | null;
+            orgnumber: string | null;
+            orgtype: string | null;
+            schnumber: string | null;
+            countycode: string | null;
+            graderange: string | null;
+            loctype: string | null;
+            magnet: string | null;
+            pubpriv: string | null;
+            locdistid: string | null;
+            locdistname: string | null;
+            mdeaddr: string | null;
+            mdename: string | null;
+            web_url: string | null;
+        }
+    > = [];
 
     for (const [orgid, f] of byOrgId.entries()) {
         const entityId = idByOrgId.get(orgid);
@@ -500,11 +520,13 @@ async function upsertSchoolAttributesAndSourceRecords(
 
         const props = (f.properties ?? {}) as Record<string, any>;
 
+        const curated = curatedMdeAttrs(props, source);
+
         // Curated attributes (shared table)
         attrRows.push({
             entity_id: entityId,
             namespace: "mde",
-            attrs: curatedMdeAttrs(props, source),
+            attrs: curated,
         });
 
         // Full raw payload for future remapping/debugging
@@ -514,10 +536,30 @@ async function upsertSchoolAttributesAndSourceRecords(
             external_key: orgid,
             payload: props as AnyJson,
         });
+
+        metadataRows.push({
+            entity_id: entityId,
+            orgid: curated.orgid ?? null,
+            formid: curated.formid ?? null,
+            orgnumber: curated.orgnumber ?? null,
+            orgtype: curated.orgtype ?? null,
+            schnumber: curated.schnumber ?? null,
+            countycode: curated.countycode ?? null,
+            graderange: curated.graderange ?? null,
+            loctype: curated.loctype ?? null,
+            magnet: curated.magnet ?? null,
+            pubpriv: curated.pubpriv ?? null,
+            locdistid: curated.locdistid ?? null,
+            locdistname: curated.locdistname ?? null,
+            mdeaddr: curated.mdeaddr ?? null,
+            mdename: curated.mdename ?? null,
+            web_url: curated.web_url ?? null,
+        });
     }
 
     console.log(`🧾 Attributes queued: ${attrRows.length}`);
     console.log(`🗃️  Source records queued: ${sourceRows.length}`);
+    console.log(`🏫 Metadata rows queued: ${metadataRows.length}`);
 
     const chunkSize = 500;
 
@@ -552,6 +594,25 @@ async function upsertSchoolAttributesAndSourceRecords(
             `✅ Upserted entity_source_records: ${
                 Math.min(i + chunkSize, sourceRows.length)
             }/${sourceRows.length}`,
+        );
+    }
+
+    for (let i = 0; i < metadataRows.length; i += chunkSize) {
+        const chunk = metadataRows.slice(i, i + chunkSize);
+        const { error } = await supabase
+            .from("school_program_location_metadata")
+            .upsert(chunk as any, { onConflict: "entity_id" });
+        if (error) {
+            console.error(
+                "❌ school_program_location_metadata upsert failed. First row:",
+            );
+            console.error(JSON.stringify(chunk[0], null, 2));
+            throw error;
+        }
+        console.log(
+            `✅ Upserted school_program_location_metadata: ${
+                Math.min(i + chunkSize, metadataRows.length)
+            }/${metadataRows.length}`,
         );
     }
 }
