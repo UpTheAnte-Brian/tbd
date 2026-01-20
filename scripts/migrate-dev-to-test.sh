@@ -49,9 +49,9 @@ pg_restore \
   psql "$TGT_DB_URL"
 
 echo
-echo "==> Step 4: Verifying districts table in TEST"
-psql "$TGT_DB_URL" -c "SELECT count(*) AS districts_count FROM public.districts;" \
-  || echo "⚠️ districts table not found"
+echo "==> Step 4: Verifying district entities in TEST"
+psql "$TGT_DB_URL" -c "SELECT count(*) AS district_entity_count FROM public.entities WHERE entity_type = 'district';" \
+  || echo "⚠️ entities table not found"
 
 echo
 echo "✅ Migration complete: $DUMP_FILE"

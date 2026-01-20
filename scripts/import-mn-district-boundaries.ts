@@ -279,74 +279,36 @@ function normalizeSdorgid(v: any): string {
 async function fetchDistrictIndex(
     supabase: SupabaseClient,
 ): Promise<DistrictIndex> {
-    // Prefer public.districts (historical) if it exists and has sdorgid + entity_id.
-    // Otherwise, try entities where entity_type indicates district.
-    // We keep this resilient because your schema has evolved.
-
     const bySdorgid = new Map<string, string>();
 
-    // 1) Try districts table
-    try {
-        const { data, error } = await supabase
-            .from("districts")
-            .select("sdorgid, entity_id")
-            .limit(10000);
-        if (!error && data?.length) {
-            for (const r of data as any[]) {
-                const key = normalizeSdorgid(r.sdorgid);
-                if (key && r.entity_id) bySdorgid.set(key, r.entity_id);
-            }
-            if (bySdorgid.size > 0) return { bySdorgid };
-        }
-    } catch {
-        // ignore
+    const { data, error } = await supabase
+        .from("entities")
+        .select("id, external_ids")
+        .eq("entity_type", "district")
+        .limit(20000);
+
+    if (error) {
+        throw new Error(`Failed to load district entities: ${error.message}`);
     }
 
-    // 2) Try entities table with external_id-ish field names
-    const candidates: Array<{ sdorgid: string; entity_id: string }> = [];
-
-    // Try common column names. We probe using select and ignore if it fails.
-    const probes: Array<
-        { sel: string; map: (row: any) => { sdorgid: any; entity_id: any } }
-    > = [
-        {
-            sel: "id, external_id",
-            map: (r) => ({ sdorgid: r.external_id, entity_id: r.id }),
-        },
-        {
-            sel: "id, sdorgid",
-            map: (r) => ({ sdorgid: r.sdorgid, entity_id: r.id }),
-        },
-        {
-            sel: "id, metadata",
-            map: (r) => ({ sdorgid: r.metadata?.sdorgid, entity_id: r.id }),
-        },
-    ];
-
-    for (const p of probes) {
-        try {
-            const { data, error } = await supabase.from("entities").select(
-                p.sel,
-            ).limit(20000);
-            if (error || !data?.length) continue;
-            for (const r of data as any[]) {
-                const m = p.map(r);
-                const key = normalizeSdorgid(m.sdorgid);
-                if (key && m.entity_id) {
-                    candidates.push({ sdorgid: key, entity_id: m.entity_id });
-                }
-            }
-            if (candidates.length) break;
-        } catch {
-            // ignore and keep probing
+    for (const r of data ?? []) {
+        const externalIds =
+            (r as { external_ids?: Record<string, unknown> }).external_ids ??
+            null;
+        const sdorgid =
+            externalIds?.sdorgid ??
+            externalIds?.sd_org_id ??
+            externalIds?.district_id ??
+            null;
+        const key = normalizeSdorgid(sdorgid);
+        if (key && (r as { id?: string }).id) {
+            bySdorgid.set(key, (r as { id: string }).id);
         }
     }
-
-    for (const c of candidates) bySdorgid.set(c.sdorgid, c.entity_id);
 
     if (bySdorgid.size === 0) {
         throw new Error(
-            "Could not build district index. Ensure district entities exist (e.g., districts table with sdorgid/entity_id) or entities table contains sdorgid/external_id mapping.",
+            "Could not build district index. Ensure district entities exist with external_ids.sdorgid values.",
         );
     }
 

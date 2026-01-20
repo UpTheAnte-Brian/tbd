@@ -1,12 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/database.types";
 
-const isUuid = (value: string) =>
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-        .test(
-            value,
-        );
-
 export async function resolveDistrictEntityId(
     supabase: SupabaseClient<Database>,
     districtKey: string,
@@ -37,30 +31,6 @@ export async function resolveDistrictEntityId(
         .maybeSingle();
     if (bySdorgidError) throw bySdorgidError;
     if (bySdorgid?.id) return bySdorgid.id;
-
-    if (isUuid(districtKey)) {
-        const { data: districtRow, error: districtError } = await supabase
-            .from("districts")
-            .select("sdorgid, entity_id")
-            .eq("id", districtKey)
-            .maybeSingle();
-        if (districtError) throw districtError;
-
-        if (districtRow?.entity_id) {
-            return districtRow.entity_id;
-        }
-
-        if (districtRow?.sdorgid) {
-            const { data: bySdorgidFromDistrict, error } = await supabase
-                .from("entities")
-                .select("id")
-                .eq("entity_type", "district")
-                .eq("external_ids->>sdorgid", districtRow.sdorgid)
-                .maybeSingle();
-            if (error) throw error;
-            if (bySdorgidFromDistrict?.id) return bySdorgidFromDistrict.id;
-        }
-    }
 
     throw new Error(`Entity not found for district ${districtKey}`);
 }

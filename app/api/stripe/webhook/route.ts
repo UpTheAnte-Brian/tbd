@@ -45,7 +45,6 @@ export async function POST(req: Request) {
             amount: number;
             email?: string | null;
             type?: "platform" | "district";
-            district_id?: string | null;
             user_id?: string | null;
             subscription_id?: string | null;
             receipt_url?: string | null;
@@ -90,7 +89,6 @@ export async function POST(req: Request) {
                 amount: session.amount_total || 0,
                 email,
                 type: districtId ? "district" : "platform",
-                ...(districtId && { district_id: districtId }),
                 ...(userId && { user_id: userId }),
                 ...(interval &&
                     {
@@ -110,7 +108,6 @@ export async function POST(req: Request) {
                     type: districtId ? "district" : "platform",
                     status: "active",
                     created_at: new Date().toISOString(),
-                    ...(districtId && { district_id: districtId }),
                     ...(interval && { interval }),
                 };
 
@@ -162,19 +159,18 @@ export async function POST(req: Request) {
                 // Subscription payment
                 const { data: subscriptionData } = await supabase
                     .from("subscriptions")
-                    .select("district_id, user_id")
+                    .select("type, user_id")
                     .eq("stripe_subscription_id", subscriptionId)
                     .single();
 
-                const districtId = subscriptionData?.district_id ?? null;
+                const subscriptionType = subscriptionData?.type ?? null;
                 const userId = subscriptionData?.user_id ?? null;
 
                 await upsertDonation({
                     invoice_id: invoice.id as string,
                     amount: invoice.amount_paid,
                     email,
-                    type: districtId ? "district" : "platform",
-                    ...(districtId && { district_id: districtId }),
+                    type: subscriptionType ?? "platform",
                     ...(userId && { user_id: userId }),
                     subscription_id: subscriptionId,
                     receipt_url: finalReceiptUrl,

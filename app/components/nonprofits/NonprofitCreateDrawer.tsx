@@ -17,14 +17,11 @@ export default function NonprofitCreateDrawer({
 }: NonprofitCreateDrawerProps) {
   const [name, setName] = useState("");
   const [orgType, setOrgType] = useState<OrgType>("external_charity");
-  const [districtId, setDistrictId] = useState("");
   const [website, setWebsite] = useState("");
   const [mission, setMission] = useState("");
   const [ein, setEin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const isDistrictFoundation = orgType === "district_foundation";
 
   async function handleCreate() {
     setLoading(true);
@@ -37,18 +34,8 @@ export default function NonprofitCreateDrawer({
         website_url: website || null,
         mission_statement: mission || null,
         ein: ein || null,
-        district_id: null,
         active: false,
       };
-
-      if (isDistrictFoundation) {
-        if (!districtId) {
-          setError("District is required for district foundations.");
-          setLoading(false);
-          return;
-        }
-        body.district_id = districtId;
-      }
 
       const res = await fetch("/api/nonprofits", {
         method: "POST",
@@ -64,7 +51,6 @@ export default function NonprofitCreateDrawer({
       // reset
       setName("");
       setOrgType("external_charity");
-      setDistrictId("");
       setWebsite("");
       setMission("");
       setEin("");
@@ -138,19 +124,6 @@ export default function NonprofitCreateDrawer({
                 <option value="up_the_ante">Up The Ante (Self)</option>
               </select>
             </div>
-
-            {/* District (only when org_type = district_foundation) */}
-            {isDistrictFoundation && (
-              <div>
-                <label className="block mb-1 font-medium">District ID *</label>
-                <input
-                  value={districtId}
-                  onChange={(e) => setDistrictId(e.target.value)}
-                  className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                  placeholder="District UUID"
-                />
-              </div>
-            )}
 
             {/* EIN */}
             <div>

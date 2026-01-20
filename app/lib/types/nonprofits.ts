@@ -14,8 +14,6 @@ export interface Nonprofit {
 
     org_type: OrgType;
 
-    district_id: string | null;
-
     address: string | null;
     contact_email: string | null;
     contact_phone: string | null;
@@ -37,6 +35,5 @@ export interface FoundationMetadata {
 
 export interface DistrictFoundation extends Nonprofit {
     org_type: "district_foundation";
-    district_id: string;
     metadata?: FoundationMetadata;
 }

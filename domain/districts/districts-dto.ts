@@ -12,49 +12,17 @@ export async function getDistrictDTO(id: string): Promise<DistrictDetails> {
   const supabase = await createClient();
   const entityId = await resolveDistrictEntityId(supabase, id);
 
-  const selectClause =
-    "id, sdorgid, shortname, status, properties, centroid_lat, centroid_lng";
+  const { data: districtEntity, error: districtError } = await supabase
+    .from("entities")
+    .select("id, name, slug, active, external_ids")
+    .eq("id", entityId)
+    .maybeSingle();
 
-  const { data: districtByEntity, error: districtByEntityError } =
-    await supabase
-      .from("districts")
-      .select(selectClause)
-      .eq("entity_id", entityId)
-      .maybeSingle();
-
-  if (districtByEntityError) {
-    throw districtByEntityError;
+  if (districtError) {
+    throw districtError;
   }
 
-  const { data: districtById, error: districtByIdError } =
-    districtByEntity
-      ? { data: null, error: null }
-      : await supabase
-          .from("districts")
-          .select(selectClause)
-          .eq("id", id)
-          .maybeSingle();
-
-  if (districtByIdError) {
-    throw districtByIdError;
-  }
-
-  const { data: districtBySdorgid, error: districtBySdorgidError } =
-    districtByEntity || districtById
-      ? { data: null, error: null }
-      : await supabase
-          .from("districts")
-          .select(selectClause)
-          .eq("sdorgid", id)
-          .maybeSingle();
-
-  if (districtBySdorgidError) {
-    throw districtBySdorgidError;
-  }
-
-  const district = districtByEntity ?? districtById ?? districtBySdorgid;
-
-  if (!district) {
+  if (!districtEntity) {
     throw new Error("District not found");
   }
 
@@ -109,17 +77,8 @@ export async function getDistrictDTO(id: string): Promise<DistrictDetails> {
     };
   }) ?? [];
 
-  const rawProps = (() => {
-    if (!district.properties) return {};
-    if (typeof district.properties === "string") {
-      try {
-        return JSON.parse(district.properties);
-      } catch {
-        return {};
-      }
-    }
-    return district.properties ?? {};
-  })() as Record<string, unknown>;
+  const rawProps =
+    (districtEntity.external_ids as Record<string, unknown> | null) ?? {};
   const props = Object.fromEntries(
     Object.entries(rawProps).map(([k, v]) => [k.toLowerCase(), v]),
   ) as Record<string, unknown>;
@@ -135,12 +94,19 @@ export async function getDistrictDTO(id: string): Promise<DistrictDetails> {
     fallback: string | null = "",
   ): string | null => (typeof val === "string" ? val : fallback);
 
+  const sdorgid =
+    asString(props.sdorgid, null) ??
+    asString(props.sd_org_id, null) ??
+    asString(props.district_id, null) ??
+    districtEntity.slug ??
+    districtEntity.id;
+
   return {
-    id: district.id,
+    id: districtEntity.id,
     entity_id: entityId,
-    sdorgid: district.sdorgid,
-    shortname: district.shortname ?? null,
-    prefname: asString(props.prefname, district.shortname) ?? null,
+    sdorgid,
+    shortname: asString(props.shortname, districtEntity.name) ?? null,
+    prefname: asString(props.prefname, districtEntity.name) ?? null,
     sdnumber: asString(props.sdnumber, "") ?? null,
     web_url: asString(props.web_url, "") ?? null,
     acres: asNumber(props.acres),
@@ -149,9 +115,10 @@ export async function getDistrictDTO(id: string): Promise<DistrictDetails> {
     sqmiles: asNumber(props.sqmiles),
     shape_area: asNumber(props.shape_area),
     shape_leng: asNumber(props.shape_leng),
-    centroid_lat: district.centroid_lat ?? null,
-    centroid_lng: district.centroid_lng ?? null,
-    status: district.status ?? null,
+    centroid_lat: asNumber(props.centroid_lat),
+    centroid_lng: asNumber(props.centroid_lng),
+    status: asString(props.status, null) ??
+      (districtEntity.active ? "active" : "inactive"),
     users: mappedUsers,
   };
 }

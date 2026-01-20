@@ -6,7 +6,6 @@ type DonationRow = {
     id: string;
     amount: number;
     created_at: string;
-    district?: { shortname: string };
     stripe_session_id: string;
     user_id?: string;
     type?: "platform" | "district";
@@ -31,8 +30,7 @@ export async function getReceipts(): Promise<Receipt[]> {
             email,
             receipt_url,
             subscription_id,
-            invoice_id,
-            district:district_id(shortname)
+            invoice_id
         `)
         .order("created_at", { ascending: false });
 
@@ -43,7 +41,6 @@ export async function getReceipts(): Promise<Receipt[]> {
         id: r.id,
         amount: r.amount,
         date: new Date(r.created_at).toISOString().split("T")[0],
-        district_name: r.district?.shortname ?? undefined,
         stripe_session_id: r.stripe_session_id ?? undefined,
         user_id: r.user_id ?? undefined,
         type: r.type ?? undefined,
@@ -70,8 +67,7 @@ export async function getReceiptBySessionId(
             email,
             receipt_url,
             subscription_id,
-            invoice_id,
-            district:district_id(shortname)
+            invoice_id
         `)
         .eq("stripe_session_id", stripeSessionId)
         .limit(1)
@@ -85,7 +81,6 @@ export async function getReceiptBySessionId(
         id: r.id,
         amount: r.amount,
         date: new Date(r.created_at).toISOString().split("T")[0],
-        district_name: r.district?.shortname ?? undefined,
         stripe_session_id: r.stripe_session_id ?? undefined,
         user_id: r.user_id ?? undefined,
         type: r.type ?? undefined,

@@ -8,7 +8,7 @@ export * from "@/domain/entities/types";
 // District domain
 // ----------------------------
 export interface DistrictDetails {
-    id: string; // UUID from districts table
+    id: string; // UUID from entities table
     entity_id: string; // UUID from entities table
     sdorgid: string;
     shortname: string | null;

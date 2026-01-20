@@ -347,16 +347,24 @@ function getSupabaseEnv() {
 async function fetchDistrictIndex(supabase: ReturnType<typeof createClient>) {
     // Build sdorgid -> entity_id index
     const { data, error } = await supabase
-        .from("districts")
-        .select("entity_id, sdorgid");
+        .from("entities")
+        .select("id, external_ids")
+        .eq("entity_type", "district");
 
     if (error) throw error;
     if (!data) throw new Error("No districts returned from Supabase.");
 
     const index = new Map<string, string>();
-    for (const row of data as Array<{ entity_id: string; sdorgid: string }>) {
-        if (row.sdorgid && row.entity_id) {
-            index.set(String(row.sdorgid), row.entity_id);
+    for (const row of data as Array<{ id: string; external_ids: unknown }>) {
+        const externalIds =
+            (row.external_ids as Record<string, unknown> | null) ?? null;
+        const sdorgid =
+            externalIds?.sdorgid ??
+            externalIds?.sd_org_id ??
+            externalIds?.district_id ??
+            null;
+        if (sdorgid && row.id) {
+            index.set(String(sdorgid), row.id);
         }
     }
 

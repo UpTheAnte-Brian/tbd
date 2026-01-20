@@ -150,11 +150,10 @@ export async function getNonprofitDTO(id: string): Promise<NonprofitDTO> {
 
 /**
  * List nonprofits with optional filters.
- * (filters: org_type, district_id, active)
+ * (filters: org_type, active)
  */
 export async function listNonprofitDTO(filters?: {
     org_type?: OrgType;
-    district_id?: string;
     active?: boolean;
 }): Promise<NonprofitDTO[]> {
     const supabase = await createApiClient();
@@ -163,10 +162,6 @@ export async function listNonprofitDTO(filters?: {
 
     if (filters?.org_type) {
         query = query.eq("org_type", filters.org_type);
-    }
-
-    if (filters?.district_id) {
-        query = query.eq("district_id", filters.district_id);
     }
 
     if (filters?.active !== undefined) {
@@ -191,31 +186,6 @@ export async function listNonprofitDTO(filters?: {
         entity_id: entityIdByNonprofitId.get(String(np.id)) ?? null,
         foundation_metadata: null,
     }));
-}
-
-/**
- * District foundation lookup:
- * Every district SHOULD have exactly one district foundation nonprofit.
- */
-export async function getDistrictFoundationDTO(
-    districtId: string,
-): Promise<NonprofitDTO | null> {
-    const supabase = await createApiClient();
-
-    const { data: nonprofit, error } = await supabase
-        .from("nonprofits")
-        .select("*")
-        .eq("district_id", districtId)
-        .eq("org_type", "district_foundation")
-        .maybeSingle();
-
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    if (!nonprofit) return null;
-
-    return { ...nonprofit, foundation_metadata: null };
 }
 
 /**
@@ -289,28 +259,4 @@ export async function updateNonprofitDTO(
     }
 
     return getNonprofitDTO(id);
-}
-
-/**
- * Upsert district foundation (used during initial district setup)
- */
-export async function upsertDistrictFoundationDTO(
-    districtId: string,
-    fields: Partial<Nonprofit>,
-): Promise<NonprofitDTO> {
-    const existing = await getDistrictFoundationDTO(districtId);
-
-    if (existing) {
-        // Update
-        return updateNonprofitDTO(existing.id, fields);
-    }
-
-    // Create
-    const created = await createNonprofitDTO({
-        ...fields,
-        org_type: "district_foundation",
-        district_id: districtId,
-    });
-
-    return created;
 }

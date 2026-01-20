@@ -1116,50 +1116,6 @@ export type Database = {
         }
         Relationships: []
       }
-      districts: {
-        Row: {
-          centroid_lat: number | null
-          centroid_lng: number | null
-          created_at: string | null
-          entity_id: string
-          id: string
-          properties: Json
-          sdorgid: string
-          shortname: string | null
-          status: string
-        }
-        Insert: {
-          centroid_lat?: number | null
-          centroid_lng?: number | null
-          created_at?: string | null
-          entity_id: string
-          id?: string
-          properties: Json
-          sdorgid: string
-          shortname?: string | null
-          status?: string
-        }
-        Update: {
-          centroid_lat?: number | null
-          centroid_lng?: number | null
-          created_at?: string | null
-          entity_id?: string
-          id?: string
-          properties?: Json
-          sdorgid?: string
-          shortname?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "districts_entity_id_fk"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "entities"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       document_versions: {
         Row: {
           approved_at: string | null
@@ -1286,8 +1242,8 @@ export type Database = {
         Row: {
           amount: number
           created_at: string | null
-          district_id: string | null
           email: string | null
+          entity_id: string | null
           id: string
           invoice_id: string | null
           receipt_url: string | null
@@ -1299,8 +1255,8 @@ export type Database = {
         Insert: {
           amount: number
           created_at?: string | null
-          district_id?: string | null
           email?: string | null
+          entity_id?: string | null
           id?: string
           invoice_id?: string | null
           receipt_url?: string | null
@@ -1312,8 +1268,8 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string | null
-          district_id?: string | null
           email?: string | null
+          entity_id?: string | null
           id?: string
           invoice_id?: string | null
           receipt_url?: string | null
@@ -1324,10 +1280,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "donations_district_id_fkey"
-            columns: ["district_id"]
+            foreignKeyName: "donations_entity_id_fkey"
+            columns: ["entity_id"]
             isOneToOne: false
-            referencedRelation: "districts"
+            referencedRelation: "entities"
             referencedColumns: ["id"]
           },
         ]
@@ -1661,7 +1617,6 @@ export type Database = {
           contact_email: string | null
           contact_phone: string | null
           created_at: string
-          district_id: string | null
           ein: string | null
           entity_id: string
           id: string
@@ -1678,7 +1633,6 @@ export type Database = {
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
-          district_id?: string | null
           ein?: string | null
           entity_id: string
           id?: string
@@ -1695,7 +1649,6 @@ export type Database = {
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
-          district_id?: string | null
           ein?: string | null
           entity_id?: string
           id?: string
@@ -1707,13 +1660,6 @@ export type Database = {
           website_url?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "nonprofits_district_id_fkey"
-            columns: ["district_id"]
-            isOneToOne: false
-            referencedRelation: "districts"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "nonprofits_entity_id_fk"
             columns: ["entity_id"]
@@ -1805,8 +1751,8 @@ export type Database = {
         Row: {
           amount: number | null
           created_at: string | null
-          district_id: string | null
           email: string | null
+          entity_id: string | null
           id: string
           interval: string | null
           status: string
@@ -1818,8 +1764,8 @@ export type Database = {
         Insert: {
           amount?: number | null
           created_at?: string | null
-          district_id?: string | null
           email?: string | null
+          entity_id?: string | null
           id?: string
           interval?: string | null
           status: string
@@ -1831,8 +1777,8 @@ export type Database = {
         Update: {
           amount?: number | null
           created_at?: string | null
-          district_id?: string | null
           email?: string | null
+          entity_id?: string | null
           id?: string
           interval?: string | null
           status?: string
@@ -1843,10 +1789,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "subscriptions_district_id_fkey"
-            columns: ["district_id"]
+            foreignKeyName: "subscriptions_entity_id_fkey"
+            columns: ["entity_id"]
             isOneToOne: false
-            referencedRelation: "districts"
+            referencedRelation: "entities"
             referencedColumns: ["id"]
           },
         ]
