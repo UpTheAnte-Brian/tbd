@@ -20,8 +20,8 @@ export function VersionHistory(props: {
                             <button
                                 className={`w-full text-left px-2 py-2 rounded ${
                                     active
-                                        ? "bg-slate-900 text-white"
-                                        : "bg-slate-100"
+                                        ? "bg-brand-secondary-1 text-brand-primary-1"
+                                        : "bg-brand-secondary-2"
                                 }`}
                                 onClick={() => onSelect(version.id)}
                             >
@@ -48,7 +48,7 @@ export function VersionHistory(props: {
                     );
                 })}
                 {versions.length === 0 && (
-                    <li className="text-sm text-slate-500">
+                    <li className="text-sm text-brand-secondary-0">
                         No minutes yet
                     </li>
                 )}

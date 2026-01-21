@@ -128,14 +128,14 @@ export function DonatePageContent({
 
   if (loading) {
     return (
-      <div className="max-w-xl mx-auto my-4 p-6 bg-white rounded shadow text-black">
+      <div className="max-w-xl mx-auto my-4 p-6 bg-brand-primary-1 rounded shadow text-brand-secondary-1">
         Loading districts...
       </div>
     );
   }
 
   return (
-    <div className="max-w-xl mx-auto my-4 p-6 bg-white rounded shadow">
+    <div className="max-w-xl mx-auto my-4 p-6 bg-brand-primary-1 rounded shadow">
       <Canvas
         autorun={{ speed: 10 }}
         style={{
@@ -148,22 +148,22 @@ export function DonatePageContent({
           pointerEvents: "none",
         }}
       />
-      <h1 className="text-3xl font-bold mb-2 text-gray-700">
+      <h1 className="text-3xl font-bold mb-2 text-brand-secondary-1">
         Donate{" "}
         {selectedDistrictId && (
-          <span className="text-3xl font-bold text-gray-700">
+          <span className="text-3xl font-bold text-brand-secondary-1">
             to {districts.find((d) => d.id === selectedDistrictId)?.shortname}
           </span>
         )}
       </h1>
-      <p className="mb-6 text-gray-700">
+      <p className="mb-6 text-brand-secondary-0">
         Support your favorite districts and help us make a difference!
       </p>
 
       <section className="mb-6">
         {!initialDistrictId && (
           <div>
-            <h2 className="text-sm font-semibold text-gray-700 mb-2">
+            <h2 className="text-sm font-semibold text-brand-secondary-1 mb-2">
               Select District(s)
             </h2>
             <DistrictSearch
@@ -181,7 +181,7 @@ export function DonatePageContent({
           </div>
         )}
         {/* {selectedDistrictId && (
-          <p className="mt-2 text-lg text-black">
+          <p className="mt-2 text-lg text-brand-secondary-1">
             Selected:{" "}
             {districts.find((d) => d.id === selectedDistrictId)?.shortname}
           </p>
@@ -189,7 +189,7 @@ export function DonatePageContent({
       </section>
 
       <section className="mb-6">
-        <h2 className="text-sm font-semibold text-gray-700 mb-2">
+        <h2 className="text-sm font-semibold text-brand-secondary-1 mb-2">
           One-Time Donation
         </h2>
         <div className="flex gap-3 mb-2">
@@ -198,8 +198,8 @@ export function DonatePageContent({
               key={amt}
               className={`px-4 py-2 rounded border ${
                 donationAmount === amt
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-700 border-gray-300 hover:border-blue-400"
+                  ? "bg-brand-primary-0 text-brand-primary-1 border-brand-primary-0"
+                  : "bg-brand-primary-1 text-brand-secondary-1 border-brand-secondary-2 hover:border-brand-accent-1"
               }`}
               onClick={() => handleAmountChange(amt)}
               type="button"
@@ -211,7 +211,7 @@ export function DonatePageContent({
             type="number"
             min={1}
             placeholder="Custom"
-            className="px-2 py-1 w-24 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="px-2 py-1 w-24 border border-brand-secondary-2 rounded focus:ring-2 focus:ring-brand-accent-1 focus:outline-none"
             value={donationAmount === "" ? "" : donationAmount}
             onChange={(e) => {
               const v = e.target.value;
@@ -223,7 +223,7 @@ export function DonatePageContent({
       </section>
 
       <section className="mb-6">
-        <h2 className="text-sm font-semibold text-gray-700 mb-2">
+        <h2 className="text-sm font-semibold text-brand-secondary-1 mb-2">
           Subscription
         </h2>
         <div className="flex gap-4">
@@ -232,8 +232,8 @@ export function DonatePageContent({
               key={opt.value}
               className={`px-3 py-1 rounded border cursor-pointer ${
                 subscriptionType === opt.value
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-700 border-gray-300 hover:border-blue-400"
+                  ? "bg-brand-primary-0 text-brand-primary-1 border-brand-primary-0"
+                  : "bg-brand-primary-1 text-brand-secondary-1 border-brand-secondary-2 hover:border-brand-accent-1"
               }`}
             >
               <input
@@ -251,7 +251,7 @@ export function DonatePageContent({
       </section>
 
       <button
-        className="w-full mt-4 py-3 bg-blue-600 text-white rounded font-bold text-lg hover:bg-blue-700 transition"
+        className="w-full mt-4 py-3 bg-brand-primary-0 text-brand-primary-1 rounded font-bold text-lg hover:bg-brand-primary-2 transition"
         onClick={handleDonate}
         disabled={!donationAmount || Number(donationAmount) <= 0}
       >

@@ -739,15 +739,13 @@ export default function EntityMapExplorer({
       <div className="absolute top-4 left-4 z-50 flex items-center gap-3">
         <button
           type="button"
-          className="px-3 py-1 rounded bg-white/10 text-white hover:bg-white/20"
+          className="px-3 py-1 rounded bg-brand-secondary-1 text-brand-primary-1 hover:bg-brand-secondary-0"
           onClick={handleBack}
         >
           Back to States
         </button>
-        <div className="text-white">
-          <div className="text-xs uppercase text-white/60">
-            Viewing districts
-          </div>
+        <div className="rounded bg-brand-secondary-1 px-3 py-1 text-brand-primary-1">
+          <div className="text-xs uppercase opacity-60">Viewing districts</div>
           <div className="font-semibold">
             {selectedState?.name ?? selectedState?.slug ?? "State"}
           </div>
@@ -759,8 +757,8 @@ export default function EntityMapExplorer({
   const layerControls = useMemo(() => {
     if (activeLayer !== "districts" || !selectedDistrictEntityId) return null;
     return (
-      <div className="absolute top-4 right-4 z-50 w-72 max-w-[80vw] rounded-lg bg-black/70 p-3 text-white">
-        <div className="text-xs uppercase text-white/60">Layers</div>
+      <div className="absolute top-4 right-4 z-50 w-72 max-w-[80vw] rounded-lg bg-brand-secondary-1 p-3 text-brand-primary-1">
+        <div className="text-xs uppercase text-brand-primary-1 opacity-60">Layers</div>
         <label className="mt-2 flex items-center gap-2 text-sm">
           <input
             type="checkbox"
@@ -775,7 +773,7 @@ export default function EntityMapExplorer({
           <span>Schools</span>
         </label>
         {schoolsScanned !== null ? (
-          <div className="mt-1 text-xs text-white/60">
+          <div className="mt-1 text-xs text-brand-primary-1 opacity-60">
             Schools scanned: {schoolsScanned}
           </div>
         ) : null}
@@ -783,7 +781,7 @@ export default function EntityMapExplorer({
           title="Sources"
           visibleLayers={visibleLayers}
           geometriesByType={geometriesByType}
-          className="mt-3 text-white"
+          className="mt-3 text-brand-primary-1"
         />
       </div>
     );
@@ -831,10 +829,10 @@ export default function EntityMapExplorer({
               setHoveredSchoolId(null);
             }}
           >
-            <div className="text-sm text-gray-900">
+            <div className="text-sm text-brand-secondary-1">
               <div className="font-semibold">{activeSchoolInfo.title}</div>
               {activeSchoolInfo.lines.length ? (
-                <div className="mt-1 space-y-0.5 text-xs text-gray-700">
+                <div className="mt-1 space-y-0.5 text-xs text-brand-secondary-0">
                   {activeSchoolInfo.lines.map((line) => (
                     <div key={line}>{line}</div>
                   ))}
@@ -873,37 +871,37 @@ export default function EntityMapExplorer({
             {layerControls}
             {loadingChildLayer && (
               <div className="absolute top-4 right-4 z-50">
-                <div className="px-3 py-1 rounded bg-black/70 text-white text-sm">
+                <div className="px-3 py-1 rounded bg-brand-secondary-1 text-brand-primary-1 text-sm">
                   Loading districts...
                 </div>
               </div>
             )}
             {loadingGeometries && (
               <div className="absolute top-14 right-4 z-50">
-                <div className="px-3 py-1 rounded bg-black/70 text-white text-sm">
+                <div className="px-3 py-1 rounded bg-brand-secondary-1 text-brand-primary-1 text-sm">
                   Loading district layers...
                 </div>
               </div>
             )}
             {loadingSchools && (
               <div className="absolute top-24 right-4 z-50">
-                <div className="px-3 py-1 rounded bg-black/70 text-white text-sm">
+                <div className="px-3 py-1 rounded bg-brand-secondary-1 text-brand-primary-1 text-sm">
                   Loading schools...
                 </div>
               </div>
             )}
             {!scriptLoaded && !loadError && (
               <div className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none">
-                <div className="rounded bg-black/70 text-white text-sm px-4 py-2">
+                <div className="rounded bg-brand-secondary-1 text-brand-primary-1 text-sm px-4 py-2">
                   Loading map...
                 </div>
               </div>
             )}
             {loadError && (
               <div className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none">
-                <div className="rounded bg-black/80 text-white text-sm px-4 py-3 text-center">
+                <div className="rounded bg-brand-secondary-1 text-brand-primary-1 text-sm px-4 py-3 text-center">
                   Map failed to load.
-                  <div className="text-red-300 mt-1">{loadError}</div>
+                  <div className="text-brand-accent-1 mt-1">{loadError}</div>
                 </div>
               </div>
             )}
@@ -918,7 +916,7 @@ export default function EntityMapExplorer({
                     title="Layer sources"
                     visibleLayers={visibleLayers}
                     geometriesByType={geometriesByType}
-                    className="rounded-xl border border-brand-secondary-1 bg-brand-secondary-2 p-3 text-brand-primary-0"
+                    className="rounded-xl border border-brand-secondary-1 bg-brand-secondary-1 p-3 text-brand-primary-1"
                   />
                 </div>
               )

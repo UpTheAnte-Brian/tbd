@@ -64,7 +64,7 @@ export default function DesktopMenu({
       onHoverEnd={toggleHoverMenu}
       key={menuObj.name}
     >
-      <span className="flex-center gap-1 hover:bg-white/5 cursor-pointer px-3 py-1 rounded-xl">
+      <span className="flex-center gap-1 text-brand-primary-1 hover:bg-brand-secondary-0 cursor-pointer px-3 py-1 rounded-xl">
         {hasSubMenu ? (
           <>
             {menuObj.name}{" "}
@@ -99,7 +99,9 @@ export default function DesktopMenu({
               columns.map((col, colIndex) => (
                 <div key={colIndex} className="flex flex-col gap-y-4">
                   {col.heading && (
-                    <p className="text-sm text-gray-500 h-5">{col.heading}</p>
+                    <p className="text-sm text-brand-secondary-2 h-5">
+                      {col.heading}
+                    </p>
                   )}
                   {(col.items ?? []).map((submenu, i) => (
                     <div className="relative cursor-pointer" key={i}>
@@ -123,17 +125,17 @@ export default function DesktopMenu({
                             type="submit"
                             className="flex items-center gap-x-4 group/menubox bg-transparent border-none p-0 font-inherit text-inherit cursor-pointer appearance-none"
                           >
-                            <div className="bg-white/5 w-fit p-2 rounded-md group-hover/menubox:bg-white group-hover/menubox:text-gray-900 duration-300">
+                            <div className="bg-brand-secondary-0 w-fit p-2 rounded-md group-hover/menubox:bg-brand-primary-1 group-hover/menubox:text-brand-secondary-1 duration-300">
                               {submenu.icon && (
                                 <DynamicIcon
                                   name={submenu.icon as IconName}
-                                  className="stroke-gray-300 group-hover/menubox:stroke-gray-900"
+                                  className="stroke-brand-secondary-2 group-hover/menubox:stroke-brand-secondary-1"
                                 />
                               )}
                             </div>
                             <div>
                               <h6 className="font-semibold">{submenu.name}</h6>
-                              <p className="text-sm text-gray-400">
+                              <p className="text-sm text-brand-secondary-2">
                                 {submenu.desc}
                               </p>
                             </div>
@@ -144,17 +146,17 @@ export default function DesktopMenu({
                           href={submenu.path}
                           className="flex items-center gap-x-4 group/menubox"
                         >
-                          <div className="bg-white/5 w-fit p-2 rounded-md group-hover/menubox:bg-white group-hover/menubox:text-gray-900 duration-300">
+                          <div className="bg-brand-secondary-0 w-fit p-2 rounded-md group-hover/menubox:bg-brand-primary-1 group-hover/menubox:text-brand-secondary-1 duration-300">
                             {submenu.icon && (
                               <DynamicIcon
                                 name={submenu.icon as IconName}
-                                className="stroke-gray-300 group-hover/menubox:stroke-gray-900"
+                                className="stroke-brand-secondary-2 group-hover/menubox:stroke-brand-secondary-1"
                               />
                             )}
                           </div>
                           <div>
                             <h6 className="font-semibold">{submenu.name}</h6>
-                            <p className="text-sm text-gray-400">
+                            <p className="text-sm text-brand-secondary-2">
                               {submenu.desc}
                             </p>
                           </div>

@@ -94,13 +94,13 @@ export function MotionVotePanel(props: {
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <div className="font-semibold">{motion.title}</div>
-                    <div className="text-sm text-slate-600">
+                    <div className="text-sm text-brand-secondary-0">
                         Status: {motion.status}
                     </div>
                 </div>
 
                 <button
-                    className="px-3 py-2 rounded bg-slate-100"
+                    className="px-3 py-2 rounded bg-brand-secondary-2"
                     onClick={refresh}
                     disabled={loading}
                 >
@@ -109,28 +109,28 @@ export function MotionVotePanel(props: {
             </div>
 
             {locked && (
-                <div className="rounded bg-red-50 border border-red-200 p-3 text-sm text-red-800">
+                <div className="rounded bg-brand-accent-2 border border-brand-accent-2 p-3 text-sm text-brand-primary-1">
                     {lockMessage}
                 </div>
             )}
 
             <div className="flex gap-2">
                 <button
-                    className="px-3 py-2 rounded bg-green-700 text-white disabled:bg-slate-300"
+                    className="px-3 py-2 rounded bg-brand-primary-0 text-brand-primary-1 disabled:bg-brand-secondary-2"
                     disabled={locked}
                     onClick={() => cast(VOTE_VALUE.YES)}
                 >
                     Yes
                 </button>
                 <button
-                    className="px-3 py-2 rounded bg-red-700 text-white disabled:bg-slate-300"
+                    className="px-3 py-2 rounded bg-brand-accent-2 text-brand-primary-1 disabled:bg-brand-secondary-2"
                     disabled={locked}
                     onClick={() => cast(VOTE_VALUE.NO)}
                 >
                     No
                 </button>
                 <button
-                    className="px-3 py-2 rounded bg-slate-700 text-white disabled:bg-slate-300"
+                    className="px-3 py-2 rounded bg-brand-secondary-0 text-brand-primary-1 disabled:bg-brand-secondary-2"
                     disabled={locked}
                     onClick={() => cast(VOTE_VALUE.ABSTAIN)}
                 >
@@ -138,14 +138,14 @@ export function MotionVotePanel(props: {
                 </button>
             </div>
 
-            <div className="text-sm text-slate-700">
+            <div className="text-sm text-brand-secondary-0">
                 Your vote:{" "}
                 <span className="font-medium">
                     {myVote?.value ?? "(none)"}
                 </span>
             </div>
 
-            <div className="text-sm text-slate-700 flex gap-4">
+            <div className="text-sm text-brand-secondary-0 flex gap-4">
                 <span>Yes: {counts.yes}</span>
                 <span>No: {counts.no}</span>
                 <span>Abstain: {counts.abstain}</span>
@@ -156,7 +156,7 @@ export function MotionVotePanel(props: {
                 <ul className="space-y-1">
                     {votes.map((vote) => (
                         <li key={vote.id} className="flex justify-between">
-                            <span className="text-slate-600 truncate">
+                            <span className="text-brand-secondary-0 truncate">
                                 {vote.user_id ?? "(anonymous)"}
                             </span>
                             <span className="font-medium">{vote.value}</span>

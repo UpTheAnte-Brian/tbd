@@ -18,7 +18,7 @@ export function OneTimeDonateButton() {
   return (
     <button
       onClick={handleClick}
-      className="px-4 py-2 bg-blue-600 text-white rounded"
+      className="px-4 py-2 bg-brand-primary-0 text-brand-primary-1 rounded hover:bg-brand-primary-2"
     >
       Donate $25
     </button>

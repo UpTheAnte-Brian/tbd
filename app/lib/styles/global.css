@@ -4,13 +4,36 @@
 
 
 :root {
-  --uta-primary-dark: #2c2a29;
-  --uta-primary-light: #a7a9b4;
+  --brand-primary-0: #da2b1f;
+  --brand-primary-1: #ffffff;
+  --brand-primary-2: #da2b1f;
+  --brand-secondary-0: #50534c;
+  --brand-secondary-1: #2c2a29;
+  --brand-secondary-2: #a7a9b4;
+  --brand-accent-0: #94292e;
+  --brand-accent-1: #ff3a1e;
+  --brand-accent-2: #6d3235;
+  --brand-font-family: Inter;
+  --brand-font-header1: Inter;
+  --brand-font-header2: Inter;
+  --brand-font-subheader: Inter;
+  --brand-font-heading: Inter;
+  --brand-font-display: Inter;
+  --brand-font-logo: Inter;
+  --surface-page: var(--brand-primary-1);
+  --surface-card: var(--brand-primary-1);
+  --surface-inset: var(--brand-secondary-2);
+  --surface-nav: var(--brand-secondary-1);
+  --surface-accent: var(--brand-primary-0);
+  --text-on-light: var(--brand-secondary-1);
+  --text-on-dark: var(--brand-primary-1);
+  --border-subtle: var(--brand-secondary-2);
+  --focus-ring: var(--brand-accent-1);
 }
 
 @layer components {
-  .sub-menu {
-    @apply absolute top-[3rem] p-[15px] rounded-[6px] origin-[50%_-170px] backdrop-blur-lg bg-[#111] border border-[#222] shadow-lg;
+.sub-menu {
+    @apply absolute top-[3rem] p-[15px] rounded-[6px] origin-[50%_-170px] backdrop-blur-lg bg-brand-secondary-1 border border-brand-secondary-0 text-brand-primary-1 shadow-lg;
   }
 }
 
@@ -52,6 +75,8 @@ body {
   padding: 0;
   margin: 0;
   font-family: var(--brand-font-family);
+  background-color: var(--surface-page);
+  color: var(--text-on-light);
 }
 
 * {

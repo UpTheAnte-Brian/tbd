@@ -14,7 +14,7 @@ export default function AUNLogo({
         <Image src={Logo} alt="Logo" className="size-6 md:size-8" />
         <h3
           className={`${
-            backgroundWhite ? "text-black" : "text-white"
+            backgroundWhite ? "text-brand-secondary-1" : "text-brand-primary-1"
           } text-md font-semibold md:text-md lg:text-lg`}
         >
           Ante Up Nation

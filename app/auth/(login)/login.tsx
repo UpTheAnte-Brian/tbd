@@ -70,10 +70,10 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
 
           return (
             <>
-              <h1 className="mt-10 text-2xl font-semibold tracking-tight text-center text-gray-900">
+              <h1 className="mt-10 text-2xl font-semibold tracking-tight text-center text-brand-secondary-1">
                 {title}
               </h1>
-              <p className="mt-2 text-sm text-center text-gray-600">
+              <p className="mt-2 text-sm text-center text-brand-secondary-0">
                 {subtitle}
               </p>
             </>
@@ -82,18 +82,18 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
 
         <div className="mt-10">
           {requestCodeState?.success ? (
-            <div className="p-6 text-center bg-green-50 rounded-lg">
-              <h3 className="text-sm font-medium text-green-800">
+            <div className="p-6 text-center bg-brand-secondary-2 rounded-lg">
+              <h3 className="text-sm font-medium text-brand-secondary-1">
                 Check your email
               </h3>
-              <p className="mt-2 text-sm text-green-700">
+              <p className="mt-2 text-sm text-brand-secondary-0">
                 We&apos;ve sent a 6-digit code to your email.
               </p>
 
               <form action={verifyCodeAction} className="space-y-4">
-                <div className="flex items-center justify-between gap-3 px-4 h-12 bg-white rounded-lg border border-gray-200 shadow-sm">
+                <div className="flex items-center justify-between gap-3 px-4 h-12 bg-brand-primary-1 rounded-lg border border-brand-secondary-2 shadow-sm">
                   <div
-                    className="min-w-0 text-sm text-gray-800 truncate"
+                    className="min-w-0 text-sm text-brand-secondary-1 truncate"
                     aria-label="Email address"
                   >
                     {email}
@@ -105,7 +105,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                       window.location.href =
                         mode === "signin" ? "/auth/sign-in" : "/auth/sign-up";
                     }}
-                    className="text-sm font-medium text-blue-600 hover:text-blue-500 whitespace-nowrap"
+                    className="text-sm font-medium text-brand-accent-1 hover:text-brand-primary-0 whitespace-nowrap"
                   >
                     Change
                   </button>
@@ -120,15 +120,15 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                   pattern="[0-9]{6}"
                   maxLength={6}
                   required
-                  className="px-4 h-12 bg-white rounded-lg border-gray-200 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500"
+                  className="px-4 h-12 bg-brand-primary-1 rounded-lg border-brand-secondary-2 shadow-sm transition-colors focus:border-brand-accent-1 focus:ring-brand-accent-1"
                 />
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-brand-secondary-0">
                   Tip: Codes sometimes land in Spam/Promotions.
                 </p>
 
                 <Button
                   type="submit"
-                  className="w-full h-12 font-medium text-white bg-blue-600 rounded-lg transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="w-full h-12 font-medium text-brand-primary-1 bg-brand-primary-0 rounded-lg transition-colors hover:bg-brand-primary-2 focus:outline-none focus:ring-2 focus:ring-brand-accent-1 focus:ring-offset-2"
                 >
                   {verifyPending ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -157,7 +157,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                       setLoading(false);
                     }
                   }}
-                  className="w-full text-sm font-medium text-blue-600 hover:text-blue-500"
+                  className="w-full text-sm font-medium text-brand-accent-1 hover:text-brand-primary-0"
                 >
                   Resend code
                 </button>
@@ -172,14 +172,14 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                   placeholder="name@example.com"
                   required
                   onChange={(e) => setEmail(e.target.value.trim())}
-                  className="px-4 h-12 bg-white rounded-lg border-gray-200 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500"
+                  className="px-4 h-12 bg-brand-primary-1 rounded-lg border-brand-secondary-2 shadow-sm transition-colors focus:border-brand-accent-1 focus:ring-brand-accent-1"
                 />
                 <input type="hidden" name="priceId" value={priceId || ""} />
                 <input type="hidden" name="redirect" value={redirect || ""} />
 
                 <Button
                   type="submit"
-                  className="w-full h-12 font-medium text-white bg-blue-600 rounded-lg transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="w-full h-12 font-medium text-brand-primary-1 bg-brand-primary-0 rounded-lg transition-colors hover:bg-brand-primary-2 focus:outline-none focus:ring-2 focus:ring-brand-accent-1 focus:ring-offset-2"
                 >
                   {requestPending ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -191,10 +191,10 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
 
               <div className="relative">
                 <div className="flex absolute inset-0 items-center">
-                  <div className="w-full border-t border-gray-200" />
+                  <div className="w-full border-t border-brand-secondary-2" />
                 </div>
                 <div className="flex relative justify-center">
-                  <span className="px-4 text-sm text-gray-500 bg-gradient-to-b from-white to-gray-50">
+                  <span className="px-4 text-sm text-brand-secondary-2 bg-gradient-to-b from-brand-primary-1 to-brand-secondary-2">
                     or
                   </span>
                 </div>
@@ -202,12 +202,12 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
 
               <Button
                 onClick={handleGoogleSignIn}
-                className="w-full h-12 font-medium text-gray-700 bg-white rounded-lg border border-gray-200 shadow-sm transition-all hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="w-full h-12 font-medium text-brand-secondary-1 bg-brand-primary-1 rounded-lg border border-brand-secondary-2 shadow-sm transition-all hover:bg-brand-secondary-2 focus:outline-none focus:ring-2 focus:ring-brand-accent-1 focus:ring-offset-2"
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <div className="flex justify-center items-center text-gray-700">
+                  <div className="flex justify-center items-center text-brand-secondary-1">
                     <svg className="mr-2 w-5 h-5" viewBox="0 0 24 24">
                       <path
                         fill="#4285F4"
@@ -234,18 +234,18 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
           )}
 
           {requestCodeState?.error && (
-            <div className="mt-4 text-sm text-red-600">
+            <div className="mt-4 text-sm text-brand-accent-1">
               {requestCodeState.error}
             </div>
           )}
 
           {verifyCodeState?.error && (
-            <div className="mt-4 text-sm text-red-600">
+            <div className="mt-4 text-sm text-brand-accent-1">
               {verifyCodeState.error}
             </div>
           )}
 
-          <p className="mt-8 text-sm text-center text-gray-600">
+          <p className="mt-8 text-sm text-center text-brand-secondary-0">
             {mode === "signin"
               ? "New to our platform? "
               : "Already have an account? "}
@@ -253,7 +253,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
               href={`${mode === "signin" ? "/auth/sign-up" : "/auth/sign-in"}${
                 redirect ? `?redirect=${redirect}` : ""
               }${priceId ? `&priceId=${priceId}` : ""}`}
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-medium text-brand-accent-1 hover:text-brand-primary-0"
             >
               {mode === "signin" ? "Create an account" : "Sign in"}
             </Link>

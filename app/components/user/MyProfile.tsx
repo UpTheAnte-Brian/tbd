@@ -154,7 +154,7 @@ export default function MyProfile({
             }}
           />
           <button
-            className="w-full rounded bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full rounded bg-brand-primary-0 px-3 py-2 text-sm font-semibold text-brand-primary-1 hover:bg-brand-primary-2 disabled:opacity-60 disabled:cursor-not-allowed"
             onClick={() =>
               updateProfile({
                 username,
@@ -172,57 +172,57 @@ export default function MyProfile({
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <label className="text-xs uppercase tracking-wide text-gray-400">
+          <label className="text-xs uppercase tracking-wide text-brand-secondary-2">
             Full Name
           </label>
           <input
             id="fullName"
             type="text"
-            className="rounded border border-gray-700 bg-gray-900 px-3 py-2 text-white md:col-span-1"
+            className="rounded border border-brand-secondary-0 bg-brand-secondary-1 px-3 py-2 text-brand-primary-1 md:col-span-1"
             value={fullname || ""}
             onChange={(e) => setFullname(e.target.value)}
           />
 
-          <label className="text-xs uppercase tracking-wide text-gray-400">
+          <label className="text-xs uppercase tracking-wide text-brand-secondary-2">
             First Name
           </label>
           <input
             id="firstName"
             type="text"
-            className="rounded border border-gray-700 bg-gray-900 px-3 py-2 text-white md:col-span-1"
+            className="rounded border border-brand-secondary-0 bg-brand-secondary-1 px-3 py-2 text-brand-primary-1 md:col-span-1"
             value={firstName || ""}
             onChange={(e) => setFirstName(e.target.value)}
           />
 
-          <label className="text-xs uppercase tracking-wide text-gray-400">
+          <label className="text-xs uppercase tracking-wide text-brand-secondary-2">
             Last Name
           </label>
           <input
             id="lastName"
             type="text"
-            className="rounded border border-gray-700 bg-gray-900 px-3 py-2 text-white md:col-span-1"
+            className="rounded border border-brand-secondary-0 bg-brand-secondary-1 px-3 py-2 text-brand-primary-1 md:col-span-1"
             value={lastName || ""}
             onChange={(e) => setLastName(e.target.value)}
           />
 
-          <label className="text-xs uppercase tracking-wide text-gray-400">
+          <label className="text-xs uppercase tracking-wide text-brand-secondary-2">
             Username
           </label>
           <input
             id="username"
             type="text"
-            className="rounded border border-gray-700 bg-gray-900 px-3 py-2 text-white md:col-span-1"
+            className="rounded border border-brand-secondary-0 bg-brand-secondary-1 px-3 py-2 text-brand-primary-1 md:col-span-1"
             value={username || ""}
             onChange={(e) => setUsername(e.target.value)}
           />
 
-          <label className="text-xs uppercase tracking-wide text-gray-400 md:col-span-2">
+          <label className="text-xs uppercase tracking-wide text-brand-secondary-2 md:col-span-2">
             Website
           </label>
           <input
             id="website"
             type="url"
-            className="rounded border border-gray-700 bg-gray-900 px-3 py-2 text-white md:col-span-2"
+            className="rounded border border-brand-secondary-0 bg-brand-secondary-1 px-3 py-2 text-brand-primary-1 md:col-span-2"
             value={website || ""}
             onChange={(e) => setWebsite(e.target.value)}
           />

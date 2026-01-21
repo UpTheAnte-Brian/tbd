@@ -179,7 +179,7 @@ export function MeetingDetail(props: {
                     </div>
 
                     <button
-                        className="px-3 py-2 rounded bg-slate-900 text-white disabled:bg-slate-300"
+                        className="px-3 py-2 rounded bg-brand-secondary-1 text-brand-primary-1 disabled:bg-brand-secondary-2"
                         disabled={!newMotionTitle.trim() || meetingFinalized}
                         onClick={async () => {
                             try {
@@ -228,7 +228,7 @@ export function MeetingDetail(props: {
                         />
                     ))}
                     {motions.length === 0 && (
-                        <div className="text-sm text-slate-500">
+                        <div className="text-sm text-brand-secondary-0">
                             No motions yet.
                         </div>
                     )}
@@ -239,33 +239,33 @@ export function MeetingDetail(props: {
                 <div className="flex items-center justify-between gap-3">
                     <div className="font-semibold">Minutes</div>
                     {minutesExpandedLoaded && minutesExpanded && (
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700">
+                        <span className="rounded-full bg-brand-secondary-2 px-3 py-1 text-sm text-brand-secondary-0">
                             {minutesExpanded.status}
                         </span>
                     )}
                 </div>
 
                 {!minutesExpandedLoaded && (
-                    <div className="text-sm text-slate-500">
+                    <div className="text-sm text-brand-secondary-0">
                         Loading minutes...
                     </div>
                 )}
                 {minutesExpandedLoaded && !minutesExpanded && (
-                    <div className="text-sm text-slate-500">
+                    <div className="text-sm text-brand-secondary-0">
                         No minutes generated yet.
                     </div>
                 )}
                 {minutesExpandedLoaded && minutesExpanded && (
                     <>
-                        <div className="rounded border bg-slate-50 p-3 text-sm text-slate-800 whitespace-pre-wrap">
+                        <div className="rounded border bg-brand-secondary-2 p-3 text-sm text-brand-secondary-1 whitespace-pre-wrap">
                             {minutesExpanded.content_md ??
                                 "No minutes content available."}
                         </div>
-                        <details className="rounded border bg-white p-3 text-sm">
-                            <summary className="cursor-pointer text-slate-600">
+                        <details className="rounded border bg-brand-primary-1 p-3 text-sm text-brand-secondary-1">
+                            <summary className="cursor-pointer text-brand-secondary-0">
                                 Raw JSON
                             </summary>
-                            <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap text-xs text-slate-700">
+                            <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap text-xs text-brand-secondary-0">
                                 {JSON.stringify(
                                     minutesExpanded.content_json ?? {},
                                     null,
@@ -276,7 +276,7 @@ export function MeetingDetail(props: {
 
                         <div className="flex items-center gap-2">
                             <button
-                                className="px-3 py-2 rounded bg-slate-900 text-white disabled:bg-slate-300"
+                                className="px-3 py-2 rounded bg-brand-secondary-1 text-brand-primary-1 disabled:bg-brand-secondary-2"
                                 disabled={
                                     minutesApproving ||
                                     Boolean(minutesExpanded.locked_at)
@@ -313,7 +313,7 @@ export function MeetingDetail(props: {
                                     : "Approve Minutes"}
                             </button>
                             {minutesExpanded.locked_at && (
-                                <span className="text-sm text-slate-600">
+                                <span className="text-sm text-brand-secondary-0">
                                     Locked{" "}
                                     {new Date(
                                         minutesExpanded.locked_at,

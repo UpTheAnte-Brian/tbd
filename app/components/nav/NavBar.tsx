@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import AUNLogo from "@/app/components/AUNLogo";
+import BrandPaletteCube from "@/app/components/branding/BrandPaletteCube";
 import Menus from "@/app/lib/menus";
 import DesktopMenu from "@/app/components/DesktopMenu";
 import { Menu } from "@/app/lib/types/types";
@@ -40,11 +41,14 @@ export default function NavBarComponent() {
   // });
 
   return (
-    <nav className="w-full bg-gray-900 text-white border-b border-gray-800">
+    <nav className="w-full bg-surface-nav text-brand-primary-1 border-b border-subtle">
       <div className="mx-auto w-full max-w-[1600px] px-4 md:px-6 h-16 flex items-center gap-4">
         {/* Left: Logo */}
-        <div className="flex items-center justify-start shrink-0">
+        <div className="flex items-center justify-start shrink-0 gap-3">
           <AUNLogo />
+          <div className="hidden md:block w-10">
+            <BrandPaletteCube className="w-10 p-1" />
+          </div>
         </div>
 
         {/* Center: Desktop Menu (truly centered between left & right) */}
@@ -118,26 +122,26 @@ function UserPopover({
     <div className="relative" ref={popoverRef}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-gray-800 transition-colors"
+        className="flex items-center gap-2 rounded-full px-2 py-1 text-brand-primary-1 hover:bg-brand-secondary-0 transition-colors"
       >
         {user ? (
           <SmallAvatar name={label} url={user.avatar_url ?? null} size={30} />
         ) : (
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-800">
-            <UserIcon className="w-4 h-4 text-gray-200" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-secondary-0">
+            <UserIcon className="w-4 h-4 text-brand-primary-1" />
           </div>
         )}
         <span className="hidden sm:inline text-sm font-medium">{label}</span>
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-52 rounded-md border border-gray-800 bg-[#0f1116] shadow-xl z-50">
+        <div className="absolute right-0 mt-2 w-52 rounded-md border border-brand-secondary-0 bg-brand-secondary-1 text-brand-primary-1 shadow-xl z-50">
           <ul className="py-2 text-sm">
             {user ? (
               <>
                 <li>
                   <a
                     href="/account"
-                    className="flex items-center gap-2 px-3 py-2 hover:bg-gray-800"
+                    className="flex items-center gap-2 px-3 py-2 hover:bg-brand-secondary-0"
                     onClick={() => setOpen(false)}
                   >
                     Profile
@@ -146,7 +150,7 @@ function UserPopover({
                 <li>
                   <button
                     type="button"
-                    className="w-full text-left px-3 py-2 hover:bg-gray-800"
+                    className="w-full text-left px-3 py-2 hover:bg-brand-secondary-0"
                     onClick={handleSignOut}
                   >
                     Log out
@@ -157,7 +161,7 @@ function UserPopover({
               <li>
                 <a
                   href="/auth/sign-in"
-                  className="flex items-center gap-2 px-3 py-2 hover:bg-gray-800"
+                  className="flex items-center gap-2 px-3 py-2 hover:bg-brand-secondary-0"
                   onClick={() => setOpen(false)}
                 >
                   Sign in

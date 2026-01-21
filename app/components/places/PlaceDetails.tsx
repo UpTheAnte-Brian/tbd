@@ -46,27 +46,29 @@ export default function PlaceDetails({
   }
 
   return (
-    <div className="flex flex-col bg-white shadow-lg rounded-t-lg md:rounded-none md:rounded-l-lg md:w-96 w-full h-full overflow-auto">
-      <div className="flex justify-between items-center p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-black">{place.name}</h2>
+    <div className="flex flex-col bg-brand-primary-1 shadow-lg rounded-t-lg md:rounded-none md:rounded-l-lg md:w-96 w-full h-full overflow-auto">
+      <div className="flex justify-between items-center p-4 border-b border-brand-secondary-2">
+        <h2 className="text-lg font-semibold text-brand-secondary-1">
+          {place.name}
+        </h2>
         <button
           onClick={onClose}
           aria-label="Close"
-          className="text-gray-600 hover:text-gray-800 focus:outline-none"
+          className="text-brand-secondary-0 hover:text-brand-secondary-1 focus:outline-none"
         >
           ✕
         </button>
       </div>
       <div className="p-4 space-y-2">
         {place.formatted_address && (
-          <p className="text-black">
-            <strong className="text-black">Address:</strong>{" "}
+          <p className="text-brand-secondary-1">
+            <strong className="text-brand-secondary-1">Address:</strong>{" "}
             {place.formatted_address}
           </p>
         )}
         {place.formatted_phone_number && (
-          <p className="text-black">
-            <strong className="text-black">Phone:</strong>{" "}
+          <p className="text-brand-secondary-1">
+            <strong className="text-brand-secondary-1">Phone:</strong>{" "}
             {place.formatted_phone_number}
           </p>
         )}
@@ -78,8 +80,8 @@ export default function PlaceDetails({
             disabled={loading || claimed}
             className={`w-full py-3 mt-auto font-semibold rounded-b-lg focus:outline-none ${
               claimed
-                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                : "bg-blue-600 text-white hover:bg-blue-700"
+                ? "bg-brand-secondary-2 text-brand-secondary-0 cursor-not-allowed"
+                : "bg-brand-primary-0 text-brand-primary-1 hover:bg-brand-primary-2"
             }`}
           >
             {loading

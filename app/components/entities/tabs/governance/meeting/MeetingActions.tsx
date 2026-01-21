@@ -57,7 +57,7 @@ export function MeetingActions(props: {
     return (
         <div className="flex gap-2">
             <button
-                className="px-3 py-2 rounded bg-slate-900 text-white disabled:bg-slate-300"
+                className="px-3 py-2 rounded bg-brand-secondary-1 text-brand-primary-1 disabled:bg-brand-secondary-2"
                 disabled={!canStart}
                 title={
                     !canStart
@@ -84,7 +84,7 @@ export function MeetingActions(props: {
             </button>
 
             <button
-                className="px-3 py-2 rounded bg-red-700 text-white disabled:bg-slate-300"
+                className="px-3 py-2 rounded bg-brand-accent-2 text-brand-primary-1 disabled:bg-brand-secondary-2"
                 disabled={!canAdjourn}
                 title={
                     !canAdjourn
@@ -114,7 +114,7 @@ export function MeetingActions(props: {
             </button>
 
             <button
-                className="px-3 py-2 rounded bg-emerald-700 text-white disabled:bg-slate-300"
+                className="px-3 py-2 rounded bg-brand-primary-0 text-brand-primary-1 disabled:bg-brand-secondary-2"
                 disabled={!canFinalizeMeeting}
                 title={finalizeTitle}
                 onClick={async () => {

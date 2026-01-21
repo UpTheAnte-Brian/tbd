@@ -27,7 +27,7 @@ export default function MobMenu({ Menus }: { Menus: MenuObj[] }) {
       </button>
 
       <motion.div
-        className="fixed left-0 right-0 top-16 overflow-y-auto h-full bg-[#18181A] backdrop-blur text-white p-6 pb-20"
+        className="fixed left-0 right-0 top-16 overflow-y-auto h-full bg-brand-secondary-1 backdrop-blur text-brand-primary-1 p-6 pb-20"
         initial={{ x: "-100%" }}
         animate={{ x: isOpen ? "0%" : "-100%" }}
       >
@@ -38,7 +38,7 @@ export default function MobMenu({ Menus }: { Menus: MenuObj[] }) {
             return (
               <li key={name}>
                 <span
-                  className="flex-center-between p-4 hover:bg-white/5 rounded-md cursor-pointer relative"
+                  className="flex-center-between p-4 hover:bg-brand-secondary-0 rounded-md cursor-pointer relative"
                   onClick={() => setClicked(isClicked ? null : i)}
                 >
                   {name}
@@ -61,7 +61,7 @@ export default function MobMenu({ Menus }: { Menus: MenuObj[] }) {
                     {subMenu.map(({ name, icon, path, method, desc }) => (
                       <li
                         key={name}
-                        className="p-2 flex items-center hover:bg-white/5 rounded-md cursor-pointer"
+                        className="p-2 flex items-center hover:bg-brand-secondary-0 rounded-md cursor-pointer"
                       >
                         {String(method ?? "").toUpperCase() === "POST" ? (
                           <form
@@ -74,17 +74,19 @@ export default function MobMenu({ Menus }: { Menus: MenuObj[] }) {
                               type="submit"
                               className="flex items-center gap-x-4 group/menubox bg-transparent border-none p-0 font-inherit text-inherit cursor-pointer appearance-none"
                             >
-                              <div className="bg-white/5 w-fit p-2 rounded-md group-hover/menubox:bg-white group-hover/menubox:text-gray-900 duration-300">
+                              <div className="bg-brand-secondary-0 w-fit p-2 rounded-md group-hover/menubox:bg-brand-primary-1 group-hover/menubox:text-brand-secondary-1 duration-300">
                                 {icon && (
                                   <DynamicIcon
                                     name={icon as IconName}
-                                    className="stroke-gray-300 group-hover/menubox:stroke-gray-900"
+                                    className="stroke-brand-secondary-2 group-hover/menubox:stroke-brand-secondary-1"
                                   />
                                 )}
                               </div>
                               <div>
                                 <h6 className="font-semibold">{name}</h6>
-                                <p className="text-sm text-gray-400">{desc}</p>
+                                <p className="text-sm text-brand-secondary-2">
+                                  {desc}
+                                </p>
                               </div>
                             </button>
                           </form>
@@ -94,17 +96,19 @@ export default function MobMenu({ Menus }: { Menus: MenuObj[] }) {
                             onClick={toggleDrawer} // close drawer on link click
                             className="flex items-center gap-x-4 group/menubox"
                           >
-                            <div className="bg-white/5 w-fit p-2 rounded-md group-hover/menubox:bg-white group-hover/menubox:text-gray-900 duration-300">
+                            <div className="bg-brand-secondary-0 w-fit p-2 rounded-md group-hover/menubox:bg-brand-primary-1 group-hover/menubox:text-brand-secondary-1 duration-300">
                               {icon && (
                                 <DynamicIcon
                                   name={icon as IconName}
-                                  className="stroke-gray-300 group-hover/menubox:stroke-gray-900"
+                                  className="stroke-brand-secondary-2 group-hover/menubox:stroke-brand-secondary-1"
                                 />
                               )}
                             </div>
                             <div>
                               <h6 className="font-semibold">{name}</h6>
-                              <p className="text-sm text-gray-400">{desc}</p>
+                              <p className="text-sm text-brand-secondary-2">
+                                {desc}
+                              </p>
                             </div>
                           </Link>
                         )}

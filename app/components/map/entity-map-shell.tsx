@@ -607,8 +607,8 @@ export default function EntityMapShell({
               position: "fixed",
               left: hoverRef.current.x + 10,
               top: hoverRef.current.y - 40,
-              background: "rgba(0,0,0,0.8)",
-              color: "white",
+              background: "var(--brand-secondary-1)",
+              color: "var(--brand-primary-1)",
               borderRadius: "0.5rem",
               padding: "0.5rem 1rem",
               pointerEvents: "none",
@@ -631,9 +631,9 @@ export default function EntityMapShell({
         )}
 
       {selectedFeature && renderPopup && (
-        <div className="absolute top-24 left-1/2 transform -translate-x-1/2 md:left-3 md:transform-none md:-translate-x-0 bg-black/80 text-white rounded-lg px-4 py-2 z-50 shadow-lg transition-all duration-150 opacity-100 pointer-events-auto">
+        <div className="absolute top-24 left-1/2 transform -translate-x-1/2 md:left-3 md:transform-none md:-translate-x-0 bg-brand-secondary-1 text-brand-primary-1 rounded-lg px-4 py-2 z-50 shadow-lg transition-all duration-150 opacity-100 pointer-events-auto">
           <button
-            className="absolute top-1 right-1 text-white bg-gray-700 hover:bg-gray-900 rounded-full px-2 py-0.5 text-xs font-bold z-10"
+            className="absolute top-1 right-1 text-brand-primary-1 bg-brand-secondary-0 hover:bg-brand-secondary-2 rounded-full px-2 py-0.5 text-xs font-bold z-10"
             style={{ lineHeight: "1" }}
             onClick={() => onClearSelection?.()}
             aria-label="Close popup"

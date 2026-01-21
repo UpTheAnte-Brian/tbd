@@ -52,16 +52,16 @@ export default function UsersPage() {
   return (
     <div className="p-6">
       <h1 className="text-xl font-bold mb-4">Users</h1>
-      <table className="w-full border-collapse border border-gray-300">
+      <table className="w-full border-collapse border border-brand-secondary-2">
         <thead>
-          <tr className="bg-gray-100">
-            <th className="border border-gray-300 px-2 py-1 text-left text-black">
+          <tr className="bg-brand-secondary-2">
+            <th className="border border-brand-secondary-2 px-2 py-1 text-left text-brand-secondary-1">
               Name
             </th>
-            <th className="border border-gray-300 px-2 py-1 text-left text-black">
+            <th className="border border-brand-secondary-2 px-2 py-1 text-left text-brand-secondary-1">
               Role
             </th>
-            <th className="border border-gray-300 px-2 py-1 text-left text-black">
+            <th className="border border-brand-secondary-2 px-2 py-1 text-left text-brand-secondary-1">
               Districts
             </th>
           </tr>
@@ -69,10 +69,10 @@ export default function UsersPage() {
         <tbody>
           {users.map((u) => (
             <tr key={u.id}>
-              <td className="border border-gray-300 px-2 py-1">
+              <td className="border border-brand-secondary-2 px-2 py-1">
                 <Link
                   href={`/users/${u.id}`}
-                  className="text-blue-600 hover:underline"
+                  className="text-brand-accent-1 hover:underline"
                 >
                   {!u.full_name
                     ? !u.username
@@ -81,9 +81,9 @@ export default function UsersPage() {
                     : u.full_name}
                 </Link>
               </td>
-              <td className="border border-gray-300 px-2 py-1">
+              <td className="border border-brand-secondary-2 px-2 py-1">
                 <select
-                  className="w-full bg-white text-black border border-gray-300 rounded px-2 py-1"
+                  className="w-full bg-brand-primary-1 text-brand-secondary-1 border border-brand-secondary-2 rounded px-2 py-1"
                   value={u.global_role || ""}
                   onChange={(e) => handleRoleChange(u.id, e.target.value)}
                 >
@@ -92,10 +92,10 @@ export default function UsersPage() {
                 </select>
               </td>
 
-              <td className="border border-gray-300 px-2 py-1">
+              <td className="border border-brand-secondary-2 px-2 py-1">
                 {(u.entity_users ?? []).filter((eu) => eu.entity_type === "district").length >
                 0 ? (
-                  <ul className="list-disc pl-4 text-white">
+                  <ul className="list-disc pl-4 text-brand-secondary-1">
                     {(u.entity_users as EntityUser[] | undefined)
                       ?.filter((eu) => eu.entity_type === "district")
                       .map((eu) => (
@@ -103,7 +103,7 @@ export default function UsersPage() {
                       ))}
                   </ul>
                 ) : (
-                  <span className="text-gray-500 italic">None</span>
+                  <span className="text-brand-secondary-0 italic">None</span>
                 )}
               </td>
             </tr>

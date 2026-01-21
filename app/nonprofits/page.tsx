@@ -136,8 +136,8 @@ export default function NonprofitsPage() {
     sortable: true,
     filter: true,
     resizable: true,
-    cellClass: "bg-[#1a1a1a] text-white",
-    headerClass: "bg-[#1a1a1a] text-white",
+    cellClass: "bg-brand-secondary-1 text-brand-primary-1",
+    headerClass: "bg-brand-secondary-1 text-brand-primary-1",
   };
 
   if (!nonprofits.length) return <LoadingSpinner />;
@@ -150,9 +150,9 @@ export default function NonprofitsPage() {
           placeholder="Search foundations..."
           value={searchText}
           onChange={handleSearchChange}
-          className="flex-[1_1_55%] rounded border border-gray-700 bg-[#1a1a1a] px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="flex-[1_1_55%] rounded border border-brand-secondary-0 bg-brand-secondary-1 px-3 py-2 text-brand-primary-1 focus:outline-none focus:ring-1 focus:ring-brand-accent-1"
         />
-        <div className="text-sm text-gray-300 whitespace-nowrap">
+        <div className="text-sm text-brand-secondary-2 whitespace-nowrap">
           Showing {visibleCount} / {nonprofits.length}
         </div>
         <button
@@ -164,7 +164,7 @@ export default function NonprofitsPage() {
         </button>
       </div>
 
-      <div className="ag-theme-quartz h-[600px] w-full text-white bg-[#0f1116]">
+      <div className="ag-theme-quartz h-[600px] w-full text-brand-primary-1 bg-brand-secondary-1">
         <AgGridReact<Nonprofit>
           rowData={nonprofits}
           columnDefs={columnDefs}

@@ -40,10 +40,7 @@ export function EntityThemeProviderClient({
   children: ReactNode;
 }) {
   const tokens = resolved ?? fallbackTokens;
-  const cssVars = useMemo(
-    () => buildBrandCssVars(tokens, { includeDistrict: true }),
-    [tokens],
-  );
+  const cssVars = useMemo(() => buildBrandCssVars(tokens), [tokens]);
   const contextValue = useMemo(
     () => ({
       entityId,

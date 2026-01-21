@@ -71,13 +71,14 @@ function PaginationNumber({
   isActive: boolean;
 }) {
   const className = clsx(
-    "flex h-10 w-10 items-center justify-center text-sm border",
+    "flex h-10 w-10 items-center justify-center text-sm border border-brand-secondary-2",
     {
       "rounded-l-md": position === "first" || position === "single",
       "rounded-r-md": position === "last" || position === "single",
-      "z-10 bg-blue-600 border-blue-600 text-white": isActive,
-      "hover:bg-gray-100": !isActive && position !== "middle",
-      "text-gray-300": position === "middle",
+      "z-10 bg-brand-primary-0 border-brand-primary-0 text-brand-primary-1":
+        isActive,
+      "hover:bg-brand-secondary-2": !isActive && position !== "middle",
+      "text-brand-secondary-2": position === "middle",
     }
   );
 

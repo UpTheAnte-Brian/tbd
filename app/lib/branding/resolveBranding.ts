@@ -383,11 +383,7 @@ export const resolveBrandingTokens = (
   };
 };
 
-export const buildBrandCssVars = (
-  tokens: ResolvedBranding,
-  options: { includeDistrict?: boolean } = {},
-) => {
-  const includeDistrict = options.includeDistrict ?? true;
+export const buildBrandCssVars = (tokens: ResolvedBranding) => {
   const vars: Record<string, string> = {
     "--brand-primary-0": tokens.colors.primary0,
     "--brand-primary-1": tokens.colors.primary1,
@@ -406,25 +402,6 @@ export const buildBrandCssVars = (
     "--brand-font-display": tokens.typography.display,
     "--brand-font-logo": tokens.typography.logo,
   };
-
-  if (includeDistrict) {
-    vars["--district-primary-0"] = tokens.colors.primary0;
-    vars["--district-primary-1"] = tokens.colors.primary1;
-    vars["--district-primary-2"] = tokens.colors.primary2;
-    vars["--district-secondary-0"] = tokens.colors.secondary0;
-    vars["--district-secondary-1"] = tokens.colors.secondary1;
-    vars["--district-secondary-2"] = tokens.colors.secondary2;
-    vars["--district-accent-0"] = tokens.colors.accent0;
-    vars["--district-accent-1"] = tokens.colors.accent1;
-    vars["--district-accent-2"] = tokens.colors.accent2;
-    vars["--district-font-family"] = tokens.typography.body;
-    vars["--district-font-header1"] = tokens.typography.header1;
-    vars["--district-font-header2"] = tokens.typography.header2;
-    vars["--district-font-subheader"] = tokens.typography.subheader;
-    vars["--district-font-heading"] = tokens.typography.header1;
-    vars["--district-font-display"] = tokens.typography.display;
-    vars["--district-font-logo"] = tokens.typography.logo;
-  }
 
   return vars;
 };

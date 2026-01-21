@@ -100,10 +100,10 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
   );
 
   return (
-    <div className="p-4 border border-gray-300 space-y-4 rounded">
-      <div className="flex flex-col text-black">
+    <div className="p-4 border border-brand-secondary-2 space-y-4 rounded">
+      <div className="flex flex-col text-brand-secondary-1">
         <div className="text-lg font-bold">{entityName}</div>
-        <div className="text-sm text-gray-600 capitalize">
+        <div className="text-sm text-brand-secondary-0 capitalize">
           Managing roles for {entityType}
         </div>
       </div>
@@ -111,17 +111,17 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
       {/* Add User Form */}
       <form
         onSubmit={handleAddUser}
-        className="p-2 border border-gray-200 rounded space-y-2 bg-gray-50"
+        className="p-2 border border-brand-secondary-2 rounded space-y-2 bg-brand-secondary-2"
       >
         <div className="flex flex-col gap-2">
-          <label htmlFor="user-select" className="font-semibold text-black">
+          <label htmlFor="user-select" className="font-semibold text-brand-secondary-1">
             Add User
           </label>
           <select
             id="user-select"
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
-            className="border border-gray-400 rounded px-2 py-1 text-black"
+            className="border border-brand-secondary-2 rounded px-2 py-1 text-brand-secondary-1"
           >
             <option value="">Select a user</option>
             {filteredAvailableUsers.map((user) => (
@@ -133,7 +133,7 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
           <select
             value={selectedRole}
             onChange={(e) => setSelectedRole(e.target.value)}
-            className="border border-gray-400 rounded px-2 py-1 text-black"
+            className="border border-brand-secondary-2 rounded px-2 py-1 text-brand-secondary-1"
           >
             {roles.map((role) => (
               <option key={role} value={role}>
@@ -144,7 +144,7 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
           <button
             type="submit"
             disabled={adding}
-            className="bg-blue-600 text-white px-3 py-1 rounded disabled:opacity-50"
+            className="bg-brand-primary-0 text-brand-primary-1 px-3 py-1 rounded disabled:opacity-50"
           >
             {adding ? "Adding..." : "Add User"}
           </button>
@@ -160,10 +160,10 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
           return (
             <li
               key={makeKey(assignment)}
-              className="p-2 border border-gray-200 rounded text-black flex items-center justify-between"
+              className="p-2 border border-brand-secondary-2 rounded text-brand-secondary-1 flex items-center justify-between"
             >
               <div>
-                <div className="font-semibold text-black">{displayName}</div>
+                <div className="font-semibold text-brand-secondary-1">{displayName}</div>
               </div>
               <div className="flex items-center gap-2">
                 <select
@@ -175,7 +175,7 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
                       displayName
                     )
                   }
-                  className="border border-gray-400 rounded px-2 py-1 text-black"
+                  className="border border-brand-secondary-2 rounded px-2 py-1 text-brand-secondary-1"
                 >
                   {roles.map((role) => (
                     <option key={role} value={role}>
@@ -206,7 +206,7 @@ const UserRolesAssignments: React.FC<UserRolesAssignmentsProps> = ({
                       alert("An error occurred while deleting the role.");
                     }
                   }}
-                  className="bg-red-500 text-white px-2 py-1 rounded"
+                  className="bg-brand-accent-2 text-brand-primary-1 px-2 py-1 rounded"
                 >
                   Delete
                 </button>

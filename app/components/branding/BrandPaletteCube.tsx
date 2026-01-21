@@ -12,9 +12,15 @@ const cells = [
   "bg-brand-accent-2",
 ] as const;
 
-export default function BrandPaletteCube() {
+export default function BrandPaletteCube({
+  className,
+}: {
+  className?: string;
+}) {
   return (
-    <div className="w-full rounded border border-brand-secondary-1 bg-brand-secondary-2 p-2">
+    <div
+      className={`w-full rounded border border-brand-secondary-1 bg-brand-secondary-2 p-2 ${className ?? ""}`}
+    >
       <div className="grid grid-cols-3 grid-rows-3 gap-0 w-full overflow-hidden rounded">
         {cells.map((cls, idx) => (
           <div key={cls + idx} className={`${cls} aspect-square opacity-90`} />

@@ -65,8 +65,8 @@ export default function NonprofitCreateDrawer({
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black bg-opacity-40 transition-opacity z-40 ${
-          open ? "opacity-100" : "opacity-0 pointer-events-none"
+        className={`fixed inset-0 bg-brand-secondary-1 transition-opacity z-40 ${
+          open ? "opacity-40" : "opacity-0 pointer-events-none"
         }`}
         onClick={onClose}
       />
@@ -74,7 +74,7 @@ export default function NonprofitCreateDrawer({
       {/* Drawer */}
       <div
         className={`
-          fixed top-0 right-0 h-full bg-gray-900 border-l border-gray-700 z-50
+          fixed top-0 right-0 h-full bg-brand-secondary-1 border-l border-brand-secondary-0 z-50
           transform transition-transform
           w-full sm:w-96
           ${open ? "translate-x-0" : "translate-x-full"}
@@ -84,7 +84,7 @@ export default function NonprofitCreateDrawer({
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Add New Nonprofit</h2>
             <button
-              className="text-gray-400 hover:text-white"
+              className="text-brand-secondary-2 hover:text-brand-primary-1"
               onClick={onClose}
             >
               ✕
@@ -92,7 +92,7 @@ export default function NonprofitCreateDrawer({
           </div>
 
           {error && (
-            <p className="text-red-400 mb-3">
+            <p className="text-brand-accent-1 mb-3">
               <strong>Error:</strong> {error}
             </p>
           )}
@@ -104,7 +104,7 @@ export default function NonprofitCreateDrawer({
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+                className="w-full p-2 rounded bg-brand-secondary-0 border border-brand-secondary-0"
                 placeholder="Organization name"
               />
             </div>
@@ -117,7 +117,7 @@ export default function NonprofitCreateDrawer({
               <select
                 value={orgType}
                 onChange={(e) => setOrgType(e.target.value as OrgType)}
-                className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+                className="w-full p-2 rounded bg-brand-secondary-0 border border-brand-secondary-0"
               >
                 <option value="external_charity">External Charity</option>
                 <option value="district_foundation">District Foundation</option>
@@ -131,7 +131,7 @@ export default function NonprofitCreateDrawer({
               <input
                 value={ein}
                 onChange={(e) => setEin(e.target.value)}
-                className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+                className="w-full p-2 rounded bg-brand-secondary-0 border border-brand-secondary-0"
                 placeholder="12-3456789"
               />
             </div>
@@ -142,7 +142,7 @@ export default function NonprofitCreateDrawer({
               <input
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
-                className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+                className="w-full p-2 rounded bg-brand-secondary-0 border border-brand-secondary-0"
                 placeholder="https://example.org"
               />
             </div>
@@ -155,7 +155,7 @@ export default function NonprofitCreateDrawer({
               <textarea
                 value={mission}
                 onChange={(e) => setMission(e.target.value)}
-                className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+                className="w-full p-2 rounded bg-brand-secondary-0 border border-brand-secondary-0"
                 rows={3}
                 placeholder="What is the mission?"
               />
@@ -166,7 +166,7 @@ export default function NonprofitCreateDrawer({
             <button
               disabled={loading}
               onClick={handleCreate}
-              className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500 disabled:bg-gray-700"
+              className="px-4 py-2 bg-brand-primary-0 rounded hover:bg-brand-primary-2 disabled:bg-brand-secondary-0"
             >
               {loading ? <LoadingSpinner /> : "Create"}
             </button>
@@ -174,7 +174,7 @@ export default function NonprofitCreateDrawer({
             <button
               disabled={loading}
               onClick={onClose}
-              className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
+              className="px-4 py-2 bg-brand-secondary-0 rounded hover:bg-brand-secondary-2"
             >
               Cancel
             </button>

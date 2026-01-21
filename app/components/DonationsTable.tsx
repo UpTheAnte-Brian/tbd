@@ -38,7 +38,7 @@ export default function DonationsTable() {
               href={params.value}
               target="_blank"
               rel="noreferrer"
-              className="text-blue-600 underline"
+              className="text-brand-accent-1 underline"
             >
               View
             </a>
@@ -51,12 +51,12 @@ export default function DonationsTable() {
   const defaultColDef = {
     flex: 1,
     cellStyle: {
-      backgroundColor: "#1a1a1a", // dark background
-      color: "#ffffff", // white text
+      backgroundColor: "var(--brand-secondary-1)", // dark background
+      color: "var(--brand-primary-1)", // white text
     },
     headerStyle: {
-      backgroundColor: "#1a1a1a", // dark background
-      color: "#ffffff", // white text
+      backgroundColor: "var(--brand-secondary-1)", // dark background
+      color: "var(--brand-primary-1)", // white text
     },
   };
 
@@ -90,7 +90,7 @@ export default function DonationsTable() {
   if (error) return <p>{error}</p>;
 
   return (
-    <div className="h-80 w-full bg-black text-black">
+    <div className="h-80 w-full bg-brand-secondary-1 text-brand-primary-1">
       <AgGridReact<Receipt>
         columnDefs={columnDefs}
         rowData={receipts}

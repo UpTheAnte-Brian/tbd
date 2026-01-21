@@ -57,7 +57,7 @@ export function MinutesEditor(props: {
                         Minutes ({minutes.status})
                     </div>
                     {minutes.finalized_at && (
-                        <div className="text-sm text-slate-600">
+                        <div className="text-sm text-brand-secondary-0">
                             Finalized:{" "}
                             {new Date(
                                 minutes.finalized_at,
@@ -68,7 +68,7 @@ export function MinutesEditor(props: {
 
                 <div className="flex gap-2">
                     <button
-                        className="px-3 py-2 rounded bg-slate-900 text-white disabled:bg-slate-300"
+                        className="px-3 py-2 rounded bg-brand-secondary-1 text-brand-primary-1 disabled:bg-brand-secondary-2"
                         disabled={!editable}
                         onClick={async () => {
                             try {
@@ -94,7 +94,7 @@ export function MinutesEditor(props: {
                     </button>
 
                     <button
-                        className="px-3 py-2 rounded bg-slate-100 disabled:bg-slate-300"
+                        className="px-3 py-2 rounded bg-brand-secondary-2 disabled:bg-brand-secondary-2"
                         disabled={minutes.status === MINUTES_STATUS.FINALIZED}
                         onClick={async () => {
                             if (

@@ -49,7 +49,7 @@ export default function DonationSuccessPage() {
   }, [sessionId]);
 
   return (
-    <div className="relative w-full h-full bg-black">
+    <div className="relative w-full h-full bg-brand-secondary-1 text-brand-primary-1">
       <Canvas
         autorun={{ speed: 1 }}
         style={{
@@ -63,22 +63,22 @@ export default function DonationSuccessPage() {
         }}
       />
       <div className="max-w-xl mx-auto py-16 px-6 text-center relative z-10">
-        <h1 className="text-3xl font-bold text-green-600 mb-4">
+        <h1 className="text-3xl font-bold text-brand-accent-1 mb-4">
           🎉 Thank you for your donation!
         </h1>
         <p className="text-lg mb-6">Your payment was processed successfully.</p>
 
-        <div className="border rounded-lg p-6 shadow-md bg-white text-left">
-          <h2 className="text-xl font-semibold mb-4 text-black">
+        <div className="border border-brand-secondary-2 rounded-lg p-6 shadow-md bg-brand-primary-1 text-left text-brand-secondary-1">
+          <h2 className="text-xl font-semibold mb-4 text-brand-secondary-1">
             Donation Receipt
           </h2>
 
-          {loading && <p className="text-gray-600">Loading receipt...</p>}
+          {loading && <p className="text-brand-secondary-0">Loading receipt...</p>}
           {!loading && !sessionId && (
-            <p className="text-red-600">Missing session ID in URL.</p>
+            <p className="text-brand-accent-1">Missing session ID in URL.</p>
           )}
           {!loading && sessionId && !receipt && (
-            <p className="text-red-600">Unable to load receipt details.</p>
+            <p className="text-brand-accent-1">Unable to load receipt details.</p>
           )}
           {!loading && receipt && (
             <div>
@@ -86,17 +86,17 @@ export default function DonationSuccessPage() {
                 <a
                   href={receipt.receipt_url}
                   target="_blank"
-                  className="text-blue-600 underline"
+                  className="text-brand-accent-1 underline"
                 >
                   View Receipt
                 </a>
               </p>
-              <p className="text-black">
-                <strong className="text-black">Amount:</strong> $
+              <p className="text-brand-secondary-1">
+                <strong className="text-brand-secondary-1">Amount:</strong> $
                 {(receipt.amount / 100).toFixed(2)}
               </p>
-              <p className="text-black">
-                <strong className="text-black">Date:</strong> {receipt.date}
+              <p className="text-brand-secondary-1">
+                <strong className="text-brand-secondary-1">Date:</strong> {receipt.date}
               </p>
             </div>
           )}
@@ -104,14 +104,14 @@ export default function DonationSuccessPage() {
         {districtId && (
           <Link
             href={`/districts/${districtId}`}
-            className="inline-block mt-2 px-6 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700"
+            className="inline-block mt-2 px-6 py-3 bg-brand-primary-0 text-brand-primary-1 font-medium rounded-md hover:bg-brand-primary-2"
           >
             Return to District
           </Link>
         )}
         <Link
           href="/"
-          className="inline-block mt-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700"
+          className="inline-block mt-2 px-6 py-3 bg-brand-primary-0 text-brand-primary-1 font-medium rounded-md hover:bg-brand-primary-2"
         >
           Return to Home
         </Link>

@@ -7,6 +7,7 @@ import { HydrationBoundary, DehydratedState } from "@tanstack/react-query";
 import ReactQueryProvider from "@/app/lib/providers/ReactQueryProvider";
 import { getCurrentProfile } from "@/app/data/users";
 import UserProviderClient from "@/app/providers/UserProviderClient";
+import BrandingDebug from "@/app/components/branding/BrandingDebug";
 
 // This sets the title on your browser tab.
 // export const metadata = {
@@ -36,26 +37,29 @@ export default async function RootLayout({
             state={{ queries: [], mutations: [] } as DehydratedState}
           >
             <GoogleMapsProvider>
-              <main className="relative">
-                {/* Header: Fixed position, ensure content flows below it */}
-                <UserProviderClient initialUser={serverUser}>
-                  <header className="h-16 text-[15px] fixed top-0 w-full bg-[#18181A] z-[999]">
+              <>
+                <main className="relative">
+                  {/* Header: Fixed position, ensure content flows below it */}
+                  <UserProviderClient initialUser={serverUser}>
+                  <header className="h-16 text-[15px] fixed top-0 w-full bg-surface-nav text-brand-primary-1 z-[999]">
                     <NavBarComponent></NavBarComponent>
                   </header>
 
-                  {/* Main Content Area: Use padding-top to create space below the fixed header */}
-                  <div className="pt-16 min-h-screen bg-uta-primary-dark">
-                    {/* Added pt- to account for header height */}
+                    {/* Main Content Area: Use padding-top to create space below the fixed header */}
+                    <div className="pt-16 min-h-screen bg-brand-secondary-2">
+                      {/* Added pt- to account for header height */}
 
-                    {children}
-                  </div>
+                      {children}
+                    </div>
 
-                  {/* Footer */}
-                  {/* <div className="min-h-10vh bg-[#18181A]">
-                  <Footer />
-                </div> */}
-                </UserProviderClient>
-              </main>
+                    {/* Footer */}
+                    {/* <div className="min-h-10vh bg-[#18181A]">
+                    <Footer />
+                  </div> */}
+                  </UserProviderClient>
+                </main>
+                <BrandingDebug />
+              </>
             </GoogleMapsProvider>
           </HydrationBoundary>
         </ReactQueryProvider>
