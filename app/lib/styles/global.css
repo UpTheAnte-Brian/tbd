@@ -4,8 +4,8 @@
 
 
 :root {
-  --uta-primary-dark: #334632;
-  --uta-primary-light: #d4d4de;
+  --uta-primary-dark: #2c2a29;
+  --uta-primary-light: #a7a9b4;
 }
 
 @layer components {

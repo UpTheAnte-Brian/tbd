@@ -65,15 +65,15 @@ export type ResolvedBranding = {
 };
 
 export const DEFAULT_BRAND_COLORS: BrandColorTokens = {
-  primary0: "#0b1223",
+  primary0: "#da2b1f",
   primary1: "#ffffff",
-  primary2: "#111827",
-  secondary0: "#6cb617",
-  secondary1: "#024c06",
-  secondary2: "#dcf07a",
-  accent0: "#245ef0",
-  accent1: "#ed37cb",
-  accent2: "#f52a1f",
+  primary2: "#da2b1f",
+  secondary0: "#50534c",
+  secondary1: "#2c2a29",
+  secondary2: "#a7a9b4",
+  accent0: "#94292e",
+  accent1: "#ff3a1e",
+  accent2: "#6d3235",
 };
 
 export const DEFAULT_BRAND_PALETTES: Record<
