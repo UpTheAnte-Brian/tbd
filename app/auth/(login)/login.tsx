@@ -54,14 +54,31 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
         <AUNLogo backgroundWhite={true} />
         {/* </div> */}
 
-        <h1 className="mt-10 text-2xl font-semibold tracking-tight text-center text-gray-900">
-          {mode === "signin" ? "Welcome back" : "Create your account"}
-        </h1>
-        <p className="mt-2 text-sm text-center text-gray-600">
-          {mode === "signin"
-            ? "Sign in to continue to your account"
-            : "Get started with your new account"}
-        </p>
+        {(() => {
+          const otpSent = Boolean(requestCodeState?.success);
+          const title = otpSent
+            ? "Check your email"
+            : mode === "signin"
+              ? "Welcome back"
+              : "Create your account";
+
+          const subtitle = otpSent
+            ? "Enter the 6-digit code we sent you."
+            : mode === "signin"
+              ? "Sign in to continue to your account"
+              : "Get started with your new account";
+
+          return (
+            <>
+              <h1 className="mt-10 text-2xl font-semibold tracking-tight text-center text-gray-900">
+                {title}
+              </h1>
+              <p className="mt-2 text-sm text-center text-gray-600">
+                {subtitle}
+              </p>
+            </>
+          );
+        })()}
 
         <div className="mt-10">
           {requestCodeState?.success ? (
@@ -70,25 +87,44 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                 Check your email
               </h3>
               <p className="mt-2 text-sm text-green-700">
-                We&apos;ve sent you a login code to your account.
+                We&apos;ve sent a 6-digit code to your email.
               </p>
 
               <form action={verifyCodeAction} className="space-y-4">
-                <Input
-                  name="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  required
-                  defaultValue={email}
-                  className="px-4 h-12 bg-white rounded-lg border-gray-200 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500"
-                />
+                <div className="flex items-center justify-between gap-3 px-4 h-12 bg-white rounded-lg border border-gray-200 shadow-sm">
+                  <div
+                    className="min-w-0 text-sm text-gray-800 truncate"
+                    aria-label="Email address"
+                  >
+                    {email}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // simplest: go back to the request-code screen
+                      window.location.href =
+                        mode === "signin" ? "/auth/sign-in" : "/auth/sign-up";
+                    }}
+                    className="text-sm font-medium text-blue-600 hover:text-blue-500 whitespace-nowrap"
+                  >
+                    Change
+                  </button>
+                </div>
+                <input type="hidden" name="email" value={email} />
                 <input type="hidden" name="redirect" value={redirect || ""} />
                 <Input
                   name="loginCode"
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
                   required
                   className="px-4 h-12 bg-white rounded-lg border-gray-200 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500"
                 />
+                <p className="text-xs text-gray-600">
+                  Tip: Codes sometimes land in Spam/Promotions.
+                </p>
 
                 <Button
                   type="submit"
@@ -97,9 +133,34 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                   {verifyPending ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
-                    "Login with Code"
+                    "Verify code"
                   )}
                 </Button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setLoading(true);
+                    try {
+                      const formData = new FormData();
+                      formData.set("email", email);
+                      if (redirect) {
+                        formData.set("redirect", redirect);
+                      }
+                      if (priceId) {
+                        formData.set("priceId", priceId);
+                      }
+                      await requestLoginCode(
+                        { error: "", success: "" },
+                        formData,
+                      );
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="w-full text-sm font-medium text-blue-600 hover:text-blue-500"
+                >
+                  Resend code
+                </button>
               </form>
             </div>
           ) : (
@@ -110,7 +171,7 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
                   type="email"
                   placeholder="name@example.com"
                   required
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value.trim())}
                   className="px-4 h-12 bg-white rounded-lg border-gray-200 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500"
                 />
                 <input type="hidden" name="priceId" value={priceId || ""} />

@@ -38,6 +38,7 @@ import path from "node:path";
 import fs from "node:fs";
 import os from "node:os";
 import { createClient } from "@supabase/supabase-js";
+import { logSupabaseError } from "./lib/supabase-error";
 
 type GeoJSONPosition = [number, number] | [number, number, number];
 
@@ -404,6 +405,17 @@ function getSupabaseEnv() {
     return { url, serviceKey };
 }
 
+function supabaseHostFromEnv(): string {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ??
+        process.env.SUPABASE_URL;
+    if (!url) return "unknown";
+    try {
+        return new URL(url).host;
+    } catch {
+        return url;
+    }
+}
+
 type DistrictIndex = {
     bySdorgid: Map<string, string>;
     byEntityIdExternalIds: Map<string, Record<string, any>>;
@@ -602,6 +614,7 @@ async function uploadToSupabase(
     outputGeoJSON: string,
     source: string,
     concurrency: number,
+    debug: boolean,
 ) {
     console.log("☁️  Uploading per-district attendance areas to Supabase...");
 
@@ -658,6 +671,18 @@ async function uploadToSupabase(
             (matchRate * 100).toFixed(1)
         }%)`,
     );
+    if (debug) {
+        const sampleEntityId = Array.from(groups.keys())[0] ?? "n/a";
+        console.log("Debug context:");
+        console.log(`• supabase_host: ${supabaseHostFromEnv()}`);
+        console.log(`• geometry_type: ${GEOMETRY_TYPE}`);
+        console.log(
+            "• upsert_targets: entities (external_ids), entity_attributes, entity_source_records, entity_geometries (rpc)",
+        );
+        console.log(`• upload_features: ${fc.features.length}`);
+        console.log(`• district_groups: ${groups.size}`);
+        console.log(`• sample_entity_id: ${sampleEntityId}`);
+    }
 
     const limit = createLimiter(concurrency);
 
@@ -725,11 +750,11 @@ async function uploadToSupabase(
                             `  ✓ Upserted ${ok}/${groups.size} districts...`,
                         );
                     }
-                } catch (e: any) {
+                } catch (e: unknown) {
                     failed++;
-                    console.error(
-                        `❌ Failed upsert for district ${districtEntityId}:`,
-                        e?.message ?? e,
+                    logSupabaseError(
+                        `Failed upsert for district ${districtEntityId}`,
+                        e,
                     );
                 }
             })
@@ -746,7 +771,7 @@ async function uploadToSupabase(
 }
 
 async function main() {
-    const { generateOnly, uploadOnly, concurrency, versionTag } = parseArgs(
+    const { generateOnly, uploadOnly, concurrency, versionTag, debug } = parseArgs(
         process.argv,
     );
     const { dir, inputGeoJSON, displayGeoJSON, metadataJSON } =
@@ -761,6 +786,14 @@ async function main() {
     console.log(`• input_geojson: ${inputGeoJSON}`);
     console.log(`• display_geojson: ${displayGeoJSON}`);
     console.log(`• metadata_json: ${metadataJSON}`);
+    if (debug) {
+        console.log("Debug context:");
+        console.log(`• supabase_host: ${supabaseHostFromEnv()}`);
+        console.log(`• geometry_type: ${GEOMETRY_TYPE}`);
+        console.log(
+            "• upsert_targets: entities (external_ids), entity_attributes, entity_source_records, entity_geometries (rpc)",
+        );
+    }
 
     if (!uploadOnly) {
         try {
@@ -771,9 +804,8 @@ async function main() {
                 versionTag,
                 source,
             );
-        } catch (err: any) {
-            console.error("❌ ogr2ogr failed.");
-            console.error(err?.message ?? err);
+        } catch (err: unknown) {
+            logSupabaseError("ogr2ogr failed", err);
             process.exit(1);
         }
     } else {
@@ -792,10 +824,9 @@ async function main() {
     assertFileExists(displayGeoJSON);
 
     try {
-        await uploadToSupabase(displayGeoJSON, source, concurrency);
-    } catch (err: any) {
-        console.error("❌ Upload failed.");
-        console.error(err?.message ?? err);
+        await uploadToSupabase(displayGeoJSON, source, concurrency, debug);
+    } catch (err: unknown) {
+        logSupabaseError("Upload failed", err);
         process.exit(1);
     }
 }
@@ -816,6 +847,7 @@ function parseArgs(argv: string[]) {
         uploadOnly: args.has("--upload-only"),
         concurrency,
         versionTag,
+        debug: args.has("--debug"),
     };
 }
 

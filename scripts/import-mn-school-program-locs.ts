@@ -39,6 +39,7 @@ import crypto from "node:crypto";
 import { execSync } from "node:child_process";
 
 import { createClient } from "@supabase/supabase-js";
+import { logSupabaseError } from "./lib/supabase-error";
 
 // -----------------------------
 // Config
@@ -123,6 +124,7 @@ function parseArgs(argv: string[]) {
         uploadOnly: flags.has("--upload-only"),
         concurrency,
         versionTag: kv["--version"]?.trim() || DEFAULT_VERSION,
+        debug: flags.has("--debug"),
     };
 }
 
@@ -137,6 +139,17 @@ function getSupabaseEnv() {
     if (!servicekey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
 
     return { url, servicekey };
+}
+
+function supabaseHostFromEnv(): string {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ??
+        process.env.SUPABASE_URL;
+    if (!url) return "unknown";
+    try {
+        return new URL(url).host;
+    } catch {
+        return url;
+    }
 }
 
 // -----------------------------
@@ -450,9 +463,7 @@ async function upsertSchoolEntities(
             );
 
         if (upsertError) {
-            console.warn(
-                `⚠️ entities upsert failed (entity_type): ${upsertError.message}`,
-            );
+            logSupabaseError("Entities upsert failed (entity_type)", upsertError);
             console.error("❌ All entity upsert attempts failed. First row:");
             console.error(JSON.stringify(chunk[0], null, 2));
             throw upsertError;
@@ -569,7 +580,8 @@ async function upsertSchoolAttributesAndSourceRecords(
             .from("entity_attributes")
             .upsert(chunk as any, { onConflict: "entity_id,namespace" });
         if (error) {
-            console.error("❌ entity_attributes upsert failed. First row:");
+            logSupabaseError("entity_attributes upsert failed", error);
+            console.error("First row:");
             console.error(JSON.stringify(chunk[0], null, 2));
             throw error;
         }
@@ -586,7 +598,8 @@ async function upsertSchoolAttributesAndSourceRecords(
             .from("entity_source_records")
             .upsert(chunk as any, { onConflict: "entity_id,source" });
         if (error) {
-            console.error("❌ entity_source_records upsert failed. First row:");
+            logSupabaseError("entity_source_records upsert failed", error);
+            console.error("First row:");
             console.error(JSON.stringify(chunk[0], null, 2));
             throw error;
         }
@@ -603,9 +616,11 @@ async function upsertSchoolAttributesAndSourceRecords(
             .from("school_program_location_metadata")
             .upsert(chunk as any, { onConflict: "entity_id" });
         if (error) {
-            console.error(
-                "❌ school_program_location_metadata upsert failed. First row:",
+            logSupabaseError(
+                "school_program_location_metadata upsert failed",
+                error,
             );
+            console.error("First row:");
             console.error(JSON.stringify(chunk[0], null, 2));
             throw error;
         }
@@ -673,16 +688,13 @@ async function upsertSchoolGeometries(
             );
 
             if (error) {
-                console.error("❌ Geometry upsert failed", {
+                console.error("Geometry upsert failed", {
                     orgid,
                     entityId,
                     lng,
                     lat,
-                    message: error.message,
-                    details: (error as any).details,
-                    hint: (error as any).hint,
-                    code: (error as any).code,
                 });
+                logSupabaseError("Geometry upsert failed", error);
                 throw error;
             }
         });
@@ -719,7 +731,7 @@ async function upsertSchoolGeometries(
 // -----------------------------
 
 async function main() {
-    const { generateOnly, uploadOnly, concurrency, versionTag } = parseArgs(
+    const { generateOnly, uploadOnly, concurrency, versionTag, debug } = parseArgs(
         process.argv.slice(2),
     );
     const paths = artifactPaths(versionTag);
@@ -732,6 +744,15 @@ async function main() {
     console.log(`• version_tag: ${versionTag}`);
     console.log(`• input_geojson: ${paths.inputGeoJSON}`);
     console.log(`• display_geojson: ${paths.displayGeoJSON}`);
+    if (debug) {
+        console.log("Debug context:");
+        console.log(`• supabase_host: ${supabaseHostFromEnv()}`);
+        console.log("• entity_type: school");
+        console.log(`• geometry_type: ${GEOMETRY_TYPE}`);
+        console.log(
+            "• upsert_targets: entities, entity_attributes, entity_source_records, school_program_location_metadata, entity_geometries (rpc)",
+        );
+    }
 
     if (!uploadOnly) {
         downloadAndConvertToGeoJSON({
@@ -771,6 +792,16 @@ async function main() {
         fc.features,
         source,
     );
+    if (debug) {
+        const sample = idByOrgId.entries().next().value as
+            | [string, string]
+            | undefined;
+        console.log("Debug counts:");
+        console.log(`• feature_count: ${fc.features.length}`);
+        console.log(`• entities_upserted: ${idByOrgId.size}`);
+        console.log(`• sample_orgid: ${sample?.[0] ?? "n/a"}`);
+        console.log(`• sample_entity_id: ${sample?.[1] ?? "n/a"}`);
+    }
 
     // 2) Upsert curated attributes + raw source payload
     await upsertSchoolAttributesAndSourceRecords(
@@ -793,7 +824,6 @@ async function main() {
 }
 
 main().catch((err) => {
-    console.error("\n❌ Import failed:");
-    console.error(err);
+    logSupabaseError("Import school program locations failed", err);
     process.exit(1);
 });

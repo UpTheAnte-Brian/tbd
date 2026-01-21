@@ -48,6 +48,7 @@ import path from "path";
 import os from "os";
 import { execSync } from "child_process";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { logSupabaseError } from "./lib/supabase-error";
 
 // ----------------------------
 // Config
@@ -78,6 +79,7 @@ type Args = {
     concurrency: number;
     versionTag: string;
     simplify: number;
+    debug: boolean;
 };
 
 function parseArgs(argv: string[]): Args {
@@ -89,6 +91,7 @@ function parseArgs(argv: string[]): Args {
         concurrency: 8,
         versionTag: DEFAULT_VERSION,
         simplify: 0.001,
+        debug: false,
     };
 
     for (const a of argv) {
@@ -96,6 +99,7 @@ function parseArgs(argv: string[]): Args {
         if (a === "--upload-only") args.uploadOnly = true;
         if (a === "--no-display") args.noDisplay = true;
         if (a === "--upload-simplified") args.uploadSimplified = true;
+        if (a === "--debug") args.debug = true;
 
         if (a.startsWith("--concurrency=")) {
             const n = Number(a.split("=")[1]);
@@ -256,6 +260,17 @@ function getSupabaseEnv() {
     return { url, servicekey };
 }
 
+function supabaseHostFromEnv(): string {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ??
+        process.env.SUPABASE_URL;
+    if (!url) return "unknown";
+    try {
+        return new URL(url).host;
+    } catch {
+        return url;
+    }
+}
+
 function supabaseAdmin(): SupabaseClient {
     const { url, servicekey } = getSupabaseEnv();
     return createClient(url, servicekey, { auth: { persistSession: false } });
@@ -293,7 +308,9 @@ async function fetchDistrictIndex(
         .limit(20000);
 
     if (error) {
-        throw new Error(`Failed to load district entities: ${error.message}`);
+        const wrapped = new Error("Failed to load district entities.");
+        (wrapped as { cause?: unknown }).cause = error;
+        throw wrapped;
     }
 
     for (const r of data ?? []) {
@@ -663,6 +680,7 @@ async function uploadPerDistrict(
     geometryType: string,
     source: string,
     concurrency: number,
+    debug: boolean,
 ) {
     // Many datasets are one feature per district, but we support multi-feature per district
     const groups = new Map<string, GeoJSONFeature[]>(); // entity_id -> features
@@ -692,6 +710,14 @@ async function uploadPerDistrict(
     }
 
     const entries = Array.from(groups.entries());
+    if (debug) {
+        const sampleEntityId = entries[0]?.[0] ?? "n/a";
+        console.log("Debug counts:");
+        console.log(`• upload_features: ${fc.features.length}`);
+        console.log(`• district_groups: ${groups.size}`);
+        console.log(`• skipped_features: ${skipped}`);
+        console.log(`• sample_entity_id: ${sampleEntityId}`);
+    }
 
     // simple concurrency pool
     let idx = 0;
@@ -829,6 +855,20 @@ async function main() {
     console.log(`• input_geojson: ${inputGeoJSON}`);
     console.log(`• display_geojson: ${displayGeoJSON}`);
     console.log(`• metadata_json: ${metadataJSON}`);
+    if (args.debug) {
+        console.log("Debug context:");
+        console.log(`• supabase_host: ${supabaseHostFromEnv()}`);
+        console.log(
+            `• geometry_types: ${GEOMETRY_TYPE_BOUNDARY}${
+                args.uploadSimplified
+                    ? `, ${GEOMETRY_TYPE_BOUNDARY_SIMPLIFIED}`
+                    : ""
+            }`,
+        );
+        console.log(
+            "• upsert_targets: entities (external_ids), entity_attributes, district_metadata, entity_source_records, entity_geometries (rpc)",
+        );
+    }
 
     if (!args.uploadOnly) {
         console.log("⬇️  Downloading district boundaries GeoPackage ZIP...");
@@ -922,6 +962,7 @@ async function main() {
         GEOMETRY_TYPE_BOUNDARY,
         sourceTag,
         args.concurrency,
+        args.debug,
     );
 
     // Optionally upload boundary_simplified too (using the same upload FC)
@@ -934,6 +975,7 @@ async function main() {
             GEOMETRY_TYPE_BOUNDARY_SIMPLIFIED,
             `${sourceTag}_simplified`,
             args.concurrency,
+            args.debug,
         );
     }
 
@@ -941,12 +983,6 @@ async function main() {
 }
 
 main().catch((err) => {
-    console.error("\n❌ Import failed:");
-    console.error({
-        code: (err as any)?.code ?? null,
-        details: (err as any)?.details ?? null,
-        hint: (err as any)?.hint ?? null,
-        message: (err as any)?.message ?? String(err),
-    });
+    logSupabaseError("Import district boundaries failed", err);
     process.exit(1);
 });

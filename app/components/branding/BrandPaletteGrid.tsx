@@ -32,6 +32,8 @@ const suggestedUse = (role: PaletteRole, index: number): string | null => {
 const titleCaseRole = (role: PaletteRole): string =>
   role.charAt(0).toUpperCase() + role.slice(1);
 
+const RAW_HEX = /^[0-9a-fA-F]{6}$/;
+
 export default function BrandPaletteGrid({
   palettes,
   canEdit,
@@ -46,6 +48,13 @@ export default function BrandPaletteGrid({
 
   const editKey = (role: PaletteRole, slot: number) => `${role}:${slot}`;
 
+  const normalizeUserHex = (value: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const candidate = trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
+    return normalizeHex(candidate);
+  };
+
   const startEditing = (role: PaletteRole, slot: number, hex: string) => {
     if (!canEdit) return;
     const isSame =
@@ -59,7 +68,7 @@ export default function BrandPaletteGrid({
   };
 
   const handleSave = async (role: PaletteRole, slot: number) => {
-    const hex = normalizeHex(draftHex) ?? draftHex;
+    const hex = normalizeUserHex(draftHex);
     if (!hex) return;
     const key = editKey(role, slot);
     setSavingKey(key);
@@ -118,6 +127,7 @@ export default function BrandPaletteGrid({
                 const tag = suggestedUse(role, slot.slot);
                 const isUsingDefaults = !isInitialized || palette.isIncomplete;
                 const isSaving = savingKey === editKey(role, slot.slot);
+                const normalizedDraft = normalizeUserHex(draftHex);
 
                 return (
                   <div key={`${palette.key}-${slot.slot}`} className="group">
@@ -191,13 +201,35 @@ export default function BrandPaletteGrid({
                         </div>
                       </div>
 
-                      <div className="text-[13px] opacity-90 break-all">
-                        {displayHex}
-                      </div>
-
-                      <div className="text-[14px] uppercase tracking-wide opacity-80">
-                        Slot {slot.slot}
-                      </div>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={draftHex}
+                          onChange={(event) => {
+                            const nextValue = event.target.value.trim();
+                            setDraftHex(
+                              RAW_HEX.test(nextValue)
+                                ? `#${nextValue.toUpperCase()}`
+                                : nextValue.toUpperCase()
+                            );
+                          }}
+                          onClick={(event) => event.stopPropagation()}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              void handleSave(role, slot.slot);
+                            }
+                          }}
+                          className="h-7 w-24 rounded border border-brand-secondary-1 bg-brand-secondary-2 px-2 text-[12px] font-semibold uppercase tracking-widest"
+                          placeholder="#DA2B1F"
+                          aria-label={`${titleCaseRole(role)} slot ${slot.slot} hex value`}
+                        />
+                      ) : (
+                        <div className="text-[13px] opacity-90 break-all">
+                          {displayHex}
+                        </div>
+                      )}
 
                       {tag && !isEditing ? (
                         <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center opacity-0 transition-opacity group-hover:opacity-100">
@@ -215,36 +247,31 @@ export default function BrandPaletteGrid({
                       ) : null}
 
                       {isEditing ? (
-                        <div className="mt-3 flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={normalizeHex(draftHex) ?? slot.hex}
-                            onChange={(event) => setDraftHex(event.target.value)}
-                            onClick={(event) => event.stopPropagation()}
-                            className="h-7 w-7 rounded border border-brand-secondary-1 bg-brand-secondary-2"
-                            aria-label={`Pick ${titleCaseRole(role)} slot ${slot.slot} color`}
-                          />
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void handleSave(role, slot.slot);
-                            }}
-                            disabled={isSaving}
-                            className="rounded border px-2 py-1 text-[10px] font-semibold uppercase tracking-widest"
-                            style={{
-                              borderColor: textColor,
-                              color: textColor,
-                            }}
-                          >
-                            {isSaving ? "Saving" : "Save"}
-                          </button>
-                          {slot.isOverride ? (
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <label
+                              onClick={(event) => event.stopPropagation()}
+                              className="relative flex h-9 w-20 cursor-pointer items-center justify-center rounded border border-brand-secondary-1 bg-transparent p-1 text-[10px] font-semibold uppercase tracking-widest"
+                            >
+                              Pick Color
+                              <input
+                                type="color"
+                                value={normalizedDraft ?? slot.hex}
+                                onChange={(event) =>
+                                  setDraftHex(event.target.value.toUpperCase())
+                                }
+                                onClick={(event) => event.stopPropagation()}
+                                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                                aria-label={`Pick ${titleCaseRole(role)} slot ${slot.slot} color`}
+                              />
+                            </label>
+                          </div>
+                          <div className="ml-auto flex items-center gap-2">
                             <button
                               type="button"
                               onClick={(event) => {
                                 event.stopPropagation();
-                                void handleReset(role, slot.slot);
+                                void handleSave(role, slot.slot);
                               }}
                               disabled={isSaving}
                               className="rounded border px-2 py-1 text-[10px] font-semibold uppercase tracking-widest"
@@ -253,9 +280,26 @@ export default function BrandPaletteGrid({
                                 color: textColor,
                               }}
                             >
-                              Default
+                              {isSaving ? "Saving" : "Save"}
                             </button>
-                          ) : null}
+                            {slot.isOverride ? (
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  void handleReset(role, slot.slot);
+                                }}
+                                disabled={isSaving}
+                                className="rounded border px-2 py-1 text-[10px] font-semibold uppercase tracking-widest"
+                                style={{
+                                  borderColor: textColor,
+                                  color: textColor,
+                                }}
+                              >
+                                Reset to Default
+                              </button>
+                            ) : null}
+                          </div>
                         </div>
                       ) : null}
                     </div>

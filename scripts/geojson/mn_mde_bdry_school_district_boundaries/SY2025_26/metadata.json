@@ -3,6 +3,6 @@
   "dataset_version": "SY2025_26",
   "source_tag": "mn_mde_bdry_school_district_boundaries_SY2025_26",
   "zip_url": "https://resources.gisdata.mn.gov/pub/gdrs/data/pub/us_mn_state_mde/bdry_school_district_boundaries/gpkg_bdry_school_district_boundaries.zip",
-  "generated_at": "2026-01-20T18:36:44.187Z",
+  "generated_at": "2026-01-20T21:35:33.892Z",
   "output_geojson": "scripts/geojson/mn_mde_bdry_school_district_boundaries/SY2025_26/input.geojson"
 }
