@@ -2657,6 +2657,24 @@ export type Database = {
         Returns: Json
       }
       longtransactionsenabled: { Args: never; Returns: boolean }
+      map_children_geojson: {
+        Args: {
+          p_entity_type?: string
+          p_geometry_type?: string
+          p_limit?: number
+          p_offset?: number
+          p_parent_entity_id: string
+          p_relationship_type?: string
+        }
+        Returns: {
+          active: boolean
+          entity_id: string
+          entity_type: string
+          geojson: Json
+          name: string
+          slug: string
+        }[]
+      }
       nonprofit_admin: { Args: { target_nonprofit: string }; Returns: boolean }
       populate_geometry_columns:
         | { Args: { tbl_oid: unknown; use_typmod?: boolean }; Returns: number }
