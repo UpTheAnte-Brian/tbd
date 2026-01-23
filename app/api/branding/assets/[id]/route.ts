@@ -36,7 +36,7 @@ export async function PATCH(
   const { data: canManage, error: permError } = await supabasePublic.rpc(
     "can_manage_entity_assets",
     {
-      p_uid: userData.user.id,
+      p_user_id: userData.user.id,
       p_entity_id: entityId,
     },
   );
@@ -118,7 +118,7 @@ export async function DELETE(
   const { data: canManage, error: permError } = await supabasePublic.rpc(
     "can_manage_entity_assets",
     {
-      p_uid: userData.user.id,
+      p_user_id: userData.user.id,
       p_entity_id: entityId,
     },
   );

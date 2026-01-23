@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import AUNLogo from "@/app/components/AUNLogo";
-import BrandPaletteCube from "@/app/components/branding/BrandPaletteCube";
 import Menus from "@/app/lib/menus";
 import DesktopMenu from "@/app/components/DesktopMenu";
 import { Menu } from "@/app/lib/types/types";
@@ -46,9 +45,6 @@ export default function NavBarComponent() {
         {/* Left: Logo */}
         <div className="flex items-center justify-start shrink-0 gap-3">
           <AUNLogo />
-          <div className="hidden md:block w-10">
-            <BrandPaletteCube className="w-10 p-1" />
-          </div>
         </div>
 
         {/* Center: Desktop Menu (truly centered between left & right) */}

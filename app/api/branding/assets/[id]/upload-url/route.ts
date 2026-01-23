@@ -46,7 +46,7 @@ export async function POST(
   const { data: canManage, error: permError } = await supabasePublic.rpc(
     "can_manage_entity_assets",
     {
-      p_uid: userData.user.id,
+      p_user_id: userData.user.id,
       p_entity_id: asset.entity_id,
     },
   );

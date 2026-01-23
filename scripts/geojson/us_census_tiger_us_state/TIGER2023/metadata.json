@@ -3,6 +3,6 @@
   "dataset_version": "TIGER2023",
   "source_tag": "us_census_tiger_state_2023_TIGER2023",
   "zip_url": "https://www2.census.gov/geo/tiger/TIGER2023/STATE/tl_2023_us_state.zip",
-  "generated_at": "2026-01-16T21:14:08.628Z",
+  "generated_at": "2026-01-22T15:00:15.495Z",
   "output_geojson": "scripts/geojson/us_census_tiger_us_state/TIGER2023/input.geojson"
 }

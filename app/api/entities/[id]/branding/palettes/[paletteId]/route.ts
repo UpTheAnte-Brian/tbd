@@ -5,7 +5,7 @@ import { resolveEntityId } from "@/app/lib/entities";
 // PATCH /api/entities/[id]/branding/palettes/[paletteId]
 export async function PATCH(
   req: NextRequest,
-  context: { params: Promise<{ id: string; paletteId: string }> }
+  context: { params: Promise<{ id: string; paletteId: string }> },
 ) {
   const supabase = await createApiClient();
   const { id: entityKey, paletteId } = await context.params;
@@ -27,9 +27,9 @@ export async function PATCH(
   const { data: canManage, error: permError } = await supabase.rpc(
     "can_manage_entity_assets",
     {
-      p_uid: userId,
+      p_user_id: userId,
       p_entity_id: entityId,
-    }
+    },
   );
 
   if (permError) {
@@ -54,23 +54,29 @@ export async function PATCH(
   }
 
   const paletteUpdate: Record<string, unknown> = {};
-  let colorsUpdate: Array<{
-    slot: number;
-    hex: string;
-    label: string | null;
-    usage_notes: string | null;
-  }> | null = null;
+  let colorsUpdate:
+    | Array<{
+      slot: number;
+      hex: string;
+      label: string | null;
+      usage_notes: string | null;
+    }>
+    | null = null;
 
   if (body.name !== undefined) {
     if (typeof body.name !== "string") {
-      return NextResponse.json({ error: "name must be a string" }, { status: 400 });
+      return NextResponse.json({ error: "name must be a string" }, {
+        status: 400,
+      });
     }
     paletteUpdate.name = body.name;
   }
 
   if (body.colors !== undefined) {
     if (!Array.isArray(body.colors)) {
-      return NextResponse.json({ error: "colors must be an array" }, { status: 400 });
+      return NextResponse.json({ error: "colors must be an array" }, {
+        status: 400,
+      });
     }
 
     const colors = body.colors.map((color, index) => {
@@ -107,7 +113,7 @@ export async function PATCH(
     if (colors.some((color) => !color)) {
       return NextResponse.json(
         { error: "Invalid color format. Must be hex #RRGGBB" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -121,7 +127,9 @@ export async function PATCH(
 
   if (body.role !== undefined) {
     if (typeof body.role !== "string") {
-      return NextResponse.json({ error: "role must be a string" }, { status: 400 });
+      return NextResponse.json({ error: "role must be a string" }, {
+        status: 400,
+      });
     }
     const roleOptions = ["primary", "secondary", "accent"];
     if (!roleOptions.includes(body.role)) {
@@ -134,7 +142,9 @@ export async function PATCH(
   const hasColorsUpdate = colorsUpdate !== null;
 
   if (!hasPaletteUpdates && !hasColorsUpdate) {
-    return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+    return NextResponse.json({ error: "No valid fields to update" }, {
+      status: 400,
+    });
   }
 
   const paletteQuery = supabase
@@ -143,16 +153,16 @@ export async function PATCH(
 
   const { data, error } = hasPaletteUpdates
     ? await paletteQuery
-        .update(paletteUpdate)
-        .eq("id", paletteId)
-        .eq("entity_id", entityId)
-        .select("id, entity_id, role, name, usage_notes, created_at, updated_at")
-        .single()
+      .update(paletteUpdate)
+      .eq("id", paletteId)
+      .eq("entity_id", entityId)
+      .select("id, entity_id, role, name, usage_notes, created_at, updated_at")
+      .single()
     : await paletteQuery
-        .select("id, entity_id, role, name, usage_notes, created_at, updated_at")
-        .eq("id", paletteId)
-        .eq("entity_id", entityId)
-        .single();
+      .select("id, entity_id, role, name, usage_notes, created_at, updated_at")
+      .eq("id", paletteId)
+      .eq("entity_id", entityId)
+      .single();
 
   if (error) {
     if (error.code === "PGRST116") {
@@ -191,7 +201,7 @@ export async function PATCH(
             hex: color.hex,
             label: color.label,
             usage_notes: color.usage_notes,
-          }))
+          })),
         )
         .select("id, slot, hex, label, usage_notes")
         .order("slot", { ascending: true });
@@ -235,7 +245,7 @@ export async function PATCH(
 // DELETE /api/entities/[id]/branding/palettes/[paletteId]
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string; paletteId: string } }
+  { params }: { params: { id: string; paletteId: string } },
 ) {
   const supabase = await createApiClient();
   const { id: entityKey, paletteId } = params;
@@ -257,9 +267,9 @@ export async function DELETE(
   const { data: canManage, error: permError } = await supabase.rpc(
     "can_manage_entity_assets",
     {
-      p_uid: userId,
+      p_user_id: userId,
       p_entity_id: entityId,
-    }
+    },
   );
 
   if (permError) {

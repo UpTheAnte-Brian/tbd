@@ -1,0 +1,147 @@
+[
+  {
+    "proname": "_object_exists",
+    "args": "p_schema text, p_name text, p_kind text",
+    "return_type": "bool"
+  },
+  {
+    "proname": "approve_document_version",
+    "args": "p_document_version_id uuid, p_approval_method text, p_signature_hash text, p_ip inet, p_meeting_id uuid",
+    "return_type": "uuid"
+  },
+  {
+    "proname": "approve_meeting_minutes",
+    "args": "p_meeting_id uuid, p_signature_hash text, p_approval_method text, p_ip inet",
+    "return_type": "uuid"
+  },
+  {
+    "proname": "assert_can_adjourn_meeting",
+    "args": "p_board_id uuid, p_presiding_user_id uuid",
+    "return_type": "void"
+  },
+  {
+    "proname": "assert_can_start_meeting",
+    "args": "p_board_id uuid",
+    "return_type": "void"
+  },
+  {
+    "proname": "create_board_packet_for_meeting",
+    "args": "p_meeting_id uuid, p_title text",
+    "return_type": "jsonb"
+  },
+  {
+    "proname": "current_user_id",
+    "args": "",
+    "return_type": "uuid"
+  },
+  {
+    "proname": "enforce_meeting_packet_consistency",
+    "args": "",
+    "return_type": "trigger"
+  },
+  {
+    "proname": "enforce_votes_open",
+    "args": "",
+    "return_type": "trigger"
+  },
+  {
+    "proname": "finalize_meeting",
+    "args": "p_meeting_id uuid, p_signature_hash text",
+    "return_type": "board_meetings"
+  },
+  {
+    "proname": "finalize_motion",
+    "args": "p_motion_id uuid, p_signature_hash text, p_approval_method text, p_ip inet",
+    "return_type": "uuid"
+  },
+  {
+    "proname": "is_board_chair",
+    "args": "p_entity_id uuid, p_user_id uuid",
+    "return_type": "bool"
+  },
+  {
+    "proname": "is_board_member",
+    "args": "p_entity_id uuid, p_user_id uuid",
+    "return_type": "bool"
+  },
+  {
+    "proname": "is_board_member_current",
+    "args": "p_board_id uuid",
+    "return_type": "bool"
+  },
+  {
+    "proname": "is_board_officer",
+    "args": "p_board_id uuid, p_user_id uuid",
+    "return_type": "bool"
+  },
+  {
+    "proname": "is_board_officer_current",
+    "args": "p_board_id uuid",
+    "return_type": "bool"
+  },
+  {
+    "proname": "is_quorum_met",
+    "args": "p_meeting_id uuid",
+    "return_type": "bool"
+  },
+  {
+    "proname": "meeting_is_adjourned_for_motion",
+    "args": "p_motion_id uuid",
+    "return_type": "bool"
+  },
+  {
+    "proname": "prevent_approval_modifications",
+    "args": "",
+    "return_type": "trigger"
+  },
+  {
+    "proname": "prevent_minutes_update_when_locked",
+    "args": "",
+    "return_type": "trigger"
+  },
+  {
+    "proname": "prevent_minutes_updates_after_approval",
+    "args": "",
+    "return_type": "trigger"
+  },
+  {
+    "proname": "prevent_motion_updates_after_finalize",
+    "args": "",
+    "return_type": "trigger"
+  },
+  {
+    "proname": "prevent_vote_updates",
+    "args": "",
+    "return_type": "trigger"
+  },
+  {
+    "proname": "quorum_required_for_meeting",
+    "args": "p_meeting_id uuid",
+    "return_type": "int4"
+  },
+  {
+    "proname": "set_board_packet_version",
+    "args": "p_meeting_id uuid, p_document_version_id uuid",
+    "return_type": "bool"
+  },
+  {
+    "proname": "trg_board_meetings_enforce_lifecycle",
+    "args": "",
+    "return_type": "trigger"
+  },
+  {
+    "proname": "trg_minutes_auto_version",
+    "args": "",
+    "return_type": "trigger"
+  },
+  {
+    "proname": "trg_minutes_immutable_if_finalized",
+    "args": "",
+    "return_type": "trigger"
+  },
+  {
+    "proname": "trg_votes_block_after_adjournment",
+    "args": "",
+    "return_type": "trigger"
+  }
+]

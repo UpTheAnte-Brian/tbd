@@ -17,11 +17,11 @@ type RouteParams = {
 // PATCH /api/entities/[id]/branding/palettes/[paletteId]/colors/[slot]
 export async function PATCH(
   req: NextRequest,
-  context: { params: Promise<RouteParams> }
+  context: { params: Promise<RouteParams> },
 ) {
   const supabase = await createApiClient();
-  const { id: entityKey, paletteId: roleParam, slot: slotParam } =
-    await context.params;
+  const { id: entityKey, paletteId: roleParam, slot: slotParam } = await context
+    .params;
 
   const { data: userData, error: userErr } = await supabase.auth.getUser();
   if (userErr || !userData?.user) {
@@ -39,9 +39,9 @@ export async function PATCH(
   const { data: canManage, error: permError } = await supabase.rpc(
     "can_manage_entity_assets",
     {
-      p_uid: userData.user.id,
+      p_user_id: userData.user.id,
       p_entity_id: entityId,
-    }
+    },
   );
 
   if (permError) {
@@ -72,13 +72,15 @@ export async function PATCH(
 
   const hexValue = body.hex;
   if (hexValue !== null && typeof hexValue !== "string") {
-    return NextResponse.json({ error: "hex must be a string or null" }, { status: 400 });
+    return NextResponse.json({ error: "hex must be a string or null" }, {
+      status: 400,
+    });
   }
 
   if (typeof hexValue === "string" && !HEX_PATTERN.test(hexValue)) {
     return NextResponse.json(
       { error: "Invalid hex format. Must be #RRGGBB" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -121,7 +123,9 @@ export async function PATCH(
           .single();
 
         if (reloadErr) {
-          return NextResponse.json({ error: reloadErr.message }, { status: 500 });
+          return NextResponse.json({ error: reloadErr.message }, {
+            status: 500,
+          });
         }
 
         paletteId = existing.id;
@@ -147,7 +151,7 @@ export async function PATCH(
 
     return NextResponse.json(
       { ok: true, paletteId, slot, action: "deleted" },
-      { status: 200, headers: { "Cache-Control": "no-store" } }
+      { status: 200, headers: { "Cache-Control": "no-store" } },
     );
   }
 
@@ -161,7 +165,7 @@ export async function PATCH(
         slot,
         hex: normalizedHex,
       },
-      { onConflict: "palette_id,slot" }
+      { onConflict: "palette_id,slot" },
     );
 
   if (upsertErr) {
@@ -170,6 +174,6 @@ export async function PATCH(
 
   return NextResponse.json(
     { ok: true, paletteId, slot, hex: normalizedHex, action: "upserted" },
-    { status: 200, headers: { "Cache-Control": "no-store" } }
+    { status: 200, headers: { "Cache-Control": "no-store" } },
   );
 }

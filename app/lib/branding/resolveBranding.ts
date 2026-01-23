@@ -160,15 +160,18 @@ const resolveTypography = (
 };
 
 const normalizePaletteRole = (palette: BrandingPalette): PaletteRole | null => {
-  const role = palette.role === "tertiary" ? "accent" : palette.role;
-  if (role === "primary" || role === "secondary" || role === "accent") {
-    return role;
+  if (
+    palette.role === "primary" ||
+    palette.role === "secondary" ||
+    palette.role === "accent"
+  ) {
+    return palette.role;
   }
 
   const name = palette.name?.toLowerCase() ?? "";
   if (name.includes("primary")) return "primary";
   if (name.includes("secondary")) return "secondary";
-  if (name.includes("accent") || name.includes("tertiary")) return "accent";
+  if (name.includes("accent")) return "accent";
 
   return null;
 };

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { Geometry } from "geojson";
+import type { PostgrestError } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/utils/supabase/service-worker";
 import type {
   EntityFeature,
@@ -20,6 +21,12 @@ type MapChildrenRow = {
   slug: string | null;
   active: boolean | null;
   geojson: unknown | null;
+};
+
+type CollectResult = {
+  rows: MapChildrenRow[];
+  error: PostgrestError | null;
+  geometryType: string;
 };
 
 const parseLimitParam = (value: string | null): number | null => {
@@ -82,7 +89,7 @@ export async function GET(
     });
   };
 
-  const collect = async (geometryType: string) => {
+  const collect = async (geometryType: string): Promise<CollectResult> => {
     const rows: MapChildrenRow[] = [];
 
     if (!AUTO_PAGE) {
@@ -94,7 +101,7 @@ export async function GET(
       if (error) return { rows: [] as MapChildrenRow[], error, geometryType };
       return {
         rows: (data ?? []) as MapChildrenRow[],
-        error: null as any,
+        error: null,
         geometryType,
       };
     }
@@ -113,7 +120,7 @@ export async function GET(
       currentOffset += pageSize;
     }
 
-    return { rows, error: null as any, geometryType };
+    return { rows, error: null, geometryType };
   };
 
   // 1) Try requested geometry type.

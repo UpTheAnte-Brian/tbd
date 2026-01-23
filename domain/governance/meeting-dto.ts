@@ -534,7 +534,7 @@ export async function listMeetingMotions(
     const { data, error } = await supabase
         .schema("governance")
         .from("motions")
-        .select("id, meeting_id, title, status, created_at, finalized_at")
+        .select("*")
         .eq("meeting_id", meetingId)
         .order("created_at", { ascending: false });
 
@@ -583,7 +583,7 @@ export async function createMeetingMotion(
         .insert(
             payload as unknown as ExtendedGovernanceTables["motions"]["Insert"],
         )
-        .select("id, meeting_id, title, status, created_at, finalized_at")
+        .select("*")
         .single();
 
     if (error) throw error;
@@ -672,16 +672,23 @@ export async function upsertMyVote(
 
     // Different environments store votes differently (user_id+value vs board_member_id+vote).
     // Cast through `unknown` to avoid explicit `any` lint errors.
+    type UpsertSingleResult = {
+        data: RawRecord | null;
+        error: PostgrestError | null;
+    };
+    type VotesQuery = {
+        upsert: (
+            values: Record<string, unknown>,
+            options: { onConflict: string },
+        ) => {
+            select: (columns: string) => {
+                single: () => Promise<UpsertSingleResult>;
+            };
+        };
+    };
     const votesQuery = supabase
         .schema("governance")
-        .from("votes") as unknown as {
-            upsert: (
-                values: Record<string, unknown>,
-                options: { onConflict: string },
-            ) => any;
-            select: (columns: string) => any;
-            single: () => any;
-        };
+        .from("votes") as unknown as VotesQuery;
 
     const { data, error } = await votesQuery
         .upsert(

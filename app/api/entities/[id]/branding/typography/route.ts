@@ -5,7 +5,7 @@ import { resolveEntityId } from "@/app/lib/entities";
 // GET /api/entities/[id]/branding/typography
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id: entityKey } = await params;
   const supabase = await createApiClient();
@@ -35,7 +35,7 @@ export async function GET(
 // PUT /api/entities/[id]/branding/typography
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id: entityKey } = await params;
   const supabase = await createApiClient();
@@ -57,9 +57,9 @@ export async function PUT(
   const { data: canManage, error: permError } = await supabase.rpc(
     "can_manage_entity_assets",
     {
-      p_uid: userId,
+      p_user_id: userId,
       p_entity_id: entityId,
-    }
+    },
   );
 
   if (permError) {
@@ -75,22 +75,21 @@ export async function PUT(
   const validAvailability = ["system", "google", "licensed"];
 
   const trimmedName = typeof font_name === "string" ? font_name.trim() : "";
-  const fontNameValid =
-    trimmedName.length > 0 &&
+  const fontNameValid = trimmedName.length > 0 &&
     /^[A-Za-z0-9][A-Za-z0-9\s.'_-]*$/.test(trimmedName) &&
     !trimmedName.includes("://") &&
     !trimmedName.includes("/");
   if (!role || !fontNameValid) {
     return NextResponse.json(
       { error: "role and valid font_name are required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   if (availability && !validAvailability.includes(String(availability))) {
     return NextResponse.json(
       { error: "availability must be system, google, or licensed" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -117,18 +116,18 @@ export async function PUT(
 
   const { data, error } = existing?.id
     ? await supabase
-        .schema("branding")
-        .from("typography")
-        .update(payload)
-        .eq("id", existing.id)
-        .select("*")
-        .single()
+      .schema("branding")
+      .from("typography")
+      .update(payload)
+      .eq("id", existing.id)
+      .select("*")
+      .single()
     : await supabase
-        .schema("branding")
-        .from("typography")
-        .insert(payload)
-        .select("*")
-        .single();
+      .schema("branding")
+      .from("typography")
+      .insert(payload)
+      .select("*")
+      .single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -51,7 +51,7 @@ export default function DistrictSearch<T extends SearchFeature>({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search districts…"
-        className="w-full rounded border border-brand-secondary-1 px-3 py-2 text-brand-secondary-0 outline-none"
+        className="w-full rounded border border-brand-secondary-1 px-3 py-2 text-brand-accent-0 placeholder:text-brand-accent-1 outline-none"
         type="text"
         onKeyDown={(e) => {
           if (e.key === "ArrowDown") {

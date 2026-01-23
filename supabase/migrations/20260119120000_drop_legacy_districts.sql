@@ -68,5 +68,44 @@ END $$;
 -- 4) Drop functions that might reference public.districts (add here if you find any)
 -- DROP FUNCTION IF EXISTS public.some_function(args);
 
--- 5) Finally drop the legacy districts table
+-- =========================================================
+-- Drop legacy districts safely (remove dependencies first)
+-- =========================================================
+
+-- Drop FK constraints that still reference public.districts (legacy tables)
+DO $$
+BEGIN
+  -- district_users -> districts
+  IF EXISTS (
+    SELECT 1
+    FROM pg_constraint c
+    JOIN pg_class t ON t.oid = c.conrelid
+    JOIN pg_namespace n ON n.oid = t.relnamespace
+    WHERE n.nspname = 'public'
+      AND t.relname = 'district_users'
+      AND c.conname = 'district_users_district_id_fkey'
+  ) THEN
+    EXECUTE 'ALTER TABLE public.district_users DROP CONSTRAINT district_users_district_id_fkey';
+  END IF;
+
+  -- foundations -> districts
+  IF EXISTS (
+    SELECT 1
+    FROM pg_constraint c
+    JOIN pg_class t ON t.oid = c.conrelid
+    JOIN pg_namespace n ON n.oid = t.relnamespace
+    WHERE n.nspname = 'public'
+      AND t.relname = 'foundations'
+      AND c.conname = 'foundations_district_id_fkey'
+  ) THEN
+    EXECUTE 'ALTER TABLE public.foundations DROP CONSTRAINT foundations_district_id_fkey';
+  END IF;
+END $$;
+
+-- Optional: if these legacy tables are truly deprecated, you can drop them too
+-- (leave commented unless you're sure)
+-- DROP TABLE IF EXISTS public.district_users;
+-- DROP TABLE IF EXISTS public.foundations;
+
+-- Finally drop legacy districts
 DROP TABLE IF EXISTS public.districts;

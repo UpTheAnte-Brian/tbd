@@ -269,30 +269,30 @@ export type Database = {
       }
       palettes: {
         Row: {
-          created_at: string | null
+          created_at: string
           entity_id: string
           id: string
           name: string
           role: Database["branding"]["Enums"]["color_role"]
-          updated_at: string | null
+          updated_at: string
           usage_notes: string | null
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           entity_id: string
           id?: string
           name: string
           role: Database["branding"]["Enums"]["color_role"]
-          updated_at?: string | null
+          updated_at?: string
           usage_notes?: string | null
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           entity_id?: string
           id?: string
           name?: string
           role?: Database["branding"]["Enums"]["color_role"]
-          updated_at?: string | null
+          updated_at?: string
           usage_notes?: string | null
         }
         Relationships: []
@@ -380,8 +380,19 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      color_role: "primary" | "secondary" | "tertiary" | "accent"
+      color_role: "primary" | "secondary" | "accent"
       logo_category:
+        | "full_color"
+        | "stacked"
+        | "horizontal"
+        | "one_color_white"
+        | "one_color_black"
+        | "one_color_red"
+        | "inverse"
+        | "pattern_small"
+        | "pattern_large"
+        | "other"
+      logo_subcategory:
         | "district_primary"
         | "district_secondary"
         | "icon"
@@ -402,18 +413,7 @@ export type Database = {
         | "co_brand"
         | "event"
         | "program"
-      logo_subcategory:
-        | "full_color"
-        | "stacked"
-        | "horizontal"
-        | "one_color_white"
-        | "one_color_black"
-        | "one_color_red"
-        | "inverse"
-        | "pattern_small"
-        | "pattern_large"
-        | "other"
-      pattern_type: "triangle_small" | "triangle_large"
+      pattern_type: "none" | "dots" | "stripes" | "grid" | "chevrons" | "waves"
       typography_role:
         | "header1"
         | "header2"
@@ -476,65 +476,56 @@ export type Database = {
         Row: {
           adjourned_at: string | null
           board_id: string
-          board_packet_document_id: string | null
-          board_packet_version_id: string | null
+          called_by_user_id: string | null
           cancelled_at: string | null
           created_at: string
-          created_by: string
           finalized_at: string | null
           finalized_by: string | null
           finalized_signature_hash: string | null
           id: string
-          location: string | null
           meeting_type: string
+          presiding_user_id: string | null
           scheduled_end: string | null
-          scheduled_start: string
+          scheduled_start: string | null
           started_at: string | null
           status: string
-          title: string
-          virtual_link: string | null
+          title: string | null
         }
         Insert: {
           adjourned_at?: string | null
           board_id: string
-          board_packet_document_id?: string | null
-          board_packet_version_id?: string | null
+          called_by_user_id?: string | null
           cancelled_at?: string | null
           created_at?: string
-          created_by: string
           finalized_at?: string | null
           finalized_by?: string | null
           finalized_signature_hash?: string | null
           id?: string
-          location?: string | null
-          meeting_type: string
+          meeting_type?: string
+          presiding_user_id?: string | null
           scheduled_end?: string | null
-          scheduled_start: string
+          scheduled_start?: string | null
           started_at?: string | null
           status?: string
-          title: string
-          virtual_link?: string | null
+          title?: string | null
         }
         Update: {
           adjourned_at?: string | null
           board_id?: string
-          board_packet_document_id?: string | null
-          board_packet_version_id?: string | null
+          called_by_user_id?: string | null
           cancelled_at?: string | null
           created_at?: string
-          created_by?: string
           finalized_at?: string | null
           finalized_by?: string | null
           finalized_signature_hash?: string | null
           id?: string
-          location?: string | null
           meeting_type?: string
+          presiding_user_id?: string | null
           scheduled_end?: string | null
-          scheduled_start?: string
+          scheduled_start?: string | null
           started_at?: string | null
           status?: string
-          title?: string
-          virtual_link?: string | null
+          title?: string | null
         }
         Relationships: [
           {
@@ -542,13 +533,6 @@ export type Database = {
             columns: ["board_id"]
             isOneToOne: false
             referencedRelation: "boards"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "board_meetings_finalized_by_fkey"
-            columns: ["finalized_by"]
-            isOneToOne: false
-            referencedRelation: "board_members"
             referencedColumns: ["id"]
           },
         ]
@@ -561,17 +545,17 @@ export type Database = {
           role: string
           status: string
           term_end: string | null
-          term_start: string
+          term_start: string | null
           user_id: string
         }
         Insert: {
           board_id: string
           created_at?: string
           id?: string
-          role: string
+          role?: string
           status?: string
           term_end?: string | null
-          term_start: string
+          term_start?: string | null
           user_id: string
         }
         Update: {
@@ -581,7 +565,7 @@ export type Database = {
           role?: string
           status?: string
           term_end?: string | null
-          term_start?: string
+          term_start?: string | null
           user_id?: string
         }
         Relationships: [
@@ -597,27 +581,21 @@ export type Database = {
       boards: {
         Row: {
           created_at: string
-          entity_id: string
+          entity_id: string | null
           id: string
-          name: string
-          quorum_override_count: number | null
-          quorum_rule: string
+          name: string | null
         }
         Insert: {
           created_at?: string
-          entity_id: string
+          entity_id?: string | null
           id?: string
-          name?: string
-          quorum_override_count?: number | null
-          quorum_rule?: string
+          name?: string | null
         }
         Update: {
           created_at?: string
-          entity_id?: string
+          entity_id?: string | null
           id?: string
-          name?: string
-          quorum_override_count?: number | null
-          quorum_rule?: string
+          name?: string | null
         }
         Relationships: []
       }
@@ -660,12 +638,11 @@ export type Database = {
       meeting_minutes: {
         Row: {
           amended_from_id: string | null
-          approved_at: string | null
-          approved_by: string | null
-          content: string
+          content: string | null
           content_json: Json | null
           content_md: string | null
-          draft: boolean
+          created_at: string
+          draft: boolean | null
           finalized_at: string | null
           finalized_by: string | null
           id: string
@@ -676,12 +653,11 @@ export type Database = {
         }
         Insert: {
           amended_from_id?: string | null
-          approved_at?: string | null
-          approved_by?: string | null
-          content: string
+          content?: string | null
           content_json?: Json | null
           content_md?: string | null
-          draft?: boolean
+          created_at?: string
+          draft?: boolean | null
           finalized_at?: string | null
           finalized_by?: string | null
           id?: string
@@ -692,12 +668,11 @@ export type Database = {
         }
         Update: {
           amended_from_id?: string | null
-          approved_at?: string | null
-          approved_by?: string | null
-          content?: string
+          content?: string | null
           content_json?: Json | null
           content_md?: string | null
-          draft?: boolean
+          created_at?: string
+          draft?: boolean | null
           finalized_at?: string | null
           finalized_by?: string | null
           id?: string
@@ -722,13 +697,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "meeting_minutes_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "board_members"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "meeting_minutes_finalized_by_fkey"
             columns: ["finalized_by"]
             isOneToOne: false
@@ -747,39 +715,24 @@ export type Database = {
       motions: {
         Row: {
           created_at: string
-          description: string | null
-          finalized_at: string | null
           id: string
           meeting_id: string
-          motion_type: string
-          moved_by: string
-          seconded_by: string | null
-          status: string
-          title: string
+          status: string | null
+          title: string | null
         }
         Insert: {
           created_at?: string
-          description?: string | null
-          finalized_at?: string | null
           id?: string
           meeting_id: string
-          motion_type?: string
-          moved_by: string
-          seconded_by?: string | null
-          status?: string
-          title: string
+          status?: string | null
+          title?: string | null
         }
         Update: {
           created_at?: string
-          description?: string | null
-          finalized_at?: string | null
           id?: string
           meeting_id?: string
-          motion_type?: string
-          moved_by?: string
-          seconded_by?: string | null
-          status?: string
-          title?: string
+          status?: string | null
+          title?: string | null
         }
         Relationships: [
           {
@@ -789,55 +742,37 @@ export type Database = {
             referencedRelation: "board_meetings"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "motions_moved_by_fkey"
-            columns: ["moved_by"]
-            isOneToOne: false
-            referencedRelation: "board_members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "motions_seconded_by_fkey"
-            columns: ["seconded_by"]
-            isOneToOne: false
-            referencedRelation: "board_members"
-            referencedColumns: ["id"]
-          },
         ]
       }
       votes: {
         Row: {
-          board_member_id: string
+          board_member_id: string | null
+          created_at: string
           id: string
           motion_id: string
-          signature_hash: string
-          signed_at: string
-          vote: string
+          user_id: string | null
+          vote: string | null
+          vote_value: string | null
         }
         Insert: {
-          board_member_id: string
+          board_member_id?: string | null
+          created_at?: string
           id?: string
           motion_id: string
-          signature_hash?: string
-          signed_at?: string
-          vote: string
+          user_id?: string | null
+          vote?: string | null
+          vote_value?: string | null
         }
         Update: {
-          board_member_id?: string
+          board_member_id?: string | null
+          created_at?: string
           id?: string
           motion_id?: string
-          signature_hash?: string
-          signed_at?: string
-          vote?: string
+          user_id?: string | null
+          vote?: string | null
+          vote_value?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "votes_board_member_id_fkey"
-            columns: ["board_member_id"]
-            isOneToOne: false
-            referencedRelation: "board_members"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "votes_motion_id_fkey"
             columns: ["motion_id"]
@@ -852,12 +787,11 @@ export type Database = {
       meeting_minutes_expanded: {
         Row: {
           amended_from_id: string | null
-          approved_at: string | null
-          approved_by: string | null
           board_id: string | null
           content: string | null
           content_json: Json | null
           content_md: string | null
+          created_at: string | null
           draft: boolean | null
           finalized_at: string | null
           finalized_by: string | null
@@ -892,13 +826,6 @@ export type Database = {
             columns: ["amended_from_id"]
             isOneToOne: false
             referencedRelation: "meeting_minutes_expanded"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "meeting_minutes_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "board_members"
             referencedColumns: ["id"]
           },
           {
@@ -950,6 +877,18 @@ export type Database = {
         Args: { p_board_id: string }
         Returns: undefined
       }
+      can_read_board: {
+        Args: { p_board_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      can_read_entity: {
+        Args: { p_entity_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      can_read_meeting: {
+        Args: { p_meeting_id: string; p_user_id: string }
+        Returns: boolean
+      }
       create_board_packet_for_meeting: {
         Args: { p_meeting_id: string; p_title?: string }
         Returns: Json
@@ -960,23 +899,20 @@ export type Database = {
         Returns: {
           adjourned_at: string | null
           board_id: string
-          board_packet_document_id: string | null
-          board_packet_version_id: string | null
+          called_by_user_id: string | null
           cancelled_at: string | null
           created_at: string
-          created_by: string
           finalized_at: string | null
           finalized_by: string | null
           finalized_signature_hash: string | null
           id: string
-          location: string | null
           meeting_type: string
+          presiding_user_id: string | null
           scheduled_end: string | null
-          scheduled_start: string
+          scheduled_start: string | null
           started_at: string | null
           status: string
-          title: string
-          virtual_link: string | null
+          title: string | null
         }
         SetofOptions: {
           from: "*"
@@ -994,16 +930,22 @@ export type Database = {
         }
         Returns: string
       }
-      is_board_chair: {
-        Args: { p_entity_id: string; p_user_id?: string }
+      is_board_chair:
+        | { Args: { p_entity_id: string }; Returns: boolean }
+        | { Args: { p_entity_id: string; p_user_id: string }; Returns: boolean }
+      is_board_chair_for_board: {
+        Args: { p_board_id: string; p_user_id: string }
         Returns: boolean
       }
-      is_board_member: {
-        Args: { p_entity_id: string; p_user_id?: string }
-        Returns: boolean
-      }
+      is_board_member:
+        | { Args: { p_entity_id: string }; Returns: boolean }
+        | { Args: { p_entity_id: string; p_user_id: string }; Returns: boolean }
       is_board_member_current: {
         Args: { p_board_id: string }
+        Returns: boolean
+      }
+      is_board_member_for_board: {
+        Args: { p_board_id: string; p_user_id: string }
         Returns: boolean
       }
       is_board_officer: {
@@ -1109,27 +1051,6 @@ export type Database = {
           },
         ]
       }
-      channels: {
-        Row: {
-          created_by: string
-          id: number
-          inserted_at: string
-          slug: string
-        }
-        Insert: {
-          created_by: string
-          id?: number
-          inserted_at?: string
-          slug: string
-        }
-        Update: {
-          created_by?: string
-          id?: number
-          inserted_at?: string
-          slug?: string
-        }
-        Relationships: []
-      }
       district_metadata: {
         Row: {
           acres: number | null
@@ -1213,6 +1134,7 @@ export type Database = {
           status: Database["public"]["Enums"]["document_version_status"]
           storage_bucket: string | null
           storage_path: string | null
+          updated_at: string
           version_number: number | null
         }
         Insert: {
@@ -1230,6 +1152,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["document_version_status"]
           storage_bucket?: string | null
           storage_path?: string | null
+          updated_at?: string
           version_number?: number | null
         }
         Update: {
@@ -1247,6 +1170,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["document_version_status"]
           storage_bucket?: string | null
           storage_path?: string | null
+          updated_at?: string
           version_number?: number | null
         }
         Relationships: [
@@ -1405,7 +1329,7 @@ export type Database = {
           external_ids: Json
           id: string
           name: string
-          slug: string | null
+          slug: string
           updated_at: string
         }
         Insert: {
@@ -1415,7 +1339,7 @@ export type Database = {
           external_ids?: Json
           id?: string
           name: string
-          slug?: string | null
+          slug: string
           updated_at?: string
         }
         Update: {
@@ -1425,18 +1349,10 @@ export type Database = {
           external_ids?: Json
           id?: string
           name?: string
-          slug?: string | null
+          slug?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "entities_entity_type_fkey"
-            columns: ["entity_type"]
-            isOneToOne: false
-            referencedRelation: "entity_types"
-            referencedColumns: ["key"]
-          },
-        ]
+        Relationships: []
       }
       entity_attributes: {
         Row: {
@@ -1483,7 +1399,7 @@ export type Database = {
       }
       entity_geometries: {
         Row: {
-          bbox: Json | null
+          bbox: unknown
           centroid: unknown
           created_at: string
           entity_id: string
@@ -1495,19 +1411,19 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          bbox?: Json | null
+          bbox?: unknown
           centroid?: unknown
           created_at?: string
           entity_id: string
           geojson?: Json | null
-          geom: unknown
+          geom?: unknown
           geometry_type: string
           id?: string
           source?: string | null
           updated_at?: string
         }
         Update: {
-          bbox?: Json | null
+          bbox?: unknown
           centroid?: unknown
           created_at?: string
           entity_id?: string
@@ -1550,6 +1466,7 @@ export type Database = {
           is_primary: boolean
           parent_entity_id: string
           relationship_type: string
+          updated_at: string
         }
         Insert: {
           child_entity_id: string
@@ -1558,6 +1475,7 @@ export type Database = {
           is_primary?: boolean
           parent_entity_id: string
           relationship_type: string
+          updated_at?: string
         }
         Update: {
           child_entity_id?: string
@@ -1566,6 +1484,7 @@ export type Database = {
           is_primary?: boolean
           parent_entity_id?: string
           relationship_type?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -1873,15 +1792,7 @@ export type Database = {
           message?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "messages_channel_id_fkey"
-            columns: ["channel_id"]
-            isOneToOne: false
-            referencedRelation: "channels"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       nonprofits: {
         Row: {
@@ -1989,24 +1900,6 @@ export type Database = {
           updated_at?: string | null
           username?: string | null
           website?: string | null
-        }
-        Relationships: []
-      }
-      role_permissions: {
-        Row: {
-          id: number
-          permission: Database["public"]["Enums"]["app_permission"]
-          role: Database["public"]["Enums"]["app_role"]
-        }
-        Insert: {
-          id?: number
-          permission: Database["public"]["Enums"]["app_permission"]
-          role: Database["public"]["Enums"]["app_role"]
-        }
-        Update: {
-          id?: number
-          permission?: Database["public"]["Enums"]["app_permission"]
-          role?: Database["public"]["Enums"]["app_role"]
         }
         Relationships: []
       }
@@ -2121,41 +2014,32 @@ export type Database = {
       }
       subscriptions: {
         Row: {
-          amount: number | null
           created_at: string | null
           email: string | null
           entity_id: string | null
           id: string
-          interval: string | null
           status: string
           stripe_subscription_id: string
-          type: Database["public"]["Enums"]["donation_type"] | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
-          amount?: number | null
           created_at?: string | null
           email?: string | null
           entity_id?: string | null
           id?: string
-          interval?: string | null
           status: string
           stripe_subscription_id: string
-          type?: Database["public"]["Enums"]["donation_type"] | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
-          amount?: number | null
           created_at?: string | null
           email?: string | null
           entity_id?: string | null
           id?: string
-          interval?: string | null
           status?: string
           stripe_subscription_id?: string
-          type?: Database["public"]["Enums"]["donation_type"] | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -2183,62 +2067,32 @@ export type Database = {
           },
         ]
       }
-      todos: {
-        Row: {
-          id: number
-          inserted_at: string
-          is_complete: boolean | null
-          task: string | null
-          user_id: string
-        }
-        Insert: {
-          id?: number
-          inserted_at?: string
-          is_complete?: boolean | null
-          task?: string | null
-          user_id: string
-        }
-        Update: {
-          id?: number
-          inserted_at?: string
-          is_complete?: boolean | null
-          task?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          role: string
-          user_id: string
-        }
-        Insert: {
-          role: string
-          user_id: string
-        }
-        Update: {
-          role?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       entity_geometries_geojson: {
         Row: {
+          created_at: string | null
           entity_id: string | null
           geojson: Json | null
           geometry_type: string | null
+          source: string | null
+          updated_at: string | null
         }
         Insert: {
+          created_at?: string | null
           entity_id?: string | null
-          geojson?: never
+          geojson?: Json | null
           geometry_type?: string | null
+          source?: string | null
+          updated_at?: string | null
         }
         Update: {
+          created_at?: string | null
           entity_id?: string | null
-          geojson?: never
+          geojson?: Json | null
           geometry_type?: string | null
+          source?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -2351,6 +2205,7 @@ export type Database = {
       }
     }
     Functions: {
+      _geom_from_geojson_4326: { Args: { p_geojson: Json }; Returns: unknown }
       _postgis_deprecate: {
         Args: { newname: string; oldname: string; version: string }
         Returns: undefined
@@ -2484,15 +2339,13 @@ export type Database = {
         }
         Returns: boolean
       }
-      business_admin: { Args: { target_business: string }; Returns: boolean }
       can_manage_entity_assets: {
-        Args: { p_entity_id: string; p_uid: string }
+        Args: { p_entity_id: string; p_user_id: string }
         Returns: boolean
       }
       create_user: { Args: { email: string }; Returns: string }
       custom_access_token_hook: { Args: { event: Json }; Returns: Json }
       disablelongtransactions: { Args: never; Returns: string }
-      district_admin: { Args: { target_district: string }; Returns: boolean }
       dropgeometrycolumn:
         | {
             Args: {
@@ -2624,34 +2477,14 @@ export type Database = {
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
       gettransactionid: { Args: never; Returns: unknown }
-      has_entity_role: {
-        Args: {
-          p_entity_id: string
-          p_entity_type: string
-          p_roles: Database["public"]["Enums"]["entity_user_role"][]
-        }
+      is_entity_admin:
+        | { Args: { p_entity_id: string }; Returns: boolean }
+        | { Args: { p_entity_id: string; p_user_id: string }; Returns: boolean }
+      is_entity_user: {
+        Args: { p_entity_id: string; p_user_id: string }
         Returns: boolean
       }
-      is_admin: { Args: never; Returns: boolean }
-      is_entity_admin:
-        | {
-            Args: { p_entity_id: string; p_user_id?: string }
-            Returns: boolean
-          }
-        | {
-            Args: { p_entity_id: string; p_entity_type: string }
-            Returns: boolean
-          }
-      is_entity_user:
-        | {
-            Args: { p_entity_id: string; p_user_id?: string }
-            Returns: boolean
-          }
-        | {
-            Args: { p_entity_id: string; p_entity_type: string }
-            Returns: boolean
-          }
-      is_global_admin: { Args: { p_user_id?: string }; Returns: boolean }
+      is_global_admin: { Args: { p_user_id: string }; Returns: boolean }
       link_schools_to_districts: {
         Args: { p_limit: number; p_offset: number }
         Returns: Json
@@ -2675,7 +2508,6 @@ export type Database = {
           slug: string
         }[]
       }
-      nonprofit_admin: { Args: { target_nonprofit: string }; Returns: boolean }
       populate_geometry_columns:
         | { Args: { tbl_oid: unknown; use_typmod?: boolean }; Returns: number }
         | { Args: { use_typmod?: boolean }; Returns: string }
@@ -3315,28 +3147,22 @@ export type Database = {
           p_geometry_type: string
           p_simplified_type?: string
           p_simplify?: boolean
-          p_source: string
-          p_tolerance?: number
-        }
-        Returns: undefined
-      }
-      upsert_entity_geometry_geojson_only: {
-        Args: {
-          p_entity_id: string
-          p_geojson: Json
-          p_geometry_type: string
           p_source?: string
+          p_tolerance?: number
         }
         Returns: undefined
       }
       upsert_entity_geometry_with_geom_geojson: {
         Args: {
-          p_bbox?: Json
+          p_bbox: Json
           p_entity_id: string
           p_geojson: Json
           p_geom_geojson: Json
           p_geometry_type: string
-          p_source?: string
+          p_simplified_type?: string
+          p_simplify?: boolean
+          p_source: string
+          p_tolerance?: number
         }
         Returns: undefined
       }
@@ -3372,7 +3198,6 @@ export type Database = {
       document_visibility: "public" | "internal" | "board_only"
       donation_type: "platform" | "district"
       entity_user_role: "admin" | "editor" | "viewer" | "employee"
-      foundation_user_role: "President" | "board member" | "Patron"
       org_type: "district_foundation" | "up_the_ante" | "external_charity"
       user_status: "ONLINE" | "OFFLINE"
     }
@@ -3510,8 +3335,20 @@ export type CompositeTypes<
 export const Constants = {
   branding: {
     Enums: {
-      color_role: ["primary", "secondary", "tertiary", "accent"],
+      color_role: ["primary", "secondary", "accent"],
       logo_category: [
+        "full_color",
+        "stacked",
+        "horizontal",
+        "one_color_white",
+        "one_color_black",
+        "one_color_red",
+        "inverse",
+        "pattern_small",
+        "pattern_large",
+        "other",
+      ],
+      logo_subcategory: [
         "district_primary",
         "district_secondary",
         "icon",
@@ -3533,19 +3370,7 @@ export const Constants = {
         "event",
         "program",
       ],
-      logo_subcategory: [
-        "full_color",
-        "stacked",
-        "horizontal",
-        "one_color_white",
-        "one_color_black",
-        "one_color_red",
-        "inverse",
-        "pattern_small",
-        "pattern_large",
-        "other",
-      ],
-      pattern_type: ["triangle_small", "triangle_large"],
+      pattern_type: ["none", "dots", "stripes", "grid", "chevrons", "waves"],
       typography_role: [
         "header1",
         "header2",
@@ -3597,7 +3422,6 @@ export const Constants = {
       document_visibility: ["public", "internal", "board_only"],
       donation_type: ["platform", "district"],
       entity_user_role: ["admin", "editor", "viewer", "employee"],
-      foundation_user_role: ["President", "board member", "Patron"],
       org_type: ["district_foundation", "up_the_ante", "external_charity"],
       user_status: ["ONLINE", "OFFLINE"],
     },

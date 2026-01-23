@@ -1,8 +1,8 @@
 -- Add school_program_locations to allowed geometry types
-alter table public.entity_geometries
+alter table if exists public.entity_geometries
   drop constraint if exists entity_geometries_geom_type_check;
 
-alter table public.entity_geometries
+alter table if exists public.entity_geometries
   add constraint entity_geometries_geom_type_check
   check (
     geometry_type = any (

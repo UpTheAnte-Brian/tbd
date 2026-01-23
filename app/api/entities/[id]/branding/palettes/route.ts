@@ -8,7 +8,7 @@ type ColorRole = Database["branding"]["Enums"]["color_role"];
 // POST /api/entities/[id]/branding/palettes
 export async function POST(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   const supabase = await createApiClient();
   const { id: entityKey } = await context.params;
@@ -30,9 +30,9 @@ export async function POST(
   const { data: canManage, error: permError } = await supabase.rpc(
     "can_manage_entity_assets",
     {
-      p_uid: userId,
+      p_user_id: userId,
       p_entity_id: entityId,
-    }
+    },
   );
 
   if (permError) {
@@ -70,7 +70,9 @@ export async function POST(
     return NextResponse.json({ error: "role is required" }, { status: 400 });
   }
   if (!Array.isArray(colorsRaw)) {
-    return NextResponse.json({ error: "colors must be an array" }, { status: 400 });
+    return NextResponse.json({ error: "colors must be an array" }, {
+      status: 400,
+    });
   }
 
   const roleOptions: ColorRole[] = ["primary", "secondary", "accent"];
@@ -109,12 +111,13 @@ export async function POST(
   if (colors.some((color) => !color)) {
     return NextResponse.json(
       { error: "Invalid color format. Must be hex #RRGGBB" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
-  const resolvedName =
-    typeof name === "string" && name.trim().length > 0 ? name.trim() : role;
+  const resolvedName = typeof name === "string" && name.trim().length > 0
+    ? name.trim()
+    : role;
 
   const { data: palette, error } = await supabase
     .schema("branding")
@@ -125,7 +128,7 @@ export async function POST(
         name: resolvedName,
         role,
       },
-      { onConflict: "entity_id,role" }
+      { onConflict: "entity_id,role" },
     )
     .select("id, entity_id, role, name, usage_notes, created_at, updated_at")
     .single();
@@ -156,7 +159,7 @@ export async function POST(
           hex: color.hex,
           label: color.label,
           usage_notes: color.usage_notes,
-        }))
+        })),
       )
       .select("id, slot, hex, label, usage_notes")
       .order("slot", { ascending: true });
@@ -176,6 +179,6 @@ export async function POST(
 
   return NextResponse.json(
     { palette: { ...palette, colors: insertedColors } },
-    { status: 201, headers: { "Cache-Control": "no-store" } }
+    { status: 201, headers: { "Cache-Control": "no-store" } },
   );
 }

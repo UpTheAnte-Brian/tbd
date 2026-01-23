@@ -8,6 +8,9 @@
 - Stripe
 - Google Maps JS API
 
+## Local Supabase
+- Fresh local Supabase environment: `npm run env:local:fresh`
+
 -## Architectural Principles
 - DTO layer sits between Supabase queries and UI
 - No Supabase client calls directly from React components (fetch UI → API route → DTO)

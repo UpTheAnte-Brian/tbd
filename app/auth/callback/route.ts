@@ -35,56 +35,6 @@ export async function GET(request: Request) {
     }
 
     if (!error) { // after session exchange
-      // const { data: userData } = await supabase.auth.getUser();
-      // const user = userData?.user;
-
-      // let role = "authenticated";
-      // if (user?.user_metadata?.role) {
-      //   role = user.user_metadata.role;
-      // } else if (user?.user_metadata?.admin === true) {
-      //   role = "admin";
-      // }
-
-      // let sessionData;
-      // for (let i = 0; i < 10; i++) {
-      //   const result = await supabase.auth.getSession();
-      //   if (result.data?.session?.access_token) {
-      //     sessionData = result.data;
-      //     if (role === "authenticated") {
-      //       const { data: roleData, error: userRoleError } = await supabase
-      //         .from("user_roles")
-      //         .select("role")
-      //         .eq("user_id", session?.user?.id)
-      //         .maybeSingle();
-      //       if (!userRoleError) {
-      //         role = roleData?.role;
-      //       }
-      //     }
-      //     break;
-      //   }
-      //   await new Promise((res) => setTimeout(res, 100));
-      // }
-
-      // if (sessionData?.session?.access_token) {
-      //   const cookieOptions = {
-      //     path: "/",
-      //     httpOnly: true,
-      //     secure: isProd,
-      //     sameSite: "lax",
-      //   };
-      //   (await cookies()).set(
-      //     "role",
-      //     role,
-      //     cookieOptions as Partial<ResponseCookie>,
-      //   );
-      //   const isAdmin = role === "admin";
-      //   (await cookies()).set(
-      //     "sb-admin",
-      //     isAdmin ? "true" : "false",
-      //     cookieOptions as Partial<ResponseCookie>,
-      //   );
-      // }
-
       const forwardedHost = request.headers.get("x-forwarded-host"); // original origin before load balancer
 
       if (!isProd) {

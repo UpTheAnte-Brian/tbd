@@ -4,6 +4,8 @@
 
 begin;
 
+create schema if not exists branding;
+
 -- 1) Create new child table
 create table if not exists branding.palette_colors (
   id uuid not null default gen_random_uuid(),

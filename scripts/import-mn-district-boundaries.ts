@@ -8,7 +8,7 @@
  *  4) Upsert district identity keys into public.entities.external_ids (sdorgid/sdnumber/sdtype/formid)
  *  5) Upsert curated district attributes into public.entity_attributes (namespace = "mde")
  *  6) Store full source payload into public.entity_source_records (source = source_tag)
- *  7) Upload per-district geometries to Supabase via RPC `upsert_entity_geometry_with_geom_geojson`
+ *  7) Upload per-district geometries to Supabase via RPC `upsert_entity_geometry_from_geojson`
  *
  * Notes:
  *  - This script assumes district entities already exist (from your district import).
@@ -46,6 +46,7 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
+import crypto from "crypto";
 import { execSync } from "child_process";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { logSupabaseError } from "./lib/supabase-error";
@@ -64,8 +65,57 @@ const GEOMETRY_TYPE_BOUNDARY = "boundary";
 const GEOMETRY_TYPE_BOUNDARY_SIMPLIFIED = "boundary_simplified";
 
 // Deterministic UUID namespace (commit this value and never change it)
-// If you already have a namespace constant elsewhere, replace this string to match.
+// Single source of truth: keep this constant stable forever once committed.
 const UUID_NAMESPACE = "2f8c8e8a-7f24-4c0a-9d0a-3bd1a7d3a7b1";
+
+// ----------------------------
+// Deterministic UUIDs (v5)
+// ----------------------------
+
+// RFC 4122 UUID v5 (SHA-1). Node's `crypto` does not expose v5 directly.
+function uuidToBytes(uuid: string): Buffer {
+    const hex = uuid.replace(/-/g, "");
+    if (!/^[0-9a-fA-F]{32}$/.test(hex)) {
+        throw new Error(`Invalid UUID: ${uuid}`);
+    }
+    return Buffer.from(hex, "hex");
+}
+
+function bytesToUuid(buf: Buffer): string {
+    const hex = buf.toString("hex");
+    return [
+        hex.slice(0, 8),
+        hex.slice(8, 12),
+        hex.slice(12, 16),
+        hex.slice(16, 20),
+        hex.slice(20, 32),
+    ].join("-");
+}
+
+function uuidv5(name: string, namespaceUuid: string): string {
+    const ns = uuidToBytes(namespaceUuid);
+    const hash = crypto
+        .createHash("sha1")
+        .update(ns)
+        .update(Buffer.from(name, "utf8"))
+        .digest();
+
+    // Take first 16 bytes for UUID
+    const bytes = Buffer.from(hash.subarray(0, 16));
+
+    // Set version to 5
+    bytes[6] = (bytes[6] & 0x0f) | 0x50;
+    // Set variant to RFC 4122
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+    return bytesToUuid(bytes);
+}
+
+function deterministicDistrictEntityId(sdorgid: string): string {
+    // Stable across environments as long as UUID_NAMESPACE and naming scheme do not change.
+    // IMPORTANT: Do not include versionTag; sdorgid is the dataset's stable identifier.
+    return uuidv5(`mde_sdorgid:${sdorgid}`, UUID_NAMESPACE);
+}
 
 // ----------------------------
 // CLI args
@@ -277,9 +327,10 @@ function supabaseAdmin(): SupabaseClient {
 }
 
 type DistrictIndex = {
-    // key is sdorgid normalized string
-    bySdorgid: Map<string, string>; // entity_id
-    byEntityIdExternalIds: Map<string, Record<string, any>>; // entity_id -> external_ids
+    // sdorgid (normalized) -> deterministic entity_id
+    bySdorgid: Map<string, string>;
+    // entity_id -> external_ids (best-effort cache for patching)
+    byEntityIdExternalIds: Map<string, Record<string, any>>;
 };
 
 function normalizeSdorgid(v: any): string {
@@ -297,51 +348,78 @@ function normalizeSdorgid(v: any): string {
 
 async function fetchDistrictIndex(
     supabase: SupabaseClient,
+    fc: FeatureCollection,
 ): Promise<DistrictIndex> {
     const bySdorgid = new Map<string, string>();
     const byEntityIdExternalIds = new Map<string, Record<string, any>>();
 
-    const { data, error } = await supabase
-        .from("entities")
-        .select("id, external_ids")
-        .eq("entity_type", "district")
-        .limit(20000);
-
-    if (error) {
-        const wrapped = new Error("Failed to load district entities.");
-        (wrapped as { cause?: unknown }).cause = error;
-        throw wrapped;
+    // Build a deterministic mapping from the source GeoJSON itself.
+    for (const f of fc.features) {
+        const sdorgid = normalizeSdorgid(
+            f.properties?.sdorgid ?? (f.properties as any)?.SDORGID,
+        );
+        if (!sdorgid) continue;
+        const entityId = deterministicDistrictEntityId(sdorgid);
+        bySdorgid.set(sdorgid, entityId);
     }
 
-    for (const r of data ?? []) {
-        const externalIds =
-            (r as { external_ids?: Record<string, unknown> }).external_ids ??
-            null;
-        const entityId = (r as { id?: string }).id;
-        if (entityId) {
-            byEntityIdExternalIds.set(
-                entityId,
-                (externalIds ?? {}) as Record<string, any>,
+    // Best-effort: preload existing external_ids so we merge vs overwrite
+    const ids = Array.from(new Set(Array.from(bySdorgid.values())));
+    if (ids.length) {
+        const { data, error } = await supabase
+            .from("entities")
+            .select("id, external_ids")
+            .in("id", ids);
+
+        if (error) {
+            console.warn(
+                "WARN: failed to preload entities.external_ids",
+                error,
             );
-        }
-        const sdorgid =
-            externalIds?.sdorgid ??
-            externalIds?.sd_org_id ??
-            externalIds?.district_id ??
-            null;
-        const key = normalizeSdorgid(sdorgid);
-        if (key && entityId) {
-            bySdorgid.set(key, entityId as string);
+        } else {
+            for (const r of data ?? []) {
+                const entityId = (r as any).id as string;
+                const externalIds = ((r as any).external_ids ?? {}) as Record<
+                    string,
+                    any
+                >;
+                byEntityIdExternalIds.set(entityId, externalIds);
+            }
         }
     }
 
     if (bySdorgid.size === 0) {
         throw new Error(
-            "Could not build district index. Ensure district entities exist with external_ids.sdorgid values.",
+            "Could not build district index from the boundary dataset (no sdorgid found in features).",
         );
     }
 
     return { bySdorgid, byEntityIdExternalIds };
+}
+
+async function assertDistrictExists(
+    supabase: SupabaseClient,
+    entityId: string,
+    sdorgid: string,
+    cache: Set<string>,
+) {
+    if (cache.has(entityId)) return;
+
+    const { data, error } = await supabase
+        .from("entities")
+        .select("id")
+        .eq("id", entityId)
+        .limit(1);
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+        throw new Error(
+            `Missing district entity for sdorgid=${sdorgid}. Run importDistricts first.`,
+        );
+    }
+
+    cache.add(entityId);
 }
 
 // ----------------------------
@@ -514,24 +592,60 @@ async function upsertGeometry(
         entityId: string;
         geometryType: string;
         source: string;
-        geojson: FeatureCollection; // we store FC for rendering
-        geomGeoJSON: any; // geometry or FC; depends on your RPC
-        bbox: any;
+        geojson: FeatureCollection; // FeatureCollection for rendering/storage
     },
 ) {
+    // The existing RPC `upsert_entity_geometry_from_geojson` is implemented to
+    // parse a *Geometry* object via PostGIS (ST_GeomFromGeoJSON). Passing a
+    // FeatureCollection can trigger: "invalid GeoJson representation".
+    //
+    // So we:
+    //  1) build a Geometry/GeometryCollection from the FeatureCollection
+    //  2) call the RPC with that Geometry so PostGIS can build `geom`
+    //  3) then persist the full FeatureCollection into `entity_geometries.geojson`
+    const features = params.geojson?.features ?? [];
+    const geometries = features
+        .map((f) => (f as any)?.geometry)
+        .filter((g): g is GeoJSONGeometry => Boolean(g));
+
+    if (geometries.length === 0) {
+        throw new Error(
+            `No geometry present for entity ${params.entityId} (${params.geometryType})`,
+        );
+    }
+
+    const geomGeojson: GeoJSONGeometry | {
+        type: "GeometryCollection";
+        geometries: GeoJSONGeometry[];
+    } = geometries.length === 1
+        ? geometries[0]
+        : { type: "GeometryCollection", geometries };
+
     const { error } = await supabase.rpc(
-        "upsert_entity_geometry_with_geom_geojson",
+        "upsert_entity_geometry_from_geojson",
         {
             p_entity_id: params.entityId,
+            // IMPORTANT: pass a GeoJSON Geometry (or GeometryCollection), not a FeatureCollection
+            p_geojson: geomGeojson,
             p_geometry_type: params.geometryType,
-            p_geojson: params.geojson,
-            p_geom_geojson: params.geomGeoJSON,
-            p_bbox: params.bbox,
+            p_simplified_type: null,
+            p_simplify: null,
             p_source: params.source,
+            p_tolerance: null,
         },
     );
 
     if (error) throw error;
+
+    // Persist the app-friendly FeatureCollection for map rendering.
+    // The RPC should have created/updated the row already; we only update the JSON.
+    const { error: geojsonError } = await supabase
+        .from("entity_geometries")
+        .update({ geojson: params.geojson } as any)
+        .eq("entity_id", params.entityId)
+        .eq("geometry_type", params.geometryType);
+
+    if (geojsonError) throw geojsonError;
 }
 
 function stripNullish(obj: Record<string, any>) {
@@ -559,8 +673,8 @@ function curatedDistrictAttrs(props: Record<string, any>, source: string) {
     const sdtype = String(props.sdtype ?? props.SDTYPE ?? "").trim() || null;
     const prefname = String(props.prefname ?? props.PREFNAME ?? "").trim() ||
         null;
-    const shortname =
-        String(props.shortname ?? props.SHORTNAME ?? "").trim() || null;
+    const shortname = String(props.shortname ?? props.SHORTNAME ?? "").trim() ||
+        null;
     const web_url = String(props.web_url ?? props.WEB_URL ?? "").trim() || null;
 
     return stripNullish({
@@ -684,6 +798,7 @@ async function uploadPerDistrict(
 ) {
     // Many datasets are one feature per district, but we support multi-feature per district
     const groups = new Map<string, GeoJSONFeature[]>(); // entity_id -> features
+    const existingEntityIds = new Set<string>();
     let skipped = 0;
 
     for (const f of fc.features) {
@@ -699,6 +814,13 @@ async function uploadPerDistrict(
             skipped++;
             continue;
         }
+        await assertDistrictExists(
+            supabase,
+            entityId,
+            sdorgid,
+            existingEntityIds,
+        );
+
         const arr = groups.get(entityId) || [];
         arr.push(f);
         groups.set(entityId, arr);
@@ -733,8 +855,6 @@ async function uploadPerDistrict(
                 features,
             };
 
-            // PostGIS ST_GeomFromGeoJSON expects a GeoJSON *Geometry*, not a Feature/FeatureCollection.
-            // District boundaries should be one feature per district; if not, we fall back to a GeometryCollection.
             const geoms = features
                 .map((f) => f.geometry)
                 .filter((g): g is GeoJSONGeometry => Boolean(g));
@@ -746,19 +866,11 @@ async function uploadPerDistrict(
                 continue;
             }
 
-            const geomGeoJSON: GeoJSONGeometry = geoms.length === 1
-                ? geoms[0]
-                : { type: "GeometryCollection", geometries: geoms };
-
-            const bbox = toBbox(geomGeoJSON);
-
             await upsertGeometry(supabase, {
                 entityId,
                 geometryType,
                 source,
-                geojson: perDistrictFC, // keep FC for client rendering
-                geomGeoJSON, // geometry only for PostGIS
-                bbox,
+                geojson: perDistrictFC,
             });
 
             // --- 4/5/6: external_ids + entity_attributes + entity_source_records ---
@@ -951,7 +1063,7 @@ async function main() {
     console.log(`• Features in upload file: ${fc.features.length}`);
 
     const supabase = supabaseAdmin();
-    const districtIndex = await fetchDistrictIndex(supabase);
+    const districtIndex = await fetchDistrictIndex(supabase, fc);
     console.log(`• Districts indexed: ${districtIndex.bySdorgid.size}`);
 
     // Upload boundary
