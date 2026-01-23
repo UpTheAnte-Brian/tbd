@@ -29,7 +29,7 @@ export default function EntityMapTab({ entityId, entityType }: Props) {
       setError(null);
       try {
         const res = await fetch(
-          `/api/entities/${entityId}/map?geometry_type=boundary_simplified`,
+          `/api/entities/${entityId}/map?geometry_type=boundary`,
           { cache: "no-store" }
         );
         if (!res.ok) {

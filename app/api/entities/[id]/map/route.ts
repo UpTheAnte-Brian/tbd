@@ -3,7 +3,7 @@ import { createApiClient } from "@/utils/supabase/route";
 import { resolveEntityId } from "@/app/lib/entities";
 import { getEntityMapFeatureCollection } from "@/app/lib/server/entities";
 
-// GET /api/entities/[id]/map?geometry_type=boundary_simplified
+// GET /api/entities/[id]/map?geometry_type=boundary
 export async function GET(
   req: Request,
   context: { params: Promise<{ id: string }> }
@@ -11,8 +11,7 @@ export async function GET(
   const supabase = await createApiClient();
   const { id: entityKey } = await context.params;
   const { searchParams } = new URL(req.url);
-  const geometryType = searchParams.get("geometry_type") ??
-    "boundary_simplified";
+  const geometryType = searchParams.get("geometry_type") ?? "boundary";
 
   try {
     const entityId = await resolveEntityId(supabase, entityKey);

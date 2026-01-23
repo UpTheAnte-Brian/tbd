@@ -14,7 +14,7 @@ This folder contains one-off and repeatable scripts used to:
   - Dataset artifacts (raw inputs + derived display outputs) grouped by dataset key + version.
   - Each dataset folder should include:
     - `input.geojson` (raw or canonical)
-    - `display.geojson` (simplified for UI)
+    - `display.geojson` (render-optimized for UI)
     - `metadata.json` (dataset_key, dataset_version, source_tag, urls, timestamps, etc.)
 - `scripts/enrich-role/**`
   - Special-purpose script project (has its own `deno.json`, etc.).
@@ -26,7 +26,7 @@ This folder contains one-off and repeatable scripts used to:
 Most scripts support:
 - **Environment selection** via `dotenv -e .env.local` / `.env.test.local` etc.
 - **Flags** (typical patterns):
-  - `--generate-only` (download/convert/simplify but don’t write to DB)
+  - `--generate-only` (download/convert/prepare but don’t write to DB)
   - `--limit` / `--offset` (batch processing)
   - dataset/version flags depending on script
 
@@ -52,16 +52,15 @@ Output stored in `public.entities` + `public.entity_geometries`.
 Typical:
 - downloads/unzips (if applicable)
 - converts to GeoJSON
-- creates `display.geojson` (simplified)
+- creates `display.geojson` (render-optimized)
 - upserts entities + geometries
 
 #### `import-mn-district-boundaries.ts`
-Imports MN district boundaries and the simplified boundary used by UI.
+Imports MN district boundaries used by UI.
 
 Notes:
 - geometry types used:
   - `boundary`
-  - `boundary_simplified`
 
 #### `import-mn-attendance-areas.ts`
 Imports attendance area polygons tied to district context.

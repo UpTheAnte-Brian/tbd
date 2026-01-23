@@ -2,7 +2,7 @@
  *
  * Runs relationship-defining jobs (RPCs) that upsert rows into public.entity_relationships.
  * - school geom: entity_geometries.geometry_type = 'school_program_locations'
- * - district geom: prefer 'boundary_simplified', fallback 'boundary'
+ * - district geom: 'boundary'
  * - relationship: entity_relationships (parent=district, child=school, relationship_type='contains', is_primary=true)
  *
  * Tasks:

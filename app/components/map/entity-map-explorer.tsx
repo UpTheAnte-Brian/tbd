@@ -264,7 +264,7 @@ export default function EntityMapExplorer({
     setEmptyMessage(null);
     try {
       const res = await fetch(
-        `/api/map/entities/${parentId}/children?relationship=contains&geometry_type=boundary_simplified`,
+        `/api/map/entities/${parentId}/children?relationship=contains&geometry_type=boundary`,
         { cache: "no-store" }
       );
       if (!res.ok) {

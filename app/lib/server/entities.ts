@@ -277,7 +277,7 @@ export async function deleteEntityUser(
 export async function getEntityMapFeatureCollection(
   supabase: SupabaseClient,
   entityId: string,
-  geometryType = "boundary_simplified"
+  geometryType = "boundary"
 ): Promise<EntityFeatureCollection> {
   const entity = await getEntityById(supabase, entityId);
   if (!entity) {
@@ -296,8 +296,7 @@ export async function getEntityMapFeatureCollection(
   }
 
   const geometry = geomRows?.[0]?.geojson as Geometry | undefined;
-  const requirePolygon =
-    geometryType === "boundary" || geometryType === "boundary_simplified";
+  const requirePolygon = geometryType === "boundary";
 
   if (!geometry) {
     return { type: "FeatureCollection", features: [] };

@@ -70,42 +70,48 @@ async function main() {
     const { count: nullGeojsonCount, error: geojsonError } = await supabase
         .from("entity_geometries")
         .select("id", { count: "exact", head: true })
-        .eq("geometry_type", "boundary_simplified")
+        .eq("geometry_type", "boundary")
         .is("geojson", null);
 
     if (geojsonError) {
         fail(`GeoJSON null check failed: ${geojsonError.message}`);
     } else if ((nullGeojsonCount ?? 0) > 0) {
         fail(
-            `boundary_simplified has ${nullGeojsonCount} null geojson rows (expected 0)`,
+            `boundary has ${nullGeojsonCount} null geojson rows (expected 0)`,
         );
     } else {
-        pass("boundary_simplified geojson has no nulls");
+        pass("boundary geojson has no nulls");
     }
 
     if (mn) {
-        const { data: childFeatures, error: childError } = await supabase.rpc(
-            "map_children_geojson",
-            {
-                p_parent_entity_id: mn.id,
-                p_relationship_type: "contains",
-                p_entity_type: "district",
-                p_geometry_type: "boundary_simplified",
-                p_limit: 400,
-                p_offset: 0,
-            },
-        );
+        const { data: relRows, error: relError } = await supabase
+            .from("entity_relationships")
+            .select("child_entity_id")
+            .eq("parent_entity_id", mn.id)
+            .eq("relationship_type", "contains");
 
-        if (childError) {
-            fail(`map_children_geojson failed: ${childError.message}`);
-        } else if ((childFeatures ?? []).length <= MIN_CHILD_FEATURES) {
-            fail(
-                `map_children_geojson returned ${(childFeatures ?? []).length} features (expected >${MIN_CHILD_FEATURES})`,
-            );
+        if (relError) {
+            fail(`Child relationship lookup failed: ${relError.message}`);
         } else {
-            pass(
-                `map_children_geojson returned ${(childFeatures ?? []).length} features`,
+            const childIds = (relRows ?? [])
+                .map((row) => row.child_entity_id)
+                .filter((id): id is string => typeof id === "string");
+
+            const { count: childCount, error: childCountError } = await supabase
+                .from("entity_geometries")
+                .select("entity_id", { count: "exact", head: true })
+                .in("entity_id", childIds)
+                .eq("geometry_type", "boundary");
+
+            if (childCountError) {
+                fail(`Child geometry count failed: ${childCountError.message}`);
+            } else if ((childCount ?? 0) <= MIN_CHILD_FEATURES) {
+            fail(
+                `MN child geometries returned ${childCount ?? 0} features (expected >${MIN_CHILD_FEATURES})`,
             );
+            } else {
+                pass(`MN child geometries returned ${childCount ?? 0} features`);
+            }
         }
     }
 

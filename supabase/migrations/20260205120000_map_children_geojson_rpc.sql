@@ -17,7 +17,7 @@ create or replace function public.map_children_geojson(
   p_parent_entity_id uuid,
   p_relationship_type text default 'contains',
   p_entity_type text default null,
-  p_geometry_type text default 'boundary_simplified',
+  p_geometry_type text default 'boundary',
   p_limit integer default 400,
   p_offset integer default 0
 )

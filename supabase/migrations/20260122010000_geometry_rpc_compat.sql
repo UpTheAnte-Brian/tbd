@@ -34,10 +34,7 @@ create or replace function public.upsert_entity_geometry_with_geom_geojson(
   p_geojson jsonb,
   p_geom_geojson jsonb,
   p_bbox jsonb,
-  p_source text,
-  p_simplified_type text default null,
-  p_simplify boolean default false,
-  p_tolerance double precision default null
+  p_source text
 )
 returns void
 language plpgsql
@@ -65,12 +62,6 @@ begin
 
   if v_geom is null then
     raise exception 'Invalid GeoJSON geometry (p_geom_geojson).';
-  end if;
-
-  -- Optional simplification path
-  if coalesce(p_simplify, false) = true and p_tolerance is not null then
-    -- Preserve topology when possible
-    v_geom := ST_SimplifyPreserveTopology(v_geom, p_tolerance);
   end if;
 
   -- Compute bbox geometry (envelope)
@@ -102,35 +93,6 @@ begin
     source = excluded.source,
     bbox = excluded.bbox,
     updated_at = now();
-
-  -- If caller provided a simplified_type, also upsert that row using the same geometry.
-  if p_simplified_type is not null and length(trim(p_simplified_type)) > 0 then
-    insert into public.entity_geometries (
-      entity_id,
-      geometry_type,
-      geom,
-      geojson,
-      source,
-      bbox,
-      updated_at
-    )
-    values (
-      p_entity_id,
-      p_simplified_type,
-      v_geom,
-      p_geojson,
-      p_source,
-      v_bbox,
-      now()
-    )
-    on conflict (entity_id, geometry_type)
-    do update set
-      geom = excluded.geom,
-      geojson = excluded.geojson,
-      source = excluded.source,
-      bbox = excluded.bbox,
-      updated_at = now();
-  end if;
 
 end;
 $$;

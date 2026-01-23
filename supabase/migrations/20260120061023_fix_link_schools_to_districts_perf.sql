@@ -24,28 +24,24 @@ begin
     offset p_offset
   ),
 
-  -- Pick ONE geometry per district (prefer boundary_simplified over boundary)
+  -- Pick ONE geometry per district (boundary only)
   district_geoms as materialized (
     select distinct on (d.id)
       d.id as district_id,
       dg.geom as district_geom,
-      dg.geometry_type as district_geom_type,
       st_area(dg.geom::geography) as district_area_geog
     from public.entities d
     join public.entity_geometries dg
       on dg.entity_id = d.id
-     and dg.geometry_type in ('boundary_simplified','boundary')
+     and dg.geometry_type = 'boundary'
     where d.entity_type = 'district'
-    order by
-      d.id,
-      (dg.geometry_type = 'boundary_simplified') desc
+    order by d.id
   ),
 
   district_candidates as (
     select
       sb.school_id,
       dg.district_id,
-      dg.district_geom_type,
       dg.district_area_geog
     from school_batch sb
     join district_geoms dg
@@ -60,7 +56,6 @@ begin
     from district_candidates
     order by
       school_id,
-      (district_geom_type = 'boundary_simplified') desc,
       district_area_geog asc
   ),
 
@@ -89,10 +84,9 @@ begin
     from public.entities s
     join public.entity_geometries sg
       on sg.entity_id = s.id
-     and sg.geometry_type in ('boundary_simplified','boundary')
+     and sg.geometry_type = 'boundary'
     where s.entity_type = 'state'
       and s.slug = 'mn'
-    order by (sg.geometry_type = 'boundary_simplified') desc
     limit 1
   ),
 
@@ -134,10 +128,6 @@ $$;
 create index if not exists idx_entity_geometries_school_prog_loc_gist
 on public.entity_geometries using gist (geom)
 where geometry_type = 'school_program_locations';
-
-create index if not exists idx_entity_geometries_district_bdry_simp_gist
-on public.entity_geometries using gist (geom)
-where geometry_type = 'boundary_simplified';
 
 create index if not exists idx_entity_geometries_district_bdry_gist
 on public.entity_geometries using gist (geom)

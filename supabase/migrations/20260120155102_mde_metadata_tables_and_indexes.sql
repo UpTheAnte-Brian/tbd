@@ -124,10 +124,6 @@ create index if not exists entity_geometries_boundary_gist_idx
   on public.entity_geometries using gist (geom)
   where geometry_type = 'boundary';
 
-create index if not exists entity_geometries_boundary_simplified_gist_idx
-  on public.entity_geometries using gist (geom)
-  where geometry_type = 'boundary_simplified';
-
 create index if not exists entity_geometries_school_prog_loc_gist_idx
   on public.entity_geometries using gist (geom)
   where geometry_type = 'school_program_locations';

@@ -340,7 +340,7 @@ function generateDisplayGeoJSON(
     }
     assertFileExists(inputGeoJSON);
 
-    console.log("🔧 Generating simplified attendance areas GeoJSON...");
+    console.log("🔧 Generating display attendance areas GeoJSON...");
     console.log(`• Input:  ${inputGeoJSON}`);
     console.log(`• Output: ${displayGeoJSON}`);
     console.log(`• Simplify tolerance: ${SIMPLIFY_TOLERANCE}`);

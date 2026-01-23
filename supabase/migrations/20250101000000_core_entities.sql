@@ -116,7 +116,7 @@ create table if not exists public.entity_geometries (
 
   entity_id uuid not null references public.entities(id) on delete cascade,
 
-  geometry_type text not null,    -- e.g. 'boundary', 'boundary_simplified', 'point', 'district_attendance_areas', 'school_program_locations'
+  geometry_type text not null,    -- e.g. 'boundary', 'point', 'district_attendance_areas', 'school_program_locations'
   source text null,               -- dataset / provenance string
 
   -- PostGIS geometry (SRID can vary; you can enforce later if you want)

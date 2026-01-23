@@ -14,9 +14,6 @@ drop index if exists "public"."subscriptions_subscription_id_key";
 
 alter table "public"."districts" add column "geometry_geom" geometry;
 
-alter table "public"."districts" add column "geometry_simplified" geometry;
-
-alter table "public"."districts" add column "geometry_simplified_geojson" text;
 
 alter table "public"."donations" drop column "currency";
 
@@ -70,7 +67,6 @@ CREATE INDEX idx_district_metadata_sdorgid ON public.district_metadata USING btr
 
 CREATE INDEX idx_districts_geometry_geom_gist ON public.districts USING gist (geometry_geom);
 
-CREATE INDEX idx_districts_geometry_simplified_gist ON public.districts USING gist (geometry_simplified);
 
 CREATE INDEX idx_districts_sdorgid ON public.districts USING btree (sdorgid);
 
@@ -175,5 +171,4 @@ grant trigger on table "public"."spatial_ref_sys" to "service_role";
 grant truncate on table "public"."spatial_ref_sys" to "service_role";
 
 grant update on table "public"."spatial_ref_sys" to "service_role";
-
 

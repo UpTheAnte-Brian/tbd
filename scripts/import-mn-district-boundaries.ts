@@ -32,7 +32,6 @@
  *  --vintage=SY2025_26                (deprecated; alias for --version)
  *  --no-display                       (skip display/simplify generation)
  *  --simplify=0.001                   (display simplify tolerance; defaults 0.001)
- *  --upload-simplified                (also upload geometry_type=boundary_simplified)
  *
  * Download source:
  *  https://resources.gisdata.mn.gov/pub/gdrs/data/pub/us_mn_state_mde/bdry_school_district_boundaries/gpkg_bdry_school_district_boundaries.zip
@@ -62,7 +61,6 @@ const DOWNLOAD_URL =
 
 // IMPORTANT: keep in sync with DB check constraint
 const GEOMETRY_TYPE_BOUNDARY = "boundary";
-const GEOMETRY_TYPE_BOUNDARY_SIMPLIFIED = "boundary_simplified";
 
 // Deterministic UUID namespace (commit this value and never change it)
 // Single source of truth: keep this constant stable forever once committed.
@@ -125,7 +123,6 @@ type Args = {
     generateOnly: boolean;
     uploadOnly: boolean;
     noDisplay: boolean;
-    uploadSimplified: boolean;
     concurrency: number;
     versionTag: string;
     simplify: number;
@@ -137,7 +134,6 @@ function parseArgs(argv: string[]): Args {
         generateOnly: false,
         uploadOnly: false,
         noDisplay: false,
-        uploadSimplified: false,
         concurrency: 8,
         versionTag: DEFAULT_VERSION,
         simplify: 0.001,
@@ -148,7 +144,6 @@ function parseArgs(argv: string[]): Args {
         if (a === "--generate-only") args.generateOnly = true;
         if (a === "--upload-only") args.uploadOnly = true;
         if (a === "--no-display") args.noDisplay = true;
-        if (a === "--upload-simplified") args.uploadSimplified = true;
         if (a === "--debug") args.debug = true;
 
         if (a.startsWith("--concurrency=")) {
@@ -507,9 +502,9 @@ function buildDisplayGeoJSON(
             `ogr2ogr -f GeoJSON -t_srs EPSG:4326 -makevalid -simplify ${simplifyTolerance} "${outPath}" "${inPath}"`,
         );
 
-        const simplified = readGeoJSON(outPath);
+        const displayGeoJSON = readGeoJSON(outPath);
 
-        const features: GeoJSONFeature[] = simplified.features.map((f) => {
+        const features: GeoJSONFeature[] = displayGeoJSON.features.map((f) => {
             const props: Record<string, any> = {};
             for (const [k, v] of Object.entries(f.properties || {})) {
                 if (keepKeys.has(k)) props[k] = v;
@@ -628,10 +623,7 @@ async function upsertGeometry(
             // IMPORTANT: pass a GeoJSON Geometry (or GeometryCollection), not a FeatureCollection
             p_geojson: geomGeojson,
             p_geometry_type: params.geometryType,
-            p_simplified_type: null,
-            p_simplify: null,
             p_source: params.source,
-            p_tolerance: null,
         },
     );
 
@@ -970,13 +962,7 @@ async function main() {
     if (args.debug) {
         console.log("Debug context:");
         console.log(`• supabase_host: ${supabaseHostFromEnv()}`);
-        console.log(
-            `• geometry_types: ${GEOMETRY_TYPE_BOUNDARY}${
-                args.uploadSimplified
-                    ? `, ${GEOMETRY_TYPE_BOUNDARY_SIMPLIFIED}`
-                    : ""
-            }`,
-        );
+        console.log(`• geometry_types: ${GEOMETRY_TYPE_BOUNDARY}`);
         console.log(
             "• upsert_targets: entities (external_ids), entity_attributes, district_metadata, entity_source_records, entity_geometries (rpc)",
         );
@@ -1009,9 +995,7 @@ async function main() {
             );
 
             if (!args.noDisplay) {
-                console.log(
-                    "🧪 Generating display (simplified) district boundaries GeoJSON...",
-                );
+                console.log("🧪 Generating display district boundaries GeoJSON...");
                 console.log(`• Simplify tolerance: ${args.simplify}`);
                 const displayFC = buildDisplayGeoJSON(inputFC, args.simplify);
                 writeGeoJSON(displayGeoJSON, displayFC);
@@ -1076,20 +1060,6 @@ async function main() {
         args.concurrency,
         args.debug,
     );
-
-    // Optionally upload boundary_simplified too (using the same upload FC)
-    if (args.uploadSimplified) {
-        console.log("☁️  Uploading boundary_simplified geometries...");
-        await uploadPerDistrict(
-            supabase,
-            fc,
-            districtIndex,
-            GEOMETRY_TYPE_BOUNDARY_SIMPLIFIED,
-            `${sourceTag}_simplified`,
-            args.concurrency,
-            args.debug,
-        );
-    }
 
     console.log("Done.");
 }

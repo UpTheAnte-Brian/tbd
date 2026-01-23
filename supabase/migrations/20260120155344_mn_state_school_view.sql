@@ -11,5 +11,5 @@ join public.entities mn
  and mn.slug = 'mn'
 join public.entity_geometries mng
   on mng.entity_id = mn.id
- and mng.geometry_type in ('boundary_simplified','boundary')
+ and mng.geometry_type = 'boundary'
 where st_covers(mng.geom, sg.geom);

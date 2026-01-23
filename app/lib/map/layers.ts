@@ -22,11 +22,10 @@ export type GeometryLayerConfig = {
 
 export const GEOMETRY_LAYERS: GeometryLayerConfig[] = [
   {
-    geometryType: "boundary_simplified",
+    geometryType: "boundary",
     label: "District Boundary",
     renderMode: "polygon",
     fetchScope: "entity",
-    fallbackGeometryTypes: ["boundary"],
     zIndex: 1,
     defaultVisible: true,
     style: {

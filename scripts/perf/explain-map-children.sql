@@ -10,22 +10,11 @@ select
   eg.geojson
 from public.entity_relationships r
 join public.entities e on e.id = r.child_entity_id
-join public.entity_geometries_geojson eg
+join public.entity_geometries eg
   on eg.entity_id = e.id
- and eg.geometry_type = 'boundary_simplified'
+ and eg.geometry_type = 'boundary'
 where r.parent_entity_id = 'a44ee5a4-afc9-4710-a53d-0239c3eda1f7'::uuid
   and r.relationship_type = 'contains'
   and e.entity_type = 'district'
 order by e.id
 limit 400;
-
--- Explain the RPC directly.
-explain (analyze, buffers)
-select * from public.map_children_geojson(
-    p_parent_entity_id := 'a44ee5a4-afc9-4710-a53d-0239c3eda1f7'::uuid,
-  p_relationship_type := 'contains',
-  p_entity_type := 'district',
-  p_geometry_type := 'boundary_simplified',
-  p_limit := 400,
-  p_offset := 0
-);

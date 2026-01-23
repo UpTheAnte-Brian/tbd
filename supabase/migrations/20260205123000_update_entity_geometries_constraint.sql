@@ -1,4 +1,5 @@
--- Add school_program_locations to allowed geometry types
+-- Remove deprecated geometry type from geometry_type constraint.
+
 alter table if exists public.entity_geometries
   drop constraint if exists entity_geometries_geom_type_check;
 

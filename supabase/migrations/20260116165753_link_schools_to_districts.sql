@@ -24,14 +24,13 @@ begin
     select
       sb.school_id,
       d.id as district_id,
-      dg.geom as district_geom,
-      dg.geometry_type as district_geom_type
+      dg.geom as district_geom
     from school_batch sb
     join public.entities d
       on d.entity_type = 'district'
     join public.entity_geometries dg
       on dg.entity_id = d.id
-     and dg.geometry_type in ('boundary_simplified','boundary')
+     and dg.geometry_type = 'boundary'
     where st_covers(dg.geom, sb.school_geom)
   ),
   best_district as (
@@ -41,7 +40,6 @@ begin
     from district_candidates
     order by
       school_id,
-      (district_geom_type = 'boundary_simplified') desc,
       st_area(district_geom::geography) asc
   ),
   upsert_primary as (
@@ -84,10 +82,9 @@ begin
     from public.entities s
     join public.entity_geometries sg
       on sg.entity_id = s.id
-     and sg.geometry_type in ('boundary_simplified','boundary')
+     and sg.geometry_type = 'boundary'
     where s.entity_type = 'state'
       and s.slug = 'mn'
-    order by (sg.geometry_type = 'boundary_simplified') desc
     limit 1
   ),
   matches as (

@@ -6,7 +6,7 @@ import {
 } from "@/app/lib/server/entity-geometry-queries";
 import { supabaseAdmin } from "@/utils/supabase/service-worker";
 
-// GET /api/entities/[id]/geometries?types=boundary_simplified,district_attendance_areas
+// GET /api/entities/[id]/geometries?types=boundary,district_attendance_areas
 export async function GET(
   req: Request,
   context: { params: Promise<{ id: string }> }

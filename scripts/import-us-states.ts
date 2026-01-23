@@ -235,7 +235,7 @@ async function main() {
                 shpPath,
             ]);
 
-            console.log("✨ Generating display (simplified) GeoJSON...");
+            console.log("✨ Generating display GeoJSON...");
             await run("ogr2ogr", [
                 "-f",
                 "GeoJSON",
@@ -366,9 +366,6 @@ async function main() {
                 p_source: sourceLabel,
                 // IMPORTANT: geometry object, not the full feature
                 p_geojson: geom,
-                p_simplify: true,
-                p_simplified_type: "boundary_simplified",
-                p_tolerance: args.tolerance,
             },
         );
 

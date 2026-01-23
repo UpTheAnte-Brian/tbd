@@ -120,7 +120,6 @@ drop index if exists "public"."entity_types_pkey";
 
 drop index if exists "public"."idx_districts_geometry_geom_gist";
 
-drop index if exists "public"."idx_districts_geometry_simplified_gist";
 
 drop index if exists "public"."idx_districts_sdorgid";
 
@@ -138,9 +137,6 @@ drop table "public"."entity_types";
 
 alter table "public"."districts" drop column "geometry_geom";
 
-alter table "public"."districts" drop column "geometry_simplified";
-
-alter table "public"."districts" drop column "geometry_simplified_geojson";
 
 alter table "public"."donations" drop column "email";
 
@@ -272,6 +268,5 @@ using (true);
   for select
   to public
 using (true);
-
 
 

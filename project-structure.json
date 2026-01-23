@@ -704,8 +704,8 @@
       {"type":"directory","name":"geojson","contents":[
         {"type":"file","name":"attendance_areas_display.geojson"},
         {"type":"file","name":"attendance_areas_display1.geojson"},
-        {"type":"file","name":"mn_attendance_areas_simplified_to_MP.geojson"},
-        {"type":"file","name":"mn_attendance_areas_simplified.geojson"},
+        {"type":"file","name":"mn_attendance_areas_display_to_MP.geojson"},
+        {"type":"file","name":"mn_attendance_areas_display.geojson"},
         {"type":"file","name":"mn_attendance_areas.geojson"},
         {"type":"file","name":"mn-districts.geojson"},
         {"type":"file","name":"mn-schools.geojson"},
