@@ -34,6 +34,7 @@ const chunk = <T>(arr: T[], size: number): T[][] => {
 };
 
 const BATCH_SIZE = 200;
+const REL_PAGE_SIZE = 1000;
 
 const isGeometry = (value: unknown): value is Geometry =>
     typeof value === "object" &&
@@ -98,11 +99,39 @@ export async function GET() {
     }
 
     const { data: relRows, error: relError } = stateIds.length
-        ? await supabase
-            .from("entity_relationships")
-            .select("parent_entity_id, child_entity_id")
-            .in("parent_entity_id", stateIds)
-            .eq("relationship_type", "contains")
+        ? await (async () => {
+            const rows: {
+                parent_entity_id: string;
+                child_entity_id: string;
+            }[] = [];
+
+            for (const batch of chunk(stateIds, BATCH_SIZE)) {
+                let offset = 0;
+                // Page through results to avoid PostgREST default limits.
+                while (true) {
+                    const { data, error } = await supabase
+                        .from("entity_relationships")
+                        .select("parent_entity_id, child_entity_id")
+                        .in("parent_entity_id", batch)
+                        .eq("relationship_type", "contains")
+                        // Stable ordering helps paging.
+                        .order("parent_entity_id", { ascending: true })
+                        .order("child_entity_id", { ascending: true })
+                        .range(offset, offset + REL_PAGE_SIZE - 1);
+
+                    if (error) return { data: null, error };
+                    const page = (data ?? []) as {
+                        parent_entity_id: string;
+                        child_entity_id: string;
+                    }[];
+                    rows.push(...page);
+                    if (page.length < REL_PAGE_SIZE) break;
+                    offset += REL_PAGE_SIZE;
+                }
+            }
+
+            return { data: rows, error: null };
+        })()
         : { data: [], error: null };
 
     if (relError) {
