@@ -22,10 +22,10 @@ limit 400;
 -- Explain the RPC directly.
 explain (analyze, buffers)
 select * from public.map_children_geojson(
-  'a44ee5a4-afc9-4710-a53d-0239c3eda1f7'::uuid,
-  'contains',
-  'district',
-  'boundary_simplified',
-  400,
-  0
+    p_parent_entity_id := 'a44ee5a4-afc9-4710-a53d-0239c3eda1f7'::uuid,
+  p_relationship_type := 'contains',
+  p_entity_type := 'district',
+  p_geometry_type := 'boundary_simplified',
+  p_limit := 400,
+  p_offset := 0
 );

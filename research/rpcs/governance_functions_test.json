@@ -1,77 +1,31 @@
-[
-  {
-    "proname": "_object_exists",
-    "args": "p_schema text, p_name text, p_kind text",
-    "return_type": "bool"
-  },
-  {
-    "proname": "assert_can_adjourn_meeting",
-    "args": "p_board_id uuid, p_presiding_user_id uuid",
-    "return_type": "void"
-  },
-  {
-    "proname": "assert_can_start_meeting",
-    "args": "p_board_id uuid",
-    "return_type": "void"
-  },
-  {
-    "proname": "current_user_id",
-    "args": "",
-    "return_type": "uuid"
-  },
-  {
-    "proname": "finalize_meeting",
-    "args": "p_meeting_id uuid, p_signature_hash text",
-    "return_type": "board_meetings"
-  },
-  {
-    "proname": "is_board_member",
-    "args": "p_board_id uuid, p_user_id uuid",
-    "return_type": "bool"
-  },
-  {
-    "proname": "is_board_member_current",
-    "args": "p_board_id uuid",
-    "return_type": "bool"
-  },
-  {
-    "proname": "is_board_officer",
-    "args": "p_board_id uuid, p_user_id uuid",
-    "return_type": "bool"
-  },
-  {
-    "proname": "is_board_officer_current",
-    "args": "p_board_id uuid",
-    "return_type": "bool"
-  },
-  {
-    "proname": "meeting_is_adjourned_for_motion",
-    "args": "p_motion_id uuid",
-    "return_type": "bool"
-  },
-  {
-    "proname": "prevent_minutes_update_when_locked",
-    "args": "",
-    "return_type": "trigger"
-  },
-  {
-    "proname": "trg_board_meetings_enforce_lifecycle",
-    "args": "",
-    "return_type": "trigger"
-  },
-  {
-    "proname": "trg_minutes_auto_version",
-    "args": "",
-    "return_type": "trigger"
-  },
-  {
-    "proname": "trg_minutes_immutable_if_finalized",
-    "args": "",
-    "return_type": "trigger"
-  },
-  {
-    "proname": "trg_votes_block_after_adjournment",
-    "args": "",
-    "return_type": "trigger"
-  }
-]
+
+  select
+    e.id as entity_id,
+    e.entity_type,
+    e.name,
+    e.slug,
+    e.active,
+    eg.geojson as geojson
+  from public.entity_relationships r
+  join public.entities e
+    on e.id = r.child_entity_id
+  join public.entity_geometries eg
+    on eg.entity_id = e.id
+   and eg.geometry_type = p_geometry_type
+  where r.parent_entity_id = p_parent_entity_id
+    and r.relationship_type = p_relationship_type
+    and (p_entity_type is null or e.entity_type = p_entity_type)
+  order by e.id
+  offset greatest(coalesce(p_offset, 0), 0)
+  limit greatest(0, least(coalesce(p_limit, 400), 5000));
+
+  create view public.entity_geometries_geojson as
+select
+  eg.entity_id,
+  eg.geometry_type,
+  eg.geojson,
+  eg.source,
+  eg.created_at,
+  eg.updated_at
+from
+  entity_geometries eg;

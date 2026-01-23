@@ -1035,20 +1035,6 @@ export type Database = {
             referencedRelation: "entities"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "businesses_entity_id_fk"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["mn_state_id"]
-          },
-          {
-            foreignKeyName: "businesses_entity_id_fk"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["school_id"]
-          },
         ]
       }
       district_metadata: {
@@ -1101,20 +1087,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "entities"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "district_metadata_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: true
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["mn_state_id"]
-          },
-          {
-            foreignKeyName: "district_metadata_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: true
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["school_id"]
           },
         ]
       }
@@ -1241,20 +1213,6 @@ export type Database = {
             referencedRelation: "entities"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "documents_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["mn_state_id"]
-          },
-          {
-            foreignKeyName: "documents_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["school_id"]
-          },
         ]
       }
       donations: {
@@ -1304,20 +1262,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "entities"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "donations_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["mn_state_id"]
-          },
-          {
-            foreignKeyName: "donations_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["school_id"]
           },
         ]
       }
@@ -1381,20 +1325,6 @@ export type Database = {
             referencedRelation: "entities"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "entity_attributes_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["mn_state_id"]
-          },
-          {
-            foreignKeyName: "entity_attributes_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["school_id"]
-          },
         ]
       }
       entity_geometries: {
@@ -1404,7 +1334,6 @@ export type Database = {
           created_at: string
           entity_id: string
           geojson: Json | null
-          geom: unknown
           geometry_type: string
           id: string
           source: string | null
@@ -1416,7 +1345,6 @@ export type Database = {
           created_at?: string
           entity_id: string
           geojson?: Json | null
-          geom?: unknown
           geometry_type: string
           id?: string
           source?: string | null
@@ -1428,7 +1356,6 @@ export type Database = {
           created_at?: string
           entity_id?: string
           geojson?: Json | null
-          geom?: unknown
           geometry_type?: string
           id?: string
           source?: string | null
@@ -1441,20 +1368,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "entities"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "entity_geometries_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["mn_state_id"]
-          },
-          {
-            foreignKeyName: "entity_geometries_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["school_id"]
           },
         ]
       }
@@ -1495,39 +1408,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "entity_relationships_child_entity_id_fkey"
-            columns: ["child_entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["mn_state_id"]
-          },
-          {
-            foreignKeyName: "entity_relationships_child_entity_id_fkey"
-            columns: ["child_entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["school_id"]
-          },
-          {
             foreignKeyName: "entity_relationships_parent_entity_id_fkey"
             columns: ["parent_entity_id"]
             isOneToOne: false
             referencedRelation: "entities"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "entity_relationships_parent_entity_id_fkey"
-            columns: ["parent_entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["mn_state_id"]
-          },
-          {
-            foreignKeyName: "entity_relationships_parent_entity_id_fkey"
-            columns: ["parent_entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["school_id"]
           },
         ]
       }
@@ -1561,20 +1446,6 @@ export type Database = {
             referencedRelation: "entities"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "entity_source_records_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["mn_state_id"]
-          },
-          {
-            foreignKeyName: "entity_source_records_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["school_id"]
-          },
         ]
       }
       entity_status: {
@@ -1600,20 +1471,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "entities"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "entity_status_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: true
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["mn_state_id"]
-          },
-          {
-            foreignKeyName: "entity_status_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: true
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["school_id"]
           },
         ]
       }
@@ -1673,20 +1530,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "entities"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "entity_users_entity_ref_id_fk"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["mn_state_id"]
-          },
-          {
-            foreignKeyName: "entity_users_entity_ref_id_fk"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["school_id"]
           },
           {
             foreignKeyName: "entity_users_user_id_fkey"
@@ -1851,20 +1694,6 @@ export type Database = {
             referencedRelation: "entities"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "nonprofits_entity_id_fk"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["mn_state_id"]
-          },
-          {
-            foreignKeyName: "nonprofits_entity_id_fk"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["school_id"]
-          },
         ]
       }
       profiles: {
@@ -1972,20 +1801,6 @@ export type Database = {
             referencedRelation: "entities"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "school_program_location_metadata_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: true
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["mn_state_id"]
-          },
-          {
-            foreignKeyName: "school_program_location_metadata_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: true
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["school_id"]
-          },
         ]
       }
       spatial_ref_sys: {
@@ -2051,73 +1866,10 @@ export type Database = {
             referencedRelation: "entities"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "subscriptions_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["mn_state_id"]
-          },
-          {
-            foreignKeyName: "subscriptions_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["school_id"]
-          },
         ]
       }
     }
     Views: {
-      entity_geometries_geojson: {
-        Row: {
-          created_at: string | null
-          entity_id: string | null
-          geojson: Json | null
-          geometry_type: string | null
-          source: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          entity_id?: string | null
-          geojson?: Json | null
-          geometry_type?: string | null
-          source?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          entity_id?: string | null
-          geojson?: Json | null
-          geometry_type?: string | null
-          source?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "entity_geometries_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "entities"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "entity_geometries_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["mn_state_id"]
-          },
-          {
-            foreignKeyName: "entity_geometries_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "v_mn_schools"
-            referencedColumns: ["school_id"]
-          },
-        ]
-      }
       geography_columns: {
         Row: {
           coord_dimension: number | null
@@ -2193,13 +1945,6 @@ export type Database = {
           updated_at?: string | null
           username?: string | null
           website?: string | null
-        }
-        Relationships: []
-      }
-      v_mn_schools: {
-        Row: {
-          mn_state_id: string | null
-          school_id: string | null
         }
         Relationships: []
       }
@@ -2493,11 +2238,11 @@ export type Database = {
       map_children_geojson: {
         Args: {
           p_entity_type?: string
-          p_geometry_type?: string
+          p_geometry_type: string
           p_limit?: number
           p_offset?: number
           p_parent_entity_id: string
-          p_relationship_type?: string
+          p_relationship_type: string
         }
         Returns: {
           active: boolean

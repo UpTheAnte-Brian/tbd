@@ -74,7 +74,7 @@ export async function GET() {
             const rows: GeometryRow[] = [];
             for (const batch of chunk(stateIds, BATCH_SIZE)) {
                 const { data, error } = await supabase
-                    .from("entity_geometries_geojson")
+                    .from("entity_geometries")
                     .select("entity_id, geometry_type, geojson")
                     .in("entity_id", batch)
                     .eq("geometry_type", "boundary_simplified");
