@@ -7,7 +7,7 @@ import EntityMapShell from "@/app/components/map/entity-map-shell";
 import DistrictSearch from "@/app/components/districts/district-search";
 import DistrictPopUp from "@/app/components/districts/district-pop-up";
 import LoadingSpinner from "@/app/components/loading-spinner";
-import LayerLegend from "@/app/components/map/LayerLegend";
+import LayerSources from "@/app/components/map/LayerSources";
 import { DEFAULT_BRAND_COLORS } from "@/app/lib/branding/resolveBranding";
 import {
   fetchMapGeometryDetail,
@@ -75,7 +75,7 @@ const detailCacheKey = (entityId: string, geometryType: string) =>
 
 const mergeGeometries = (
   base: EntityGeometriesByType,
-  next: EntityGeometriesByType
+  next: EntityGeometriesByType,
 ) => {
   const merged: EntityGeometriesByType = { ...base };
   Object.entries(next).forEach(([geometryType, rows]) => {
@@ -155,7 +155,7 @@ export default function EntityMapExplorer({
     useState<EntityFeatureCollection>(initialStates);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedFeature, setSelectedFeature] = useState<EntityFeature | null>(
-    null
+    null,
   );
   const [loadingChildLayer, setLoadingChildLayer] = useState(false);
   const [selectedState, setSelectedState] =
@@ -168,8 +168,7 @@ export default function EntityMapExplorer({
     useState<EntityGeometriesByType>({});
   const [attendanceFeatureCollection, setAttendanceFeatureCollection] =
     useState<OverlayFeatureCollection | null>(null);
-  const [loadingAttendanceAreas, setLoadingAttendanceAreas] =
-    useState(false);
+  const [loadingAttendanceAreas, setLoadingAttendanceAreas] = useState(false);
   const [schoolsVisible, setSchoolsVisible] = useState(true);
   const [schoolFeatureCollection, setSchoolFeatureCollection] =
     useState<OverlayFeatureCollection | null>(null);
@@ -185,7 +184,7 @@ export default function EntityMapExplorer({
   const detailGeometryDebounceRef = useRef<number | null>(null);
   const geometriesByType = useMemo(
     () => detailGeometriesByType,
-    [detailGeometriesByType]
+    [detailGeometriesByType],
   );
   if (!cacheRef.current.has(STATES_CACHE_KEY)) {
     cacheRef.current.set(STATES_CACHE_KEY, initialStates);
@@ -275,7 +274,7 @@ export default function EntityMapExplorer({
     try {
       const res = await fetch(
         `/api/map/entities/${parentId}/children?relationship=contains&entity_type=district&geometry_type=boundary&limit=400`,
-        { cache: "no-store" }
+        { cache: "no-store" },
       );
       if (!res.ok) {
         throw new Error("Failed to load child layer");
@@ -294,7 +293,7 @@ export default function EntityMapExplorer({
       setLoadingSchools(false);
       setSchoolsScanned(null);
       setEmptyMessage(
-        data.featureCollection.features.length ? null : "Coming soon."
+        data.featureCollection.features.length ? null : "Coming soon.",
       );
     } catch (err) {
       console.error(err);
@@ -412,10 +411,10 @@ export default function EntityMapExplorer({
           entityId,
           request.endpoint,
           request.geometryType,
-          { signal: controller.signal }
+          { signal: controller.signal },
         )
           .then((result) => ({ request, result }))
-          .catch((error) => ({ request, error }))
+          .catch((error) => ({ request, error })),
       );
 
       const results = await Promise.all(tasks);
@@ -460,9 +459,9 @@ export default function EntityMapExplorer({
   const tooltipBuilder = useMemo(() => {
     return (props: EntityMapProperties) => ({
       title: props.name ?? props.slug ?? "Entity",
-      lines: [
-        props.entity_type ? `Type: ${props.entity_type}` : null,
-      ].filter((line): line is string => Boolean(line)),
+      lines: [props.entity_type ? `Type: ${props.entity_type}` : null].filter(
+        (line): line is string => Boolean(line),
+      ),
     });
   }, []);
 
@@ -490,23 +489,22 @@ export default function EntityMapExplorer({
 
   const layerConfigByType = useMemo(
     () => new Map(GEOMETRY_LAYERS.map((layer) => [layer.geometryType, layer])),
-    []
+    [],
   );
   const attendanceVisible =
     activeLayer === "districts" && Boolean(selectedDistrictEntityId);
   const schoolsLayerVisible = attendanceVisible && schoolsVisible;
   const resolveLayerRows = useMemo(
-    () =>
-      (layer: (typeof GEOMETRY_LAYERS)[number]) => {
-        const geometryTypes = [
-          layer.geometryType,
-          ...(layer.fallbackGeometryTypes ?? []),
-        ];
-        return geometryTypes.flatMap(
-          (geometryType) => geometriesByType[geometryType] ?? []
-        );
-      },
-    [geometriesByType]
+    () => (layer: (typeof GEOMETRY_LAYERS)[number]) => {
+      const geometryTypes = [
+        layer.geometryType,
+        ...(layer.fallbackGeometryTypes ?? []),
+      ];
+      return geometryTypes.flatMap(
+        (geometryType) => geometriesByType[geometryType] ?? [],
+      );
+    },
+    [geometriesByType],
   );
 
   useEffect(() => {
@@ -524,27 +522,28 @@ export default function EntityMapExplorer({
       }
       const rows = resolveLayerRows(layer);
       const hasGeojson = rows.some(
-        (row) => row.geojson && row.geojson.features.length > 0
+        (row) => row.geojson && row.geojson.features.length > 0,
       );
       return hasGeojson;
     });
   }, [attendanceVisible, resolveLayerRows, schoolsLayerVisible]);
 
-  const overlayFeatureCollection = useMemo<OverlayFeatureCollection | null>(() => {
-    if (!attendanceVisible || !attendanceFeatureCollection) return null;
-    if (!attendanceFeatureCollection.features.length) return null;
-    const features = attendanceFeatureCollection.features.map((feature) => ({
-      ...feature,
-      properties: {
-        ...(feature.properties ?? {}),
-        __geometry_type: ATTENDANCE_GEOMETRY_TYPE,
-      },
-    }));
-    return {
-      type: "FeatureCollection",
-      features,
-    };
-  }, [attendanceFeatureCollection, attendanceVisible]);
+  const overlayFeatureCollection =
+    useMemo<OverlayFeatureCollection | null>(() => {
+      if (!attendanceVisible || !attendanceFeatureCollection) return null;
+      if (!attendanceFeatureCollection.features.length) return null;
+      const features = attendanceFeatureCollection.features.map((feature) => ({
+        ...feature,
+        properties: {
+          ...(feature.properties ?? {}),
+          __geometry_type: ATTENDANCE_GEOMETRY_TYPE,
+        },
+      }));
+      return {
+        type: "FeatureCollection",
+        features,
+      };
+    }, [attendanceFeatureCollection, attendanceVisible]);
 
   const overlayStyle = useMemo(() => {
     return (feature: google.maps.Data.Feature) => {
@@ -577,7 +576,7 @@ export default function EntityMapExplorer({
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
       const id = String(
-        feature.id ?? feature.properties?.entity_id ?? `school:${index}`
+        feature.id ?? feature.properties?.entity_id ?? `school:${index}`,
       );
 
       points.push({
@@ -600,11 +599,11 @@ export default function EntityMapExplorer({
 
   const activeSchoolId = selectedSchoolId ?? hoveredSchoolId;
   const activeSchool = activeSchoolId
-    ? schoolPointsById.get(activeSchoolId) ?? null
+    ? (schoolPointsById.get(activeSchoolId) ?? null)
     : null;
   const activeSchoolInfo = useMemo(
     () => (activeSchool ? buildSchoolInfo(activeSchool.properties) : null),
-    [activeSchool]
+    [activeSchool],
   );
 
   const brandAccent = useMemo(() => {
@@ -629,69 +628,88 @@ export default function EntityMapExplorer({
       clickable: true,
       zIndex: schoolLayerConfig?.zIndex,
     }),
-    [brandAccent, schoolLayerConfig]
+    [brandAccent, schoolLayerConfig],
   );
   const loadingGeometries = loadingAttendanceAreas;
+  const layerLoadingByType = useMemo(
+    () => ({
+      district_attendance_areas: loadingGeometries,
+      school_program_locations: loadingSchools && schoolsLayerVisible,
+    }),
+    [loadingGeometries, loadingSchools, schoolsLayerVisible],
+  );
 
-  const overlay = useMemo(() => {
-    if (activeLayer !== "districts") return null;
+  const districtControls = useMemo(() => {
+    if (activeLayer !== "districts" && !loadingChildLayer) return null;
     return (
-      <div className="absolute top-4 left-4 z-50 flex items-center gap-3">
-        <button
-          type="button"
-          className="px-3 py-1 rounded bg-brand-secondary-1 text-brand-primary-1 hover:bg-brand-secondary-0"
-          onClick={handleBack}
-        >
-          Back to States
-        </button>
-        <div className="rounded bg-brand-secondary-1 px-3 py-1 text-brand-primary-1">
-          <div className="text-xs uppercase opacity-60">Viewing districts</div>
-          <div className="font-semibold">
-            {selectedState?.name ?? selectedState?.slug ?? "State"}
+      <div className="absolute top-4 left-4 z-50 w-[min(100%,520px)] sm:min-w-[320px]">
+        <div className="rounded-xl border border-brand-secondary-0 bg-brand-secondary-1 p-3 text-brand-primary-1 shadow-lg">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              className="rounded bg-brand-accent-1 px-3 py-1 text-sm font-semibold text-brand-primary-1 hover:bg-brand-accent-0"
+              onClick={handleBack}
+            >
+              Back to States
+            </button>
+            <div className="rounded bg-brand-secondary-0 px-3 py-1">
+              <div className="text-xs uppercase text-brand-secondary-2">
+                Viewing districts
+              </div>
+              <div className="font-semibold">
+                {selectedState?.name ?? selectedState?.slug ?? "State"}
+              </div>
+            </div>
           </div>
+          {loadingChildLayer ? (
+            <div className="mt-3 rounded bg-brand-secondary-0 px-3 py-1 text-xs text-brand-secondary-2">
+              Loading districts...
+            </div>
+          ) : null}
+          {selectedDistrictEntityId ? (
+            <div className="mt-3 rounded-lg border border-brand-secondary-0 bg-brand-secondary-0 p-3">
+              <div className="text-xs uppercase text-brand-secondary-2">
+                Layers
+              </div>
+              <label className="mt-2 flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={schoolsVisible}
+                  onChange={(event) => {
+                    const nextValue = event.target.checked;
+                    setSchoolsVisible(nextValue);
+                    console.log("Schools layer toggled:", nextValue);
+                  }}
+                />
+                <span>Schools</span>
+              </label>
+              {schoolsScanned !== null ? (
+                <div className="mt-1 text-xs text-brand-secondary-2">
+                  School Program Locations: {schoolsScanned}
+                </div>
+              ) : null}
+              <LayerSources
+                visibleLayers={visibleLayers}
+                geometriesByType={geometriesByType}
+                loadingByType={layerLoadingByType}
+                className="mt-3"
+              />
+            </div>
+          ) : null}
         </div>
-      </div>
-    );
-  }, [activeLayer, selectedState]);
-
-  const layerControls = useMemo(() => {
-    if (activeLayer !== "districts" || !selectedDistrictEntityId) return null;
-    return (
-      <div className="absolute top-4 right-4 z-50 w-72 max-w-[80vw] rounded-lg bg-brand-secondary-1 p-3 text-brand-primary-1">
-        <div className="text-xs uppercase text-brand-primary-1 opacity-60">Layers</div>
-        <label className="mt-2 flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            className="h-4 w-4"
-            checked={schoolsVisible}
-            onChange={(event) => {
-              const nextValue = event.target.checked;
-              setSchoolsVisible(nextValue);
-              console.log("Schools layer toggled:", nextValue);
-            }}
-          />
-          <span>Schools</span>
-        </label>
-        {schoolsScanned !== null ? (
-          <div className="mt-1 text-xs text-brand-primary-1 opacity-60">
-            Schools scanned: {schoolsScanned}
-          </div>
-        ) : null}
-        <LayerLegend
-          title="Sources"
-          visibleLayers={visibleLayers}
-          geometriesByType={geometriesByType}
-          className="mt-3 text-brand-primary-1"
-        />
       </div>
     );
   }, [
     activeLayer,
     geometriesByType,
+    layerLoadingByType,
+    loadingChildLayer,
     selectedDistrictEntityId,
+    selectedState,
+    schoolsScanned,
     schoolsVisible,
     visibleLayers,
-    schoolsScanned,
   ]);
 
   const mapChildren =
@@ -755,7 +773,9 @@ export default function EntityMapExplorer({
           setSelectedId(null);
           setSelectedFeature(null);
         }}
-        overlayFeatureCollection={attendanceVisible ? overlayFeatureCollection : null}
+        overlayFeatureCollection={
+          attendanceVisible ? overlayFeatureCollection : null
+        }
         overlayStyle={overlayStyle}
         isClickable={(props) =>
           activeLayer === "states" ? isClickable(props) : true
@@ -767,29 +787,7 @@ export default function EntityMapExplorer({
         mapChildren={mapChildren}
         renderOverlay={({ scriptLoaded, loadError }) => (
           <>
-            {overlay}
-            {layerControls}
-            {loadingChildLayer && (
-              <div className="absolute top-4 right-4 z-50">
-                <div className="px-3 py-1 rounded bg-brand-secondary-1 text-brand-primary-1 text-sm">
-                  Loading districts...
-                </div>
-              </div>
-            )}
-            {loadingGeometries && (
-              <div className="absolute top-14 right-4 z-50">
-                <div className="px-3 py-1 rounded bg-brand-secondary-1 text-brand-primary-1 text-sm">
-                  Loading district layers...
-                </div>
-              </div>
-            )}
-            {loadingSchools && schoolsLayerVisible && (
-              <div className="absolute top-24 right-4 z-50">
-                <div className="px-3 py-1 rounded bg-brand-secondary-1 text-brand-primary-1 text-sm">
-                  Loading schools...
-                </div>
-              </div>
-            )}
+            {districtControls}
             {!scriptLoaded && !loadError && (
               <div className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none">
                 <div className="rounded bg-brand-secondary-1 text-brand-primary-1 text-sm px-4 py-2">
@@ -809,17 +807,7 @@ export default function EntityMapExplorer({
         )}
         renderPopup={
           activeLayer === "districts" && selectedFeature
-            ? (feature) => (
-                <div className="flex flex-col gap-3">
-                  <DistrictPopUp district={feature} />
-                  <LayerLegend
-                    title="Layer sources"
-                    visibleLayers={visibleLayers}
-                    geometriesByType={geometriesByType}
-                    className="rounded-xl border border-brand-secondary-1 bg-brand-secondary-1 p-3 text-brand-primary-1"
-                  />
-                </div>
-              )
+            ? (feature) => <DistrictPopUp district={feature} />
             : undefined
         }
         renderSearch={

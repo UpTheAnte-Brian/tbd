@@ -631,7 +631,7 @@ export default function EntityMapShell({
         )}
 
       {selectedFeature && renderPopup && (
-        <div className="absolute top-24 left-1/2 transform -translate-x-1/2 md:left-3 md:transform-none md:-translate-x-0 bg-brand-secondary-1 text-brand-primary-1 rounded-lg px-4 py-2 z-50 shadow-lg transition-all duration-150 opacity-100 pointer-events-auto">
+        <div className="absolute top-4 right-4 w-[min(90vw,360px)] bg-brand-secondary-1 text-brand-primary-1 rounded-lg px-4 py-2 z-50 shadow-lg transition-all duration-150 opacity-100 pointer-events-auto">
           <button
             className="absolute top-1 right-1 text-brand-primary-1 bg-brand-secondary-0 hover:bg-brand-secondary-2 rounded-full px-2 py-0.5 text-xs font-bold z-10"
             style={{ lineHeight: "1" }}

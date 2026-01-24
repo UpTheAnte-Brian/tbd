@@ -12,6 +12,14 @@ type Props = {
   geometriesByType: EntityGeometriesByType;
   title?: string;
   className?: string;
+  loadingByType?: Record<string, boolean>;
+};
+
+export type LayerLegendItem = {
+  geometryType: string;
+  label: string;
+  sourceLines: string[];
+  isLoading: boolean;
 };
 
 const getLayerRows = (
@@ -32,37 +40,45 @@ const formatSourceLine = (rawSource: string) => {
   return `${label} — ${parsed.version}`;
 };
 
-export default function LayerLegend({
-  visibleLayers,
-  geometriesByType,
-  title,
-  className,
-}: Props) {
-  const items = visibleLayers
+export const buildLayerLegendItems = (
+  visibleLayers: GeometryLayerConfig[],
+  geometriesByType: EntityGeometriesByType,
+  loadingByType?: Record<string, boolean>
+): LayerLegendItem[] =>
+  visibleLayers
     .map((layer) => {
       const rows = getLayerRows(layer, geometriesByType);
-      if (!rows.length) return null;
+      const isLoading = Boolean(loadingByType?.[layer.geometryType]);
+      if (!rows.length && !isLoading) return null;
       const sources = Array.from(
         new Set(rows.map((row) => row.source).filter(Boolean))
       ) as string[];
       const sourceLines = sources.length
         ? sources.map(formatSourceLine)
-        : ["Source: unavailable"];
+        : isLoading
+          ? []
+          : ["Source: unavailable"];
       return {
         geometryType: layer.geometryType,
         label: layer.label,
         sourceLines,
+        isLoading,
       };
     })
-    .filter(
-      (
-        item
-      ): item is {
-        geometryType: string;
-        label: string;
-        sourceLines: string[];
-      } => Boolean(item)
-    );
+    .filter((item): item is LayerLegendItem => Boolean(item));
+
+export default function LayerLegend({
+  visibleLayers,
+  geometriesByType,
+  title,
+  className,
+  loadingByType,
+}: Props) {
+  const items = buildLayerLegendItems(
+    visibleLayers,
+    geometriesByType,
+    loadingByType
+  );
 
   if (!items.length) return null;
 
@@ -74,12 +90,21 @@ export default function LayerLegend({
       <div className="space-y-3">
         {items.map((item) => (
           <div key={item.geometryType}>
-            <div className="text-sm font-semibold">{item.label}</div>
-            <div className="text-xs opacity-70 space-y-1">
-              {item.sourceLines.map((line) => (
-                <div key={line}>{line}</div>
-              ))}
+            <div className="flex items-center justify-between gap-2 text-sm font-semibold">
+              <span>{item.label}</span>
+              {item.isLoading ? (
+                <span className="text-[11px] font-normal text-brand-secondary-2">
+                  Loading...
+                </span>
+              ) : null}
             </div>
+            {item.sourceLines.length ? (
+              <div className="text-xs opacity-70 space-y-1">
+                {item.sourceLines.map((line) => (
+                  <div key={line}>{line}</div>
+                ))}
+              </div>
+            ) : null}
           </div>
         ))}
       </div>
