@@ -74,6 +74,7 @@ type GeometryQueryResult = {
 };
 
 const BATCH_SIZE = 200;
+const STATE_GEOMETRY_TYPES = ["boundary_simplified", "boundary"] as const;
 
 export const dynamic = "force-dynamic";
 
@@ -114,7 +115,7 @@ export async function GET() {
           .from("entity_geometries")
           .select("entity_id, geometry_type, geojson")
           .in("entity_id", batch)
-          .eq("geometry_type", "boundary");
+          .in("geometry_type", STATE_GEOMETRY_TYPES);
 
         if (error) return { data: null, error, batches };
         rows.push(...(data ?? []));
@@ -137,20 +138,38 @@ export async function GET() {
   }
 
   const normalizeStart = Date.now();
-  const geoByEntityId = new Map<string, Geometry>();
+  const geoByEntityId = new Map<
+    string,
+    { geometry: Geometry; geometryType: string }
+  >();
   for (const row of geomRows ?? []) {
     if (!row?.entity_id) continue;
     const geom = normalizeToGeometry(row.geojson);
-    if (geom) geoByEntityId.set(row.entity_id, geom);
+    if (!geom) continue;
+    const geometryType = row.geometry_type ?? "";
+    const existing = geoByEntityId.get(row.entity_id);
+    if (!existing) {
+      geoByEntityId.set(row.entity_id, { geometry: geom, geometryType });
+      continue;
+    }
+    if (
+      geometryType === "boundary_simplified" &&
+      existing.geometryType !== "boundary_simplified"
+    ) {
+      geoByEntityId.set(row.entity_id, { geometry: geom, geometryType });
+    }
   }
   const normalizeMs = Date.now() - normalizeStart;
 
   const featureStart = Date.now();
   const features: EntityFeature[] = [];
   for (const state of states ?? []) {
-    const geometry = geoByEntityId.get(state.id);
-    if (!geometry) continue;
-    if (geometry.type !== "Polygon" && geometry.type !== "MultiPolygon") {
+    const geometryEntry = geoByEntityId.get(state.id);
+    if (!geometryEntry) continue;
+    if (
+      geometryEntry.geometry.type !== "Polygon" &&
+      geometryEntry.geometry.type !== "MultiPolygon"
+    ) {
       continue;
     }
     const props: EntityMapProperties = {
@@ -165,7 +184,7 @@ export async function GET() {
       type: "Feature",
       id: state.id,
       properties: props,
-      geometry,
+      geometry: geometryEntry.geometry,
     });
   }
   const featureMs = Date.now() - featureStart;
@@ -188,6 +207,7 @@ export async function GET() {
     features: features.length,
     batch_size: BATCH_SIZE,
     batches,
+    geometry_types: STATE_GEOMETRY_TYPES,
   });
 
   return NextResponse.json(
