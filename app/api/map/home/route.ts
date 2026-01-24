@@ -72,21 +72,38 @@ const BATCH_SIZE = 200;
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const requestStart = Date.now();
+  const requestId =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `map-home-${requestStart}`;
   const supabase = supabaseAdmin;
+  const statesStart = Date.now();
   const { data: states, error: statesError } = await supabase
     .from("entities")
     .select("id, name, slug, active")
     .eq("entity_type", "state");
+  const statesMs = Date.now() - statesStart;
 
   if (statesError) {
+    console.error("map home error", {
+      request_id: requestId,
+      step: "fetch_states",
+      duration_ms: Date.now() - requestStart,
+      query_ms: statesMs,
+      error: statesError.message,
+    });
     return NextResponse.json({ error: statesError.message }, { status: 500 });
   }
 
   const stateIds = sanitizeIds((states ?? []).map((s) => s.id));
+  const geometryStart = Date.now();
   const { data: geomRows, error: geomError } = stateIds.length
     ? await (async () => {
       const rows: GeometryRow[] = [];
+      let batches = 0;
       for (const batch of chunk(stateIds, BATCH_SIZE)) {
+        batches += 1;
         const { data, error } = await supabase
           .from("entity_geometries")
           .select("entity_id, geometry_type, geojson")
@@ -96,21 +113,33 @@ export async function GET() {
         if (error) return { data: null, error };
         rows.push(...(data ?? []));
       }
-      return { data: rows, error: null };
+      return { data: rows, error: null, batches };
     })()
-    : { data: [], error: null };
+    : { data: [], error: null, batches: 0 };
+  const geometryMs = Date.now() - geometryStart;
 
   if (geomError) {
+    console.error("map home error", {
+      request_id: requestId,
+      step: "fetch_geometries",
+      duration_ms: Date.now() - requestStart,
+      query_ms: geometryMs,
+      state_ids: stateIds.length,
+      error: geomError.message,
+    });
     return NextResponse.json({ error: geomError.message }, { status: 500 });
   }
 
+  const normalizeStart = Date.now();
   const geoByEntityId = new Map<string, Geometry>();
   for (const row of geomRows ?? []) {
     if (!row?.entity_id) continue;
     const geom = normalizeToGeometry(row.geojson);
     if (geom) geoByEntityId.set(row.entity_id, geom);
   }
+  const normalizeMs = Date.now() - normalizeStart;
 
+  const featureStart = Date.now();
   const features: EntityFeature[] = [];
   for (const state of states ?? []) {
     const geometry = geoByEntityId.get(state.id);
@@ -133,11 +162,27 @@ export async function GET() {
       geometry,
     });
   }
+  const featureMs = Date.now() - featureStart;
 
   const featureCollection: EntityFeatureCollection = {
     type: "FeatureCollection",
     features,
   };
+
+  console.log("map home timing", {
+    request_id: requestId,
+    duration_ms: Date.now() - requestStart,
+    states_ms: statesMs,
+    geometries_ms: geometryMs,
+    normalize_ms: normalizeMs,
+    feature_ms: featureMs,
+    states_count: states?.length ?? 0,
+    state_ids: stateIds.length,
+    geometry_rows: geomRows?.length ?? 0,
+    features: features.length,
+    batch_size: BATCH_SIZE,
+    batches: geomRows ? Math.ceil(stateIds.length / BATCH_SIZE) : 0,
+  });
 
   return NextResponse.json(
     {
