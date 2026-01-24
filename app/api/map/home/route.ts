@@ -67,6 +67,12 @@ type GeometryRow = {
   geojson: unknown | null;
 };
 
+type GeometryQueryResult = {
+  data: GeometryRow[] | null;
+  error: { message: string } | null;
+  batches: number;
+};
+
 const BATCH_SIZE = 200;
 
 export const dynamic = "force-dynamic";
@@ -98,8 +104,8 @@ export async function GET() {
 
   const stateIds = sanitizeIds((states ?? []).map((s) => s.id));
   const geometryStart = Date.now();
-  const { data: geomRows, error: geomError } = stateIds.length
-    ? await (async () => {
+  const { data: geomRows, error: geomError, batches } = stateIds.length
+    ? await (async (): Promise<GeometryQueryResult> => {
       const rows: GeometryRow[] = [];
       let batches = 0;
       for (const batch of chunk(stateIds, BATCH_SIZE)) {
@@ -110,7 +116,7 @@ export async function GET() {
           .in("entity_id", batch)
           .eq("geometry_type", "boundary");
 
-        if (error) return { data: null, error };
+        if (error) return { data: null, error, batches };
         rows.push(...(data ?? []));
       }
       return { data: rows, error: null, batches };
@@ -181,7 +187,7 @@ export async function GET() {
     geometry_rows: geomRows?.length ?? 0,
     features: features.length,
     batch_size: BATCH_SIZE,
-    batches: geomRows ? Math.ceil(stateIds.length / BATCH_SIZE) : 0,
+    batches,
   });
 
   return NextResponse.json(
