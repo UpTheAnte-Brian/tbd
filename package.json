@@ -33,8 +33,6 @@
     "importDistrictBoundaries:test": "dotenv -e .env.test.local -- tsx scripts/import-mn-district-boundaries.ts",
     "linkSchoolsToDistricts": "dotenv -e .env.local -- tsx scripts/link-schools-to-districts.ts",
     "linkSchoolsToDistricts:test": "dotenv -e .env.test.local -- tsx scripts/link-schools-to-districts.ts",
-    "linkRelationships": "dotenv -e .env.local -- tsx scripts/link-schools-to-districts.ts",
-    "linkRelationships:test": "dotenv -e .env.test.local -- tsx scripts/link-schools-to-districts.ts",
     "linkMnDistrictsToState:test": "dotenv -e .env.test.local -- tsx scripts/link-mn-districts-to-state.ts",
     "linkMnDistrictsToState:local": "dotenv -e .env.local -- tsx scripts/link-mn-districts-to-state.ts"
   },

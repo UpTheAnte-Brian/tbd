@@ -36,20 +36,20 @@ for each row execute function branding.touch_updated_at();
 
 -- 2) Backfill palette_colors from palettes.colors (jsonb array of hex strings)
 --    This assumes palettes.colors is like ["#CE4040", "#FFFFFF", ...]
-insert into branding.palette_colors (palette_id, slot, hex)
-select
-  p.id as palette_id,
-  c.ord - 1 as slot,
-  upper(c.val) as hex
-from branding.palettes p
-cross join lateral (
-  select ord, val
-  from jsonb_array_elements_text(p.colors) with ordinality as t(val, ord)
-) c
-where p.colors is not null
-  and jsonb_typeof(p.colors) = 'array'
-on conflict (palette_id, slot) do update
-set hex = excluded.hex;
+-- insert into branding.palette_colors (palette_id, slot, hex)
+-- select
+--   p.id as palette_id,
+--   c.ord - 1 as slot,
+--   upper(c.val) as hex
+-- from branding.palettes p
+-- cross join lateral (
+--   select ord, val
+--   from jsonb_array_elements_text(p.colors) with ordinality as t(val, ord)
+-- ) c
+-- where p.colors is not null
+--   and jsonb_typeof(p.colors) = 'array'
+-- on conflict (palette_id, slot) do update
+-- set hex = excluded.hex;
 
 -- 3) Optional: Seed default labels for slot 0/1/2 (only if you want)
 -- update branding.palette_colors

@@ -386,18 +386,40 @@ async function main() {
 
         const entity_id = (entityRow as any).id as string;
 
+        const { error: sourceErr } = await supabase
+            .from("entity_source_records")
+            .upsert(
+                {
+                    entity_id,
+                    source: sourceLabel,
+                    external_key: uspsUpper,
+                    payload: props,
+                } as any,
+                { onConflict: "entity_id,source" },
+            );
+
+        if (sourceErr) {
+            console.error(
+                `[${i}] entity_source_records upsert failed for ${name} (${uspsUpper}) entity=${entity_id}:`,
+                sourceErr,
+            );
+            process.exit(1);
+        }
+
         // Simplified boundary for map rendering (canonical for states)
+        // NOTE: We intentionally store ONLY `boundary_simplified` for states.
         if (geomDisplay) {
             const { error: geomSmallErr } = await supabase.rpc(
-                "upsert_entity_geometry_with_geom_geojson",
+                "upsert_entity_geometry_from_geojson",
                 {
                     p_entity_id: entity_id,
-                    p_geometry_type: "boundary_simplified",
                     p_geojson: geomDisplay,
-                    p_geom_geojson: geomDisplay,
-                    p_bbox: null,
+                    p_geometry_type: "boundary_simplified",
+                    p_simplified_type: null,
+                    p_simplify: false,
                     p_source:
                         `${sourceLabel}_boundary_simplified_${args.tolerance}`,
+                    p_tolerance: args.tolerance,
                 },
             );
 

@@ -1296,7 +1296,15 @@ export type Database = {
           slug?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "entities_entity_type_fkey"
+            columns: ["entity_type"]
+            isOneToOne: false
+            referencedRelation: "entity_types"
+            referencedColumns: ["key"]
+          },
+        ]
       }
       entity_attributes: {
         Row: {
@@ -1334,6 +1342,7 @@ export type Database = {
           created_at: string
           entity_id: string
           geojson: Json | null
+          geom: unknown
           geometry_type: string
           id: string
           source: string | null
@@ -1345,6 +1354,7 @@ export type Database = {
           created_at?: string
           entity_id: string
           geojson?: Json | null
+          geom?: unknown
           geometry_type: string
           id?: string
           source?: string | null
@@ -1356,6 +1366,7 @@ export type Database = {
           created_at?: string
           entity_id?: string
           geojson?: Json | null
+          geom?: unknown
           geometry_type?: string
           id?: string
           source?: string | null
@@ -2275,6 +2286,10 @@ export type Database = {
       }
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
+      safe_geom_from_geojson_4326: {
+        Args: { p_geojson: Json }
+        Returns: unknown
+      }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown
@@ -2867,18 +2882,28 @@ export type Database = {
         }
         Returns: string
       }
-      upsert_entity_geometry_from_geojson: {
-        Args: {
-          p_entity_id: string
-          p_geojson: Json
-          p_geometry_type: string
-          p_simplified_type?: string
-          p_simplify?: boolean
-          p_source?: string
-          p_tolerance?: number
-        }
-        Returns: undefined
-      }
+      upsert_entity_geometry_from_geojson:
+        | {
+            Args: {
+              p_entity_id: string
+              p_geojson: Json
+              p_geometry_type: string
+              p_simplified_type?: string
+              p_simplify?: boolean
+              p_source?: string
+              p_tolerance?: number
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_entity_id: string
+              p_geojson: Json
+              p_geometry_type: string
+              p_source?: string
+            }
+            Returns: undefined
+          }
       upsert_entity_geometry_with_geom_geojson: {
         Args: {
           p_bbox: Json
@@ -2886,10 +2911,7 @@ export type Database = {
           p_geojson: Json
           p_geom_geojson: Json
           p_geometry_type: string
-          p_simplified_type?: string
-          p_simplify?: boolean
           p_source: string
-          p_tolerance?: number
         }
         Returns: undefined
       }

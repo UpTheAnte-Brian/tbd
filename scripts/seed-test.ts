@@ -56,7 +56,7 @@ async function ensureEntityTypes() {
     { key: "district", label: "District", description: "School districts", active: true },
     { key: "nonprofit", label: "Nonprofit", description: "District foundations and other charities", active: true },
     { key: "school", label: "School", description: "School building/campus entity", active: true },
-    { key: "state", label: "State", description: "State-level government entity", active: true },
+    { key: "state", label: "State", description: "US states + DC", active: true },
   ];
 
   const { error } = await supabase

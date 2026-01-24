@@ -1,12 +1,11 @@
-export type EntityRole = "admin" | "editor" | "viewer" | "employee";
-export type EntityType = "district" | "nonprofit" | "business";
+import type {
+  EntityType,
+  EntityUser,
+  EntityUserRole,
+} from "@/domain/entities/types";
 
-export interface EntityUser {
-  entity_type?: EntityType;
-  entity_id: string;
-  user_id: string;
-  role: EntityRole;
-}
+export type EntityRole = EntityUserRole;
+export type { EntityType, EntityUser };
 
 /**
  * Returns true if the user has one of the allowed roles for the given entity.

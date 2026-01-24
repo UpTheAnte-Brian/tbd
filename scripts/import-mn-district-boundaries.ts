@@ -616,6 +616,8 @@ async function upsertGeometry(
         ? geometries[0]
         : { type: "GeometryCollection", geometries };
 
+    // NOTE: The DB has overloaded versions of this RPC. To avoid "could not choose best candidate"
+    // we call the *most specific* signature by including the extra parameters.
     const { error } = await supabase.rpc(
         "upsert_entity_geometry_from_geojson",
         {
@@ -624,6 +626,10 @@ async function upsertGeometry(
             p_geojson: geomGeojson,
             p_geometry_type: params.geometryType,
             p_source: params.source,
+            // Disambiguation params (match the extended signature)
+            p_simplified_type: null,
+            p_simplify: false,
+            p_tolerance: null,
         },
     );
 
@@ -787,7 +793,25 @@ async function uploadPerDistrict(
     source: string,
     concurrency: number,
     debug: boolean,
+    fullFC?: FeatureCollection,
 ) {
+    const fullPropsBySdorgid = new Map<string, Record<string, any>>();
+    if (fullFC) {
+        for (const f of fullFC.features) {
+            const sdorgid = normalizeSdorgid(
+                (f as any)?.properties?.sdorgid ??
+                    (f as any)?.properties?.SDORGID,
+            );
+            if (!sdorgid) continue;
+            if (!fullPropsBySdorgid.has(sdorgid)) {
+                fullPropsBySdorgid.set(
+                    sdorgid,
+                    ((f as any).properties ?? {}) as Record<string, any>,
+                );
+            }
+        }
+    }
+
     // Many datasets are one feature per district, but we support multi-feature per district
     const groups = new Map<string, GeoJSONFeature[]>(); // entity_id -> features
     const existingEntityIds = new Set<string>();
@@ -867,16 +891,33 @@ async function uploadPerDistrict(
 
             // --- 4/5/6: external_ids + entity_attributes + entity_source_records ---
             const first = features[0];
-            const props = (first?.properties ?? {}) as Record<string, any>;
+            const propsDisplay = (first?.properties ?? {}) as Record<string, any>;
+
+            // Prefer full source properties when available (display geojson trims fields)
+            const sdorgid = normalizeSdorgid(
+                propsDisplay.sdorgid ?? (propsDisplay as any).SDORGID,
+            );
+            const props = (fullPropsBySdorgid.get(sdorgid) ?? propsDisplay) as Record<
+                string,
+                any
+            >;
 
             // identity keys
-            const sdorgid = normalizeSdorgid(props.sdorgid ?? props.SDORGID);
-            const formid = String(props.formid ?? props.FORMID ?? "").trim() ||
+            const formid = String(props.formid ?? (props as any).FORMID ?? "").trim() ||
                 null;
-            const sdnumber =
-                String(props.sdnumber ?? props.SDNUMBER ?? "").trim() || null;
-            const sdtype = String(props.sdtype ?? props.SDTYPE ?? "").trim() ||
+            const sdnumber = String(props.sdnumber ?? (props as any).SDNUMBER ?? "").trim() ||
                 null;
+            const sdtype = String(props.sdtype ?? (props as any).SDTYPE ?? "").trim() ||
+                null;
+
+            // friendly name
+            const prefname = String(
+                props.prefname ??
+                    (props as any).PREFNAME ??
+                    props.sdprefname ??
+                    (props as any).SDPREFNAME ??
+                    "",
+            ).trim() || null;
 
             const existingExternalIds =
                 districtIndex.byEntityIdExternalIds.get(entityId) ?? {};
@@ -902,6 +943,15 @@ async function uploadPerDistrict(
                 sdnumber,
                 sdtype,
             });
+
+            // Ensure entities.name is the friendly preferred name
+            if (prefname) {
+                const { error: nameErr } = await supabase
+                    .from("entities")
+                    .update({ name: prefname } as any)
+                    .eq("id", entityId);
+                if (nameErr) throw nameErr;
+            }
 
             // curated attrs
             const curated = curatedDistrictAttrs(props, source);
@@ -1037,28 +1087,36 @@ async function main() {
     // Upload
     console.log("☁️  Uploading district boundary geometries to Supabase...");
 
-    // Prefer display for upload if present (smaller + consistent props), else input.
-    const uploadPath = !args.noDisplay && fs.existsSync(displayGeoJSON)
+    // Prefer display for GEOMETRY upload if present (smaller + consistent props), else input.
+    const geometryUploadPath = !args.noDisplay && fs.existsSync(displayGeoJSON)
         ? displayGeoJSON
         : inputGeoJSON;
-    assertFileExists(uploadPath);
+    assertFileExists(geometryUploadPath);
 
-    const fc = readGeoJSON(uploadPath);
-    console.log(`• Features in upload file: ${fc.features.length}`);
+    // We ALSO want full source properties for metadata/external_ids/attrs.
+    // If display.geojson is used, its properties are intentionally trimmed and will cause NULL-heavy writes.
+    assertFileExists(inputGeoJSON);
+
+    const geometryFC = readGeoJSON(geometryUploadPath);
+    const fullFC = readGeoJSON(inputGeoJSON);
+
+    console.log(`• Features in geometry upload file: ${geometryFC.features.length}`);
+    console.log(`• Features in full source file: ${fullFC.features.length}`);
 
     const supabase = supabaseAdmin();
-    const districtIndex = await fetchDistrictIndex(supabase, fc);
+    const districtIndex = await fetchDistrictIndex(supabase, geometryFC);
     console.log(`• Districts indexed: ${districtIndex.bySdorgid.size}`);
 
-    // Upload boundary
+    // Upload boundary using geometryFC, but pull attributes from fullFC.
     await uploadPerDistrict(
         supabase,
-        fc,
+        geometryFC,
         districtIndex,
         GEOMETRY_TYPE_BOUNDARY,
         sourceTag,
         args.concurrency,
         args.debug,
+        fullFC,
     );
 
     console.log("Done.");

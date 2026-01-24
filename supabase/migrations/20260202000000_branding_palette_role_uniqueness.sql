@@ -30,17 +30,12 @@ BEGIN
         WHEN lower(name) LIKE '%primary%' THEN 'primary'
         WHEN lower(name) LIKE '%secondary%' THEN 'secondary'
         WHEN lower(name) LIKE '%accent%' THEN 'accent'
-        WHEN lower(name) LIKE '%tertiary%' THEN 'accent'
         ELSE 'secondary'
       END;
 
     ALTER TABLE branding.palettes
       ALTER COLUMN role SET NOT NULL;
   END IF;
-
-  UPDATE branding.palettes
-    SET role = 'accent'
-    WHERE role = 'tertiary';
 
   WITH ranked AS (
     SELECT

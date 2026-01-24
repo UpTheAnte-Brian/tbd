@@ -134,6 +134,7 @@ function curatedDistrictAttrs(props: Record<string, any>) {
 type DistrictSeed = {
   id: string;
   sdorgid: string;
+  entity_type: "district";
   name: string;
   slug: string;
   externalIds: Record<string, string>;
@@ -204,8 +205,12 @@ async function fetchBoundaryGeojsonSdorgids(): Promise<
     if (!sdorgid) continue;
 
     const name = cleanString(
-      props.sdprefname ??
+      props.prefname ??
+        props.PREFNAME ??
+        props.sdprefname ??
         props.SDPREFNAME ??
+        props.shortname ??
+        props.SHORTNAME ??
         props.sdname ??
         props.isdname ??
         props.name,
@@ -339,7 +344,7 @@ async function main() {
     { key: "district", label: "District", description: "School districts", active: true },
     { key: "nonprofit", label: "Nonprofit", description: "District foundations and other charities", active: true },
     { key: "school", label: "School", description: "School building/campus entity", active: true },
-    { key: "state", label: "State", description: "State-level government entity", active: true },
+    { key: "state", label: "State", description: "US states + DC", active: true },
   ];
 
   const { error: etErr } = await supabase.from("entity_types").upsert(entityTypes, { onConflict: "key" });
@@ -352,7 +357,7 @@ async function main() {
     return {
       id,
       sdorgid: d.sdorgid,
-      entity_type: "district",
+      entity_type: "district" as const,
       name,
       slug: districtSlug(d.sdorgid),
       externalIds: d.externalIds,

@@ -1,5 +1,11 @@
 // Core entity/user primitives for shared domain usage.
-export const ENTITY_TYPES = ["district", "nonprofit", "business"] as const;
+export const ENTITY_TYPES = [
+  "district",
+  "nonprofit",
+  "business",
+  "state",
+  "school",
+] as const;
 export type EntityType = (typeof ENTITY_TYPES)[number];
 export type EntityUserRole = "admin" | "editor" | "viewer" | "employee";
 export type EntityUserStatus = "active" | "invited" | "removed" | null;

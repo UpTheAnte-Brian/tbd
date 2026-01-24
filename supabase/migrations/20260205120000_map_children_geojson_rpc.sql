@@ -13,7 +13,7 @@ create index if not exists entities_type_id_idx
 create index if not exists entity_geometries_entity_geomtype_idx
   on public.entity_geometries (entity_id, geometry_type);
 
-create or replace function public.map_children_geojson(
+create function public.map_children_geojson(
   p_parent_entity_id uuid,
   p_relationship_type text default 'contains',
   p_entity_type text default null,

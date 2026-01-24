@@ -73,7 +73,7 @@ async function ensureEntityTypes() {
         {
             key: "state",
             label: "State",
-            description: "State-level government entity",
+            description: "US states + DC",
             active: true,
         },
     ];
