@@ -17,6 +17,7 @@ const execFileAsync = promisify(execFile);
  * - Requires SQL function `public.upsert_entity_geometry_from_geojson`.
  * - Upserts entities by (entity_type='state', slug), where slug = lowercase USPS code.
  * - Imports States + DC only (excludes PR, GU, VI, MP, AS).
+ * - Uploads ONLY boundary_simplified geometry for states.
  */
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -145,28 +146,26 @@ function normSlug(usps: string) {
 }
 
 function toExternalIds(props: any) {
-    const usps =
-        pick(props, [
-            "STUSPS",
-            "USPS",
-            "STATE_ABBR",
-            "STATE",
-            "abbr",
-            "Abbr",
-        ]) ??
-            pickFromDescription(props, "STUSPS") ??
-            pickFromDescription(props, "USPS");
+    const usps = pick(props, [
+        "STUSPS",
+        "USPS",
+        "STATE_ABBR",
+        "STATE",
+        "abbr",
+        "Abbr",
+    ]) ??
+        pickFromDescription(props, "STUSPS") ??
+        pickFromDescription(props, "USPS");
 
-    const fips =
-        pick(props, [
-            "STATEFP",
-            "FIPS",
-            "STATE_FIPS",
-            "STATEFP00",
-            "STATEFP10",
-        ]) ??
-            pickFromDescription(props, "STATEFP") ??
-            pickFromDescription(props, "FIPS");
+    const fips = pick(props, [
+        "STATEFP",
+        "FIPS",
+        "STATE_FIPS",
+        "STATEFP00",
+        "STATEFP10",
+    ]) ??
+        pickFromDescription(props, "STATEFP") ??
+        pickFromDescription(props, "FIPS");
 
     const geoid = pick(props, ["GEOID", "GEOIDFP", "GEOID10", "GEOID20"]) ??
         pickFromDescription(props, "GEOID") ??
@@ -277,12 +276,33 @@ async function main() {
             `Missing input GeoJSON at ${inputGeojsonPath}. Run without --upload-only first.`,
         );
     }
+    if (!(await pathExists(displayGeojsonPath))) {
+        throw new Error(
+            `Missing display GeoJSON at ${displayGeojsonPath}. Run without --upload-only first (or regenerate artifacts).`,
+        );
+    }
 
     const raw = await fs.readFile(inputGeojsonPath, "utf8");
     const fc = JSON.parse(raw);
 
+    const rawDisplay = await fs.readFile(displayGeojsonPath, "utf8");
+    const fcDisplay = JSON.parse(rawDisplay);
+
     if (fc?.type !== "FeatureCollection" || !Array.isArray(fc.features)) {
         throw new Error("Input is not a valid FeatureCollection");
+    }
+
+    if (
+        fcDisplay?.type !== "FeatureCollection" ||
+        !Array.isArray(fcDisplay.features)
+    ) {
+        throw new Error("Display is not a valid FeatureCollection");
+    }
+
+    if (fc.features.length !== fcDisplay.features.length) {
+        console.warn(
+            `⚠️  input/display feature counts differ: input=${fc.features.length} display=${fcDisplay.features.length}. Will match by index.`,
+        );
     }
 
     const sourceLabel = `${SOURCE_TAG_PREFIX}_${args.vintage}`;
@@ -294,13 +314,21 @@ async function main() {
     let skipped = 0;
 
     for (const [i, feature] of fc.features.entries()) {
+        const featureDisplay = fcDisplay.features[i];
+
         const props = feature?.properties ?? {};
         const geom = feature?.geometry;
+        const geomDisplay = featureDisplay?.geometry;
 
         if (!geom) {
-            console.warn(`[${i}] missing geometry, skipping`);
+            console.warn(`[${i}] missing input geometry, skipping`);
             skipped++;
             continue;
+        }
+        if (!geomDisplay) {
+            console.warn(
+                `[${i}] missing display geometry; will skip boundary_simplified for this feature`,
+            );
         }
 
         const name = pick(props, [
@@ -358,23 +386,28 @@ async function main() {
 
         const entity_id = (entityRow as any).id as string;
 
-        const { error: geomErr } = await supabase.rpc(
-            "upsert_entity_geometry_from_geojson",
-            {
-                p_entity_id: entity_id,
-                p_geometry_type: "boundary",
-                p_source: sourceLabel,
-                // IMPORTANT: geometry object, not the full feature
-                p_geojson: geom,
-            },
-        );
-
-        if (geomErr) {
-            console.error(
-                `[${i}] geometry upsert failed for ${name} (${uspsUpper}) entity=${entity_id}:`,
-                geomErr,
+        // Simplified boundary for map rendering (canonical for states)
+        if (geomDisplay) {
+            const { error: geomSmallErr } = await supabase.rpc(
+                "upsert_entity_geometry_with_geom_geojson",
+                {
+                    p_entity_id: entity_id,
+                    p_geometry_type: "boundary_simplified",
+                    p_geojson: geomDisplay,
+                    p_geom_geojson: geomDisplay,
+                    p_bbox: null,
+                    p_source:
+                        `${sourceLabel}_boundary_simplified_${args.tolerance}`,
+                },
             );
-            process.exit(1);
+
+            if (geomSmallErr) {
+                console.error(
+                    `[${i}] boundary_simplified upsert failed for ${name} (${uspsUpper}) entity=${entity_id}:`,
+                    geomSmallErr,
+                );
+                process.exit(1);
+            }
         }
 
         ok++;
@@ -383,7 +416,7 @@ async function main() {
 
     console.log(`✅ Done. Imported: ${ok}, skipped: ${skipped}`);
     console.log(
-        "DC is included as `dc`. Territories are excluded (PR, GU, VI, MP, AS). ",
+        "DC is included as `dc`. Territories are excluded (PR, GU, VI, MP, AS). States are stored ONLY as geometry_type='boundary_simplified'.",
     );
 }
 
