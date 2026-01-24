@@ -10,8 +10,8 @@ import LoadingSpinner from "@/app/components/loading-spinner";
 import LayerLegend from "@/app/components/map/LayerLegend";
 import { DEFAULT_BRAND_COLORS } from "@/app/lib/branding/resolveBranding";
 import {
-  fetchEntityGeometries,
-  fetchChildGeometriesByRelationship,
+  fetchMapGeometryDetail,
+  type EntityGeometryRow,
   type EntityGeometriesByType,
 } from "@/app/lib/geo/entity-geometries";
 import { GEOMETRY_LAYERS } from "@/app/lib/map/layers";
@@ -36,8 +36,10 @@ type Props = {
 type ChildrenResponse = {
   parent_entity_id: string;
   relationship: string;
+  entity_type: string;
+  geometry_type: string;
+  returned_count: number;
   featureCollection: EntityFeatureCollection;
-  schools_scanned?: number | null;
 };
 
 type OverlayFeatureCollection = FeatureCollection<Geometry, GeoJsonProperties>;
@@ -48,18 +50,28 @@ type SchoolPoint = {
   properties: GeoJsonProperties;
 };
 
+type DetailCacheEntry = {
+  geometryType: string;
+  featureCollection: OverlayFeatureCollection;
+  geometryRows: EntityGeometryRow[];
+  returnedCount: number;
+};
+
+type DetailRequest = {
+  geometryType: string;
+  endpoint: "attendance-areas" | "school-program-locations";
+  setFeatureCollection: (collection: OverlayFeatureCollection | null) => void;
+  setLoading: (loading: boolean) => void;
+  setReturnedCount?: (count: number | null) => void;
+};
+
 const STATES_CACHE_KEY = "states:us";
 const GEOMETRY_FETCH_DELAY_MS = 150;
-const ENTITY_LAYER_TYPES = Array.from(
-  new Set(
-    GEOMETRY_LAYERS.filter((layer) => layer.fetchScope === "entity").flatMap(
-      (layer) => [layer.geometryType, ...(layer.fallbackGeometryTypes ?? [])]
-    )
-  )
-);
-const CHILD_LAYERS = GEOMETRY_LAYERS.filter(
-  (layer) => layer.fetchScope === "child"
-);
+const ATTENDANCE_GEOMETRY_TYPE = "district_attendance_areas";
+const SCHOOL_GEOMETRY_TYPE = "school_program_locations";
+
+const detailCacheKey = (entityId: string, geometryType: string) =>
+  `${entityId}:${geometryType}`;
 
 const mergeGeometries = (
   base: EntityGeometriesByType,
@@ -152,17 +164,15 @@ export default function EntityMapExplorer({
   const [selectedDistrictEntityId, setSelectedDistrictEntityId] = useState<
     string | null
   >(null);
-  const [entityGeometriesByType, setEntityGeometriesByType] =
+  const [detailGeometriesByType, setDetailGeometriesByType] =
     useState<EntityGeometriesByType>({});
-  const [childGeometriesByType, setChildGeometriesByType] =
-    useState<EntityGeometriesByType>({});
-  const [loadingEntityGeometries, setLoadingEntityGeometries] =
-    useState(false);
-  const [loadingChildGeometries, setLoadingChildGeometries] =
+  const [attendanceFeatureCollection, setAttendanceFeatureCollection] =
+    useState<OverlayFeatureCollection | null>(null);
+  const [loadingAttendanceAreas, setLoadingAttendanceAreas] =
     useState(false);
   const [schoolsVisible, setSchoolsVisible] = useState(true);
   const [schoolFeatureCollection, setSchoolFeatureCollection] =
-    useState<EntityFeatureCollection | null>(null);
+    useState<OverlayFeatureCollection | null>(null);
   const [loadingSchools, setLoadingSchools] = useState(false);
   const [schoolsScanned, setSchoolsScanned] = useState<number | null>(null);
   const [hoveredSchoolId, setHoveredSchoolId] = useState<string | null>(null);
@@ -170,22 +180,12 @@ export default function EntityMapExplorer({
   const [fitBoundsToken, setFitBoundsToken] = useState<number | null>(null);
 
   const cacheRef = useRef(new Map<string, EntityFeatureCollection>());
-  // Cache district geometries per entity so swaps are instant.
-  const entityGeometryCacheRef = useRef(
-    new Map<string, EntityGeometriesByType>()
-  );
-  const childGeometryCacheRef = useRef(
-    new Map<string, EntityGeometriesByType>()
-  );
-  const schoolCacheRef = useRef(new Map<string, EntityFeatureCollection>());
-  const schoolAbortRef = useRef<AbortController | null>(null);
-  const entityGeometryAbortRef = useRef<AbortController | null>(null);
-  const entityGeometryDebounceRef = useRef<number | null>(null);
-  const childGeometryAbortRef = useRef<AbortController | null>(null);
-  const childGeometryDebounceRef = useRef<number | null>(null);
+  const detailGeometryCacheRef = useRef(new Map<string, DetailCacheEntry>());
+  const detailGeometryAbortRef = useRef<AbortController | null>(null);
+  const detailGeometryDebounceRef = useRef<number | null>(null);
   const geometriesByType = useMemo(
-    () => mergeGeometries(entityGeometriesByType, childGeometriesByType),
-    [childGeometriesByType, entityGeometriesByType]
+    () => detailGeometriesByType,
+    [detailGeometriesByType]
   );
   if (!cacheRef.current.has(STATES_CACHE_KEY)) {
     cacheRef.current.set(STATES_CACHE_KEY, initialStates);
@@ -225,8 +225,16 @@ export default function EntityMapExplorer({
     };
   }, [initialStates]);
 
+  const isMinnesota = (props: EntityMapProperties) => {
+    const name = props.name?.toLowerCase() ?? "";
+    const slug = props.slug?.toLowerCase() ?? "";
+    return name.includes("minnesota") || slug === "minnesota" || slug === "mn";
+  };
+
   const isClickable = (props: EntityMapProperties) =>
-    props.active === true && props.child_count > 0;
+    props.active === true &&
+    props.entity_type === "state" &&
+    isMinnesota(props);
 
   const handleSelect = async (feature: EntityFeature) => {
     setSelectedId(feature.id as string);
@@ -252,10 +260,12 @@ export default function EntityMapExplorer({
       setSelectedId(null);
       setSelectedFeature(null);
       setSelectedDistrictEntityId(null);
-      setEntityGeometriesByType({});
-      setChildGeometriesByType({});
-      setLoadingEntityGeometries(false);
-      setLoadingChildGeometries(false);
+      setDetailGeometriesByType({});
+      setAttendanceFeatureCollection(null);
+      setSchoolFeatureCollection(null);
+      setLoadingAttendanceAreas(false);
+      setLoadingSchools(false);
+      setSchoolsScanned(null);
       setEmptyMessage(cached.features.length ? null : "Coming soon.");
       return;
     }
@@ -264,7 +274,7 @@ export default function EntityMapExplorer({
     setEmptyMessage(null);
     try {
       const res = await fetch(
-        `/api/map/entities/${parentId}/children?relationship=contains&geometry_type=boundary`,
+        `/api/map/entities/${parentId}/children?relationship=contains&entity_type=district&geometry_type=boundary&limit=400`,
         { cache: "no-store" }
       );
       if (!res.ok) {
@@ -277,10 +287,12 @@ export default function EntityMapExplorer({
       setSelectedId(null);
       setSelectedFeature(null);
       setSelectedDistrictEntityId(null);
-      setEntityGeometriesByType({});
-      setChildGeometriesByType({});
-      setLoadingEntityGeometries(false);
-      setLoadingChildGeometries(false);
+      setDetailGeometriesByType({});
+      setAttendanceFeatureCollection(null);
+      setSchoolFeatureCollection(null);
+      setLoadingAttendanceAreas(false);
+      setLoadingSchools(false);
+      setSchoolsScanned(null);
       setEmptyMessage(
         data.featureCollection.features.length ? null : "Coming soon."
       );
@@ -303,10 +315,12 @@ export default function EntityMapExplorer({
     setSelectedState(null);
     setEmptyMessage(null);
     setSelectedDistrictEntityId(null);
-    setEntityGeometriesByType({});
-    setChildGeometriesByType({});
-    setLoadingEntityGeometries(false);
-    setLoadingChildGeometries(false);
+    setDetailGeometriesByType({});
+    setAttendanceFeatureCollection(null);
+    setSchoolFeatureCollection(null);
+    setLoadingAttendanceAreas(false);
+    setLoadingSchools(false);
+    setSchoolsScanned(null);
     setHoveredSchoolId(null);
     setSelectedSchoolId(null);
     setFitBoundsToken((token) => (token ?? 0) + 1);
@@ -314,34 +328,21 @@ export default function EntityMapExplorer({
 
   useEffect(() => {
     if (!selectedDistrictEntityId) {
-      setEntityGeometriesByType({});
-      setChildGeometriesByType({});
-      setLoadingEntityGeometries(false);
-      setLoadingChildGeometries(false);
+      setDetailGeometriesByType({});
+      setAttendanceFeatureCollection(null);
       setSchoolFeatureCollection(null);
       setSchoolsScanned(null);
+      setLoadingAttendanceAreas(false);
       setLoadingSchools(false);
       setHoveredSchoolId(null);
       setSelectedSchoolId(null);
-      if (entityGeometryAbortRef.current) {
-        entityGeometryAbortRef.current.abort();
-        entityGeometryAbortRef.current = null;
+      if (detailGeometryAbortRef.current) {
+        detailGeometryAbortRef.current.abort();
+        detailGeometryAbortRef.current = null;
       }
-      if (entityGeometryDebounceRef.current) {
-        window.clearTimeout(entityGeometryDebounceRef.current);
-        entityGeometryDebounceRef.current = null;
-      }
-      if (childGeometryAbortRef.current) {
-        childGeometryAbortRef.current.abort();
-        childGeometryAbortRef.current = null;
-      }
-      if (childGeometryDebounceRef.current) {
-        window.clearTimeout(childGeometryDebounceRef.current);
-        childGeometryDebounceRef.current = null;
-      }
-      if (schoolAbortRef.current) {
-        schoolAbortRef.current.abort();
-        schoolAbortRef.current = null;
+      if (detailGeometryDebounceRef.current) {
+        window.clearTimeout(detailGeometryDebounceRef.current);
+        detailGeometryDebounceRef.current = null;
       }
       return;
     }
@@ -354,144 +355,113 @@ export default function EntityMapExplorer({
   useEffect(() => {
     if (!selectedDistrictEntityId) return;
 
-    if (entityGeometryCacheRef.current.has(selectedDistrictEntityId)) {
-      const cached =
-        entityGeometryCacheRef.current.get(selectedDistrictEntityId) ?? {};
-      setEntityGeometriesByType(cached);
-      setLoadingEntityGeometries(false);
-      return;
+    const entityId = selectedDistrictEntityId;
+    const cachedByType: EntityGeometriesByType = {};
+    const requests: DetailRequest[] = [
+      {
+        geometryType: ATTENDANCE_GEOMETRY_TYPE,
+        endpoint: "attendance-areas",
+        setFeatureCollection: setAttendanceFeatureCollection,
+        setLoading: setLoadingAttendanceAreas,
+      },
+      {
+        geometryType: SCHOOL_GEOMETRY_TYPE,
+        endpoint: "school-program-locations",
+        setFeatureCollection: setSchoolFeatureCollection,
+        setLoading: setLoadingSchools,
+        setReturnedCount: setSchoolsScanned,
+      },
+    ];
+
+    const pending = requests.filter((request) => {
+      const cacheKey = detailCacheKey(entityId, request.geometryType);
+      const cached = detailGeometryCacheRef.current.get(cacheKey);
+      if (cached) {
+        cachedByType[request.geometryType] = cached.geometryRows;
+        request.setFeatureCollection(cached.featureCollection);
+        if (request.setReturnedCount) {
+          request.setReturnedCount(cached.returnedCount);
+        }
+        request.setLoading(false);
+        return false;
+      }
+      return true;
+    });
+
+    if (Object.keys(cachedByType).length) {
+      setDetailGeometriesByType(cachedByType);
     }
 
-    if (entityGeometryAbortRef.current) {
-      entityGeometryAbortRef.current.abort();
+    if (!pending.length) return;
+
+    if (detailGeometryAbortRef.current) {
+      detailGeometryAbortRef.current.abort();
     }
-    if (entityGeometryDebounceRef.current) {
-      window.clearTimeout(entityGeometryDebounceRef.current);
+    if (detailGeometryDebounceRef.current) {
+      window.clearTimeout(detailGeometryDebounceRef.current);
     }
 
     const controller = new AbortController();
-    entityGeometryAbortRef.current = controller;
-    setEntityGeometriesByType({});
-    setLoadingEntityGeometries(true);
+    detailGeometryAbortRef.current = controller;
 
-    // Debounce rapid district clicks and abort stale requests.
-    entityGeometryDebounceRef.current = window.setTimeout(async () => {
-      try {
-        const data = await fetchEntityGeometries(
-          selectedDistrictEntityId,
-          ENTITY_LAYER_TYPES,
+    pending.forEach((request) => request.setLoading(true));
+
+    detailGeometryDebounceRef.current = window.setTimeout(async () => {
+      const tasks = pending.map((request) =>
+        fetchMapGeometryDetail(
+          entityId,
+          request.endpoint,
+          request.geometryType,
           { signal: controller.signal }
-        );
-        if (controller.signal.aborted) return;
-        entityGeometryCacheRef.current.set(selectedDistrictEntityId, data);
-        setEntityGeometriesByType(data);
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") {
-          return;
+        )
+          .then((result) => ({ request, result }))
+          .catch((error) => ({ request, error }))
+      );
+
+      const results = await Promise.all(tasks);
+      if (controller.signal.aborted) return;
+
+      const updates: EntityGeometriesByType = {};
+      results.forEach((entry) => {
+        if ("result" in entry) {
+          const { result } = entry;
+          const cacheKey = detailCacheKey(entityId, result.geometryType);
+          detailGeometryCacheRef.current.set(cacheKey, {
+            geometryType: result.geometryType,
+            featureCollection: result.featureCollection,
+            geometryRows: result.geometryRows,
+            returnedCount: result.returnedCount,
+          });
+          updates[result.geometryType] = result.geometryRows;
+          entry.request.setFeatureCollection(result.featureCollection);
+          if (entry.request.setReturnedCount) {
+            entry.request.setReturnedCount(result.returnedCount);
+          }
+        } else {
+          console.error(entry.error);
         }
-        console.error(err);
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoadingEntityGeometries(false);
-        }
+        entry.request.setLoading(false);
+      });
+
+      if (Object.keys(updates).length) {
+        setDetailGeometriesByType((prev) => mergeGeometries(prev, updates));
       }
     }, GEOMETRY_FETCH_DELAY_MS);
 
     return () => {
       controller.abort();
-      if (entityGeometryDebounceRef.current) {
-        window.clearTimeout(entityGeometryDebounceRef.current);
-        entityGeometryDebounceRef.current = null;
+      if (detailGeometryDebounceRef.current) {
+        window.clearTimeout(detailGeometryDebounceRef.current);
+        detailGeometryDebounceRef.current = null;
       }
     };
   }, [selectedDistrictEntityId]);
-
-  useEffect(() => {
-    if (!selectedDistrictEntityId || !schoolsVisible || !CHILD_LAYERS.length) {
-      setChildGeometriesByType({});
-      setLoadingChildGeometries(false);
-      if (childGeometryAbortRef.current) {
-        childGeometryAbortRef.current.abort();
-        childGeometryAbortRef.current = null;
-      }
-      if (childGeometryDebounceRef.current) {
-        window.clearTimeout(childGeometryDebounceRef.current);
-        childGeometryDebounceRef.current = null;
-      }
-      return;
-    }
-
-    if (childGeometryCacheRef.current.has(selectedDistrictEntityId)) {
-      const cached =
-        childGeometryCacheRef.current.get(selectedDistrictEntityId) ?? {};
-      setChildGeometriesByType(cached);
-      setLoadingChildGeometries(false);
-      return;
-    }
-
-    if (childGeometryAbortRef.current) {
-      childGeometryAbortRef.current.abort();
-    }
-    if (childGeometryDebounceRef.current) {
-      window.clearTimeout(childGeometryDebounceRef.current);
-    }
-
-    const controller = new AbortController();
-    childGeometryAbortRef.current = controller;
-    setChildGeometriesByType({});
-    setLoadingChildGeometries(true);
-
-    childGeometryDebounceRef.current = window.setTimeout(async () => {
-      try {
-        const results = await Promise.all(
-          CHILD_LAYERS.map((layer) =>
-            fetchChildGeometriesByRelationship(
-              selectedDistrictEntityId,
-              {
-                relationshipType: layer.relationshipType ?? "contains",
-                childEntityType: layer.childEntityType,
-                childGeometryType:
-                  layer.childGeometryType ?? layer.geometryType,
-                primaryOnly: layer.primaryOnly,
-              },
-              { signal: controller.signal }
-            )
-          )
-        );
-        if (controller.signal.aborted) return;
-        const combined = results.reduce(
-          (acc, next) => mergeGeometries(acc, next),
-          {} as EntityGeometriesByType
-        );
-        childGeometryCacheRef.current.set(selectedDistrictEntityId, combined);
-        setChildGeometriesByType(combined);
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") {
-          return;
-        }
-        console.error(err);
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoadingChildGeometries(false);
-        }
-      }
-    }, GEOMETRY_FETCH_DELAY_MS);
-
-    return () => {
-      controller.abort();
-      if (childGeometryDebounceRef.current) {
-        window.clearTimeout(childGeometryDebounceRef.current);
-        childGeometryDebounceRef.current = null;
-      }
-    };
-  }, [selectedDistrictEntityId, schoolsVisible]);
 
   const tooltipBuilder = useMemo(() => {
     return (props: EntityMapProperties) => ({
       title: props.name ?? props.slug ?? "Entity",
       lines: [
         props.entity_type ? `Type: ${props.entity_type}` : null,
-        props.child_count ? `Children: ${props.child_count}` : null,
       ].filter((line): line is string => Boolean(line)),
     });
   }, []);
@@ -499,7 +469,7 @@ export default function EntityMapExplorer({
   const overlayTooltipBuilder = useMemo(() => {
     return (props: GeoJsonProperties) => {
       const record = (props ?? {}) as Record<string, unknown>;
-      if (record.__geometry_type !== "district_attendance_areas") {
+      if (record.__geometry_type !== ATTENDANCE_GEOMETRY_TYPE) {
         return null;
       }
       const elemNames = normalizeNameList(record.elem_name);
@@ -540,64 +510,6 @@ export default function EntityMapExplorer({
   );
 
   useEffect(() => {
-    if (!selectedDistrictEntityId || !schoolsLayerVisible) {
-      setSchoolFeatureCollection(null);
-      setSchoolsScanned(null);
-      setLoadingSchools(false);
-      if (schoolAbortRef.current) {
-        schoolAbortRef.current.abort();
-        schoolAbortRef.current = null;
-      }
-      return;
-    }
-
-    if (schoolCacheRef.current.has(selectedDistrictEntityId)) {
-      setSchoolFeatureCollection(
-        schoolCacheRef.current.get(selectedDistrictEntityId) ?? null
-      );
-      setLoadingSchools(false);
-      return;
-    }
-
-    if (schoolAbortRef.current) {
-      schoolAbortRef.current.abort();
-    }
-
-    const controller = new AbortController();
-    schoolAbortRef.current = controller;
-    setLoadingSchools(true);
-    setSchoolsScanned(null);
-
-    (async () => {
-      try {
-        const res = await fetch(
-          `/api/map/entities/${selectedDistrictEntityId}/children?relationship=contains&entity_type=school&geometry_type=school_program_locations`,
-          { cache: "no-store", signal: controller.signal }
-        );
-        if (!res.ok) throw new Error("Failed to load schools for district");
-
-        const data = (await res.json()) as ChildrenResponse;
-        if (controller.signal.aborted) return;
-
-        schoolCacheRef.current.set(
-          selectedDistrictEntityId,
-          data.featureCollection
-        );
-        setSchoolFeatureCollection(data.featureCollection);
-        setSchoolsScanned(data.schools_scanned ?? null);
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
-        console.error(err);
-        setSchoolFeatureCollection({ type: "FeatureCollection", features: [] });
-      } finally {
-        if (!controller.signal.aborted) setLoadingSchools(false);
-      }
-    })();
-
-    return () => controller.abort();
-  }, [selectedDistrictEntityId, schoolsLayerVisible]);
-
-  useEffect(() => {
     if (!schoolsLayerVisible) {
       setHoveredSchoolId(null);
       setSelectedSchoolId(null);
@@ -619,30 +531,20 @@ export default function EntityMapExplorer({
   }, [attendanceVisible, resolveLayerRows, schoolsLayerVisible]);
 
   const overlayFeatureCollection = useMemo<OverlayFeatureCollection | null>(() => {
-    if (!attendanceVisible) return null;
-    const features: OverlayFeatureCollection["features"] = [];
-    for (const layer of visibleLayers) {
-      if (layer.renderMode === "point") continue;
-      const rows = resolveLayerRows(layer);
-      for (const row of rows) {
-        if (!row.geojson) continue;
-        for (const feature of row.geojson.features) {
-          if (!feature.geometry) continue;
-          const props = {
-            ...(feature.properties ?? {}),
-            __geometry_type: layer.geometryType,
-          };
-          features.push({ ...feature, properties: props });
-        }
-      }
-    }
-    if (!features.length) return null;
-    const fc: OverlayFeatureCollection = {
+    if (!attendanceVisible || !attendanceFeatureCollection) return null;
+    if (!attendanceFeatureCollection.features.length) return null;
+    const features = attendanceFeatureCollection.features.map((feature) => ({
+      ...feature,
+      properties: {
+        ...(feature.properties ?? {}),
+        __geometry_type: ATTENDANCE_GEOMETRY_TYPE,
+      },
+    }));
+    return {
       type: "FeatureCollection",
       features,
     };
-    return fc;
-  }, [attendanceVisible, resolveLayerRows, visibleLayers]);
+  }, [attendanceFeatureCollection, attendanceVisible]);
 
   const overlayStyle = useMemo(() => {
     return (feature: google.maps.Data.Feature) => {
@@ -715,9 +617,7 @@ export default function EntityMapExplorer({
     return value || DEFAULT_BRAND_COLORS.accent1;
   }, [selectedDistrictEntityId]);
 
-  const schoolLayerConfig = layerConfigByType.get(
-    "school_program_locations"
-  );
+  const schoolLayerConfig = layerConfigByType.get(SCHOOL_GEOMETRY_TYPE);
   const schoolBaseRadius = schoolLayerConfig?.pointRadiusMeters ?? 60;
   const schoolCircleOptions = useMemo(
     () => ({
@@ -731,7 +631,7 @@ export default function EntityMapExplorer({
     }),
     [brandAccent, schoolLayerConfig]
   );
-  const loadingGeometries = loadingEntityGeometries || loadingChildGeometries;
+  const loadingGeometries = loadingAttendanceAreas;
 
   const overlay = useMemo(() => {
     if (activeLayer !== "districts") return null;
@@ -883,7 +783,7 @@ export default function EntityMapExplorer({
                 </div>
               </div>
             )}
-            {loadingSchools && (
+            {loadingSchools && schoolsLayerVisible && (
               <div className="absolute top-24 right-4 z-50">
                 <div className="px-3 py-1 rounded bg-brand-secondary-1 text-brand-primary-1 text-sm">
                   Loading schools...

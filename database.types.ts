@@ -2872,7 +2872,10 @@ export type Database = {
           p_entity_id: string
           p_geojson: Json
           p_geometry_type: string
+          p_simplified_type?: string
+          p_simplify?: boolean
           p_source?: string
+          p_tolerance?: number
         }
         Returns: undefined
       }
@@ -2883,7 +2886,10 @@ export type Database = {
           p_geojson: Json
           p_geom_geojson: Json
           p_geometry_type: string
+          p_simplified_type?: string
+          p_simplify?: boolean
           p_source: string
+          p_tolerance?: number
         }
         Returns: undefined
       }

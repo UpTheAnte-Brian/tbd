@@ -1,47 +1,68 @@
 import { NextResponse } from "next/server";
 import type { Geometry } from "geojson";
-import { supabaseAdmin } from "@/utils/supabase/service-worker";
 import type {
   EntityFeature,
   EntityFeatureCollection,
   EntityMapProperties,
 } from "@/domain/map/types";
+import { supabaseAdmin } from "@/utils/supabase/service-worker";
 
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-const sanitizeIds = (ids: unknown[]): string[] => {
-  const out: string[] = [];
-  const seen = new Set<string>();
-  for (const v of ids) {
-    if (typeof v !== "string") continue;
-    const id = v.trim();
-    if (!id || !UUID_RE.test(id)) continue;
-    if (seen.has(id)) continue;
-    seen.add(id);
-    out.push(id);
-  }
-  return out;
-};
-
-const chunk = <T>(arr: T[], size: number): T[][] => {
-  if (size <= 0) return [arr];
-  const out: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) {
-    out.push(arr.slice(i, i + size));
-  }
-  return out;
-};
-
-const isGeometry = (value: unknown): value is Geometry => {
+const isGeometryObject = (value: unknown): value is Geometry => {
   if (typeof value !== "object" || value === null) return false;
   const v = value as { type?: unknown };
   return typeof v.type === "string";
 };
 
-type RelationshipRow = {
-  parent_entity_id: string | null;
-  child_entity_id: string | null;
+const normalizeToGeometry = (value: unknown): Geometry | null => {
+  // The `geojson` column may contain:
+  // - a bare Geometry
+  // - a Feature (with a `geometry`)
+  // - a FeatureCollection (common in your dataset for boundaries)
+  // We normalize all of these down to a single Geometry.
+
+  if (typeof value !== "object" || value === null) return null;
+
+  const v = value as {
+    type?: unknown;
+    geometry?: unknown;
+    features?: unknown;
+  };
+
+  // Bare geometry: { type: "Polygon" | "MultiPolygon" | ... }
+  if (
+    typeof v.type === "string" &&
+    v.type !== "Feature" &&
+    v.type !== "FeatureCollection"
+  ) {
+    return isGeometryObject(value) ? (value as Geometry) : null;
+  }
+
+  // Feature: { type: "Feature", geometry: { ... } }
+  if (v.type === "Feature" && v.geometry && typeof v.geometry === "object") {
+    return isGeometryObject(v.geometry) ? (v.geometry as Geometry) : null;
+  }
+
+  // FeatureCollection: { type: "FeatureCollection", features: [{ type: "Feature", geometry: {...} }, ...] }
+  if (v.type === "FeatureCollection" && Array.isArray(v.features)) {
+    for (const f of v.features as unknown[]) {
+      if (typeof f !== "object" || f === null) continue;
+      const feature = f as { type?: unknown; geometry?: unknown };
+      if (feature.type !== "Feature") continue;
+      if (!feature.geometry || typeof feature.geometry !== "object") continue;
+      if (isGeometryObject(feature.geometry)) {
+        return feature.geometry as Geometry;
+      }
+    }
+  }
+
+  return null;
+};
+
+const normalizeEntityRow = (
+  value: EntityWithGeometryRow | EntityWithGeometryRow[] | null,
+): EntityWithGeometryRow | null => {
+  if (!value) return null;
+  return Array.isArray(value) ? value[0] ?? null : value;
 };
 
 type EntityRow = {
@@ -52,10 +73,18 @@ type EntityRow = {
   active: boolean | null;
 };
 
-type GeometryRow = {
-  entity_id: string | null;
+type EntityGeometryRow = {
   geometry_type: string | null;
   geojson: unknown | null;
+};
+
+type EntityWithGeometryRow = EntityRow & {
+  entity_geometries?: EntityGeometryRow[] | EntityGeometryRow | null;
+};
+
+type RelationshipEntityRow = {
+  child_entity_id: string | null;
+  entities: EntityWithGeometryRow | EntityWithGeometryRow[] | null;
 };
 
 const parseLimitParam = (value: string | null): number | null => {
@@ -72,149 +101,183 @@ const parseOffsetParam = (value: string | null): number => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-// Paging/batching constants
-const ENTITY_BATCH_SIZE = 500;
-const GEOM_BATCH_SIZE = 250;
-
 /**
- * Reads children directly from tables (no RPC) and returns a GeoJSON FeatureCollection.
+ * Reads children directly from tables and returns a GeoJSON FeatureCollection.
  *
- * Recommended MN initial load:
- * `relationship=contains&entity_type=district&geometry_type=boundary`
+ * REQUIRED usage:
+ * - entity_type is mandatory
+ * - geometry_type is mandatory
+ *
+ * Examples:
+ * MN -> districts:
+ *   relationship=contains&entity_type=district&geometry_type=boundary
+ *
+ * District -> schools:
+ *   relationship=contains&entity_type=school&geometry_type=point
  */
 export async function GET(
   req: Request,
   context: { params: Promise<{ entityId: string }> },
 ) {
-  const supabase = supabaseAdmin;
   const { entityId } = await context.params;
   const { searchParams } = new URL(req.url);
 
   const relationship = searchParams.get("relationship") || "contains";
-  const requestedGeometryType = searchParams.get("geometry_type") || "boundary";
-  const entityType = searchParams.get("entity_type") ?? null;
+  const requestedGeometryType = searchParams.get("geometry_type");
+  const entityType = searchParams.get("entity_type");
+  const debug = searchParams.get("debug") === "1";
   const limitParam = parseLimitParam(searchParams.get("limit"));
   const offsetParam = parseOffsetParam(searchParams.get("offset"));
 
+  if (!entityType) {
+    return NextResponse.json(
+      { error: "entity_type is required for children queries" },
+      { status: 400 },
+    );
+  }
+
+  if (!requestedGeometryType) {
+    return NextResponse.json(
+      { error: "geometry_type is required" },
+      { status: 400 },
+    );
+  }
+
   const requirePolygon = requestedGeometryType === "boundary";
+  const effectiveEntityType = entityType;
 
-  // If caller did not specify a limit, auto-page up to a safe cap.
-  // This prevents truncated results from PostgREST defaults.
-  const AUTO_PAGE = limitParam == null;
-  const pageSize = entityType === "district" ? 400 : 200;
-  const maxRows = entityType === "district" ? 2000 : 800;
+  const pageSize = limitParam ?? 400;
 
-  const fetchChildIds = async (pOffset: number, pLimit: number) => {
-    const { data, error } = await supabase
-      .from("entity_relationships")
-      .select("parent_entity_id, child_entity_id")
-      .eq("parent_entity_id", entityId)
-      .eq("relationship_type", relationship)
-      .order("child_entity_id", { ascending: true })
-      .range(pOffset, pOffset + pLimit - 1);
-
-    if (error) return { data: null as RelationshipRow[] | null, error };
-    return { data: (data ?? []) as RelationshipRow[], error: null };
-  };
-
-  const collectChildIds = async (): Promise<
-    {
-      childIds: string[];
-      nextOffset: number | null;
-    } | { error: string }
-  > => {
-    const out: string[] = [];
-
-    if (!AUTO_PAGE) {
-      const { data, error } = await fetchChildIds(
-        offsetParam,
-        limitParam ?? 200,
-      );
-      if (error) return { error: error.message };
-      const ids = sanitizeIds((data ?? []).map((r) => r.child_entity_id));
-      const nextOffset =
-        (limitParam ?? 0) > 0 && ids.length === (limitParam ?? 0)
-          ? offsetParam + (limitParam ?? 0)
-          : null;
-      return { childIds: ids, nextOffset };
-    }
-
-    let currentOffset = offsetParam;
-    while (out.length < maxRows) {
-      const { data, error } = await fetchChildIds(currentOffset, pageSize);
-      if (error) return { error: error.message };
-      const ids = sanitizeIds((data ?? []).map((r) => r.child_entity_id));
-      out.push(...ids);
-      if (ids.length < pageSize) break;
-      currentOffset += pageSize;
-    }
-
-    return { childIds: out, nextOffset: null };
-  };
-
-  const collectedIds = await collectChildIds();
-  if ("error" in collectedIds) {
-    return NextResponse.json({ error: collectedIds.error }, { status: 500 });
-  }
-
-  const { childIds, nextOffset } = collectedIds;
-
-  // Fetch entity rows for children (so we can filter by entity_type and include props)
-  const entityById = new Map<string, EntityRow>();
-  if (childIds.length) {
-    for (const batch of chunk(childIds, ENTITY_BATCH_SIZE)) {
-      const { data, error } = await supabase
-        .from("entities")
-        .select("id, entity_type, name, slug, active")
-        .in("id", batch);
-
-      if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-      }
-      for (const row of (data ?? []) as EntityRow[]) {
-        entityById.set(row.id, row);
-      }
+  const supabaseUrlUsed = process.env.SUPABASE_URL ??
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? null;
+  let supabaseUrlHost: string | null = null;
+  if (supabaseUrlUsed) {
+    try {
+      supabaseUrlHost = new URL(supabaseUrlUsed).host;
+    } catch {
+      supabaseUrlHost = null;
     }
   }
 
-  const filteredEntityIds = entityType
-    ? childIds.filter((id) => entityById.get(id)?.entity_type === entityType)
-    : childIds;
+  const supabase = supabaseAdmin;
 
-  const fetchGeometries = async (geometryType: string) => {
-    const geoById = new Map<string, Geometry>();
-    if (!filteredEntityIds.length) return geoById;
+  if (debug) {
+    console.log("children route debug", {
+      entityId,
+      relationship,
+      entityType,
+      requestedGeometryType,
+      supabase_url_host: supabaseUrlHost,
+    });
+  }
 
-    for (const batch of chunk(filteredEntityIds, GEOM_BATCH_SIZE)) {
-      const { data, error } = await supabase
-        .from("entity_geometries")
-        .select("entity_id, geometry_type, geojson")
-        .in("entity_id", batch)
-        .eq("geometry_type", geometryType);
+  const stringifySupabaseError = (error: unknown): string => {
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return String(error);
+    }
+  };
 
-      if (error) throw new Error(error.message);
-      for (const row of (data ?? []) as GeometryRow[]) {
-        if (row?.entity_id && isGeometry(row.geojson)) {
-          geoById.set(row.entity_id, row.geojson);
-        }
-      }
+  const respondWithError = (
+    step: string,
+    details: Record<string, unknown>,
+    error: unknown,
+  ) => {
+    const payload: Record<string, unknown> = {
+      step,
+      entityId,
+      relationship,
+      requestedGeometryType,
+      effectiveEntityType,
+      requested_entity_type: entityType,
+      requested_geometry_type: requestedGeometryType,
+      page_size: pageSize,
+      ...details,
+      supabase_error: stringifySupabaseError(error),
+    };
+    if (debug) {
+      payload.supabase_url_used = supabaseUrlUsed;
+      payload.supabase_url_host = supabaseUrlHost;
+    }
+    console.error("children route error", payload);
+
+    if (debug) {
+      return NextResponse.json(payload, { status: 500 });
     }
 
-    return geoById;
+    const message = error && typeof error === "object" && "message" in error
+      ? String((error as { message?: unknown }).message ?? "Unknown error")
+      : typeof error === "string"
+      ? error
+      : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   };
 
   const geometryType = requestedGeometryType;
-  let geoByEntityId: Map<string, Geometry>;
+  const rangeStart = offsetParam;
+  const rangeEnd = rangeStart + pageSize - 1;
 
-  try {
-    geoByEntityId = await fetchGeometries(geometryType);
-  } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  const childQuery = supabase
+    .from("entity_relationships")
+    .select(
+      `
+        child_entity_id,
+        entities:entities!entity_relationships_child_entity_id_fkey!inner (
+          id, entity_type, name, slug, active,
+          entity_geometries!inner (
+            geometry_type, geojson
+          )
+        )
+      `,
+    )
+    .eq("parent_entity_id", entityId)
+    .eq("relationship_type", relationship)
+    .eq("entities.entity_type", effectiveEntityType)
+    .eq("entities.entity_geometries.geometry_type", geometryType)
+    .order("slug", {
+      ascending: true,
+      foreignTable: "entities",
+      nullsFirst: false,
+    })
+    .order("id", { ascending: true, foreignTable: "entities" })
+    .range(rangeStart, rangeEnd);
+
+  const { data, error } = await childQuery;
+  if (error) {
+    return respondWithError(
+      "fetchChildren",
+      {
+        offset: rangeStart,
+        limit: pageSize,
+        geometryType,
+        effectiveEntityType,
+      },
+      error,
+    );
   }
 
+  const rows = (data ?? []) as RelationshipEntityRow[];
+
   const features: EntityFeature[] = [];
-  for (const id of filteredEntityIds) {
-    const geometry = geoByEntityId.get(id);
+  for (const row of rows) {
+    const entity = normalizeEntityRow(row.entities);
+    if (!entity) continue;
+
+    const id = entity.id ?? row.child_entity_id;
+    if (!id) continue;
+
+    const geometryRows = Array.isArray(entity.entity_geometries)
+      ? entity.entity_geometries
+      : entity.entity_geometries
+      ? [entity.entity_geometries]
+      : [];
+
+    let geometry: Geometry | null = null;
+    for (const geoRow of geometryRows) {
+      geometry = normalizeToGeometry(geoRow?.geojson);
+      if (geometry) break;
+    }
     if (!geometry) continue;
     if (
       requirePolygon &&
@@ -224,13 +287,12 @@ export async function GET(
       continue;
     }
 
-    const ent = entityById.get(id);
     const props: EntityMapProperties = {
       entity_id: id,
-      entity_type: ent?.entity_type ?? "",
-      slug: ent?.slug ?? null,
-      name: ent?.name ?? null,
-      active: ent?.active ?? true,
+      entity_type: entity.entity_type ?? "",
+      slug: entity.slug ?? null,
+      name: entity.name ?? null,
+      active: entity.active ?? true,
       child_count: 0,
     };
 
@@ -247,20 +309,35 @@ export async function GET(
     features,
   };
 
+  if (process.env.NODE_ENV === "development") {
+    console.log("map children", {
+      parent_entity_id: entityId,
+      entity_type: effectiveEntityType,
+      geometry_type: requestedGeometryType,
+      returned_count: features.length,
+    });
+  }
+
+  // Keep this route's response shape aligned with `/api/map/home` so the UI
+  // can treat all map layers the same.
+  //
+  // NOTE: We intentionally do NOT include the slower/secondary geometries
+  // (e.g. district_attendance_areas, school_program_locations) in this call.
   return NextResponse.json(
     {
+      level: effectiveEntityType === "district"
+        ? "districts"
+        : effectiveEntityType,
+      featureCollection,
       parent_entity_id: entityId,
       relationship,
-      geometry_type: geometryType,
+      entity_type: effectiveEntityType,
+      geometry_type: requestedGeometryType,
       returned_count: features.length,
-      next_offset: nextOffset,
-      featureCollection,
-      schools_scanned: entityType === "school" ? features.length : null,
     },
     {
       headers: {
-        "Cache-Control":
-          "public, max-age=60, s-maxage=300, stale-while-revalidate=600",
+        "Cache-Control": "public, max-age=60, s-maxage=300",
       },
     },
   );
