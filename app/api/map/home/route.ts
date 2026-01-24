@@ -70,7 +70,6 @@ type GeometryRow = {
 const BATCH_SIZE = 200;
 
 export const revalidate = 86400;
-export const dynamic = "force-dynamic";
 
 export async function GET() {
   const supabase = supabaseAdmin;
@@ -140,8 +139,15 @@ export async function GET() {
     features,
   };
 
-  return NextResponse.json({
-    level: "states",
-    featureCollection,
-  });
+  return NextResponse.json(
+    {
+      level: "states",
+      featureCollection,
+    },
+    {
+      headers: {
+        "Cache-Control": "public, max-age=60, s-maxage=3600",
+      },
+    }
+  );
 }
