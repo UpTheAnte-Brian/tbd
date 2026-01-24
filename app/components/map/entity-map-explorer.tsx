@@ -197,7 +197,7 @@ export default function EntityMapExplorer({
 
     async function loadStates() {
       try {
-        const res = await fetch("/api/map/home", { cache: "no-store" });
+        const res = await fetch("/api/map/home");
         if (!res.ok) {
           throw new Error("Failed to load states map");
         }

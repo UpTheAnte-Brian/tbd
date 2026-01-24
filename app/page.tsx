@@ -23,7 +23,7 @@ async function getHomeMapData(): Promise<MapHomeResponse> {
     process.env.NEXT_PUBLIC_HOST ?? // TODO: remove NEXT_PUBLIC_HOST fallback after migration
     `http://${(await headers()).get("host")}`;
   const res = await fetch(`${baseUrl}/api/map/home`, {
-    cache: "no-store",
+    next: { revalidate: 3600 },
   });
   if (!res.ok) {
     throw new Error("Failed to load states map");
