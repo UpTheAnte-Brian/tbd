@@ -33,21 +33,38 @@ const chunk = <T>(arr: T[], size: number): T[][] => {
   return out;
 };
 
-const isGeometry = (value: unknown): value is Geometry =>
-  typeof value === "object" &&
-  value !== null &&
-  "type" in value &&
-  typeof (value as { type?: unknown }).type === "string";
+const isGeometryObject = (value: unknown): value is Geometry => {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as { type?: unknown };
+  return typeof v.type === "string";
+};
+
+const normalizeToGeometry = (value: unknown): Geometry | null => {
+  if (typeof value !== "object" || value === null) return null;
+
+  const v = value as { type?: unknown; geometry?: unknown };
+
+  // Bare geometry: { type: "Polygon" | "MultiPolygon" | ... }
+  if (
+    typeof v.type === "string" &&
+    v.type !== "Feature" &&
+    v.type !== "FeatureCollection"
+  ) {
+    return isGeometryObject(value) ? (value as Geometry) : null;
+  }
+
+  // Feature: { type: "Feature", geometry: { ... } }
+  if (v.type === "Feature" && v.geometry && typeof v.geometry === "object") {
+    return isGeometryObject(v.geometry) ? (v.geometry as Geometry) : null;
+  }
+
+  return null;
+};
 
 type GeometryRow = {
   entity_id: string | null;
   geometry_type: string | null;
   geojson: unknown | null;
-};
-
-type ChildEntityRow = {
-  id: string;
-  entity_type: string | null;
 };
 
 const BATCH_SIZE = 200;
@@ -90,62 +107,9 @@ export async function GET() {
 
   const geoByEntityId = new Map<string, Geometry>();
   for (const row of geomRows ?? []) {
-    if (row?.entity_id && isGeometry(row.geojson)) {
-      geoByEntityId.set(row.entity_id, row.geojson);
-    }
-  }
-
-  const { data: relRows, error: relError } = stateIds.length
-    ? await supabase
-      .from("entity_relationships")
-      .select("parent_entity_id, child_entity_id")
-      .in("parent_entity_id", stateIds)
-      .eq("relationship_type", "contains")
-    : { data: [], error: null };
-
-  if (relError) {
-    return NextResponse.json({ error: relError.message }, { status: 500 });
-  }
-
-  const childIds = sanitizeIds(
-    (relRows ?? []).map((row) => row.child_entity_id),
-  );
-
-  const { data: childEntities, error: childError } = childIds.length
-    ? await (async () => {
-      const rows: ChildEntityRow[] = [];
-      for (const batch of chunk(childIds, BATCH_SIZE)) {
-        const { data, error } = await supabase
-          .from("entities")
-          .select("id, entity_type")
-          .in("id", batch);
-
-        if (error) return { data: null, error };
-        rows.push(...(data ?? []));
-      }
-      return { data: rows, error: null };
-    })()
-    : { data: [], error: null };
-
-  if (childError) {
-    return NextResponse.json({ error: childError.message }, { status: 500 });
-  }
-
-  const districtChildIds = new Set(
-    (childEntities ?? [])
-      .filter((c) => c.entity_type === "district")
-      .map((c) => c.id),
-  );
-
-  const childCountByParent = new Map<string, number>();
-  for (const row of relRows ?? []) {
-    if (
-      !row.parent_entity_id || !districtChildIds.has(row.child_entity_id ?? "")
-    ) {
-      continue;
-    }
-    const current = childCountByParent.get(row.parent_entity_id) ?? 0;
-    childCountByParent.set(row.parent_entity_id, current + 1);
+    if (!row?.entity_id) continue;
+    const geom = normalizeToGeometry(row.geojson);
+    if (geom) geoByEntityId.set(row.entity_id, geom);
   }
 
   const features: EntityFeature[] = [];
@@ -155,14 +119,13 @@ export async function GET() {
     if (geometry.type !== "Polygon" && geometry.type !== "MultiPolygon") {
       continue;
     }
-    const child_count = childCountByParent.get(state.id) ?? 0;
     const props: EntityMapProperties = {
       entity_id: state.id,
       entity_type: "state",
       name: state.name ?? null,
       slug: state.slug ?? null,
       active: state.active ?? true,
-      child_count,
+      child_count: 0,
     };
     features.push({
       type: "Feature",

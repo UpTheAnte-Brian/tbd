@@ -1,4 +1,9 @@
-import type { FeatureCollection, GeoJsonProperties, Geometry } from "geojson";
+import type {
+  Feature,
+  FeatureCollection,
+  GeoJsonProperties,
+  Geometry,
+} from "geojson";
 
 export type EntityGeometryRow = {
   id: string;
@@ -27,6 +32,49 @@ const isFeatureCollection = (
   (value as { type?: string }).type === "FeatureCollection" &&
   Array.isArray((value as { features?: unknown }).features);
 
+const isGeometryObject = (value: unknown): value is Geometry => {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as { type?: unknown };
+  return (
+    typeof v.type === "string" &&
+    v.type !== "Feature" &&
+    v.type !== "FeatureCollection"
+  );
+};
+
+const isFeature = (
+  value: unknown
+): value is Feature<Geometry, GeoJsonProperties> => {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as { type?: unknown; geometry?: unknown };
+  return v.type === "Feature" && isGeometryObject(v.geometry);
+};
+
+const normalizeFeatureCollection = (
+  value: unknown
+): FeatureCollection<Geometry, GeoJsonProperties> | null => {
+  if (isFeatureCollection(value)) return value;
+  if (isFeature(value)) {
+    return {
+      type: "FeatureCollection",
+      features: [value],
+    };
+  }
+  if (isGeometryObject(value)) {
+    return {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          geometry: value,
+          properties: {},
+        },
+      ],
+    };
+  }
+  return null;
+};
+
 const coerceString = (value: unknown) =>
   typeof value === "string" ? value : null;
 
@@ -44,7 +92,7 @@ const coerceEntityGeometryRow = (value: unknown): EntityGeometryRow | null => {
     entity_id: entityId,
     geometry_type: geometryType,
     source: coerceString(record.source),
-    geojson: isFeatureCollection(record.geojson) ? record.geojson : null,
+    geojson: normalizeFeatureCollection(record.geojson),
     bbox: (record.bbox as unknown) ?? null,
     created_at: coerceString(record.created_at),
     updated_at: coerceString(record.updated_at),
@@ -151,4 +199,76 @@ export async function fetchChildGeometriesByRelationship(
   }
 
   return byType;
+}
+
+export type MapGeometryDetail = {
+  level: string;
+  geometryType: string;
+  returnedCount: number;
+  featureCollection: FeatureCollection<Geometry, GeoJsonProperties>;
+  geometryRows: EntityGeometryRow[];
+};
+
+type MapGeometryDetailResponse = {
+  level?: unknown;
+  geometry_type?: unknown;
+  returned_count?: unknown;
+  featureCollection?: unknown;
+  geometries?: unknown;
+};
+
+const createEmptyFeatureCollection = (): FeatureCollection<
+  Geometry,
+  GeoJsonProperties
+> => ({
+  type: "FeatureCollection",
+  features: [],
+});
+
+export async function fetchMapGeometryDetail(
+  entityId: string,
+  endpoint: "attendance-areas" | "school-program-locations",
+  geometryType: string,
+  options: FetchOptions = {}
+): Promise<MapGeometryDetail> {
+  const params = new URLSearchParams();
+  params.set("geometry_type", geometryType);
+  const url = `/api/map/entities/${entityId}/${endpoint}?${params.toString()}`;
+  const res = await fetch(url, {
+    cache: "no-store",
+    signal: options.signal,
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const message =
+      typeof body?.error === "string"
+        ? body.error
+        : "Failed to load map geometry detail";
+    throw new Error(message);
+  }
+
+  const data = (await res.json()) as MapGeometryDetailResponse;
+  const featureCollection =
+    normalizeFeatureCollection(data.featureCollection) ??
+    createEmptyFeatureCollection();
+  const rawRows = Array.isArray(data.geometries) ? data.geometries : [];
+  const geometryRows = rawRows
+    .map(coerceEntityGeometryRow)
+    .filter((row): row is EntityGeometryRow => Boolean(row));
+  const resolvedGeometryType =
+    typeof data.geometry_type === "string" ? data.geometry_type : geometryType;
+  const returnedCount =
+    typeof data.returned_count === "number"
+      ? data.returned_count
+      : featureCollection.features.length;
+  const level = typeof data.level === "string" ? data.level : endpoint;
+
+  return {
+    level,
+    geometryType: resolvedGeometryType,
+    returnedCount,
+    featureCollection,
+    geometryRows,
+  };
 }

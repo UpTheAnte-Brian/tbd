@@ -23,7 +23,7 @@ async function getHomeMapData(): Promise<MapHomeResponse> {
     process.env.NEXT_PUBLIC_HOST ?? // TODO: remove NEXT_PUBLIC_HOST fallback after migration
     `http://${(await headers()).get("host")}`;
   const res = await fetch(`${baseUrl}/api/map/home`, {
-    next: { revalidate: 86400 },
+    cache: "no-store",
   });
   if (!res.ok) {
     throw new Error("Failed to load states map");
@@ -48,6 +48,11 @@ export default async function Page() {
       type: "FeatureCollection",
       features: [],
     };
+  console.log(
+    "Home page map features loaded:",
+    featureCollection.features.length,
+    mapData,
+  );
   return (
     <EntityMapExplorer
       initialStates={featureCollection}

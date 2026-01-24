@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "build": "next build",
-    "dev": "npm run tailwind:watch & next dev --turbopack",
+    "dev": "dotenv -e .env.test.local -- npm run tailwind:watch & next dev --turbopack",
     "start": "next start",
     "lint": "eslint .",
     "env:check": "tsx scripts/check-env.ts",
