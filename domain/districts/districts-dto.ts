@@ -7,6 +7,10 @@ import {
   EntityUser,
   EntityUserRole,
 } from "@/app/lib/types/types";
+import type { Database } from "@/database.types";
+
+type DistrictMetadataRow =
+  Database["public"]["Tables"]["district_metadata"]["Row"];
 
 export async function getDistrictDTO(id: string): Promise<DistrictDetails> {
   const supabase = await createClient();
@@ -14,7 +18,26 @@ export async function getDistrictDTO(id: string): Promise<DistrictDetails> {
 
   const { data: districtEntity, error: districtError } = await supabase
     .from("entities")
-    .select("id, name, slug, active, external_ids")
+    .select(
+      `
+      id,
+      name,
+      slug,
+      active,
+      external_ids,
+      district_metadata (
+        web_url,
+        sdorgid,
+        shortname,
+        prefname,
+        sdnumber,
+        acres,
+        formid,
+        sdtype,
+        sqmiles
+      )
+    `
+    )
     .eq("id", entityId)
     .maybeSingle();
 
@@ -77,6 +100,11 @@ export async function getDistrictDTO(id: string): Promise<DistrictDetails> {
     };
   }) ?? [];
 
+  const metadata =
+    Array.isArray(districtEntity.district_metadata)
+      ? (districtEntity.district_metadata[0] as DistrictMetadataRow | null)
+      : ((districtEntity.district_metadata ?? null) as DistrictMetadataRow | null);
+
   const rawProps =
     (districtEntity.external_ids as Record<string, unknown> | null) ?? {};
   const props = Object.fromEntries(
@@ -95,6 +123,7 @@ export async function getDistrictDTO(id: string): Promise<DistrictDetails> {
   ): string | null => (typeof val === "string" ? val : fallback);
 
   const sdorgid =
+    asString(metadata?.sdorgid, null) ??
     asString(props.sdorgid, null) ??
     asString(props.sd_org_id, null) ??
     asString(props.district_id, null) ??
@@ -105,14 +134,28 @@ export async function getDistrictDTO(id: string): Promise<DistrictDetails> {
     id: districtEntity.id,
     entity_id: entityId,
     sdorgid,
-    shortname: asString(props.shortname, districtEntity.name) ?? null,
-    prefname: asString(props.prefname, districtEntity.name) ?? null,
-    sdnumber: asString(props.sdnumber, "") ?? null,
-    web_url: asString(props.web_url, "") ?? null,
-    acres: asNumber(props.acres),
-    formid: asString(props.formid, null),
-    sdtype: asString(props.sdtype, null),
-    sqmiles: asNumber(props.sqmiles),
+    shortname:
+      asString(metadata?.shortname, districtEntity.name) ??
+      asString(props.shortname, districtEntity.name) ??
+      null,
+    prefname:
+      asString(metadata?.prefname, districtEntity.name) ??
+      asString(props.prefname, districtEntity.name) ??
+      null,
+    sdnumber:
+      asString(metadata?.sdnumber, null) ??
+      asString(props.sdnumber, "") ??
+      null,
+    web_url:
+      asString(metadata?.web_url, null) ??
+      asString(props.web_url, "") ??
+      null,
+    acres: asNumber(metadata?.acres) ?? asNumber(props.acres),
+    formid:
+      asString(metadata?.formid, null) ?? asString(props.formid, null),
+    sdtype:
+      asString(metadata?.sdtype, null) ?? asString(props.sdtype, null),
+    sqmiles: asNumber(metadata?.sqmiles) ?? asNumber(props.sqmiles),
     shape_area: asNumber(props.shape_area),
     shape_leng: asNumber(props.shape_leng),
     centroid_lat: asNumber(props.centroid_lat),

@@ -24,7 +24,7 @@ export default function EntityUsersTab({ entityId }: Props) {
   const [searchLoading, setSearchLoading] = useState(false);
   const DEBOUNCE_MS = 250;
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(
-    null
+    null,
   );
 
   const [highlightIndex, setHighlightIndex] = useState(-1);
@@ -107,7 +107,7 @@ export default function EntityUsersTab({ entityId }: Props) {
     setSearchLoading(true);
     try {
       const res = await fetch(
-        `/api/profiles/search?q=${encodeURIComponent(q)}`
+        `/api/profiles/search?q=${encodeURIComponent(q)}`,
       );
       if (!res.ok) throw new Error("Search failed");
       const json = await res.json();
@@ -123,7 +123,7 @@ export default function EntityUsersTab({ entityId }: Props) {
     try {
       const res = await fetch(
         `/api/entities/${entityId}/users?userId=${encodeURIComponent(userId)}`,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       if (!res.ok) throw new Error("Failed to delete user");
@@ -144,7 +144,7 @@ export default function EntityUsersTab({ entityId }: Props) {
         access (admin, editor, viewer, employee).
       </p>
 
-      <div className="space-y-4 rounded border border-brand-secondary-1 bg-brand-secondary-2 p-4">
+      <div className="space-y-4 rounded border border-brand-secondary-1 bg-brand-secondary-1 p-4">
         <h3 className="font-semibold text-lg">Add User</h3>
 
         <div className="relative">
@@ -169,12 +169,12 @@ export default function EntityUsersTab({ entityId }: Props) {
               if (e.key === "ArrowDown") {
                 e.preventDefault();
                 setHighlightIndex((prev) =>
-                  prev < searchResults.length - 1 ? prev + 1 : 0
+                  prev < searchResults.length - 1 ? prev + 1 : 0,
                 );
               } else if (e.key === "ArrowUp") {
                 e.preventDefault();
                 setHighlightIndex((prev) =>
-                  prev > 0 ? prev - 1 : searchResults.length - 1
+                  prev > 0 ? prev - 1 : searchResults.length - 1,
                 );
               } else if (e.key === "Enter") {
                 e.preventDefault();
@@ -205,14 +205,16 @@ export default function EntityUsersTab({ entityId }: Props) {
             <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded border border-brand-secondary-1 bg-brand-secondary-2">
               {searchResults.map((u, idx) => {
                 const alreadyAssigned = users.some(
-                  (user) => user.user_id === u.id
+                  (user) => user.user_id === u.id,
                 );
                 const active = idx === highlightIndex;
                 return (
                   <div
                     key={u.id}
                     className={`px-3 py-2 flex items-center gap-3 cursor-pointer ${
-                      active ? "bg-brand-secondary-1" : "hover:bg-brand-secondary-1"
+                      active
+                        ? "bg-brand-secondary-1"
+                        : "hover:bg-brand-secondary-1"
                     }`}
                     onClick={() => {
                       setNewUserId(u.id);

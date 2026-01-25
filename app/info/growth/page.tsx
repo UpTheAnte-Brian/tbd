@@ -10,13 +10,13 @@ export default function InformationPage() {
         <div className="mx-auto max-w-6xl px-6 pb-20 pt-14">
           <div className="grid items-start gap-10 md:grid-cols-[1.1fr_0.9fr]">
             <div className="info-fade-up">
-              <p className="text-xs uppercase tracking-[0.3em] text-brand-secondary-0">
+              <p className="text-sm uppercase tracking-[0.3em] text-brand-secondary-0">
                 Structure and transparency
               </p>
               <h1 className="mt-4 font-brand-heading text-4xl font-semibold leading-tight md:text-5xl">
                 How Ante Up Nation and Up the Ante work together
               </h1>
-              <p className="mt-4 text-lg text-brand-secondary-0">
+              <p className="mt-4 text-xl text-brand-secondary-0">
                 Local fundraising works best when infrastructure is shared. This
                 platform keeps donations local while giving districts and
                 nonprofits consistent tools, reporting, and long-term support.
@@ -27,10 +27,10 @@ export default function InformationPage() {
               className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 info-fade-up"
               style={{ animationDelay: "120ms" }}
             >
-              <h2 className="font-brand-heading text-xl font-semibold">
+              <h2 className="font-brand-heading text-2xl font-semibold">
                 The shared mission
               </h2>
-              <ul className="mt-4 space-y-3 text-sm text-brand-secondary-0">
+              <ul className="mt-4 space-y-3 text-base text-brand-secondary-0">
                 <li>
                   Communities benefit when fundraising is consistent,
                   transparent, and local.
@@ -51,19 +51,19 @@ export default function InformationPage() {
             style={{ animationDelay: "200ms" }}
           >
             <div className="flex items-center justify-between gap-6">
-              <h2 className="font-brand-heading text-2xl font-semibold">
+              <h2 className="font-brand-heading text-3xl font-semibold">
                 Two organizations, two responsibilities
               </h2>
             </div>
             <div className="mt-6 grid gap-6 md:grid-cols-2">
               <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6">
-                <p className="text-xs uppercase tracking-[0.28em] text-brand-secondary-0">
+                <p className="text-sm uppercase tracking-[0.28em] text-brand-secondary-0">
                   Nonprofit
                 </p>
-                <h3 className="mt-2 font-brand-heading text-xl font-semibold">
+                <h3 className="mt-2 font-brand-heading text-2xl font-semibold">
                   Up the Ante
                 </h3>
-                <ul className="mt-4 space-y-3 text-sm text-brand-secondary-0">
+                <ul className="mt-4 space-y-3 text-base text-brand-secondary-0">
                   <li>Receives charitable donations.</li>
                   <li>Manages donor-restricted funds.</li>
                   <li>Distributes funds to local causes.</li>
@@ -71,13 +71,13 @@ export default function InformationPage() {
                 </ul>
               </div>
               <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6">
-                <p className="text-xs uppercase tracking-[0.28em] text-brand-secondary-0">
+                <p className="text-sm uppercase tracking-[0.28em] text-brand-secondary-0">
                   For-profit operator
                 </p>
-                <h3 className="mt-2 font-brand-heading text-xl font-semibold">
+                <h3 className="mt-2 font-brand-heading text-2xl font-semibold">
                   Ante Up Nation (LLC)
                 </h3>
-                <ul className="mt-4 space-y-3 text-sm text-brand-secondary-0">
+                <ul className="mt-4 space-y-3 text-base text-brand-secondary-0">
                   <li>Builds and maintains the software platform.</li>
                   <li>Onboards districts, nonprofits, and retailers.</li>
                   <li>
@@ -87,7 +87,7 @@ export default function InformationPage() {
                 </ul>
               </div>
             </div>
-            <p className="mt-4 text-sm text-brand-secondary-0">
+            <p className="mt-4 text-base text-brand-secondary-0">
               These organizations are legally distinct and operate under
               separate governance structures.
             </p>
@@ -97,7 +97,7 @@ export default function InformationPage() {
             className="mt-14 info-fade-up"
             style={{ animationDelay: "260ms" }}
           >
-            <h2 className="font-brand-heading text-2xl font-semibold">
+            <h2 className="font-brand-heading text-3xl font-semibold">
               How money flows
             </h2>
             <ol className="mt-6 grid gap-4 md:grid-cols-3 lg:grid-cols-5">
@@ -129,12 +129,12 @@ export default function InformationPage() {
                   className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-4"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-accent-0 text-sm font-semibold text-brand-secondary-2">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-accent-0 text-base font-semibold text-brand-secondary-2">
                       {index + 1}
                     </span>
-                    <p className="text-sm font-semibold">{step.title}</p>
+                    <p className="text-base font-semibold">{step.title}</p>
                   </div>
-                  <p className="mt-3 text-xs text-brand-secondary-0">
+                  <p className="mt-3 text-sm text-brand-secondary-0">
                     {step.detail}
                   </p>
                 </li>
@@ -146,10 +146,10 @@ export default function InformationPage() {
             className="mt-14 info-fade-up"
             style={{ animationDelay: "320ms" }}
           >
-            <h2 className="font-brand-heading text-2xl font-semibold">
+            <h2 className="font-brand-heading text-3xl font-semibold">
               Why this structure exists
             </h2>
-            <ul className="mt-4 grid gap-3 text-sm text-brand-secondary-0 md:grid-cols-2">
+            <ul className="mt-4 grid gap-3 text-base text-brand-secondary-0 md:grid-cols-2">
               <li>
                 Nonprofits are not built to develop and maintain software.
               </li>
@@ -172,15 +172,15 @@ export default function InformationPage() {
           >
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6">
               <div>
-                <h2 className="font-brand-heading text-xl font-semibold">
+                <h2 className="font-brand-heading text-2xl font-semibold">
                   Looking for donor clarity?
                 </h2>
-                <p className="mt-2 text-sm text-brand-secondary-0">
+                <p className="mt-2 text-base text-brand-secondary-0">
                   Read the Up the Ante stewardship page before a transaction.
                 </p>
               </div>
               <Link
-                className="rounded-full border border-brand-secondary-1 bg-brand-accent-0 px-4 py-2 text-sm font-semibold text-brand-secondary-2 transition hover:bg-brand-accent-1"
+                className="rounded-full border border-brand-secondary-1 bg-brand-accent-0 px-4 py-2 text-base font-semibold text-brand-secondary-2 transition hover:bg-brand-accent-1"
                 href="/info/uptheante"
               >
                 Up the Ante stewardship

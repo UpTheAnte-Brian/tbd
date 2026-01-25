@@ -284,18 +284,18 @@ export async function getEntityMapFeatureCollection(
     return { type: "FeatureCollection", features: [] };
   }
 
-  const { data: geomRows, error: geomError } = await supabase
-    .from("entity_geometries_geojson")
+  const { data: geomRow, error: geomError } = await supabase
+    .from("entity_geometries")
     .select("entity_id, geometry_type, geojson")
     .eq("entity_id", entityId)
     .eq("geometry_type", geometryType)
-    .limit(1);
+    .maybeSingle();
 
   if (geomError) {
     throw new Error(`Failed to fetch entity geometry: ${geomError.message}`);
   }
 
-  const geometry = geomRows?.[0]?.geojson as Geometry | undefined;
+  const geometry = (geomRow?.geojson as Geometry | undefined) ?? undefined;
   const requirePolygon = geometryType === "boundary";
 
   if (!geometry) {
