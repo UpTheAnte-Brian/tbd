@@ -18,6 +18,7 @@ type Step = {
 const steps: Step[] = [
     { name: "importStates", args: ["run", "importStates"] },
     { name: "importDistricts", args: ["run", "importDistricts"] },
+    { name: "importMdeSuperintendents", args: ["run", "importMdeSuperintendents:dev"] },
     { name: "linkMnDistrictsToState:local", args: ["run", "linkMnDistrictsToState:local"] },
     {
         name: "importDistrictBoundaries",

@@ -1,0 +1,228 @@
+{
+  "entity_capability_framework": {
+    "nonprofit": {
+      "tiers": {
+        "registry_only": {
+          "label": "Registry-only",
+          "public_data_sources": [
+            "IRS Exempt Organizations",
+            "State charity registry (limited)"
+          ],
+          "questions_answerable": [
+            "Is the nonprofit legitimate?",
+            "Is it currently tax-exempt?",
+            "Who is legally responsible?"
+          ],
+          "questions_not_answerable": [
+            "How much money flows through it?",
+            "What programs are run?",
+            "Who governs it beyond one officer?"
+          ]
+        },
+
+        "disclosure_grade": {
+          "label": "Disclosure-grade",
+          "public_data_sources": [
+            "IRS Form 990",
+            "State charity filings"
+          ],
+          "questions_answerable": [
+            "What programs exist?",
+            "How funds are raised and spent?",
+            "Who governs the organization?",
+            "Basic financial health"
+          ]
+        },
+
+        "institutional": {
+          "label": "Institutional",
+          "public_data_sources": [
+            "Form 990",
+            "Audited financial statements",
+            "Grant disclosures"
+          ],
+          "questions_answerable": [
+            "Long-term sustainability",
+            "Asset stewardship",
+            "Governance maturity",
+            "Financial concentration risk"
+          ]
+        }
+      }
+    },
+
+    "business": {
+      "tiers": {
+        "registry_only": {
+          "label": "Registered Business",
+          "public_data_sources": [
+            "Secretary of State business registry"
+          ],
+          "questions_answerable": [
+            "Does this business legally exist?",
+            "Who owns or controls it?",
+            "Is it in good standing?"
+          ],
+          "questions_not_answerable": [
+            "Revenue",
+            "Profitability",
+            "Operational scale"
+          ]
+        },
+
+        "operationally_visible": {
+          "label": "Operationally Visible",
+          "public_data_sources": [
+            "Licensing agencies",
+            "Regulatory permits",
+            "Labor or safety violations"
+          ],
+          "questions_answerable": [
+            "What industry is it in?",
+            "Where does it operate?",
+            "Is it compliant with regulations?"
+          ]
+        },
+
+        "financially_disclosing": {
+          "label": "Financially Disclosing",
+          "public_data_sources": [
+            "SEC filings (10-K, 10-Q)",
+            "Municipal bond disclosures (if applicable)"
+          ],
+          "questions_answerable": [
+            "Financial performance",
+            "Risk exposure",
+            "Strategic direction"
+          ]
+        }
+      }
+    },
+
+    "school_district": {
+      "tiers": {
+        "statutory_reporting": {
+          "label": "Statutory Reporting",
+          "public_data_sources": [
+            "State education department",
+            "Annual budgets",
+            "Enrollment data"
+          ],
+          "questions_answerable": [
+            "How many students are served?",
+            "What is the approved budget?",
+            "What schools exist?"
+          ]
+        },
+
+        "performance_accountable": {
+          "label": "Performance Accountable",
+          "public_data_sources": [
+            "State assessments",
+            "Graduation rates",
+            "Attendance data"
+          ],
+          "questions_answerable": [
+            "How are students performing?",
+            "Where are achievement gaps?",
+            "Trends over time"
+          ]
+        },
+
+        "financially_transparent": {
+          "label": "Financially Transparent",
+          "public_data_sources": [
+            "Audited financials",
+            "Bond disclosures",
+            "Pension obligations"
+          ],
+          "questions_answerable": [
+            "Long-term financial sustainability",
+            "Debt and levy capacity",
+            "Capital planning readiness"
+          ]
+        }
+      }
+    },
+
+    "church": {
+      "tiers": {
+        "registry_only": {
+          "label": "Implicitly Exempt Religious Organization",
+          "public_data_sources": [
+            "Secretary of State (optional)",
+            "Denominational records"
+          ],
+          "questions_answerable": [
+            "Does the organization exist?",
+            "Where does it operate?"
+          ],
+          "questions_not_answerable": [
+            "Finances",
+            "Governance structure",
+            "Program scale"
+          ]
+        },
+
+        "voluntarily_disclosing": {
+          "label": "Voluntary Disclosure",
+          "public_data_sources": [
+            "Annual reports",
+            "Denominational transparency disclosures"
+          ],
+          "questions_answerable": [
+            "Leadership structure",
+            "Mission priorities",
+            "Community programs"
+          ]
+        }
+      }
+    },
+
+    "city_government": {
+      "tiers": {
+        "statutory": {
+          "label": "Statutory Government Entity",
+          "public_data_sources": [
+            "State statutes",
+            "City charter",
+            "Elected officials registry"
+          ],
+          "questions_answerable": [
+            "Who governs?",
+            "What authority exists?",
+            "What services are provided?"
+          ]
+        },
+
+        "financially_accountable": {
+          "label": "Financially Accountable",
+          "public_data_sources": [
+            "Annual budgets",
+            "Audited financial statements",
+            "Bond disclosures"
+          ],
+          "questions_answerable": [
+            "Where tax dollars go",
+            "Debt and obligations",
+            "Capital investment priorities"
+          ]
+        },
+
+        "performance_visible": {
+          "label": "Performance Visible",
+          "public_data_sources": [
+            "Open data portals",
+            "Service metrics",
+            "Public safety statistics"
+          ],
+          "questions_answerable": [
+            "Service effectiveness",
+            "Equity of outcomes",
+            "Operational efficiency"
+          ]
+        }
+      }
+    }
+  }
+}

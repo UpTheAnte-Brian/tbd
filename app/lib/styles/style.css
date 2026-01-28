@@ -2862,6 +2862,18 @@ video {
   --text-on-dark: var(--brand-primary-1);
   --border-subtle: var(--brand-secondary-2);
   --focus-ring: var(--brand-accent-1);
+  --text-selection-bg: var(--brand-accent-1);
+  --text-selection-fg: var(--text-on-dark);
+}
+
+::selection {
+  background-color: var(--text-selection-bg);
+  color: var(--text-selection-fg);
+}
+
+::-moz-selection {
+  background-color: var(--text-selection-bg);
+  color: var(--text-selection-fg);
 }
 
 .marker-svg {

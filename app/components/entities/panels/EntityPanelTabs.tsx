@@ -9,6 +9,7 @@ type Props = {
   entityType?: EntityType | null;
   tabsClassName?: string;
   tabsVariant?: "buttons" | "select";
+  allowedTabs?: TabKey[];
 };
 
 const BASE_TABS: { key: TabKey; label: string }[] = [
@@ -23,7 +24,28 @@ const GOVERNANCE_TAB: { key: TabKey; label: string } = {
   label: "Governance",
 };
 
+const SUPERINTENDENT_TAB: { key: TabKey; label: string } = {
+  key: "superintendent",
+  label: "Superintendent",
+};
+
+const TAB_LABELS: Record<TabKey, string> = {
+  overview: "Overview",
+  superintendent: "Superintendent",
+  branding: "Branding",
+  users: "Users",
+  map: "Map",
+  governance: "Governance",
+};
+
 function getTabs(entityType?: EntityType | null) {
+  if (entityType === "district") {
+    return [
+      BASE_TABS[0],
+      SUPERINTENDENT_TAB,
+      ...BASE_TABS.slice(1),
+    ];
+  }
   if (entityType !== "nonprofit") {
     return BASE_TABS;
   }
@@ -40,8 +62,11 @@ export default function EntityPanelTabs({
   entityType,
   tabsClassName,
   tabsVariant = "buttons",
+  allowedTabs,
 }: Props) {
-  const tabs = getTabs(entityType);
+  const tabs = allowedTabs?.length
+    ? allowedTabs.map((key) => ({ key, label: TAB_LABELS[key] }))
+    : getTabs(entityType);
   if (tabsVariant === "select") {
     return (
       <div className={tabsClassName ?? ""}>

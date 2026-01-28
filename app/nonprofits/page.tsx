@@ -29,17 +29,25 @@ export default function NonprofitsPage() {
   const [searchText, setSearchText] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const gridApiRef = useRef<FullGridApi<Nonprofit> | null>(null);
 
   const fetchNonProfits = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
       const response = await fetch("/api/nonprofits", { method: "GET" });
       if (!response.ok) throw new Error("Failed to fetch nonprofits");
       const json = await response.json();
-      setNonprofits(json);
+      setNonprofits(Array.isArray(json) ? json : []);
     } catch (error) {
       console.error(error);
+      setNonprofits([]);
+      setError("Failed to load nonprofits");
       toast.error("Failed to load nonprofits");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -140,7 +148,14 @@ export default function NonprofitsPage() {
     headerClass: "bg-brand-secondary-1 text-brand-primary-1",
   };
 
-  if (!nonprofits.length) return <LoadingSpinner />;
+  if (loading) return <LoadingSpinner />;
+  if (error) {
+    return (
+      <div className="rounded border border-rose-300 bg-rose-50 p-4 text-sm text-rose-700">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -155,24 +170,38 @@ export default function NonprofitsPage() {
         <div className="text-sm text-brand-secondary-2 whitespace-nowrap">
           Showing {visibleCount} / {nonprofits.length}
         </div>
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-sm font-semibold rounded-full hover:bg-blue-500 shadow-sm whitespace-nowrap"
-        >
-          <span className="text-base leading-none">＋</span>
-          <span>Add Nonprofit</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/admin/nonprofits/new"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-sm font-semibold rounded-full hover:bg-blue-500 shadow-sm whitespace-nowrap"
+          >
+            <span className="text-base leading-none">＋</span>
+            <span>Add Nonprofit</span>
+          </Link>
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="inline-flex items-center gap-2 px-3 py-2 border border-brand-secondary-0 text-sm font-semibold rounded-full hover:bg-brand-secondary-0 shadow-sm whitespace-nowrap"
+          >
+            Quick add (legacy)
+          </button>
+        </div>
       </div>
 
-      <div className="ag-theme-quartz h-[600px] w-full text-brand-primary-1 bg-brand-secondary-1">
-        <AgGridReact<Nonprofit>
-          rowData={nonprofits}
-          columnDefs={columnDefs}
-          theme={themeQuartz}
-          defaultColDef={defaultColDef}
-          onGridReady={onGridReady}
-        />
-      </div>
+      {nonprofits.length ? (
+        <div className="ag-theme-quartz h-[600px] w-full text-brand-primary-1 bg-brand-secondary-1">
+          <AgGridReact<Nonprofit>
+            rowData={nonprofits}
+            columnDefs={columnDefs}
+            theme={themeQuartz}
+            defaultColDef={defaultColDef}
+            onGridReady={onGridReady}
+          />
+        </div>
+      ) : (
+        <div className="rounded border border-dashed border-brand-secondary-1 p-6 text-center text-sm text-brand-secondary-0">
+          No nonprofits found yet.
+        </div>
+      )}
       <NonprofitCreateDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}

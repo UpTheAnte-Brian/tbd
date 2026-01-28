@@ -11,6 +11,7 @@ type Props = {
   entityType: EntityType | null;
   activeTab: TabKey;
   onTabChange: (tab: TabKey) => void;
+  allowedTabs?: TabKey[];
 };
 
 const BASE_TABS: { key: TabKey; label: string }[] = [
@@ -25,7 +26,24 @@ const GOVERNANCE_TAB: { key: TabKey; label: string } = {
   label: "Governance",
 };
 
+const SUPERINTENDENT_TAB: { key: TabKey; label: string } = {
+  key: "superintendent",
+  label: "Superintendent",
+};
+
+const TAB_LABELS: Record<TabKey, string> = {
+  overview: "Overview",
+  superintendent: "Superintendent",
+  branding: "Branding",
+  users: "Users",
+  map: "Map",
+  governance: "Governance",
+};
+
 function getTabs(entityType?: EntityType | null) {
+  if (entityType === "district") {
+    return [BASE_TABS[0], SUPERINTENDENT_TAB, ...BASE_TABS.slice(1)];
+  }
   if (entityType !== "nonprofit") {
     return BASE_TABS;
   }
@@ -38,8 +56,11 @@ export default function EntitySidebar({
   entityType,
   activeTab,
   onTabChange,
+  allowedTabs,
 }: Props) {
-  const tabs = getTabs(entityType);
+  const tabs = allowedTabs?.length
+    ? allowedTabs.map((key) => ({ key, label: TAB_LABELS[key] }))
+    : getTabs(entityType);
   return (
     <aside className="hidden md:block w-72 shrink-0">
       <div className="sticky top-4 rounded border border-brand-secondary-1 bg-brand-secondary-0 p-4 text-brand-secondary-2">

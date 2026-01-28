@@ -4,17 +4,32 @@ import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { EntityType } from "@/domain/entities/types";
 
-export type TabKey = "overview" | "branding" | "users" | "map" | "governance";
+export type TabKey =
+  | "overview"
+  | "branding"
+  | "users"
+  | "map"
+  | "governance"
+  | "superintendent";
 
 const BASE_TABS: TabKey[] = ["overview", "branding", "users", "map"];
 
-export function getEntityTabKeys(entityType?: EntityType | null): TabKey[] {
+export function getEntityTabKeys(
+  entityType?: EntityType | null,
+  options?: { includeSuperintendent?: boolean },
+): TabKey[] {
+  const includeSuperintendent = options?.includeSuperintendent ?? true;
   if (entityType === "nonprofit") {
     return [
       ...BASE_TABS.slice(0, 3),
       "governance" as TabKey,
       ...BASE_TABS.slice(3),
     ];
+  }
+  if (entityType === "district") {
+    return includeSuperintendent
+      ? ["overview", "superintendent", "branding", "users", "map"]
+      : ["overview", "branding", "users", "map"];
   }
   return BASE_TABS;
 }
@@ -25,6 +40,7 @@ function coerceTabKey(value: string | null): TabKey {
   if (lower === "users") return "users";
   if (lower === "map") return "map";
   if (lower === "governance") return "governance";
+  if (lower === "superintendent") return "superintendent";
   return "overview";
 }
 

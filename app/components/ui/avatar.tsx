@@ -8,11 +8,13 @@ export default function Avatar({
   url,
   size,
   onUpload,
+  secondaryAction,
 }: {
   uid: string | null;
   url: string | null;
   size: number;
   onUpload: (url: string) => void;
+  secondaryAction?: React.ReactNode;
 }) {
   const supabase = getSupabaseClient();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -76,10 +78,19 @@ export default function Avatar({
           style={{ height: size, width: size }}
         />
       )}
-      <div style={{ width: size }}>
-        <label className="button primary block" htmlFor="single">
+      <div
+        style={{ width: secondaryAction ? "100%" : size }}
+        className={secondaryAction ? "flex items-center gap-2" : ""}
+      >
+        <label
+          className={`button primary ${secondaryAction ? "" : "block"}`}
+          htmlFor="single"
+        >
           {uploading ? "Uploading ..." : "Upload"}
         </label>
+        {secondaryAction ? (
+          <div className="flex-1">{secondaryAction}</div>
+        ) : null}
         <input
           style={{ visibility: "hidden", position: "absolute" }}
           type="file"

@@ -1,0 +1,803 @@
+[
+  {
+    "ein": "04-3707991",
+    "return_name": null,
+    "tax_year": 2021,
+    "role": "director",
+    "name": "BOBBIE JO TRONSGARD BOARD",
+    "title": "MEMBER",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "04-3707991",
+    "return_name": null,
+    "tax_year": 2021,
+    "role": "director",
+    "name": "JIM KLEINSASSER BOARD",
+    "title": "MEMBER",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "04-3707991",
+    "return_name": null,
+    "tax_year": 2022,
+    "role": "director",
+    "name": "CARRIE KLEIBENSTEIN BOARD",
+    "title": "MEMBER",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "04-3707991",
+    "return_name": null,
+    "tax_year": 2022,
+    "role": "director",
+    "name": "CHRIS SIMPSON BOARD",
+    "title": "MEMBER",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "20-1943914",
+    "return_name": "WESTONKA SCHOOL AGE KIDS CORE INC",
+    "tax_year": 2023,
+    "role": "other",
+    "name": "BETSY MCCONNELL",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "20-1943914",
+    "return_name": "WESTONKA SCHOOL AGE KIDS CORE INC",
+    "tax_year": 2023,
+    "role": "other",
+    "name": "BOARD OF",
+    "title": "DIR",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "20-1943914",
+    "return_name": "WESTONKA SCHOOL AGE KIDS CORE INC",
+    "tax_year": 2023,
+    "role": "other",
+    "name": "GREG KENTON",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "20-1943914",
+    "return_name": "WESTONKA SCHOOL AGE KIDS CORE INC",
+    "tax_year": 2023,
+    "role": "other",
+    "name": "JENNA FINKE",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "20-1943914",
+    "return_name": "WESTONKA SCHOOL AGE KIDS CORE INC",
+    "tax_year": 2023,
+    "role": "other",
+    "name": "JODI ENTINGER",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "20-1943914",
+    "return_name": "WESTONKA SCHOOL AGE KIDS CORE INC",
+    "tax_year": 2023,
+    "role": "other",
+    "name": "JOHN CONNOLLY",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "20-1943914",
+    "return_name": "WESTONKA SCHOOL AGE KIDS CORE INC",
+    "tax_year": 2023,
+    "role": "other",
+    "name": "KAREN O'BRIEN",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "20-1943914",
+    "return_name": "WESTONKA SCHOOL AGE KIDS CORE INC",
+    "tax_year": 2023,
+    "role": "other",
+    "name": "KERI BERG",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "20-1943914",
+    "return_name": "WESTONKA SCHOOL AGE KIDS CORE INC",
+    "tax_year": 2023,
+    "role": "other",
+    "name": "KJERSTIN YOUNG",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "20-1943914",
+    "return_name": "WESTONKA SCHOOL AGE KIDS CORE INC",
+    "tax_year": 2023,
+    "role": "other",
+    "name": "LEAH PAULSEN",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "20-1943914",
+    "return_name": "WESTONKA SCHOOL AGE KIDS CORE INC",
+    "tax_year": 2023,
+    "role": "other",
+    "name": "MATTY LUND",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "20-1943914",
+    "return_name": "WESTONKA SCHOOL AGE KIDS CORE INC",
+    "tax_year": 2023,
+    "role": "other",
+    "name": "NED MATTIMOE",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "20-1943914",
+    "return_name": "WESTONKA SCHOOL AGE KIDS CORE INC",
+    "tax_year": 2023,
+    "role": "other",
+    "name": "NICOLE WAROLIN",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "20-1943914",
+    "return_name": "WESTONKA SCHOOL AGE KIDS CORE INC",
+    "tax_year": 2023,
+    "role": "other",
+    "name": "Section C.",
+    "title": "Disclosure",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "20-1943914",
+    "return_name": "WESTONKA SCHOOL AGE KIDS CORE INC",
+    "tax_year": 2023,
+    "role": "other",
+    "name": "TIMOTHY ) WHALEY 40.",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "ALLISON BROWN",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "ANDREW LEINFELDER",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "BILL SHERCK",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "COLIN SHAUGHNESSY",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "CRAIG OBERG",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "GREGG KATCHMARK",
+    "title": "aneeasseceensnseasseneessenssecuensessenecesauerersestenenseneracans|",
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "JENNIFER JOHNSON",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "JILLIAN BURKE",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "JOSH SLAYTON",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "KRISTEN SPARGO",
+    "title": null,
+    "average_hours_per_week": "2"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "MARIA VEACH",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "MIKE KURTH",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "MIK GUSENIUS",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "NATALIE SOPER",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "NICK LEWIS",
+    "title": null,
+    "average_hours_per_week": "30"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "PATRICK MURRAY",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "SAMANTHA PACHYAK",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "STACY SCHULTZ",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "TY PRUDY",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "VICE PRESIDENT",
+    "title": "(FORMER)",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "34-1873282",
+    "return_name": "ORONO WESTONKA SOCCER CLUB INC",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "VICTORIA SEALS",
+    "title": null,
+    "average_hours_per_week": "20"
+  },
+  {
+    "ein": "41-1377878",
+    "return_name": "WESTONKA-ORONO SPORTS CENTER",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "BLAKE SMITH",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1377878",
+    "return_name": "WESTONKA-ORONO SPORTS CENTER",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "JODI REISER",
+    "title": "Cnn rn nnn rien een rienaernaeeneaneasseeaersnaeeneaneseaee cree x ie) 0 0",
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1377878",
+    "return_name": "WESTONKA-ORONO SPORTS CENTER",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "JOHN STERNE",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1377878",
+    "return_name": "WESTONKA-ORONO SPORTS CENTER",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "MARK PETERSON",
+    "title": "SPEER) sents x ie) 0 0",
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1377878",
+    "return_name": "WESTONKA-ORONO SPORTS CENTER",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "RAY WALLANDER",
+    "title": "cree x ie) 0 0",
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1377878",
+    "return_name": "WESTONKA-ORONO SPORTS CENTER",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "Section C.",
+    "title": "Disclosure",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1377878",
+    "return_name": "WESTONKA-ORONO SPORTS CENTER",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "BLAKE SMITH",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1377878",
+    "return_name": "WESTONKA-ORONO SPORTS CENTER",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "JODI REISER",
+    "title": "Cnn rn nnn rien een rienaernaeeneaneasseeaersnaeeneaneseaee cree x ie) 0 0",
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1377878",
+    "return_name": "WESTONKA-ORONO SPORTS CENTER",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "JOHN STERNE",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1377878",
+    "return_name": "WESTONKA-ORONO SPORTS CENTER",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "PETER KOLAR",
+    "title": "SPEER) sents x ie) 0 0",
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1377878",
+    "return_name": "WESTONKA-ORONO SPORTS CENTER",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "Section C.",
+    "title": "Disclosure",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1377878",
+    "return_name": "WESTONKA-ORONO SPORTS CENTER",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "TREVOR WINTER",
+    "title": "cree x ie) 0 0",
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1619499",
+    "return_name": "MOUND WESTONKA HOCKEY ASSOCIATION",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "MOUND WESTONKA HOCKEY",
+    "title": "ASSOCIATION",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1619499",
+    "return_name": "MOUND WESTONKA HOCKEY ASSOCIATION",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "OI Application",
+    "title": "pending PO BOX 266",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1619499",
+    "return_name": "MOUND WESTONKA HOCKEY ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "MOUND WESTONKA HOCKEY",
+    "title": "ASSOCIATION",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1619499",
+    "return_name": "MOUND WESTONKA HOCKEY ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "OI Application",
+    "title": "pending",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1619499",
+    "return_name": "MOUND WESTONKA HOCKEY ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "OO Amended",
+    "title": "return",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1679420",
+    "return_name": "WESTONKA RECREATIONAL ASSOCIATION",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "DAVID GREENSLIT 2.",
+    "title": "cree x ie) 0 0",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1679420",
+    "return_name": "WESTONKA RECREATIONAL ASSOCIATION",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "JAMES BYERS 5.",
+    "title": "cree x ie) 0 0",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1679420",
+    "return_name": "WESTONKA RECREATIONAL ASSOCIATION",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "MIKE GIINTHIR 3.",
+    "title": "x ie) 0 0",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1679420",
+    "return_name": "WESTONKA RECREATIONAL ASSOCIATION",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "Section C.",
+    "title": "Disclosure",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1679420",
+    "return_name": "WESTONKA RECREATIONAL ASSOCIATION",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "TERRILL ANDERSON",
+    "title": null,
+    "average_hours_per_week": "2"
+  },
+  {
+    "ein": "41-1679420",
+    "return_name": "WESTONKA RECREATIONAL ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "DAVID GREENSLIT 2.",
+    "title": "cree x ie) 0 0",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1679420",
+    "return_name": "WESTONKA RECREATIONAL ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "JAMES BYERS 5.",
+    "title": "cree x ie) 0 0",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1679420",
+    "return_name": "WESTONKA RECREATIONAL ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "MIKE GIINTHIR 3.",
+    "title": "x ie) 0 0",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1679420",
+    "return_name": "WESTONKA RECREATIONAL ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "Section C.",
+    "title": "Disclosure",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1679420",
+    "return_name": "WESTONKA RECREATIONAL ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "TERRILL ANDERSON",
+    "title": null,
+    "average_hours_per_week": "2"
+  },
+  {
+    "ein": "41-1839631",
+    "return_name": "Westonka District 277 Foundation",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "Diane Bates 7.",
+    "title": "Cnr nr neem seen crenaernaeeneameasseeaersnaeeneneneaee cree x x ie) 0 0",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1839631",
+    "return_name": "Westonka District 277 Foundation",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "Julie Johnson",
+    "title": null,
+    "average_hours_per_week": "10"
+  },
+  {
+    "ein": "41-1839631",
+    "return_name": "Westonka District 277 Foundation",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "Kari Kantola 5.",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1839631",
+    "return_name": "Westonka District 277 Foundation",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "Kathleen Lohmar Exel",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1839631",
+    "return_name": "Westonka District 277 Foundation",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "Margaret Holste",
+    "title": null,
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1839631",
+    "return_name": "Westonka District 277 Foundation",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "Section C.",
+    "title": "Disclosure",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "DAVE BOTTS",
+    "title": "x ie) 0 0",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "JEFF PETERSON",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "JOHN STERNE",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "KEVIN BORG",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "MARK ENGEBRETSON",
+    "title": "aad x ie) 0 0",
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "Section C.",
+    "title": "Disclosure",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "SHARON THALER",
+    "title": "aad x ie) 0 0",
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2021,
+    "role": "other",
+    "name": "TIM HALES",
+    "title": "x ie) 0 0",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "DAVE BOTTS",
+    "title": "x ie) 0 0",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "JEFF PETERSON",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "JOHN STERNE",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "KEVIN BORG",
+    "title": null,
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "MARK ENGEBRETSON",
+    "title": "aad x ie) 0 0",
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "Section C.",
+    "title": "Disclosure",
+    "average_hours_per_week": null
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "SHARON THALER",
+    "title": "aad x ie) 0 0",
+    "average_hours_per_week": "1"
+  },
+  {
+    "ein": "41-1965117",
+    "return_name": "WESTONKA SPORTS ASSOCIATION",
+    "tax_year": 2022,
+    "role": "other",
+    "name": "TIM HALES",
+    "title": "x ie) 0 0",
+    "average_hours_per_week": null
+  }
+]

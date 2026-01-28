@@ -1,0 +1,34 @@
+Ante Up Nation & Up the Ante — Founder Context One-Pager
+
+The Problem Being Solved
+Local fundraising is fragmented. School districts and nonprofits rely on sporadic campaigns, limited visibility, and volunteer-driven infrastructure that doesn’t scale. Retail round-up programs work—but they require coordination, transparency, and continuity.
+
+The Solution
+A shared platform that enables consistent local fundraising while keeping funds local, transparent, and governed appropriately.
+
+The Structure
+Two legally distinct but complementary organizations:
+
+Up the Ante (Planned 501(c)(3))
+	•	Acts as the charitable steward
+	•	Receives donations
+	•	Distributes funds to local nonprofits
+	•	Publishes public reporting
+
+Ante Up Nation (For-Profit LLC)
+	•	Builds and operates the software platform
+	•	Onboards districts, nonprofits, and retailers
+	•	Provides dashboards, reporting, and compliance tooling
+	•	Supports sustainability through service fees
+
+Why Two Entities
+Nonprofits are not well-suited to building and maintaining software infrastructure. Separating stewardship from operations allows each organization to focus on what it does best, while maintaining transparency and accountability.
+
+Current Reality
+The LLC is operational first and is building the platform. The nonprofit will be established with an initial board and will contract for services as needed. Early platform work is treated as founder-owned IP until formally assigned or licensed.
+
+Near-Term Goal
+Launch an initial district-level dashboard that consolidates nonprofit data (boards, calendars, reporting, fundraising activity) and establishes an ongoing feedback loop with district leadership.
+
+Long-Term Vision
+A sustainable, transparent local fundraising ecosystem where districts, nonprofits, and businesses align around shared outcomes—supported by durable infrastructure rather than one-off campaigns.

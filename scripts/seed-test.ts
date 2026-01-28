@@ -15,6 +15,7 @@ const steps: Step[] = [
     name: "importDistricts:test",
     args: ["run", "importDistricts:test", "--", "--reconcile"],
   },
+  { name: "importMdeSuperintendents:test", args: ["run", "importMdeSuperintendents:test"] },
   {
     name: "linkMnDistrictsToState:test",
     args: ["run", "linkMnDistrictsToState:test"],
@@ -24,12 +25,12 @@ const steps: Step[] = [
     args: ["run", "importDistrictBoundaries:test"],
   },
   {
-    name: "importSchoolProgramLocs:test",
-    args: ["run", "importSchoolProgramLocs:test"],
-  },
-  {
     name: "importAttendanceAreas:test",
     args: ["run", "importAttendanceAreas:test"],
+  },
+  {
+    name: "importSchoolProgramLocs:test",
+    args: ["run", "importSchoolProgramLocs:test"],
   },
   {
     name: "linkSchoolsToDistricts:test",

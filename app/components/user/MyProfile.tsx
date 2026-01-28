@@ -152,23 +152,25 @@ export default function MyProfile({
               setAvatarUrl(url);
               updateAvatarUrl(url);
             }}
-          />
-          <button
-            className="w-full rounded bg-brand-primary-0 px-3 py-2 text-sm font-semibold text-brand-primary-1 hover:bg-brand-primary-2 disabled:opacity-60 disabled:cursor-not-allowed"
-            onClick={() =>
-              updateProfile({
-                username,
-                fullname,
-                website,
-                avatar_url: avatarUrl,
-                firstName,
-                lastName,
-              })
+            secondaryAction={
+              <button
+                className="w-full rounded bg-brand-primary-0 px-3 py-2 text-sm font-semibold text-brand-primary-1 hover:bg-brand-primary-2 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={() =>
+                  updateProfile({
+                    username,
+                    fullname,
+                    website,
+                    avatar_url: avatarUrl,
+                    firstName,
+                    lastName,
+                  })
+                }
+                disabled={loading || !hasChanges}
+              >
+                {loading ? "Saving..." : "Update Profile"}
+              </button>
             }
-            disabled={loading || !hasChanges}
-          >
-            {loading ? "Saving..." : "Update Profile"}
-          </button>
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

@@ -1,0 +1,212 @@
+
+
+{
+  "source": "IRS Exempt Organizations Search (apps.irs.gov/app/eos)",
+  "query": {
+    "organization_name_contains": "Westonka",
+    "state": "MN"
+  },
+  "last_updated": "2026-01-24",
+  "organizations": [
+    {
+      "ein": "32-0573784",
+      "name": "Friends of Mound Westonka High School",
+      "city": "Minnetrista",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": ""
+    },
+    {
+      "ein": "37-1846058",
+      "name": "Mound Westonka Baseball Dugout Club",
+      "city": "Mound",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": ""
+    },
+    {
+      "ein": "20-2600024",
+      "name": "Mound Westonka Basketball Boosters",
+      "city": "Mound",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": "990-N filer (under $50k receipts)"
+    },
+    {
+      "ein": "20-5270303",
+      "name": "Mound Westonka Fastpitch Boosters",
+      "city": "Minnetrista",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": ""
+    },
+    {
+      "ein": "92-0664172",
+      "name": "Mound Westonka High School Girls Golf Boosters",
+      "city": "Minnetrista",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": ""
+    },
+    {
+      "ein": "41-1619499",
+      "name": "Mound Westonka Hockey Association Inc.",
+      "city": "Mound",
+      "state": "MN",
+      "forms_available": ["990"],
+      "notes": "Full Form 990 reviewed (2021, 2022 PDFs available)"
+    },
+    {
+      "ein": "27-1819245",
+      "name": "Mound Westonka Lacrosse Association",
+      "city": "Minnetrista",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": ""
+    },
+    {
+      "ein": "83-3777068",
+      "name": "Mound Westonka Nordic Boosters Club",
+      "city": "Minnetrista",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": ""
+    },
+    {
+      "ein": "20-3959205",
+      "name": "Mound-Westonka High School Girls Hockey Association",
+      "city": "Mound",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": ""
+    },
+    {
+      "ein": "41-1419110",
+      "name": "Mound-Westonka Pop-Singers Scholarship Fund",
+      "city": "Mound",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": "Scholarship-focused"
+    },
+    {
+      "ein": "41-1792779",
+      "name": "Mound-Westonka Rotary Foundation",
+      "city": "Mound",
+      "state": "MN",
+      "forms_available": ["990"],
+      "notes": ""
+    },
+    {
+      "ein": "41-1800102",
+      "name": "Orono Westonka Soccer Club Inc.",
+      "city": "Long Lake",
+      "state": "MN",
+      "forms_available": ["990"],
+      "notes": ""
+    },
+    {
+      "ein": "41-0882703",
+      "name": "Westonka Community Alliance",
+      "city": "Minnetrista",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": ""
+    },
+    {
+      "ein": "99-3212332",
+      "name": "Westonka Community Food Shelf",
+      "city": "Mound",
+      "state": "MN",
+      "forms_available": ["990"],
+      "notes": ""
+    },
+    {
+      "ein": "41-1839631",
+      "name": "Westonka District 277 Foundation Corp Charter No 1n 862",
+      "city": "Mound",
+      "state": "MN",
+      "forms_available": ["990"],
+      "notes": "District education foundation; endowment & scholarships"
+    },
+    {
+      "ein": "80-0061816",
+      "name": "Westonka Early Childhood Advisory Council",
+      "city": "Mound",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": ""
+    },
+    {
+      "ein": "41-6037822",
+      "name": "Westonka Education Minnesota",
+      "city": "Mound",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": "Likely union-affiliated"
+    },
+    {
+      "ein": "41-1427027",
+      "name": "Westonka Estates",
+      "city": "Saint Paul",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": ""
+    },
+    {
+      "ein": "46-4145185",
+      "name": "Westonka Flyers Swim Club",
+      "city": "Plymouth",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": ""
+    },
+    {
+      "ein": "02-0746574",
+      "name": "Westonka Football Boosters",
+      "city": "Independence",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": ""
+    },
+    {
+      "ein": "33-1933737",
+      "name": "Westonka High School Boys Volleyball Booster Club",
+      "city": "Minnetrista",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": ""
+    },
+    {
+      "ein": "03-0389616",
+      "name": "Westonka Historical Society",
+      "city": "Mound",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": ""
+    },
+    {
+      "ein": "51-0657140",
+      "name": "Westonka Horticultural Society",
+      "city": "Long Lake",
+      "state": "MN",
+      "forms_available": ["990"],
+      "notes": ""
+    },
+    {
+      "ein": "41-1515776",
+      "name": "Westonka Intervention Project Inc.",
+      "city": "Mound",
+      "state": "MN",
+      "forms_available": [],
+      "notes": "Listed; filing status unclear"
+    },
+    {
+      "ein": "46-5524647",
+      "name": "Westonka Lacrosse Association",
+      "city": "St Bonifacius",
+      "state": "MN",
+      "forms_available": ["990-N"],
+      "notes": ""
+    }
+  ]
+}

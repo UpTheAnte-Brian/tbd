@@ -19,7 +19,11 @@ export const getCurrentUser = cache(async () => {
     if (error) {
         // Supabase returns "Auth session missing" when there is simply no session;
         // treat that as an anonymous user without logging noise.
-        if (error.message?.toLowerCase().includes("auth session missing")) {
+        const message = error.message?.toLowerCase() ?? "";
+        const isAnonymous =
+            message.includes("auth session missing") ||
+            message.includes("user from sub claim in jwt does not exist");
+        if (isAnonymous) {
             return null;
         }
         console.error("Error fetching user server-side:", error.message);

@@ -7,6 +7,7 @@ import EntityBrandingTab from "@/app/components/entities/tabs/branding/EntityBra
 import EntityUsersTab from "@/app/components/entities/tabs/users/EntityUsersTab";
 import EntityMapTab from "@/app/components/entities/tabs/map/EntityMapTab";
 import EntityGovernanceTab from "@/app/components/entities/tabs/governance/EntityGovernanceTab";
+import EntitySuperintendentTab from "@/app/components/entities/tabs/superintendent/EntitySuperintendentTab";
 import type { TabKey } from "@/app/components/entities/hooks/useEntityTabParam";
 
 type Props = {
@@ -55,6 +56,10 @@ export default function EntityPanelContent({
       case "governance":
         return (
           <EntityGovernanceTab entityId={entityId} entityType={entityType} />
+        );
+      case "superintendent":
+        return (
+          <EntitySuperintendentTab entityId={entityId} entityType={entityType} />
         );
       default:
         return null;

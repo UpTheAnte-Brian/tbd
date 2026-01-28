@@ -13,6 +13,7 @@ type Props = {
   onTabChange: (tab: TabKey) => void;
   mobileHeader?: ReactNode;
   tabs?: ReactNode;
+  allowedTabs?: TabKey[];
   children: ReactNode;
 };
 
@@ -24,6 +25,7 @@ export default function EntityPageLayout({
   onTabChange,
   mobileHeader,
   tabs,
+  allowedTabs,
   children,
 }: Props) {
   return (
@@ -40,6 +42,7 @@ export default function EntityPageLayout({
         entityType={entityType}
         activeTab={activeTab}
         onTabChange={onTabChange}
+        allowedTabs={allowedTabs}
       />
       <div className="flex-1 min-w-0 md:pl-4">
         <div className="w-full space-y-6 md:space-y-0">{children}</div>

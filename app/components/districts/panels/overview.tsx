@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import DistrictDonationsSummary from "@/app/components/districts/DistrictDonationsSummary";
+import LeadershipSection from "@/app/components/districts/LeadershipSection";
 import DistrictSideBar from "@/app/components/ui/district-sidebar";
 import { DistrictDetails } from "@/app/lib/types/types";
 
@@ -15,7 +16,8 @@ export default function DistrictOverview({
   return (
     <div className="flex flex-col md:flex-row gap-4 w-full">
       {/* Left / Main content */}
-      <div className="md:w-3/4 mb-4 md:mb-0 rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-4 md:border-0 md:bg-transparent text-brand-secondary-0">
+      <div className="md:w-3/4 mb-4 md:mb-0 rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-4 md:border-0 md:bg-transparent text-brand-secondary-0 space-y-6">
+        <LeadershipSection entityId={district.entity_id ?? district.id} />
         <div className="space-y-2">
           <p>Main content goes here</p>
           <p>Ideas:</p>

@@ -6,6 +6,7 @@ import EntityPanelTabs from "@/app/components/entities/panels/EntityPanelTabs";
 import EntityPanelContent from "@/app/components/entities/panels/EntityPanelContent";
 import EntityPageLayout from "@/app/components/entities/EntityPageLayout";
 import { EntityLogo } from "@/app/components/branding/EntityLogo";
+import { useUser } from "@/app/hooks/useUser";
 import {
   getEntityTabKeys,
   useEntityTabParam,
@@ -26,6 +27,7 @@ type Props = {
 };
 
 export default function EntityPanel({ entityId, entityType }: Props) {
+  const { user } = useUser();
   const [entity, setEntity] = useState<EntityDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +75,13 @@ export default function EntityPanel({ entityId, entityType }: Props) {
     return null;
   }, [entityType, entity?.entity_type]);
 
-  const allowedTabs = useMemo(() => getEntityTabKeys(resolvedType), [resolvedType]);
+  const allowedTabs = useMemo(
+    () =>
+      getEntityTabKeys(resolvedType, {
+        includeSuperintendent: Boolean(user),
+      }),
+    [resolvedType, user],
+  );
   const { activeTab, setActiveTab } = useEntityTabParam(allowedTabs);
 
   if (loading) {
@@ -114,6 +122,7 @@ export default function EntityPanel({ entityId, entityType }: Props) {
       onTabChange={setActiveTab}
       entityType={resolvedType}
       tabsVariant="select"
+      allowedTabs={allowedTabs}
     />
   );
 
@@ -127,6 +136,7 @@ export default function EntityPanel({ entityId, entityType }: Props) {
         onTabChange={setActiveTab}
         mobileHeader={mobileHeader}
         tabs={mobileTabs}
+        allowedTabs={allowedTabs}
       >
         {/* <div className="space-y-6"> */}
         {/* <EntityHeader

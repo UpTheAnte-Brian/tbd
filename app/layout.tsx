@@ -8,6 +8,7 @@ import ReactQueryProvider from "@/app/lib/providers/ReactQueryProvider";
 import { getCurrentProfile } from "@/app/data/users";
 import UserProviderClient from "@/app/providers/UserProviderClient";
 import BrandingDebug from "@/app/components/branding/BrandingDebug";
+import AppEnvBanner from "@/app/components/AppEnvBanner";
 
 // This sets the title on your browser tab.
 // export const metadata = {
@@ -41,14 +42,15 @@ export default async function RootLayout({
                 <main className="relative">
                   {/* Header: Fixed position, ensure content flows below it */}
                   <UserProviderClient initialUser={serverUser}>
-                  <header className="h-16 text-[15px] fixed top-0 w-full bg-surface-nav text-brand-primary-1 z-[999]">
-                    <NavBarComponent></NavBarComponent>
-                  </header>
+                    <header className="h-16 text-[15px] fixed top-0 w-full bg-surface-nav text-brand-primary-1 z-[999]">
+                      <NavBarComponent></NavBarComponent>
+                    </header>
 
                     {/* Main Content Area: Use padding-top to create space below the fixed header */}
                     <div className="pt-16 min-h-screen bg-brand-secondary-2">
                       {/* Added pt- to account for header height */}
 
+                      <AppEnvBanner />
                       {children}
                     </div>
 

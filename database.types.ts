@@ -979,6 +979,585 @@ export type Database = {
       [_ in never]: never
     }
   }
+  irs: {
+    Tables: {
+      entity_links: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          ein: string
+          entity_id: string
+          match_type: string
+          notes: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          ein: string
+          entity_id: string
+          match_type?: string
+          notes?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          ein?: string
+          entity_id?: string
+          match_type?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_links_ein_fkey"
+            columns: ["ein"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["ein"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          aka_names: string[]
+          city: string | null
+          country: string
+          created_at: string
+          deductibility_code: string | null
+          ein: string
+          ein_normalized: string | null
+          foundation_code: string | null
+          last_seen_at: string
+          legal_name: string
+          normalized_legal_name: string | null
+          ruling_year: number | null
+          state: string | null
+          subsection_code: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          aka_names?: string[]
+          city?: string | null
+          country?: string
+          created_at?: string
+          deductibility_code?: string | null
+          ein: string
+          ein_normalized?: string | null
+          foundation_code?: string | null
+          last_seen_at?: string
+          legal_name: string
+          normalized_legal_name?: string | null
+          ruling_year?: number | null
+          state?: string | null
+          subsection_code?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          aka_names?: string[]
+          city?: string | null
+          country?: string
+          created_at?: string
+          deductibility_code?: string | null
+          ein?: string
+          ein_normalized?: string | null
+          foundation_code?: string | null
+          last_seen_at?: string
+          legal_name?: string
+          normalized_legal_name?: string | null
+          ruling_year?: number | null
+          state?: string | null
+          subsection_code?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      return_documents: {
+        Row: {
+          bytes: number | null
+          created_at: string
+          doc_type: Database["irs"]["Enums"]["irs_doc_type"]
+          fetched_at: string | null
+          fetched_from: string | null
+          id: string
+          mime_type: string | null
+          return_id: string
+          sha256: string | null
+          storage_bucket: string | null
+          storage_path: string | null
+        }
+        Insert: {
+          bytes?: number | null
+          created_at?: string
+          doc_type: Database["irs"]["Enums"]["irs_doc_type"]
+          fetched_at?: string | null
+          fetched_from?: string | null
+          id?: string
+          mime_type?: string | null
+          return_id: string
+          sha256?: string | null
+          storage_bucket?: string | null
+          storage_path?: string | null
+        }
+        Update: {
+          bytes?: number | null
+          created_at?: string
+          doc_type?: Database["irs"]["Enums"]["irs_doc_type"]
+          fetched_at?: string | null
+          fetched_from?: string | null
+          id?: string
+          mime_type?: string | null
+          return_id?: string
+          sha256?: string | null
+          storage_bucket?: string | null
+          storage_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "return_documents_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "latest_returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_documents_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "returns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      return_financials: {
+        Row: {
+          contributions: number | null
+          created_at: string
+          excess_or_deficit: number | null
+          fundraising_expenses: number | null
+          fundraising_gross: number | null
+          investment_income: number | null
+          management_general_expenses: number | null
+          net_assets_begin: number | null
+          net_assets_end: number | null
+          program_expenses: number | null
+          program_service_revenue: number | null
+          return_id: string
+          source_map: Json
+          total_assets_begin: number | null
+          total_assets_end: number | null
+          total_expenses: number | null
+          total_liabilities_begin: number | null
+          total_liabilities_end: number | null
+          total_revenue: number | null
+          updated_at: string
+        }
+        Insert: {
+          contributions?: number | null
+          created_at?: string
+          excess_or_deficit?: number | null
+          fundraising_expenses?: number | null
+          fundraising_gross?: number | null
+          investment_income?: number | null
+          management_general_expenses?: number | null
+          net_assets_begin?: number | null
+          net_assets_end?: number | null
+          program_expenses?: number | null
+          program_service_revenue?: number | null
+          return_id: string
+          source_map?: Json
+          total_assets_begin?: number | null
+          total_assets_end?: number | null
+          total_expenses?: number | null
+          total_liabilities_begin?: number | null
+          total_liabilities_end?: number | null
+          total_revenue?: number | null
+          updated_at?: string
+        }
+        Update: {
+          contributions?: number | null
+          created_at?: string
+          excess_or_deficit?: number | null
+          fundraising_expenses?: number | null
+          fundraising_gross?: number | null
+          investment_income?: number | null
+          management_general_expenses?: number | null
+          net_assets_begin?: number | null
+          net_assets_end?: number | null
+          program_expenses?: number | null
+          program_service_revenue?: number | null
+          return_id?: string
+          source_map?: Json
+          total_assets_begin?: number | null
+          total_assets_end?: number | null
+          total_expenses?: number | null
+          total_liabilities_begin?: number | null
+          total_liabilities_end?: number | null
+          total_revenue?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "return_financials_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: true
+            referencedRelation: "latest_returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_financials_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: true
+            referencedRelation: "returns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      return_narratives: {
+        Row: {
+          ai_summary: string | null
+          created_at: string
+          extracted: Json
+          id: string
+          label: string | null
+          raw_text: string
+          return_id: string
+          section: Database["irs"]["Enums"]["irs_narrative_section"]
+          source_map: Json
+        }
+        Insert: {
+          ai_summary?: string | null
+          created_at?: string
+          extracted?: Json
+          id?: string
+          label?: string | null
+          raw_text: string
+          return_id: string
+          section: Database["irs"]["Enums"]["irs_narrative_section"]
+          source_map?: Json
+        }
+        Update: {
+          ai_summary?: string | null
+          created_at?: string
+          extracted?: Json
+          id?: string
+          label?: string | null
+          raw_text?: string
+          return_id?: string
+          section?: Database["irs"]["Enums"]["irs_narrative_section"]
+          source_map?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "return_narratives_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "latest_returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_narratives_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "returns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      return_people: {
+        Row: {
+          average_hours_per_week: number | null
+          created_at: string
+          id: string
+          is_current: boolean | null
+          name: string
+          other_compensation: number | null
+          reportable_compensation: number | null
+          return_id: string
+          role: Database["irs"]["Enums"]["irs_person_role"]
+          source_map: Json
+          title: string | null
+        }
+        Insert: {
+          average_hours_per_week?: number | null
+          created_at?: string
+          id?: string
+          is_current?: boolean | null
+          name: string
+          other_compensation?: number | null
+          reportable_compensation?: number | null
+          return_id: string
+          role: Database["irs"]["Enums"]["irs_person_role"]
+          source_map?: Json
+          title?: string | null
+        }
+        Update: {
+          average_hours_per_week?: number | null
+          created_at?: string
+          id?: string
+          is_current?: boolean | null
+          name?: string
+          other_compensation?: number | null
+          reportable_compensation?: number | null
+          return_id?: string
+          role?: Database["irs"]["Enums"]["irs_person_role"]
+          source_map?: Json
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "return_people_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "latest_returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_people_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "returns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      return_restrictions: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          details: Json
+          id: string
+          restriction_type: Database["irs"]["Enums"]["irs_restriction_type"]
+          return_id: string
+          source_narrative_id: string | null
+          summary: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          details?: Json
+          id?: string
+          restriction_type: Database["irs"]["Enums"]["irs_restriction_type"]
+          return_id: string
+          source_narrative_id?: string | null
+          summary: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          details?: Json
+          id?: string
+          restriction_type?: Database["irs"]["Enums"]["irs_restriction_type"]
+          return_id?: string
+          source_narrative_id?: string | null
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "return_restrictions_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "latest_returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_restrictions_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_restrictions_source_narrative_id_fkey"
+            columns: ["source_narrative_id"]
+            isOneToOne: false
+            referencedRelation: "return_narratives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      returns: {
+        Row: {
+          created_at: string
+          ein: string
+          filed_on: string | null
+          gross_receipts_cap: number | null
+          id: string
+          irs_object_id: string | null
+          is_amended: boolean | null
+          is_terminated: boolean | null
+          principal_officer_name: string | null
+          return_name: string | null
+          return_type: Database["irs"]["Enums"]["irs_return_type"]
+          source_system: string
+          tax_period_end: string | null
+          tax_period_start: string | null
+          tax_year: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ein: string
+          filed_on?: string | null
+          gross_receipts_cap?: number | null
+          id?: string
+          irs_object_id?: string | null
+          is_amended?: boolean | null
+          is_terminated?: boolean | null
+          principal_officer_name?: string | null
+          return_name?: string | null
+          return_type?: Database["irs"]["Enums"]["irs_return_type"]
+          source_system?: string
+          tax_period_end?: string | null
+          tax_period_start?: string | null
+          tax_year: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ein?: string
+          filed_on?: string | null
+          gross_receipts_cap?: number | null
+          id?: string
+          irs_object_id?: string | null
+          is_amended?: boolean | null
+          is_terminated?: boolean | null
+          principal_officer_name?: string | null
+          return_name?: string | null
+          return_type?: Database["irs"]["Enums"]["irs_return_type"]
+          source_system?: string
+          tax_period_end?: string | null
+          tax_period_start?: string | null
+          tax_year?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "returns_ein_fkey"
+            columns: ["ein"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["ein"]
+          },
+        ]
+      }
+    }
+    Views: {
+      latest_financials: {
+        Row: {
+          contributions: number | null
+          created_at: string | null
+          ein: string | null
+          excess_or_deficit: number | null
+          fundraising_expenses: number | null
+          fundraising_gross: number | null
+          investment_income: number | null
+          management_general_expenses: number | null
+          net_assets_begin: number | null
+          net_assets_end: number | null
+          program_expenses: number | null
+          program_service_revenue: number | null
+          return_id: string | null
+          return_type: Database["irs"]["Enums"]["irs_return_type"] | null
+          source_map: Json | null
+          tax_year: number | null
+          total_assets_begin: number | null
+          total_assets_end: number | null
+          total_expenses: number | null
+          total_liabilities_begin: number | null
+          total_liabilities_end: number | null
+          total_revenue: number | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "return_financials_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: true
+            referencedRelation: "latest_returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_financials_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: true
+            referencedRelation: "returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "returns_ein_fkey"
+            columns: ["ein"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["ein"]
+          },
+        ]
+      }
+      latest_returns: {
+        Row: {
+          created_at: string | null
+          ein: string | null
+          filed_on: string | null
+          gross_receipts_cap: number | null
+          id: string | null
+          irs_object_id: string | null
+          is_amended: boolean | null
+          is_terminated: boolean | null
+          principal_officer_name: string | null
+          return_type: Database["irs"]["Enums"]["irs_return_type"] | null
+          source_system: string | null
+          tax_period_end: string | null
+          tax_period_start: string | null
+          tax_year: number | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "returns_ein_fkey"
+            columns: ["ein"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["ein"]
+          },
+        ]
+      }
+    }
+    Functions: {
+      can_access_ein: { Args: { p_ein: string }; Returns: boolean }
+    }
+    Enums: {
+      irs_doc_type: "pdf" | "xml" | "other"
+      irs_narrative_section:
+        | "part_iii"
+        | "schedule_o"
+        | "schedule_d"
+        | "schedule_a"
+        | "other"
+      irs_person_role:
+        | "officer"
+        | "director"
+        | "trustee"
+        | "key_employee"
+        | "highest_compensated"
+        | "independent_contractor"
+        | "other"
+      irs_restriction_type:
+        | "endowment"
+        | "donor_restricted"
+        | "temporarily_restricted"
+        | "permanently_restricted"
+        | "board_designated"
+        | "scholarship_restriction"
+        | "program_restriction"
+        | "geographic_restriction"
+        | "other"
+      irs_return_type: "990" | "990EZ" | "990PF" | "990N" | "unknown"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       businesses: {
@@ -1166,6 +1745,7 @@ export type Database = {
           entity_id: string
           id: string
           status: Database["public"]["Enums"]["document_status"]
+          tax_year: number | null
           title: string
           updated_at: string
           visibility: Database["public"]["Enums"]["document_visibility"]
@@ -1180,6 +1760,7 @@ export type Database = {
           entity_id: string
           id?: string
           status?: Database["public"]["Enums"]["document_status"]
+          tax_year?: number | null
           title: string
           updated_at?: string
           visibility?: Database["public"]["Enums"]["document_visibility"]
@@ -1194,6 +1775,7 @@ export type Database = {
           entity_id?: string
           id?: string
           status?: Database["public"]["Enums"]["document_status"]
+          tax_year?: number | null
           title?: string
           updated_at?: string
           visibility?: Database["public"]["Enums"]["document_visibility"]
@@ -1335,6 +1917,103 @@ export type Database = {
           },
         ]
       }
+      entity_contacts: {
+        Row: {
+          contact_role: string
+          email: string | null
+          entity_id: string
+          first_seen_at: string
+          id: string
+          is_current: boolean
+          last_seen_at: string
+          name: string | null
+          phone: string | null
+          raw: Json | null
+          source_formid: string
+          source_system: string
+          source_url: string
+        }
+        Insert: {
+          contact_role: string
+          email?: string | null
+          entity_id: string
+          first_seen_at?: string
+          id?: string
+          is_current?: boolean
+          last_seen_at?: string
+          name?: string | null
+          phone?: string | null
+          raw?: Json | null
+          source_formid: string
+          source_system: string
+          source_url: string
+        }
+        Update: {
+          contact_role?: string
+          email?: string | null
+          entity_id?: string
+          first_seen_at?: string
+          id?: string
+          is_current?: boolean
+          last_seen_at?: string
+          name?: string | null
+          phone?: string | null
+          raw?: Json | null
+          source_formid?: string
+          source_system?: string
+          source_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_contacts_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_field_overrides: {
+        Row: {
+          confidence: number
+          entity_id: string
+          field_key: string
+          namespace: string
+          source: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          confidence?: number
+          entity_id: string
+          field_key: string
+          namespace: string
+          source?: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          confidence?: number
+          entity_id?: string
+          field_key?: string
+          namespace?: string
+          source?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_field_overrides_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entity_geometries: {
         Row: {
           bbox: unknown
@@ -1375,6 +2054,73 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "entity_geometries_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_onboarding_progress: {
+        Row: {
+          entity_id: string
+          last_updated: string
+          section: string
+          status: string
+        }
+        Insert: {
+          entity_id: string
+          last_updated?: string
+          section: string
+          status?: string
+        }
+        Update: {
+          entity_id?: string
+          last_updated?: string
+          section?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_onboarding_progress_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_person_claims: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string
+          entity_id: string
+          id: string
+          source: string
+          source_person_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email: string
+          entity_id: string
+          id?: string
+          source?: string
+          source_person_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          entity_id?: string
+          id?: string
+          source?: string
+          source_person_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_person_claims_entity_id_fkey"
             columns: ["entity_id"]
             isOneToOne: false
             referencedRelation: "entities"
@@ -1879,6 +2625,57 @@ export type Database = {
           },
         ]
       }
+      superintendent_scope_nonprofits: {
+        Row: {
+          created_at: string
+          district_entity_id: string | null
+          ein: string
+          entity_id: string | null
+          id: string
+          label: string | null
+          status: string
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          district_entity_id?: string | null
+          ein: string
+          entity_id?: string | null
+          id?: string
+          label?: string | null
+          status?: string
+          tier?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          district_entity_id?: string | null
+          ein?: string
+          entity_id?: string | null
+          id?: string
+          label?: string | null
+          status?: string
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "superintendent_scope_nonprofits_district_entity_id_fkey"
+            columns: ["district_entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "superintendent_scope_nonprofits_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       geography_columns: {
@@ -1922,6 +2719,69 @@ export type Database = {
           type?: string | null
         }
         Relationships: []
+      }
+      superintendent_scope_nonprofits_ready: {
+        Row: {
+          created_at: string | null
+          district_entity_id: string | null
+          ein: string | null
+          entity_id: string | null
+          has_entity: boolean | null
+          has_irs_link: boolean | null
+          has_returns: boolean | null
+          id: string | null
+          is_ready: boolean | null
+          label: string | null
+          status: string | null
+          tier: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          district_entity_id?: string | null
+          ein?: string | null
+          entity_id?: string | null
+          has_entity?: never
+          has_irs_link?: never
+          has_returns?: never
+          id?: string | null
+          is_ready?: never
+          label?: string | null
+          status?: string | null
+          tier?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          district_entity_id?: string | null
+          ein?: string | null
+          entity_id?: string | null
+          has_entity?: never
+          has_irs_link?: never
+          has_returns?: never
+          id?: string | null
+          is_ready?: never
+          label?: string | null
+          status?: string | null
+          tier?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "superintendent_scope_nonprofits_district_entity_id_fkey"
+            columns: ["district_entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "superintendent_scope_nonprofits_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_profiles_with_roles: {
         Row: {
@@ -2096,6 +2956,10 @@ export type Database = {
         Returns: boolean
       }
       can_manage_entity_assets: {
+        Args: { p_entity_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      can_read_entity: {
         Args: { p_entity_id: string; p_user_id: string }
         Returns: boolean
       }
@@ -2290,6 +3154,8 @@ export type Database = {
         Args: { p_geojson: Json }
         Returns: unknown
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown
@@ -3135,6 +4001,39 @@ export const Constants = {
       approval_target_type: ["meeting_minutes", "document_version", "motion"],
       meeting_status: ["scheduled", "in_session", "adjourned", "cancelled"],
       minutes_status: ["draft", "finalized", "amended"],
+    },
+  },
+  irs: {
+    Enums: {
+      irs_doc_type: ["pdf", "xml", "other"],
+      irs_narrative_section: [
+        "part_iii",
+        "schedule_o",
+        "schedule_d",
+        "schedule_a",
+        "other",
+      ],
+      irs_person_role: [
+        "officer",
+        "director",
+        "trustee",
+        "key_employee",
+        "highest_compensated",
+        "independent_contractor",
+        "other",
+      ],
+      irs_restriction_type: [
+        "endowment",
+        "donor_restricted",
+        "temporarily_restricted",
+        "permanently_restricted",
+        "board_designated",
+        "scholarship_restriction",
+        "program_restriction",
+        "geographic_restriction",
+        "other",
+      ],
+      irs_return_type: ["990", "990EZ", "990PF", "990N", "unknown"],
     },
   },
   public: {

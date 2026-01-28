@@ -110,6 +110,21 @@ Compares schema or file structure snapshots (used during refactors).
 #### `migrate-dev-to-test.sh`
 Convenience helper for syncing dev → test workflows (use carefully).
 
+### IRS imports
+
+#### `irs/import-irs-pdfs.ts`
+OCRs selected IRS 990 PDFs in `scripts/irs/` (pdftoppm + tesseract) and upserts:
+- `irs.organizations`
+- `irs.returns`
+- `irs.return_financials`
+- `irs.return_people`
+- `irs.return_narratives`
+
+Example runs:
+- `npm run importIrsPdfs:dev`
+- `npm run importIrsPdfs:test`
+- Single file: `npm run importIrsPdfs:dev -- --file="WestonkaRecSociety 990 2021.pdf"`
+
 ## Dataset metadata standard
 
 Each dataset folder under `scripts/geojson/<dataset_key>/<version>/metadata.json` should include:
