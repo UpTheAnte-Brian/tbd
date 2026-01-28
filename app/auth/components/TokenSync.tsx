@@ -16,8 +16,10 @@ export function TokenSync() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            access_token: session.access_token,
-            refresh_token: session.refresh_token,
+            session: {
+              access_token: session.access_token,
+              refresh_token: session.refresh_token,
+            },
           }),
         });
       }

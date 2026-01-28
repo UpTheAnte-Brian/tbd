@@ -1,5 +1,7 @@
 export default function AppEnvBanner() {
-  const env = process.env.NEXT_PUBLIC_APP_ENV;
+  const env =
+    process.env.NEXT_PUBLIC_APP_ENV ??
+    (process.env.VERCEL_ENV === "preview" ? "test" : undefined);
   if (env !== "local" && env !== "test") {
     return null;
   }
