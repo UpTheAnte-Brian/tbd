@@ -6,7 +6,7 @@ export default async function AdminNonprofitOnboardingPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ scope_id?: string }>;
+  searchParams?: Promise<{ scope_id?: string; ein?: string }>;
 }) {
   if (areAdminToolsDisabled()) {
     return (
@@ -25,6 +25,7 @@ export default async function AdminNonprofitOnboardingPage({
         <AdminNonprofitOnboardingClient
           entityId={resolvedParams.id}
           scopeId={resolvedSearchParams?.scope_id ?? null}
+          initialEin={resolvedSearchParams?.ein ?? null}
         />
       </div>
     </div>

@@ -26,6 +26,7 @@ export type OnboardingQueueRow = {
   is_ready: boolean;
   next_step:
     | "create_entity"
+    | "identity"
     | "link_irs"
     | "ingest_irs"
     | "verify"

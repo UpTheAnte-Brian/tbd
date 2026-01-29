@@ -6,6 +6,7 @@ import type { OnboardingQueueRow } from "@/app/admin/nonprofits/types";
 
 const STEP_LABELS: Record<OnboardingQueueRow["next_step"], string> = {
   create_entity: "Start onboarding",
+  identity: "Identity",
   link_irs: "Link IRS",
   ingest_irs: "Ingest IRS",
   verify: "Mark ready",

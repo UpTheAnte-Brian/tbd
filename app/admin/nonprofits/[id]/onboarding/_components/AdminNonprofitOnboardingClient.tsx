@@ -22,9 +22,11 @@ const DOCUMENT_TYPE_OPTIONS = [
 export default function AdminNonprofitOnboardingClient({
   entityId,
   scopeId,
+  initialEin,
 }: {
   entityId: string;
   scopeId?: string | null;
+  initialEin?: string | null;
 }) {
   const currentYear = new Date().getFullYear();
   const [data, setData] = useState<NonprofitOnboardingData | null>(null);
@@ -95,9 +97,10 @@ export default function AdminNonprofitOnboardingClient({
 
   useEffect(() => {
     if (!data) return;
+    const scopedEin = initialEin ?? data.scope?.ein ?? "";
     const effectiveEin = data.hasIrsLink
       ? (data.linkedEin ?? data.nonprofit?.ein ?? "")
-      : (data.nonprofit?.ein ?? "");
+      : (data.nonprofit?.ein ?? scopedEin);
     const baseline = {
       name: data.entity?.name ?? "",
       ein: effectiveEin,
@@ -106,7 +109,7 @@ export default function AdminNonprofitOnboardingClient({
     };
     setIdentityForm(baseline);
     setIdentityBaseline(baseline);
-  }, [data]);
+  }, [data, initialEin]);
 
   const progressBySection = useMemo(() => {
     const map = new Map<string, string>();

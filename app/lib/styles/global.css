@@ -141,6 +141,9 @@
   :root .bg-surface-inset .text-brand-secondary-2 {
     color: var(--brand-secondary-0);
   }
+  :root .bg-brand-secondary-2 .text-brand-secondary-2 {
+    color: var(--brand-secondary-0);
+  }
 
   :root .bg-surface-inset.text-brand-secondary-2,
   :root .bg-brand-secondary-2.text-brand-secondary-2 {
