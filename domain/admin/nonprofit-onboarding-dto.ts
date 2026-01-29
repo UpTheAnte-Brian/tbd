@@ -16,7 +16,16 @@ import type {
 } from "@/app/lib/types/nonprofit-onboarding";
 import type { Database } from "@/database.types";
 
+type PostgrestMaybeSingleError = {
+  code?: string;
+  status?: number;
+  message?: string;
+} | null;
+
 const RELATIONSHIP_TYPE = "affiliated_with";
+
+const isNotFoundError = (error: PostgrestMaybeSingleError) =>
+  error?.code === "PGRST116" || error?.status === 406;
 
 function slugify(value: string): string {
   const cleaned = value
@@ -92,7 +101,7 @@ async function fetchScopeReadyRow(
   }
 
   const { data, error } = await query.maybeSingle();
-  if (error) {
+  if (error && !isNotFoundError(error)) {
     throw new Error(error.message);
   }
   return data ?? null;
@@ -376,7 +385,7 @@ export async function getNonprofitOnboardingData(
       .select("ein, match_type, confidence, created_at, notes")
       .eq("entity_id", entityId)
       .maybeSingle();
-    if (linkError) {
+    if (linkError && !isNotFoundError(linkError)) {
       throw new Error(linkError.message);
     }
     if (link?.ein) {
@@ -395,7 +404,7 @@ export async function getNonprofitOnboardingData(
         .select("ein, legal_name, website")
         .eq("ein", link.ein)
         .maybeSingle();
-      if (orgError) {
+      if (orgError && !isNotFoundError(orgError)) {
         throw new Error(orgError.message);
       }
 
@@ -413,7 +422,7 @@ export async function getNonprofitOnboardingData(
         .eq("ein", link.ein)
         .maybeSingle();
 
-      if (latestReturnError) {
+      if (latestReturnError && !isNotFoundError(latestReturnError)) {
         throw new Error(latestReturnError.message);
       }
 
@@ -557,7 +566,7 @@ export async function updateNonprofitIdentity(
         .eq("entity_id", entityId)
         .maybeSingle();
 
-      if (linkError) {
+      if (linkError && !isNotFoundError(linkError)) {
         throw new Error(linkError.message);
       }
 
