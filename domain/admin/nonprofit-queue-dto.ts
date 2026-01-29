@@ -61,6 +61,8 @@ export async function getOnboardingQueue(): Promise<OnboardingQueueRow[]> {
     .map((row) => row.entity_id)
     .filter((value): value is string => Boolean(value));
 
+  const emptyResult = { data: [], error: null };
+
   const [entitiesResult, nonprofitsResult, progressResult] = await Promise.all([
     entityIds.length
       ? supabaseAdmin
@@ -68,20 +70,20 @@ export async function getOnboardingQueue(): Promise<OnboardingQueueRow[]> {
           .select("id")
           .in("id", entityIds)
           .eq("entity_type", "nonprofit")
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve(emptyResult),
     entityIds.length
       ? supabaseAdmin.from("nonprofits").select("entity_id").in(
           "entity_id",
           entityIds,
         )
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve(emptyResult),
     entityIds.length
       ? supabaseAdmin
           .from("entity_onboarding_progress")
           .select("entity_id, status")
           .in("entity_id", entityIds)
           .eq("section", "identity")
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve(emptyResult),
   ]);
 
   if (entitiesResult.error) {
