@@ -2,14 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { safeRoute } from "@/app/lib/api/handler";
 import { jsonError } from "@/app/lib/api/errors";
 import { getNonprofitOnboardingData } from "@/domain/admin/nonprofit-onboarding-dto";
+import { areAdminToolsDisabled } from "@/utils/admin-tools";
 
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
   return safeRoute(async () => {
-    if (process.env.NODE_ENV === "production") {
-      return jsonError("Admin routes are disabled in production.", 403);
+    if (areAdminToolsDisabled()) {
+      return jsonError("Admin routes are disabled.", 403);
     }
 
     const { id } = await context.params;

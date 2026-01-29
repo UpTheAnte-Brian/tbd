@@ -7,6 +7,7 @@ import {
   updateScopeNonprofit,
 } from "@/domain/admin/nonprofits-admin-dto";
 import type { ScopeStatus, ScopeTier } from "@/app/admin/nonprofits/types";
+import { areAdminToolsDisabled } from "@/utils/admin-tools";
 
 const TIERS: ScopeTier[] = [
   "registry_only",
@@ -27,8 +28,8 @@ function asStatus(value: unknown): ScopeStatus | undefined {
 
 export async function GET(req: Request) {
   return safeRoute(async () => {
-    if (process.env.NODE_ENV === "production") {
-      return jsonError("Admin routes are disabled in production.", 403);
+    if (areAdminToolsDisabled()) {
+      return jsonError("Admin routes are disabled.", 403);
     }
 
     const { searchParams } = new URL(req.url);
@@ -49,8 +50,8 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   return safeRoute(async () => {
-    if (process.env.NODE_ENV === "production") {
-      return jsonError("Admin routes are disabled in production.", 403);
+    if (areAdminToolsDisabled()) {
+      return jsonError("Admin routes are disabled.", 403);
     }
 
     const body = (await req.json().catch(() => null)) as
@@ -81,8 +82,8 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   return safeRoute(async () => {
-    if (process.env.NODE_ENV === "production") {
-      return jsonError("Admin routes are disabled in production.", 403);
+    if (areAdminToolsDisabled()) {
+      return jsonError("Admin routes are disabled.", 403);
     }
 
     const body = (await req.json().catch(() => null)) as

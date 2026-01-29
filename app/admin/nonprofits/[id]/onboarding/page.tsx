@@ -1,4 +1,5 @@
 import AdminNonprofitOnboardingClient from "@/app/admin/nonprofits/[id]/onboarding/_components/AdminNonprofitOnboardingClient";
+import { areAdminToolsDisabled } from "@/utils/admin-tools";
 
 export default async function AdminNonprofitOnboardingPage({
   params,
@@ -7,10 +8,10 @@ export default async function AdminNonprofitOnboardingPage({
   params: Promise<{ id: string }>;
   searchParams?: Promise<{ scope_id?: string }>;
 }) {
-  if (process.env.NODE_ENV === "production") {
+  if (areAdminToolsDisabled()) {
     return (
       <div className="mx-auto max-w-4xl px-6 py-12 text-sm text-brand-secondary-2">
-        Admin tools are disabled in production.
+        Admin tools are disabled.
       </div>
     );
   }

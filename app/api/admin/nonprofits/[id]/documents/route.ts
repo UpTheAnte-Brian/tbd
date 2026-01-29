@@ -4,14 +4,15 @@ import { jsonError } from "@/app/lib/api/errors";
 import { uploadNonprofitDocument } from "@/domain/admin/nonprofit-documents-dto";
 import { getNonprofitOnboardingData } from "@/domain/admin/nonprofit-onboarding-dto";
 import type { Database } from "@/database.types";
+import { areAdminToolsDisabled } from "@/utils/admin-tools";
 
 export async function POST(
   req: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
   return safeRoute(async () => {
-    if (process.env.NODE_ENV === "production") {
-      return jsonError("Admin routes are disabled in production.", 403);
+    if (areAdminToolsDisabled()) {
+      return jsonError("Admin routes are disabled.", 403);
     }
 
     const { id } = await context.params;

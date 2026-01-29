@@ -3,14 +3,15 @@ import AdminCardGrid from "@/app/components/admin/AdminCardGrid";
 import AdminStatusPanel from "@/app/components/admin/AdminStatusPanel";
 import { assertAdmin } from "@/app/lib/auth/assertAdmin";
 import { getAdminSummary } from "@/domain/admin/admin-summary";
+import { areAdminToolsDisabled } from "@/utils/admin-tools";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  if (process.env.NODE_ENV === "production") {
+  if (areAdminToolsDisabled()) {
     return (
       <div className="mx-auto max-w-4xl px-6 py-12 text-sm text-brand-secondary-0">
-        Admin tools are disabled in production.
+        Admin tools are disabled.
       </div>
     );
   }

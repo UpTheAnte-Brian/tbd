@@ -4,14 +4,15 @@ import { jsonError } from "@/app/lib/api/errors";
 import { getNonprofitOnboardingData } from "@/domain/admin/nonprofit-onboarding-dto";
 import { createApiClient } from "@/utils/supabase/route";
 import { isValidEin, normalizeEin } from "@/domain/irs/ein";
+import { areAdminToolsDisabled } from "@/utils/admin-tools";
 
 export async function POST(
   req: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
   return safeRoute(async () => {
-    if (process.env.NODE_ENV === "production") {
-      return jsonError("Admin routes are disabled in production.", 403);
+    if (areAdminToolsDisabled()) {
+      return jsonError("Admin routes are disabled.", 403);
     }
 
     const { id } = await context.params;

@@ -2,14 +2,15 @@ import { NextResponse } from "next/server";
 import { safeRoute } from "@/app/lib/api/handler";
 import { jsonError } from "@/app/lib/api/errors";
 import { getNonprofitReview } from "@/domain/admin/nonprofits-admin-dto";
+import { areAdminToolsDisabled } from "@/utils/admin-tools";
 
 export async function GET(
   _req: Request,
   { params }: { params: { id?: string } },
 ) {
   return safeRoute(async () => {
-    if (process.env.NODE_ENV === "production") {
-      return jsonError("Admin routes are disabled in production.", 403);
+    if (areAdminToolsDisabled()) {
+      return jsonError("Admin routes are disabled.", 403);
     }
 
     const rawEin = params.id ? decodeURIComponent(params.id) : "";

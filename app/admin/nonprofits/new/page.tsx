@@ -1,14 +1,15 @@
 import NewNonprofitForm from "@/app/admin/nonprofits/new/_components/NewNonprofitForm";
+import { areAdminToolsDisabled } from "@/utils/admin-tools";
 
 export default async function AdminNonprofitNewPage({
   searchParams,
 }: {
   searchParams?: Promise<{ district_entity_id?: string; scope_id?: string }>;
 }) {
-  if (process.env.NODE_ENV === "production") {
+  if (areAdminToolsDisabled()) {
     return (
       <div className="mx-auto max-w-4xl px-6 py-12 text-sm text-brand-secondary-2">
-        Admin tools are disabled in production.
+        Admin tools are disabled.
       </div>
     );
   }

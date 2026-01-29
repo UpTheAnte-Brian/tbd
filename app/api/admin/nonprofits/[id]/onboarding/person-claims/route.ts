@@ -1,6 +1,7 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { safeRoute } from "@/app/lib/api/handler";
 import { jsonError } from "@/app/lib/api/errors";
+import { areAdminToolsDisabled } from "@/utils/admin-tools";
 import {
   getNonprofitOnboardingData,
   upsertEntityPersonClaim,
@@ -11,8 +12,8 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   return safeRoute(async () => {
-    if (process.env.NODE_ENV === "production") {
-      return jsonError("Admin routes are disabled in production.", 403);
+    if (areAdminToolsDisabled()) {
+      return jsonError("Admin routes are disabled.", 403);
     }
 
     const { id } = await context.params;

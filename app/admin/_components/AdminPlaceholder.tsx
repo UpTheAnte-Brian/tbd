@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AdminPageShell from "@/app/admin/_components/AdminPageShell";
+import { areAdminToolsDisabled } from "@/utils/admin-tools";
 
 type AdminPlaceholderProps = {
   title: string;
@@ -10,10 +11,10 @@ export default function AdminPlaceholder({
   title,
   description,
 }: AdminPlaceholderProps) {
-  if (process.env.NODE_ENV === "production") {
+  if (areAdminToolsDisabled()) {
     return (
       <div className="mx-auto max-w-4xl px-6 py-12 text-sm text-brand-secondary-0">
-        Admin tools are disabled in production.
+        Admin tools are disabled.
       </div>
     );
   }
