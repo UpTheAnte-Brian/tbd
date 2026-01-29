@@ -2,6 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createApiClient } from "@/utils/supabase/route";
+import { createIrsAdminClient } from "@/utils/supabase/service-worker";
 import {
   ONBOARDING_SECTIONS,
   type OnboardingSection,
@@ -267,7 +268,7 @@ export async function createNonprofitShell(
     await seedOnboardingProgress(supabase, entityId);
 
     if (insertPayload.ein) {
-      const irs = supabase.schema("irs");
+      const irs = createIrsAdminClient();
       const { data: org, error: orgError } = await irs
         .from("organizations")
         .select("ein")
@@ -379,7 +380,7 @@ export async function getNonprofitOnboardingData(
   });
 
   try {
-    const irs = supabase.schema("irs");
+    const irs = createIrsAdminClient();
     const { data: link, error: linkError } = await irs
       .from("entity_links")
       .select("ein, match_type, confidence, created_at, notes")
@@ -559,7 +560,7 @@ export async function updateNonprofitIdentity(
   let allowEinUpdate = true;
   if (payload.ein !== undefined) {
     try {
-      const irs = supabase.schema("irs");
+      const irs = createIrsAdminClient();
       const { data: link, error: linkError } = await irs
         .from("entity_links")
         .select("ein")
@@ -739,7 +740,7 @@ export async function linkEntityToIrsEin(entityId: string, ein: string) {
   }
 
   const supabase = await createApiClient();
-  const irs = supabase.schema("irs");
+  const irs = createIrsAdminClient();
 
   const { data: org, error: orgError } = await irs
     .from("organizations")

@@ -3,6 +3,7 @@ import { safeRoute } from "@/app/lib/api/handler";
 import { jsonError } from "@/app/lib/api/errors";
 import { getNonprofitOnboardingData } from "@/domain/admin/nonprofit-onboarding-dto";
 import { createApiClient } from "@/utils/supabase/route";
+import { createIrsAdminClient } from "@/utils/supabase/service-worker";
 import { isValidEin, normalizeEin } from "@/domain/irs/ein";
 import { areAdminToolsDisabled } from "@/utils/admin-tools";
 
@@ -42,7 +43,7 @@ export async function POST(
 
     const einNormalized = normalizeEin(rawEin);
     const supabase = await createApiClient();
-    const irs = supabase.schema("irs");
+    const irs = createIrsAdminClient();
 
     // PostgREST filter values with special characters (like EIN dashes) must be quoted.
     // See: https://postgrest.org/en/stable/references/api/tables_views.html#operators

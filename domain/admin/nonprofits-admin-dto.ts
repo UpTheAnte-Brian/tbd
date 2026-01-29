@@ -1,8 +1,11 @@
 import "server-only";
 
-import type { PostgrestClient } from "@supabase/postgrest-js";
 import type { Database } from "@/database.types";
-import { supabaseAdmin } from "@/utils/supabase/service-worker";
+import {
+  createIrsAdminClient,
+  supabaseAdmin,
+  type IrsPostgrestClient,
+} from "@/utils/supabase/service-worker";
 import type {
   AdminCreateEntityResponse,
   AdminNonprofitReview,
@@ -52,13 +55,6 @@ type IrsPersonSelect = Pick<
   | "is_current"
 >;
 
-type IrsPostgrestClient = PostgrestClient<
-  Database,
-  Database["__InternalSupabase"],
-  "irs",
-  Database["irs"]
->;
-
 const JUNK_TEXT_HINTS = [
   "internal revenue",
   "service",
@@ -79,7 +75,7 @@ const SCOPE_TIERS: ScopeTier[] = [
 const SCOPE_STATUSES: ScopeStatus[] = ["candidate", "active", "archived"];
 
 function getIrsClient(): IrsPostgrestClient {
-  return supabaseAdmin.schema("irs");
+  return createIrsAdminClient();
 }
 
 function toNumber(value: unknown): number | null {
