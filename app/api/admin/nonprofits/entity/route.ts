@@ -12,15 +12,18 @@ export async function POST(req: Request) {
 
     const body = (await req.json().catch(() => null)) as
       | {
-          ein?: string;
-        }
+        ein?: string;
+        scope_id?: string;
+      }
       | null;
 
     if (!body?.ein) {
       return jsonError("EIN is required", 400);
     }
 
-    const result = await createEntityFromEin(body.ein);
+    const result = await createEntityFromEin(body.ein, {
+      scope_id: body.scope_id ?? null,
+    });
     return NextResponse.json(result);
   });
 }

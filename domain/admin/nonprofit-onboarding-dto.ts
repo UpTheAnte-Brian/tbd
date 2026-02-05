@@ -189,7 +189,97 @@ export async function createNonprofitShell(
   const scopeId = request.scope_id?.trim() || null;
   const websiteUrl = request.website_url?.trim() || null;
   const missionStatement = request.mission_statement?.trim() || null;
+  let normalizedEin = normalizeEinInput(request.ein ?? null);
 
+  // Idempotency / duplicate prevention
+  // 1) If the scope row already has an entity_id, treat this as an existing shell and return it.
+  if (scopeId) {
+    const { data: existingScope, error: scopeLookupError } = await supabase
+      .from("superintendent_scope_nonprofits")
+      .select("entity_id, ein")
+      .eq("id", scopeId)
+      .maybeSingle();
+
+    if (scopeLookupError && !isNotFoundError(scopeLookupError as any)) {
+      throw new Error(scopeLookupError.message);
+    }
+
+    const existingEntityId = existingScope?.entity_id
+      ? String(existingScope.entity_id)
+      : null;
+
+    // If the client didn't send an EIN but the scope row has one, use it for idempotency.
+    if (!normalizedEin && existingScope?.ein) {
+      normalizedEin = normalizeEinInput(String(existingScope.ein));
+    }
+
+    if (existingEntityId) {
+      const { data: existingEntity, error: existingEntityError } =
+        await supabase
+          .from("entities")
+          .select("id, slug")
+          .eq("id", existingEntityId)
+          .maybeSingle();
+
+      if (existingEntityError && !isNotFoundError(existingEntityError as any)) {
+        throw new Error(existingEntityError.message);
+      }
+
+      return {
+        entity_id: existingEntityId,
+        nonprofit_id: existingEntityId,
+        slug: String(existingEntity?.slug ?? ""),
+      };
+    }
+  }
+
+  // 2) If an EIN is provided and we already have a nonprofit shell for it, return the existing one.
+  if (normalizedEin) {
+    const { data: existingNonprofit, error: existingNonprofitError } =
+      await supabase
+        .from("nonprofits")
+        .select("entity_id")
+        .eq("ein", normalizedEin)
+        .maybeSingle();
+
+    if (
+      existingNonprofitError &&
+      !isNotFoundError(existingNonprofitError as any)
+    ) {
+      throw new Error(existingNonprofitError.message);
+    }
+
+    const existingEntityId = existingNonprofit?.entity_id
+      ? String(existingNonprofit.entity_id)
+      : null;
+
+    if (existingEntityId) {
+      const { data: existingEntity, error: existingEntityError } =
+        await supabase
+          .from("entities")
+          .select("id, slug")
+          .eq("id", existingEntityId)
+          .maybeSingle();
+
+      if (existingEntityError && !isNotFoundError(existingEntityError as any)) {
+        throw new Error(existingEntityError.message);
+      }
+
+      // If the scope is present but not yet linked, link it now for consistency.
+      if (scopeId) {
+        await updateScopeById(supabase, scopeId, {
+          entity_id: existingEntityId,
+          ein: normalizedEin ?? undefined,
+        });
+      }
+
+      return {
+        entity_id: existingEntityId,
+        nonprofit_id: existingEntityId,
+        slug: String(existingEntity?.slug ?? ""),
+      };
+    }
+  }
   if (!name || !orgType || !districtEntityId) {
     throw new Error("name, org_type, and district_entity_id are required");
   }
@@ -224,7 +314,7 @@ export async function createNonprofitShell(
         entity_id: entityId,
         name,
         org_type: orgType,
-        ein: normalizeEinInput(request.ein ?? null),
+        ein: normalizedEin,
         website_url: websiteUrl,
         mission_statement: missionStatement,
         active: false,
@@ -241,6 +331,13 @@ export async function createNonprofitShell(
     }
 
     nonprofitId = String(nonprofit.id);
+
+    if (scopeId) {
+      await updateScopeById(supabase, scopeId, {
+        entity_id: entityId,
+        ein: normalizedEin ?? undefined,
+      });
+    }
 
     const { error: relationshipError } = await supabase
       .from("entity_relationships")
@@ -550,6 +647,12 @@ export async function updateNonprofitIdentity(
   payload: UpdateOnboardingIdentityRequest,
 ) {
   const supabase = await createApiClient();
+  console.log("[updateNonprofitIdentity] start", {
+    entityId,
+    payloadKeys: Object.keys(payload ?? {}),
+    einProvided: payload?.ein !== undefined,
+    einValue: payload?.ein ?? null,
+  });
   const updates: Database["public"]["Tables"]["nonprofits"]["Update"] = {};
   const normalizeOptional = (value: string | null | undefined) => {
     const trimmed = value?.trim();
@@ -559,6 +662,10 @@ export async function updateNonprofitIdentity(
 
   let allowEinUpdate = true;
   if (payload.ein !== undefined) {
+    console.log("[updateNonprofitIdentity] ein check", {
+      entityId,
+      ein: payload.ein,
+    });
     try {
       const irs = createIrsAdminClient();
       const { data: link, error: linkError } = await irs
@@ -566,7 +673,17 @@ export async function updateNonprofitIdentity(
         .select("ein")
         .eq("entity_id", entityId)
         .maybeSingle();
-
+      console.log("[updateNonprofitIdentity] existing irs link lookup", {
+        entityId,
+        linkEin: link?.ein ?? null,
+        linkError: linkError
+          ? {
+            code: (linkError as any).code,
+            status: (linkError as any).status,
+            message: (linkError as any).message,
+          }
+          : null,
+      });
       if (linkError && !isNotFoundError(linkError)) {
         throw new Error(linkError.message);
       }
@@ -579,6 +696,12 @@ export async function updateNonprofitIdentity(
       allowEinUpdate = false;
     }
   }
+
+  console.log("[updateNonprofitIdentity] ein update decision", {
+    entityId,
+    allowEinUpdate,
+    einProvided: payload.ein !== undefined,
+  });
 
   if (payload.ein !== undefined && allowEinUpdate) {
     normalizedEin = normalizeEinInput(normalizeOptional(payload.ein));
@@ -611,6 +734,11 @@ export async function updateNonprofitIdentity(
     updates.name = trimmed;
   }
 
+  console.log("[updateNonprofitIdentity] updates payload", {
+    entityId,
+    updates,
+  });
+
   if (Object.keys(updates).length > 0) {
     const { error } = await supabase
       .from("nonprofits")
@@ -620,6 +748,7 @@ export async function updateNonprofitIdentity(
     if (error) {
       throw new Error(error.message);
     }
+    console.log("[updateNonprofitIdentity] nonprofits updated", { entityId });
   }
 
   if (normalizedEin !== undefined && normalizedEin !== null) {
@@ -627,6 +756,11 @@ export async function updateNonprofitIdentity(
       ein: normalizedEin,
     });
   }
+
+  console.log("[updateNonprofitIdentity] scope update", {
+    entityId,
+    normalizedEin,
+  });
 
   await upsertOnboardingProgress(entityId, "identity", "complete");
 }
@@ -715,8 +849,8 @@ export async function upsertEntityPersonClaim(params: {
   if (!email) {
     throw new Error("email is required");
   }
-  const payload: Database["public"]["Tables"]["entity_person_claims"]["Insert"] =
-    {
+  const payload:
+    Database["public"]["Tables"]["entity_person_claims"]["Insert"] = {
       entity_id: params.entityId,
       source: params.source ?? "irs",
       source_person_id: params.sourcePersonId,

@@ -43,3 +43,23 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# --- IRS / TEOS bulk ingestion artifacts ---
+# Large downloaded ZIPs (never commit)
+scripts/irs/*.zip
+
+# Extracted or derived TEOS data
+data/
+*.jsonl
+data/irs-teos/
+**/irs-teos/
+**/irs-teos/xml/
+**/irs-teos/zips/
+**/irs-teos/jsonl/
+
+# IRS PDFs (local ingestion / OCR artifacts)
+scripts/irs/pdfs/
+
+# Temporary extract dirs created by scripts
+/tmp/irs-*
+/var/folders/**/irs-teos-*

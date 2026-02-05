@@ -3,8 +3,8 @@ import "server-only";
 import type { Database } from "@/database.types";
 import {
   createIrsAdminClient,
-  supabaseAdmin,
   type IrsPostgrestClient,
+  supabaseAdmin,
 } from "@/utils/supabase/service-worker";
 import type {
   AdminCreateEntityResponse,
@@ -222,9 +222,7 @@ export async function searchNonprofits(
   const byEinMap = new Map<string, IrsOrganizationSelect>();
 
   const maybeEin = normalizeEinInput(trimmed);
-  const einMatches = maybeEin && /\d{2}-\d{7}/.test(maybeEin)
-    ? [maybeEin]
-    : [];
+  const einMatches = maybeEin && /\d{2}-\d{7}/.test(maybeEin) ? [maybeEin] : [];
 
   if (einMatches.length > 0) {
     const { data, error } = await irs
@@ -278,11 +276,11 @@ export async function searchNonprofits(
         ruling_year: org.ruling_year ?? null,
         scope: scope
           ? {
-              id: scope.id,
-              tier: scope.tier,
-              status: scope.status,
-              label: scope.label ?? null,
-            }
+            id: scope.id,
+            tier: scope.tier,
+            status: scope.status,
+            label: scope.label ?? null,
+          }
           : null,
       };
     })
@@ -411,43 +409,42 @@ export async function getNonprofitReview(
   }
 
   const currentYear = new Date().getFullYear();
-  const missingFilings =
-    !latestReturn?.tax_year || latestReturn.tax_year < currentYear - 2;
+  const missingFilings = !latestReturn?.tax_year ||
+    latestReturn.tax_year < currentYear - 2;
 
-  const mappedLatestReturn =
-    latestReturn?.id && latestReturn.tax_year !== null
-      ? {
-          id: latestReturn.id,
-          tax_year: latestReturn.tax_year,
-          return_type: latestReturn.return_type ?? null,
-          filed_on: latestReturn.filed_on ?? null,
-        }
-      : null;
+  const mappedLatestReturn = latestReturn?.id && latestReturn.tax_year !== null
+    ? {
+      id: latestReturn.id,
+      tax_year: latestReturn.tax_year,
+      return_type: latestReturn.return_type ?? null,
+      filed_on: latestReturn.filed_on ?? null,
+    }
+    : null;
 
   return {
     ein: normalizedEin,
     organization: organization
       ? {
-          ein: organization.ein,
-          legal_name: organization.legal_name,
-          city: organization.city ?? null,
-          state: organization.state ?? null,
-          website: organization.website ?? null,
-          ruling_year: organization.ruling_year ?? null,
-          subsection_code: organization.subsection_code ?? null,
-          foundation_code: organization.foundation_code ?? null,
-          deductibility_code: organization.deductibility_code ?? null,
-        }
+        ein: organization.ein,
+        legal_name: organization.legal_name,
+        city: organization.city ?? null,
+        state: organization.state ?? null,
+        website: organization.website ?? null,
+        ruling_year: organization.ruling_year ?? null,
+        subsection_code: organization.subsection_code ?? null,
+        foundation_code: organization.foundation_code ?? null,
+        deductibility_code: organization.deductibility_code ?? null,
+      }
       : null,
     latest_return: mappedLatestReturn,
     latest_financials: latestFinancials
       ? {
-          total_revenue: toNumber(latestFinancials.total_revenue),
-          total_expenses: toNumber(latestFinancials.total_expenses),
-          total_assets_end: toNumber(latestFinancials.total_assets_end),
-          total_liabilities_end: toNumber(latestFinancials.total_liabilities_end),
-          net_assets_end: toNumber(latestFinancials.net_assets_end),
-        }
+        total_revenue: toNumber(latestFinancials.total_revenue),
+        total_expenses: toNumber(latestFinancials.total_expenses),
+        total_assets_end: toNumber(latestFinancials.total_assets_end),
+        total_liabilities_end: toNumber(latestFinancials.total_liabilities_end),
+        net_assets_end: toNumber(latestFinancials.net_assets_end),
+      }
       : null,
     narratives_count: narrativesCount,
     people_count: peopleCount,
@@ -459,7 +456,7 @@ export async function getNonprofitReview(
 }
 
 export async function addScopeNonprofit(params: {
-  district_entity_id?: string | null;
+  district_entity_id: string;
   ein: string;
   label?: string | null;
   tier?: ScopeTier;
@@ -470,17 +467,20 @@ export async function addScopeNonprofit(params: {
     throw new Error("EIN is required");
   }
 
-  const payload = {
-    district_entity_id: params.district_entity_id ?? null,
-    ein: normalizedEin,
-    label: params.label ?? null,
-    tier: params.tier ?? "registry_only",
-    status: params.status ?? "candidate",
-  };
+  const payload:
+    Database["public"]["Tables"]["superintendent_scope_nonprofits"]["Insert"] =
+      {
+        district_entity_id: params.district_entity_id,
+        ein: normalizedEin,
+        label: params.label ?? undefined,
+        tier: params.tier ?? "registry_only",
+        status: params.status ?? "candidate",
+      };
 
   const { data, error } = await supabaseAdmin
     .from("superintendent_scope_nonprofits")
-    .upsert(payload, { onConflict: "ein" })
+    // EIN is only unique within a district now.
+    .upsert(payload, { onConflict: "district_entity_id,ein" })
     .select(
       "id, district_entity_id, entity_id, ein, label, tier, status, created_at, updated_at",
     )
@@ -521,7 +521,39 @@ export async function getScopeNonprofitById(
   return mapScopeRow(data as SuperintendentScopeRow | null);
 }
 
+export async function backfillScopeNonprofitEntity(params: {
+  scope_id: string;
+  entity_id: string;
+}): Promise<AdminScopeRow> {
+  const { scope_id, entity_id } = params;
+  if (!scope_id) throw new Error("scope_id is required");
+  if (!entity_id) throw new Error("entity_id is required");
+
+  const { data, error } = await supabaseAdmin
+    .from("superintendent_scope_nonprofits")
+    .update({ entity_id })
+    .eq("id", scope_id)
+    .select(
+      "id, district_entity_id, entity_id, ein, label, tier, status, created_at, updated_at",
+    )
+    .single();
+
+  if (error) throw new Error(error.message);
+  return {
+    id: String(data.id),
+    district_entity_id: data.district_entity_id,
+    entity_id: data.entity_id ?? null,
+    ein: data.ein,
+    label: data.label ?? null,
+    tier: data.tier as ScopeTier,
+    status: data.status as ScopeStatus,
+    created_at: data.created_at as string,
+    updated_at: data.updated_at as string,
+  };
+}
+
 export async function updateScopeNonprofit(params: {
+  district_entity_id: string;
   ein: string;
   tier?: ScopeTier;
   status?: ScopeStatus;
@@ -532,14 +564,29 @@ export async function updateScopeNonprofit(params: {
     throw new Error("EIN is required");
   }
 
-  const updates: Record<string, unknown> = {};
-  if (params.tier) updates.tier = params.tier;
-  if (params.status) updates.status = params.status;
-  if (params.label !== undefined) updates.label = params.label;
+  // Build update payload (omit fields you don't want to change)
+  const updates:
+    Database["public"]["Tables"]["superintendent_scope_nonprofits"]["Update"] =
+      {};
 
+  if (params.tier !== undefined) updates.tier = params.tier;
+  if (params.status !== undefined) updates.status = params.status;
+  if (params.label !== undefined) updates.label = params.label; // allow null to clear
+
+  // (Optional) avoid a no-op update
+  if (
+    params.tier === undefined &&
+    params.status === undefined &&
+    params.label === undefined
+  ) {
+    throw new Error("No updates provided");
+  }
+
+  // Update and return the updated row
   const { data, error } = await supabaseAdmin
     .from("superintendent_scope_nonprofits")
     .update(updates)
+    .eq("district_entity_id", params.district_entity_id)
     .eq("ein", normalizedEin)
     .select(
       "id, district_entity_id, entity_id, ein, label, tier, status, created_at, updated_at",
@@ -548,6 +595,9 @@ export async function updateScopeNonprofit(params: {
 
   if (error) {
     throw new Error(error.message);
+  }
+  if (!data) {
+    throw new Error("Update failed: no data returned");
   }
 
   return {
@@ -565,6 +615,7 @@ export async function updateScopeNonprofit(params: {
 
 export async function createEntityFromEin(
   ein: string,
+  opts?: { scope_id?: string | null },
 ): Promise<AdminCreateEntityResponse> {
   const normalizedEin = normalizeEinInput(ein);
   if (!normalizedEin) {
@@ -572,6 +623,69 @@ export async function createEntityFromEin(
   }
 
   const irs: IrsPostgrestClient = getIrsClient();
+
+  // Helper to ensure nonprofit shell and onboarding progress are up to date
+  async function hydrateNonprofitShell(params: {
+    entityId: string;
+    ein: string;
+    name?: string | null;
+    scopeId?: string | null;
+  }): Promise<void> {
+    const { entityId, ein, name, scopeId } = params;
+
+    // 1) Ensure a canonical nonprofit shell exists (public.nonprofits)
+    const { error: nonprofitUpsertError } = await supabaseAdmin
+      .from("nonprofits")
+      .upsert(
+        {
+          entity_id: entityId,
+          name: (name && name.trim()) ? name.trim() : `Nonprofit ${ein}`,
+          ein,
+          // REQUIRED (no DB default)
+          org_type: "external_charity",
+        },
+        { onConflict: "entity_id" },
+      );
+
+    if (nonprofitUpsertError) {
+      throw new Error(nonprofitUpsertError.message);
+    }
+
+    // 2) Mark identity as complete (identity is satisfied once shell exists)
+    const { error: progressUpsertError } = await supabaseAdmin
+      .from("entity_onboarding_progress")
+      .upsert(
+        {
+          entity_id: entityId,
+          section: "identity",
+          status: "complete",
+          last_updated: new Date().toISOString(),
+        },
+        { onConflict: "entity_id,section" },
+      );
+
+    if (progressUpsertError) {
+      throw new Error(progressUpsertError.message);
+    }
+
+    // 3) Backfill scope row(s) so the onboarding queue can resolve entity_id
+    // Prefer a specific scope_id when provided (precise). Fallback to updating all matching EIN rows.
+    if (scopeId) {
+      await backfillScopeNonprofitEntity({
+        scope_id: scopeId,
+        entity_id: entityId,
+      });
+    } else {
+      const { error: scopeUpdateError } = await supabaseAdmin
+        .from("superintendent_scope_nonprofits")
+        .update({ entity_id: entityId })
+        .eq("ein", ein);
+
+      if (scopeUpdateError) {
+        throw new Error(scopeUpdateError.message);
+      }
+    }
+  }
 
   const { data: existingLink, error: linkError } = await irs
     .from("entity_links")
@@ -594,24 +708,34 @@ export async function createEntityFromEin(
       throw new Error(entityError.message);
     }
 
+    if (entityRow?.id) {
+      await hydrateNonprofitShell({
+        entityId: String(entityRow.id),
+        ein: normalizedEin,
+        name: entityRow.name ?? null,
+        scopeId: opts?.scope_id ?? null,
+      });
+    }
+
     return {
       entity: entityRow
         ? {
-            id: String(entityRow.id),
-            name: String(entityRow.name),
-            slug: String(entityRow.slug),
-          }
+          id: String(entityRow.id),
+          name: String(entityRow.name),
+          slug: String(entityRow.slug),
+        }
         : null,
       created: false,
       linked: true,
     };
   }
 
-  const { data: existingEntity, error: existingEntityError } = await supabaseAdmin
-    .from("entities")
-    .select("id, name, slug")
-    .contains("external_ids", { ein: normalizedEin })
-    .maybeSingle();
+  const { data: existingEntity, error: existingEntityError } =
+    await supabaseAdmin
+      .from("entities")
+      .select("id, name, slug")
+      .contains("external_ids", { ein: normalizedEin })
+      .maybeSingle();
 
   if (existingEntityError) {
     throw new Error(existingEntityError.message);
@@ -628,6 +752,13 @@ export async function createEntityFromEin(
     if (linkInsertError) {
       throw new Error(linkInsertError.message);
     }
+
+    await hydrateNonprofitShell({
+      entityId: String(existingEntity.id),
+      ein: normalizedEin,
+      name: existingEntity.name ?? null,
+      scopeId: opts?.scope_id ?? null,
+    });
 
     return {
       entity: {
@@ -679,6 +810,13 @@ export async function createEntityFromEin(
   if (linkInsertError) {
     throw new Error(linkInsertError.message);
   }
+
+  await hydrateNonprofitShell({
+    entityId: String(entityRow.id),
+    ein: normalizedEin,
+    name: entityRow.name ?? null,
+    scopeId: opts?.scope_id ?? null,
+  });
 
   return {
     entity: {

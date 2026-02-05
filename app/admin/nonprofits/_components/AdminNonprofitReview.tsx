@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type {
-  AdminCreateEntityResponse,
   AdminNonprofitReview as AdminNonprofitReviewDTO,
   AdminScopeRow,
   ScopeStatus,
   ScopeTier,
 } from "@/app/admin/nonprofits/types";
+import { useRouter } from "next/navigation";
 
 const TIERS: ScopeTier[] = [
   "registry_only",
@@ -43,6 +43,7 @@ export default function AdminNonprofitReview({ ein }: Props) {
   const [status, setStatus] = useState<ScopeStatus>("candidate");
   const [savingScope, setSavingScope] = useState(false);
   const [creatingEntity, setCreatingEntity] = useState(false);
+  const router = useRouter();
 
   const syncScopeState = (scope: AdminScopeRow | null) => {
     setTier(scope?.tier ?? "registry_only");
@@ -108,29 +109,70 @@ export default function AdminNonprofitReview({ ein }: Props) {
 
   const handleCreateEntity = async () => {
     if (!data) return;
+    if (!data.scope?.district_entity_id) {
+      setError(
+        "Add this nonprofit to scope and set a district before creating the entity.",
+      );
+      return;
+    }
     setCreatingEntity(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/admin/nonprofits/entity", {
+      const response = await fetch("/api/admin/nonprofits", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ein: data.ein }),
+        body: JSON.stringify({
+          name: data.organization?.legal_name ?? data.scope?.label ?? data.ein,
+          org_type: "external_charity",
+          district_entity_id: data.scope.district_entity_id,
+          scope_id: data.scope?.id ?? null,
+          ein: data.ein,
+          website_url: null,
+          mission_statement: null,
+        }),
       });
 
       if (!response.ok) {
         throw new Error("Failed to create entity");
       }
 
-      const payload = (await response.json()) as AdminCreateEntityResponse;
-      setData((prev) =>
-        prev
-          ? {
-              ...prev,
-              entity: payload.entity ?? prev.entity,
-            }
-          : prev,
-      );
+      type CreateNonprofitShellResponse =
+        | {
+            entity_id: string;
+            nonprofit_id: string;
+            slug?: string;
+          }
+        | {
+            entity?: {
+              id: string;
+              slug?: string;
+            } | null;
+            scope?: AdminScopeRow | null;
+          };
+
+      const payload = (await response.json()) as CreateNonprofitShellResponse;
+      const createdEntityId =
+        "entity_id" in payload
+          ? payload.entity_id
+          : (payload.entity?.id ?? null);
+      const scopeId =
+        data.scope?.id ??
+        ("scope" in payload ? (payload.scope?.id ?? null) : null);
+
+      if (createdEntityId) {
+        const qs = new URLSearchParams();
+        if (scopeId) qs.set("scope_id", scopeId);
+        qs.set("ein", data.ein);
+
+        router.push(
+          `/admin/nonprofits/${encodeURIComponent(createdEntityId)}/onboarding?${qs.toString()}`,
+        );
+        return;
+      }
+
+      // Fallback (shouldn't happen): refresh the page state.
+      void load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create entity");
     } finally {
@@ -163,6 +205,18 @@ export default function AdminNonprofitReview({ ein }: Props) {
   }
 
   const org = data.organization;
+
+  // Canonical Entity derived values
+  const linkedEntityId = data.entity?.id ?? data.scope?.entity_id ?? null;
+  const linkedEntitySlug = data.entity?.slug ?? null;
+  const linkedEntityName = data.entity?.name ?? null;
+
+  const onboardingQs = new URLSearchParams();
+  if (data.scope?.id) onboardingQs.set("scope_id", data.scope.id);
+  onboardingQs.set("ein", data.ein);
+  const onboardingHref = linkedEntityId
+    ? `/admin/nonprofits/${encodeURIComponent(linkedEntityId)}/onboarding?${onboardingQs.toString()}`
+    : null;
 
   return (
     <div className="space-y-6">
@@ -255,7 +309,9 @@ export default function AdminNonprofitReview({ ein }: Props) {
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <h2 className="text-sm font-semibold text-text-on-light">Data Health</h2>
+          <h2 className="text-sm font-semibold text-text-on-light">
+            Data Health
+          </h2>
           <div className="mt-4 space-y-3 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-brand-secondary-2">Narratives</span>
@@ -375,30 +431,49 @@ export default function AdminNonprofitReview({ ein }: Props) {
             Canonical Entity
           </h2>
           <p className="mt-1 text-xs text-brand-secondary-2">
-            Create or link the public.entities record for district dashboards.
+            Create the nonprofit shell (public.entities + public.nonprofits) so
+            onboarding steps can save identity fields.
           </p>
           <div className="mt-4 space-y-3">
-            {data.entity ? (
+            {linkedEntityId ? (
               <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                Linked entity: {data.entity.name} ({data.entity.slug})
+                Linked entity:{" "}
+                {linkedEntityName ? (
+                  <>
+                    {linkedEntityName}
+                    {linkedEntitySlug ? ` (${linkedEntitySlug})` : ""}
+                  </>
+                ) : (
+                  <span className="font-mono">{linkedEntityId}</span>
+                )}
               </div>
             ) : (
               <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
                 No entity linked yet.
               </div>
             )}
-            <button
-              type="button"
-              onClick={handleCreateEntity}
-              disabled={creatingEntity || Boolean(data.entity)}
-              className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-text-on-light shadow-sm transition hover:border-brand-primary hover:text-brand-primary disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {data.entity
-                ? "Entity already linked"
-                : creatingEntity
-                  ? "Creating..."
-                  : "Create entity"}
-            </button>
+
+            {linkedEntityId && onboardingHref ? (
+              <Link
+                href={onboardingHref}
+                className="inline-flex items-center justify-center rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-primary/90"
+              >
+                Continue onboarding
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={handleCreateEntity}
+                disabled={creatingEntity || Boolean(linkedEntityId)}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-text-on-light shadow-sm transition hover:border-brand-primary hover:text-brand-primary disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {linkedEntityId
+                  ? "Entity already linked"
+                  : creatingEntity
+                    ? "Creating..."
+                    : "Create nonprofit shell"}
+              </button>
+            )}
           </div>
         </div>
       </div>

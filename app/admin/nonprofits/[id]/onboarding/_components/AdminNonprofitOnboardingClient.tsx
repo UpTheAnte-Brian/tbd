@@ -179,7 +179,7 @@ export default function AdminNonprofitOnboardingClient({
     label: string,
     url: string,
     options?: RequestInit,
-  ) => {
+  ): Promise<boolean> => {
     setActionLoading(label);
     setActionError(null);
 
@@ -202,8 +202,10 @@ export default function AdminNonprofitOnboardingClient({
 
       const payload = (await response.json()) as NonprofitOnboardingData;
       setData(payload);
+      return true;
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Request failed");
+      return false;
     } finally {
       setActionLoading(null);
     }
@@ -214,7 +216,8 @@ export default function AdminNonprofitOnboardingClient({
     if (isEinLocked) {
       delete payload.ein;
     }
-    await runAction(
+
+    const ok = await runAction(
       "identity",
       `/api/admin/nonprofits/${entityId}/onboarding/identity`,
       {
@@ -222,6 +225,12 @@ export default function AdminNonprofitOnboardingClient({
         body: JSON.stringify(payload),
       },
     );
+
+    if (ok) {
+      setActiveSection("irs_link");
+      // Make the section change obvious after saving.
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   const handleProgressUpdate = async (

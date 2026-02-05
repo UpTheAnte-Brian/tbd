@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "build": "next build",
-    "dev": "dotenv -e .env.test.local -- npm run tailwind:watch & next dev --turbopack",
+    "dev": "dotenv -e .env.local -- npm run tailwind:watch & next dev --turbopack",
     "start": "next start",
     "lint": "eslint .",
     "env:check": "tsx scripts/check-env.ts",
@@ -33,6 +33,15 @@
     "importDistrictBoundaries:test": "dotenv -e .env.test.local -- tsx scripts/import-mn-district-boundaries.ts",
     "importIrsPdfs:dev": "dotenv -e .env.local -- tsx scripts/irs/import-irs-pdfs.ts",
     "importIrsPdfs:test": "dotenv -e .env.test.local -- tsx scripts/irs/import-irs-pdfs.ts",
+
+    "importIrsBulk:dev": "dotenv -e .env.local -- tsx scripts/irs/import-irs-organizations-bulk.ts",
+    "importIrsBulk:test": "dotenv -e .env.test.local -- tsx scripts/irs/import-irs-organizations-bulk.ts",
+
+    "importIrsBulk:pub78:dev": "dotenv -e .env.local -- tsx scripts/irs/import-irs-organizations-bulk.ts --source pub78 --download",
+    "importIrsBulk:pub78:test": "dotenv -e .env.test.local -- tsx scripts/irs/import-irs-organizations-bulk.ts --source pub78 --download",
+
+    "importIrsBulk:pub78:scoped:dev": "dotenv -e .env.local -- tsx scripts/irs/import-irs-organizations-bulk.ts --source pub78 --download --district",
+    "importIrsBulk:pub78:scoped:test": "dotenv -e .env.test.local -- tsx scripts/irs/import-irs-organizations-bulk.ts --source pub78 --download --district",
     "importMdeSuperintendents:dev": "tsx scripts/import-mde-superintendents.ts --env=dev",
     "importMdeSuperintendents:test": "tsx scripts/import-mde-superintendents.ts --env=test",
     "linkSchoolsToDistricts": "dotenv -e .env.local -- tsx scripts/link-schools-to-districts.ts",

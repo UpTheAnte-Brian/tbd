@@ -27,6 +27,8 @@ export async function POST(req: Request) {
       | CreateNonprofitRequest
       | null;
 
+    console.log("[/api/admin/nonprofits POST] body", body);
+
     if (!body?.name || !body?.org_type || !body?.district_entity_id) {
       return jsonError(
         "name, org_type, and district_entity_id are required",
@@ -35,6 +37,9 @@ export async function POST(req: Request) {
     }
 
     const created = await createNonprofitShell(body);
+
+    console.log("[/api/admin/nonprofits POST] created", created);
+
     return NextResponse.json<typeof created>(created, { status: 201 });
   });
 }

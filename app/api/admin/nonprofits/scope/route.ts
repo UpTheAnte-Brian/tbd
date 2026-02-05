@@ -56,20 +56,23 @@ export async function POST(req: Request) {
 
     const body = (await req.json().catch(() => null)) as
       | {
-          district_entity_id?: string | null;
-          ein?: string;
-          label?: string | null;
-          tier?: ScopeTier;
-          status?: ScopeStatus;
-        }
+        district_entity_id: string;
+        ein?: string;
+        label?: string | null;
+        tier?: ScopeTier;
+        status?: ScopeStatus;
+      }
       | null;
 
     if (!body?.ein) {
       return jsonError("EIN is required", 400);
     }
+    if (!body.district_entity_id) {
+      return jsonError("district_entity_id is required", 400);
+    }
 
     const scope = await addScopeNonprofit({
-      district_entity_id: body.district_entity_id ?? null,
+      district_entity_id: body.district_entity_id,
       ein: body.ein,
       label: body.label ?? null,
       tier: asTier(body.tier),
@@ -88,16 +91,19 @@ export async function PATCH(req: Request) {
 
     const body = (await req.json().catch(() => null)) as
       | {
-          district_entity_id?: string | null;
-          ein?: string;
-          label?: string | null;
-          tier?: ScopeTier;
-          status?: ScopeStatus;
-        }
+        district_entity_id?: string;
+        ein?: string;
+        label?: string | null;
+        tier?: ScopeTier;
+        status?: ScopeStatus;
+      }
       | null;
 
     if (!body?.ein) {
       return jsonError("EIN is required", 400);
+    }
+    if (!body.district_entity_id) {
+      return jsonError("district_entity_id is required", 400);
     }
 
     const tier = asTier(body.tier);
@@ -109,6 +115,7 @@ export async function PATCH(req: Request) {
     }
 
     const scope = await updateScopeNonprofit({
+      district_entity_id: body.district_entity_id,
       ein: body.ein,
       tier,
       status,

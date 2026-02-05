@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { OnboardingQueueRow } from "@/app/admin/nonprofits/types";
 
 const STEP_LABELS: Record<OnboardingQueueRow["next_step"], string> = {
-  create_entity: "Start onboarding",
+  create_entity: "Create nonprofit shell",
   identity: "Identity",
   link_irs: "Link IRS",
   ingest_irs: "Ingest IRS",
@@ -68,6 +68,18 @@ export default function AdminNonprofitsClient() {
     }
   };
 
+  const resolveNextStep = (row: OnboardingQueueRow) => {
+    const nextStep = row.has_entity
+      ? row.next_step
+      : ("create_entity" as const);
+    const href =
+      !row.has_entity && row.ein
+        ? `/admin/nonprofits/${encodeURIComponent(row.ein)}`
+        : row.action_url;
+
+    return { nextStep, href };
+  };
+
   return (
     <section className="space-y-4">
       <header className="space-y-1">
@@ -106,55 +118,58 @@ export default function AdminNonprofitsClient() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
-              {rows.map((row) => (
-                <tr key={row.scope_id} className="hover:bg-surface-inset/50">
-                  <td className="px-4 py-3 font-medium text-text-on-light">
-                    {row.label ?? row.ein ?? "Untitled"}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-text-on-light">
-                    {row.ein ?? "--"}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-text-on-light">
-                    {row.status}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-text-on-light">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-surface-inset px-2 py-1">
-                        Entity: {row.has_entity ? "Yes" : "No"}
-                      </span>
-                      <span className="rounded-full bg-surface-inset px-2 py-1">
-                        IRS link: {row.has_irs_link ? "Yes" : "No"}
-                      </span>
-                      <span className="rounded-full bg-surface-inset px-2 py-1">
-                        Returns: {row.has_returns ? "Yes" : "No"}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      {row.next_step === "verify" ? (
-                        <button
-                          type="button"
-                          onClick={() => handleMarkReady(row)}
-                          disabled={updatingScopeId === row.scope_id}
-                          className="rounded-md bg-brand-primary-0 px-3 py-1 text-xs font-semibold text-brand-primary-1 transition hover:bg-brand-primary-2 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {updatingScopeId === row.scope_id
-                            ? "Updating…"
-                            : STEP_LABELS[row.next_step]}
-                        </button>
-                      ) : (
-                        <Link
-                          href={row.action_url}
-                          className="rounded-md bg-brand-primary-0 px-3 py-1 text-xs font-semibold text-brand-primary-1 transition hover:bg-brand-primary-2"
-                        >
-                          {STEP_LABELS[row.next_step]}
-                        </Link>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {rows.map((row) => {
+                const { nextStep, href } = resolveNextStep(row);
+                return (
+                  <tr key={row.scope_id} className="hover:bg-surface-inset/50">
+                    <td className="px-4 py-3 font-medium text-text-on-light">
+                      {row.label ?? row.ein ?? "Untitled"}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-text-on-light">
+                      {row.ein ?? "--"}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-text-on-light">
+                      {row.status}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-text-on-light">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-surface-inset px-2 py-1">
+                          Entity: {row.has_entity ? "Yes" : "No"}
+                        </span>
+                        <span className="rounded-full bg-surface-inset px-2 py-1">
+                          IRS link: {row.has_irs_link ? "Yes" : "No"}
+                        </span>
+                        <span className="rounded-full bg-surface-inset px-2 py-1">
+                          Returns: {row.has_returns ? "Yes" : "No"}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {nextStep === "verify" ? (
+                          <button
+                            type="button"
+                            onClick={() => handleMarkReady(row)}
+                            disabled={updatingScopeId === row.scope_id}
+                            className="rounded-md bg-brand-primary-0 px-3 py-1 text-xs font-semibold text-brand-primary-1 transition hover:bg-brand-primary-2 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {updatingScopeId === row.scope_id
+                              ? "Updating…"
+                              : STEP_LABELS[nextStep]}
+                          </button>
+                        ) : (
+                          <Link
+                            href={href}
+                            className="rounded-md bg-brand-primary-0 px-3 py-1 text-xs font-semibold text-brand-primary-1 transition hover:bg-brand-primary-2"
+                          >
+                            {STEP_LABELS[nextStep]}
+                          </Link>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
               {!loading && rows.length === 0 ? (
                 <tr>
                   <td

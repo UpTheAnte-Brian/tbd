@@ -2,8 +2,10 @@ import { type NextRequest, NextResponse } from "next/server";
 import { safeRoute } from "@/app/lib/api/handler";
 import { jsonError } from "@/app/lib/api/errors";
 import { getNonprofitOnboardingData } from "@/domain/admin/nonprofit-onboarding-dto";
-import { createApiClient } from "@/utils/supabase/route";
-import { createIrsAdminClient } from "@/utils/supabase/service-worker";
+import {
+  createIrsAdminClient,
+  supabaseAdmin,
+} from "@/utils/supabase/service-worker";
 import { isValidEin, normalizeEin } from "@/domain/irs/ein";
 import { areAdminToolsDisabled } from "@/utils/admin-tools";
 
@@ -42,7 +44,7 @@ export async function POST(
     }
 
     const einNormalized = normalizeEin(rawEin);
-    const supabase = await createApiClient();
+    const supabase = supabaseAdmin;
     const irs = createIrsAdminClient();
 
     // PostgREST filter values with special characters (like EIN dashes) must be quoted.
@@ -86,13 +88,25 @@ export async function POST(
       throw new Error(linkErr.message);
     }
 
-    const { error: scopeError } = await supabase
-      .from("superintendent_scope_nonprofits")
-      .update({ status: "active" })
-      .eq("entity_id", id);
+    // Mark scope row active. Prefer scope_id (precise) and also backfill entity_id when we have it.
+    if (scopeId) {
+      const { error: scopeError } = await supabase
+        .from("superintendent_scope_nonprofits")
+        .update({ status: "active", entity_id: id })
+        .eq("id", scopeId);
 
-    if (scopeError) {
-      throw new Error(scopeError.message);
+      if (scopeError) {
+        throw new Error(scopeError.message);
+      }
+    } else {
+      const { error: scopeError } = await supabase
+        .from("superintendent_scope_nonprofits")
+        .update({ status: "active" })
+        .eq("entity_id", id);
+
+      if (scopeError) {
+        throw new Error(scopeError.message);
+      }
     }
 
     const { error: progressError } = await supabase

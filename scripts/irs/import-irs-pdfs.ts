@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
+import { formatEinDashed, normalizeEinInput } from "./lib/ein";
 import { loadEnvFiles } from "../lib/load-env";
 import { logSupabaseError } from "../lib/supabase-error";
 
@@ -886,12 +887,17 @@ async function main() {
       console.log(`WARN: Could not locate people page in ${baseName}`);
     }
 
-    const ein = findEIN(header.text) ?? findEIN(balance.text) ??
+    const foundEin = findEIN(header.text) ?? findEIN(balance.text) ??
       findEIN(part7Text);
-    if (!ein) {
+    if (!foundEin) {
       console.error("OCR HEADER TEXT:\n", header.text.slice(0, 1500));
       throw new Error(`Could not find EIN in ${path.basename(pdfPath)}`);
     }
+    const einNormalized = normalizeEinInput(foundEin);
+    if (!einNormalized) {
+      throw new Error("Invalid EIN");
+    }
+    const ein = formatEinDashed(einNormalized);
 
     let headerText = header.text;
     let period = findTaxPeriod(narrative.text);
@@ -921,53 +927,57 @@ async function main() {
     const nameFromNarrative = extractNameFromAdditionalData(narrative.text);
     const orgName = nameFromNarrative ?? findOrgName(header.text) ??
       `EIN ${ein}`;
-    const { city, state } = findCityState(header.text);
-
-    const existingOrg = await withRetrySupabase(
-      `Read irs.organizations ${ein}`,
-      () =>
-        irs
-          .from("organizations")
-          .select("ein, legal_name, city, state")
-          .eq("ein", ein)
-          .maybeSingle(),
-    );
-    if (existingOrg.error) {
-      logSupabaseError("Read irs.organizations failed", existingOrg.error);
-      throw existingOrg.error;
-    }
-
-    const displayName = pickBestDisplayName(
-      existingOrg.data?.legal_name ?? null,
-      nameFromNarrative ?? orgName,
-    );
-    const nextLegalName = displayName ?? existingOrg.data?.legal_name ??
-      orgName;
+      const displayName = pickBestDisplayName(
+        null,
+        nameFromNarrative ?? orgName,
+      );
+    const nextLegalName = displayName ?? orgName;
 
     {
       const { error } = await withRetrySupabase(
-        `Upsert irs.organizations ${ein}`,
+        `Insert irs.organizations ${ein}`,
         () =>
-          irs.from("organizations").upsert(
-            {
-              ein,
-              legal_name: nextLegalName,
-              city: city ?? existingOrg.data?.city ?? null,
-              state: state ?? existingOrg.data?.state ?? null,
-              country: "US",
-              last_seen_at: new Date().toISOString(),
-            },
-            { onConflict: "ein" },
+          irs.from("organizations").insert(
+              {
+                ein,
+                ein_normalized: einNormalized,
+                legal_name: nextLegalName,
+                last_seen_at: new Date().toISOString(),
+              },
+            { ignoreDuplicates: true },
           ),
       );
       if (error) {
-        logSupabaseError("Upsert irs.organizations failed", error);
+        logSupabaseError("Insert irs.organizations failed", error);
         throw error;
       }
     }
 
     const detectedReturnType = findReturnType(header.text);
     const returnType = config.returnType ?? detectedReturnType ?? "990";
+
+    const existingXmlReturn = await withRetrySupabase(
+      `Read irs.returns xml priority ${ein} ${taxYear}`,
+      () =>
+        irs
+          .from("returns")
+          .select("id")
+          .eq("ein", ein)
+          .eq("tax_year", taxYear)
+          .eq("source_priority", "xml")
+          .maybeSingle(),
+    );
+    if (existingXmlReturn.error) {
+      logSupabaseError(
+        "Read irs.returns xml priority failed",
+        existingXmlReturn.error,
+      );
+      throw existingXmlReturn.error;
+    }
+    if (existingXmlReturn.data) {
+      console.log(`Skipping PDF — XML exists for ${ein} ${taxYear}`);
+      continue;
+    }
 
     const returnRow = await withRetrySupabase(
       `Upsert irs.returns ${ein} ${returnType} ${taxYear}`,
@@ -983,6 +993,7 @@ async function main() {
               tax_period_end: period.end ?? null,
               return_name: nameFromNarrative ?? null,
               source_system: "pdf_ocr",
+              source_priority: "pdf",
             },
             { onConflict: "ein,return_type,tax_year" },
           )

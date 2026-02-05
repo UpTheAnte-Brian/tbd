@@ -125,6 +125,22 @@ Example runs:
 - `npm run importIrsPdfs:test`
 - Single file: `npm run importIrsPdfs:dev -- --file="WestonkaRecSociety 990 2021.pdf"`
 
+#### IRS TEOS storage
+`IRS_TEOS_XML_ROOT` (or `IRS_XML_ROOT`) controls where TEOS ingestion artifacts are written.
+Default root is `./data/irs-teos` (relative to repo root) when the env var is not set.
+
+Directory layout (relative to root):
+```text
+data/irs-teos/
+  index/index_<year>.csv
+  zips/<year>/<shard>.zip
+  xml/<year>/<shard>/<object_id>_public.xml
+  jsonl/teos_<year>_<scope>.jsonl
+  ein/ein_list_<district>_<year>.txt
+  registry/ (optional ZIP cache for pub78/epostcard when using --cache)
+  tmp/ (scratch downloads)
+```
+
 ## Dataset metadata standard
 
 Each dataset folder under `scripts/geojson/<dataset_key>/<version>/metadata.json` should include:
@@ -160,3 +176,11 @@ The UI should treat `source_tag` + version as “what you are looking at”.
 - Relationship semantics currently assume:
   - `relationship_type = 'contains'` for hierarchical “parent contains child”
   - `is_primary` used to identify the “main” parent for a given child + relationship
+
+
+
+# scoped pub78 import (default statuses candidate,active)
+pnpm ts-node scripts/irs/import-irs-organizations-bulk.ts --source pub78 --download --district 7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e
+
+# scoped pub78 import (only active)
+pnpm ts-node scripts/irs/import-irs-organizations-bulk.ts --source pub78 --download --district 7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e --statuses active

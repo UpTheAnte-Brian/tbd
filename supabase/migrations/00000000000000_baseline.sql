@@ -4377,10 +4377,6 @@ CREATE OR REPLACE TRIGGER "trg_on_document_version_approved" BEFORE UPDATE OF "s
 
 
 
-CREATE OR REPLACE TRIGGER "trg_scope_nonprofit_autocreate_entity" BEFORE INSERT OR UPDATE OF "entity_id", "ein", "label" ON "public"."superintendent_scope_nonprofits" FOR EACH ROW EXECUTE FUNCTION "public"."ensure_scope_nonprofit_entity"();
-
-
-
 CREATE OR REPLACE TRIGGER "trg_set_document_version_number" BEFORE INSERT ON "public"."document_versions" FOR EACH ROW EXECUTE FUNCTION "public"."set_document_version_number"();
 
 
