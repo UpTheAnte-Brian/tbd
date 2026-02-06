@@ -9,7 +9,7 @@ import {
 // GET /api/entities/[id]/users
 export async function GET(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   return handleEntityUsersGet(req, context);
 }
@@ -18,7 +18,7 @@ export async function GET(
 // Body: { userId, role, status? }
 export async function POST(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   return handleEntityUsersPost(req, context);
 }
@@ -26,7 +26,7 @@ export async function POST(
 // DELETE /api/entities/[id]/users?userId=...
 export async function DELETE(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   return handleEntityUsersDelete(req, context);
 }

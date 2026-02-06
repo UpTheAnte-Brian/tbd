@@ -246,6 +246,57 @@ function extractTable(
   return { headers, rows };
 }
 
+function looksLikeFormId(value: string): boolean {
+  return /\b\d{4}-\d{2}\b/.test(value);
+}
+
+function looksLikeEmail(value: string): boolean {
+  return value.includes("@");
+}
+
+function looksLikePhone(value: string): boolean {
+  // keep this permissive; MDE formats vary
+  return /(\+?1\s*)?\(?\d{3}\)?[\s.-]*\d{3}[\s.-]*\d{4}/.test(value);
+}
+
+function inferColumnIndices(sampleColumns: string[]): {
+  superintendentIdx: number;
+  formidIdx: number;
+  districtIdx: number;
+  emailIdx: number;
+  phoneIdx: number;
+} {
+  const lowered = sampleColumns.map((c) => c.toLowerCase());
+
+  const formidIdx = sampleColumns.findIndex((c) => looksLikeFormId(c));
+  const emailIdx = sampleColumns.findIndex((c) =>
+    looksLikeEmail(c.toLowerCase())
+  );
+  const phoneIdx = sampleColumns.findIndex((c) => looksLikePhone(c));
+
+  const remaining = sampleColumns
+    .map((_, idx) => idx)
+    .filter((idx) => idx !== formidIdx && idx !== emailIdx && idx !== phoneIdx);
+
+  // Try to identify district column by keywords
+  const districtIdx =
+    remaining.find((idx) =>
+      /district|public|isd|school/.test(lowered[idx] ?? "")
+    ) ?? (remaining.length >= 2 ? remaining[1] : remaining[0] ?? -1);
+
+  // Superintendent is typically a person name; prefer the first remaining that isn't district
+  const superintendentIdx = remaining.find((idx) => idx !== districtIdx) ??
+    remaining[0] ?? -1;
+
+  return {
+    superintendentIdx,
+    formidIdx,
+    districtIdx,
+    emailIdx,
+    phoneIdx,
+  };
+}
+
 function parseRowsFromHtml(html: string): ParsedRow[] {
   const $ = cheerio.load(html);
   const { headers, rows } = extractTable($);
@@ -277,29 +328,33 @@ function parseRowsFromHtml(html: string): ParsedRow[] {
     "phone#",
   ]);
 
-  // Fallback: if headers missing, use positional indices
   const sampleCellsCount = rows.length > 0
     ? rows.first().find("td, th").length
     : 0;
 
-  if ((formidIdx < 0 || superintendentIdx < 0)) {
-    // Fallback to positional indices for common table shapes
-    if (sampleCellsCount >= 5) {
-      superintendentIdx = 0;
-      formidIdx = 1;
-      districtIdx = 2;
-      emailIdx = 3;
-      phoneIdx = 4;
-    } else if (sampleCellsCount === 4) {
-      superintendentIdx = 0;
-      formidIdx = 1;
-      districtIdx = 2;
-      emailIdx = 3;
-      phoneIdx = -1;
-    }
-    // Warn with more info
+  const headersMissing = normalizedHeaders.length === 0;
+  const headersUnreliable = formidIdx < 0 || superintendentIdx < 0;
+
+  if (headersMissing || headersUnreliable) {
+    const sampleColumns = rows.length > 0
+      ? rows.first().find("td, th").toArray().map((cell) =>
+        cleanText($(cell).text())
+      )
+      : [];
+
+    const inferred = inferColumnIndices(sampleColumns);
+
+    // Only override indices we couldn't confidently detect from headers.
+    if (formidIdx < 0) formidIdx = inferred.formidIdx;
+    if (superintendentIdx < 0) superintendentIdx = inferred.superintendentIdx;
+    if (districtIdx < 0) districtIdx = inferred.districtIdx;
+    if (emailIdx < 0) emailIdx = inferred.emailIdx;
+    if (phoneIdx < 0) phoneIdx = inferred.phoneIdx;
+
     console.warn(
-      `Could not confidently detect Form ID or Superintendent columns (sampleCellsCount=${sampleCellsCount}). Positional fallback may be used. Enable --debug to inspect parsed rows.`,
+      `Could not confidently detect columns from headers (headersMissing=${headersMissing}, sampleCellsCount=${sampleCellsCount}). Using inferred indices: ` +
+        `superintendent=${superintendentIdx}, formid=${formidIdx}, district=${districtIdx}, email=${emailIdx}, phone=${phoneIdx}. ` +
+        `Enable --debug to inspect parsed rows.`,
     );
   }
 
@@ -484,6 +539,116 @@ async function upsertContact({
   const now = new Date().toISOString();
   const raw = buildRawPayload(row);
 
+  // --- BEGIN: Reactivate unique match logic ---
+  const targetEmail = normalizeEmail(row.email);
+
+  let existingByUnique:
+    | {
+      id: string;
+      entity_id: string;
+      is_current: boolean;
+      email: string | null;
+      name: string | null;
+    }
+    | null = null;
+
+  if (row.formid) {
+    let q = supabase
+      .from("entity_contacts")
+      .select("id, entity_id, is_current, email, name")
+      .eq("source_system", SOURCE_SYSTEM)
+      .eq("source_formid", row.formid)
+      .eq("contact_role", CONTACT_ROLE)
+      .limit(1);
+
+    if (targetEmail) {
+      // MDE sometimes changes email casing; do a case-insensitive match.
+      q = q.ilike("email", targetEmail);
+    } else {
+      q = q.is("email", null);
+      // If email is null, also try to narrow by name when possible.
+      if (row.name) {
+        q = q.eq("name", row.name);
+      }
+    }
+
+    const { data: existingRows, error: existingErr } = await q;
+    if (existingErr) {
+      logSupabaseError(
+        `Lookup existing entity_contacts by unique key formid=${row.formid} email=${
+          targetEmail ?? "<null>"
+        }`,
+        existingErr,
+      );
+    } else if (existingRows && existingRows.length > 0) {
+      existingByUnique = existingRows[0] ?? null;
+    }
+  }
+
+  if (existingByUnique && (!match || match.id !== existingByUnique.id)) {
+    // Ensure only one current contact for this entity/role, but don't expire the row we're reactivating.
+    const expireCount = current.filter((c) =>
+      c.id !== existingByUnique.id
+    ).length;
+    if (expireCount > 0) {
+      if (dryRun) {
+        summary.expired += expireCount;
+      } else {
+        const { error: expireError } = await supabase
+          .from("entity_contacts")
+          .update({ is_current: false, last_seen_at: now })
+          .eq("entity_id", entityId)
+          .eq("contact_role", CONTACT_ROLE)
+          .eq("is_current", true)
+          .neq("id", existingByUnique.id);
+        if (expireError) {
+          logSupabaseError(
+            `Expire entity_contacts entity_id=${entityId} (excluding id=${existingByUnique.id})`,
+            expireError,
+          );
+          return;
+        }
+        summary.expired += expireCount;
+      }
+    }
+
+    if (dryRun) {
+      summary.updated += 1;
+      return;
+    }
+
+    const updatePayload: Record<string, unknown> = {
+      entity_id: entityId,
+      is_current: true,
+      last_seen_at: now,
+      raw,
+      source_url: SOURCE_URL,
+      source_formid: row.formid,
+      source_system: SOURCE_SYSTEM,
+    };
+    if (row.name) updatePayload.name = row.name;
+    if (row.phone) updatePayload.phone = row.phone;
+    if (targetEmail) updatePayload.email = targetEmail;
+
+    // Don't overwrite first_seen_at if it's already populated.
+    const { error: reactivateError } = await supabase
+      .from("entity_contacts")
+      .update(updatePayload)
+      .eq("id", existingByUnique.id);
+
+    if (reactivateError) {
+      logSupabaseError(
+        `Reactivate entity_contacts id=${existingByUnique.id} formid=${row.formid}`,
+        reactivateError,
+      );
+      return;
+    }
+
+    summary.updated += 1;
+    return;
+  }
+  // --- END: Reactivate unique match logic ---
+
   if (match) {
     if (dryRun) {
       summary.updated += 1;
@@ -498,7 +663,7 @@ async function upsertContact({
     };
     if (row.name) updatePayload.name = row.name;
     if (row.phone) updatePayload.phone = row.phone;
-    if (row.email && match.matchByEmail) updatePayload.email = row.email;
+    if (match.matchByEmail && targetEmail) updatePayload.email = targetEmail;
 
     const { error: updateError } = await supabase
       .from("entity_contacts")
@@ -541,7 +706,7 @@ async function upsertContact({
     entity_id: entityId,
     contact_role: CONTACT_ROLE,
     name: row.name,
-    email: row.email,
+    email: targetEmail,
     phone: row.phone,
     source_system: SOURCE_SYSTEM,
     source_formid: row.formid,

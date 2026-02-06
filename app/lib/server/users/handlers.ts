@@ -20,7 +20,7 @@ interface EntityUsersRouteParams {
 
 export async function handleEntityUsersGet(
   _req: NextRequest,
-  context: EntityUsersRouteParams
+  context: EntityUsersRouteParams,
 ) {
   const supabase = await getServerClient();
 
@@ -41,7 +41,7 @@ export async function handleEntityUsersGet(
 
 export async function handleEntityUsersPost(
   req: NextRequest,
-  context: EntityUsersRouteParams
+  context: EntityUsersRouteParams,
 ) {
   const supabase = await getServerClient();
 
@@ -50,6 +50,7 @@ export async function handleEntityUsersPost(
     role?: EntityUserRole;
     status?: EntityUserStatus | null;
   };
+
   try {
     body = (await req.json()) as {
       userId?: string;
@@ -74,6 +75,9 @@ export async function handleEntityUsersPost(
     return jsonError("status must be one of: active, invited, removed", 400);
   }
 
+  // IMPORTANT: entity_users.status is NOT NULL; default to 'active' when omitted or null
+  const status: EntityUserStatus = body.status ?? "active";
+
   try {
     const entityId = await parseEntityId(supabase, context.params);
     const user = await upsertEntityUser(
@@ -81,23 +85,23 @@ export async function handleEntityUsersPost(
       entityId,
       body.userId,
       body.role,
-      body.status ?? null,
+      status,
     );
     return jsonOk(user, { status: 201 });
   } catch (err) {
     const message = err instanceof Error
       ? err.message
       : "Failed to update entity user";
-    const status = message.toLowerCase().includes("entity not found")
+    const statusCode = message.toLowerCase().includes("entity not found")
       ? 404
       : 500;
-    return jsonError(message, status);
+    return jsonError(message, statusCode);
   }
 }
 
 export async function handleEntityUsersDelete(
   req: NextRequest,
-  context: EntityUsersRouteParams
+  context: EntityUsersRouteParams,
 ) {
   const supabase = await getServerClient();
   const { searchParams } = new URL(req.url);
