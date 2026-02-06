@@ -12,6 +12,7 @@
 */
 
 import { formatEinDashed, normalizeEinInput } from "./lib/ein";
+import { parseReturnFinancialsFromXmlPath } from "./parse-990-financials";
 
 function getPersistentTeosRoot(): string {
     // Preferred override: IRS_TEOS_XML_ROOT (or IRS_XML_ROOT). Default: ./data/irs-teos
@@ -130,149 +131,6 @@ async function ensureFileExists(p: string): Promise<boolean> {
     }
 }
 
-function asNumberOrNull(input: unknown): number | null {
-    if (input == null) return null;
-    if (typeof input === "number" && Number.isFinite(input)) return input;
-    const s = String(input).trim();
-    if (!s) return null;
-    const cleaned = s.replace(/[^0-9\-\.]/g, "");
-    if (!cleaned) return null;
-    const n = Number(cleaned);
-    return Number.isFinite(n) ? n : null;
-}
-
-function getByPath(obj: any, p: string): unknown {
-    const parts = p.split(".").filter(Boolean);
-    let cur: any = obj;
-    for (const part of parts) {
-        if (cur == null) return undefined;
-        cur = cur[part];
-        if (Array.isArray(cur)) cur = cur[0];
-    }
-    return cur;
-}
-
-function findFirstNumberFromDoc(
-    doc: any,
-    candidates: string[],
-): { value: number | null; picked: string | null; raw?: unknown } {
-    for (const p of candidates) {
-        const raw = getByPath(doc, p);
-        const n = asNumberOrNull(raw);
-        if (n != null) return { value: n, picked: p, raw };
-    }
-    return { value: null, picked: null };
-}
-
-async function parseReturnFinancialsMinimal(xmlPath: string): Promise<{
-    total_revenue: number | null;
-    total_expenses: number | null;
-    contributions: number | null;
-    net_assets_end: number | null;
-    source_map: any;
-}> {
-    const xml = await fsp.readFile(xmlPath, "utf8");
-
-    let doc: any = null;
-    let usedParser = false;
-
-    try {
-        const { XMLParser } = require("fast-xml-parser");
-        const parser = new XMLParser({
-            ignoreAttributes: false,
-            attributeNamePrefix: "@_",
-            removeNSPrefix: true,
-        });
-        doc = parser.parse(xml);
-        usedParser = true;
-    } catch {
-        usedParser = false;
-    }
-
-    const candidates = {
-        totalRevenue: [
-            "Return.ReturnData.IRS990.CYTotalRevenueAmt",
-            "Return.ReturnData.IRS990.TotalRevenueCurrentYearAmt",
-            "Return.ReturnData.IRS990.TotalRevenueAmt",
-            "Return.ReturnData.IRS990EZ.TotalRevenueAmt",
-            "Return.ReturnData.IRS990EZ.CYTotalRevenueAmt",
-            "Return.ReturnData.IRS990PF.TotalRevAndExpnssAmt",
-            "Return.ReturnHeader.TotalRevenueAmt",
-        ],
-        totalExpenses: [
-            "Return.ReturnData.IRS990.CYTotalExpensesAmt",
-            "Return.ReturnData.IRS990.TotalFunctionalExpensesAmt",
-            "Return.ReturnData.IRS990.TotalExpensesCurrentYearAmt",
-            "Return.ReturnData.IRS990EZ.TotalExpensesAmt",
-            "Return.ReturnData.IRS990EZ.CYTotalExpensesAmt",
-            "Return.ReturnData.IRS990PF.TotalExpensesAmt",
-            "Return.ReturnHeader.TotalExpensesAmt",
-        ],
-        contributions: [
-            "Return.ReturnData.IRS990.CYContributionsGrantsAmt",
-            "Return.ReturnData.IRS990.ContributionsGiftsGrantsEtcAmt",
-            "Return.ReturnData.IRS990.TotalContributionsAmt",
-            "Return.ReturnData.IRS990EZ.ContributionsGiftsGrantsEtcAmt",
-            "Return.ReturnData.IRS990EZ.TotalContributionsAmt",
-            "Return.ReturnData.IRS990PF.ContributionsGiftsAmt",
-            "Return.ReturnHeader.ContributionsAmt",
-        ],
-        netAssetsEnd: [
-            "Return.ReturnData.IRS990.NetAssetsOrFundBalancesEOYAmt",
-            "Return.ReturnData.IRS990.TotalNetAssetsFundBalancesEOYAmt",
-            "Return.ReturnData.IRS990EZ.NetAssetsOrFundBalancesEOYAmt",
-            "Return.ReturnData.IRS990EZ.TotalNetAssetsFundBalancesEOYAmt",
-            "Return.ReturnData.IRS990PF.NetAssetsEOYAmt",
-            "Return.ReturnHeader.NetAssetsEOYAmt",
-        ],
-    };
-
-    const source_map: any = {
-        parser: usedParser ? "fast-xml-parser" : "none",
-        total_revenue: null,
-        total_expenses: null,
-        contributions: null,
-        net_assets_end: null,
-    };
-
-    let total_revenue: number | null = null;
-    let total_expenses: number | null = null;
-    let contributions: number | null = null;
-    let net_assets_end: number | null = null;
-
-    if (usedParser && doc) {
-        const tr = findFirstNumberFromDoc(doc, candidates.totalRevenue);
-        total_revenue = tr.value;
-        if (tr.picked) {
-            source_map.total_revenue = { path: tr.picked, raw: tr.raw };
-        }
-
-        const te = findFirstNumberFromDoc(doc, candidates.totalExpenses);
-        total_expenses = te.value;
-        if (te.picked) {
-            source_map.total_expenses = { path: te.picked, raw: te.raw };
-        }
-
-        const c = findFirstNumberFromDoc(doc, candidates.contributions);
-        contributions = c.value;
-        if (c.picked) source_map.contributions = { path: c.picked, raw: c.raw };
-
-        const nae = findFirstNumberFromDoc(doc, candidates.netAssetsEnd);
-        net_assets_end = nae.value;
-        if (nae.picked) {
-            source_map.net_assets_end = { path: nae.picked, raw: nae.raw };
-        }
-    }
-
-    return {
-        total_revenue,
-        total_expenses,
-        contributions,
-        net_assets_end,
-        source_map,
-    };
-}
-
 async function upsertReturnFinancialsBestEffort(params: {
     supabaseAdmin: any;
     returnId: string;
@@ -281,7 +139,7 @@ async function upsertReturnFinancialsBestEffort(params: {
     const { supabaseAdmin, returnId, xmlPath } = params;
 
     try {
-        const fin = await parseReturnFinancialsMinimal(xmlPath);
+        const fin = await parseReturnFinancialsFromXmlPath(xmlPath);
         const now = new Date().toISOString();
 
         const { error } = await supabaseAdmin
@@ -292,8 +150,21 @@ async function upsertReturnFinancialsBestEffort(params: {
                     return_id: returnId,
                     total_revenue: fin.total_revenue,
                     total_expenses: fin.total_expenses,
-                    contributions: fin.contributions,
+                    excess_or_deficit: fin.excess_or_deficit,
+                    total_assets_begin: fin.total_assets_begin,
+                    total_assets_end: fin.total_assets_end,
+                    total_liabilities_begin: fin.total_liabilities_begin,
+                    total_liabilities_end: fin.total_liabilities_end,
+                    net_assets_begin: fin.net_assets_begin,
                     net_assets_end: fin.net_assets_end,
+                    contributions: fin.contributions,
+                    program_service_revenue: fin.program_service_revenue,
+                    investment_income: fin.investment_income,
+                    fundraising_gross: fin.fundraising_gross,
+                    program_expenses: fin.program_expenses,
+                    management_general_expenses:
+                        fin.management_general_expenses,
+                    fundraising_expenses: fin.fundraising_expenses,
                     source_map: fin.source_map,
                     updated_at: now,
                 },
@@ -536,7 +407,9 @@ function parseYearsFromArgs(args: Record<string, string | boolean>): number[] {
     const to = toIntYear(args.to);
     if (from != null || to != null) {
         if (from == null || to == null) {
-            throw new Error("Provide both --from and --to (inclusive year range)");
+            throw new Error(
+                "Provide both --from and --to (inclusive year range)",
+            );
         }
         if (to < from) throw new Error("--to must be >= --from");
         const out: number[] = [];
@@ -1015,60 +888,23 @@ function zipHasMember(zipPath: string, memberName: string): boolean {
 }
 
 function findZipMemberPath(zipPath: string, memberName: string): string | null {
-    // Resolve the actual entry path by suffix match.
-    // IMPORTANT: do NOT `unzip -Z1` / full listing (too large for spawnSync buffers on big shards).
-    // Use pattern listing for just this member.
+    // Resolve the actual entry path by suffix match via full listing.
+    // Required for redo-cycle subfolders (e.g., 2022Redo_cycle01_41/...).
 
     const target = memberName.toLowerCase();
-    const patterns = [memberName, `*/${memberName}`, `*${memberName}`];
 
-    // Try unzip with patterns.
-    for (const pat of patterns) {
-        try {
-            const r = spawnSync("unzip", ["-l", zipPath, pat], {
-                encoding: "utf8",
-            });
-            if (r.status !== 0) continue;
-            const lines = String(r.stdout || "")
-                .split("\n")
-                .map((s) => s.trim())
-                .filter(Boolean);
-
-            // unzip -l output has a header/footer; file lines usually end with the path.
-            for (const line of lines) {
-                if (!line) continue;
-                // Heuristic: last token is the path
-                const parts = line.split(/\s+/);
-                const last = parts[parts.length - 1];
-                if (last && last.toLowerCase().endsWith(target)) return last;
-            }
-        } catch {
-            // ignore
+    try {
+        const r = spawnSync("unzip", ["-Z1", zipPath], { encoding: "utf8" });
+        if (r.status !== 0) return null;
+        const lines = String(r.stdout || "")
+            .split("\n")
+            .map((s) => s.trim())
+            .filter(Boolean);
+        for (const line of lines) {
+            if (line.toLowerCase().endsWith(target)) return line;
         }
-    }
-
-    if (!has7z()) return null;
-
-    // Try 7z with patterns (narrow output).
-    for (const pat of patterns) {
-        try {
-            const r2 = spawnSync(
-                "7z",
-                ["l", "-ba", "-slt", zipPath, `-i!${pat}`],
-                { encoding: "utf8" },
-            );
-            if (r2.status !== 0) continue;
-            const out2 = String(r2.stdout || "");
-            const lines = out2.split("\n");
-            for (const line of lines) {
-                const m = line.match(/^Path\s*=\s*(.+)$/i);
-                if (!m) continue;
-                const p = m[1].trim();
-                if (p && p.toLowerCase().endsWith(target)) return p;
-            }
-        } catch {
-            // ignore
-        }
+    } catch {
+        // ignore
     }
 
     return null;
@@ -1084,10 +920,8 @@ function unzipExtractSingle(
     ensureDir(path.dirname(outPath));
 
     // The IRS shard zips sometimes store XMLs inside subfolders.
-    // Resolve the actual entry path by suffix match.
-    const resolvedMember = zipHasMember(zipPath, memberName)
-        ? memberName
-        : (findZipMemberPath(zipPath, memberName) || memberName);
+    // Resolve the actual entry path by suffix match from a full listing.
+    const resolvedMember = findZipMemberPath(zipPath, memberName) || memberName;
 
     // Prefer 7z first if available (more forgiving for odd central-directory warnings).
     if (has7z()) {
@@ -1909,7 +1743,8 @@ async function processYear(params: {
         throw new Error("Provide --year <YYYY> (or --years/--from/--to)");
     }
 
-    const needsSupabase = upsert || (Boolean(districtEntityId) && !scopedEinOverride);
+    const needsSupabase = upsert ||
+        (Boolean(districtEntityId) && !scopedEinOverride);
     const supabaseAdmin = needsSupabase
         ? createClient(
             mustGetEnv("NEXT_PUBLIC_SUPABASE_URL"),
@@ -2298,16 +2133,67 @@ async function processYear(params: {
         }
     }
 
+    function listLocalZipPathsForYear(y: number): string[] {
+        const dir = path.join(getPersistentTeosRoot(), "zips", String(y));
+        try {
+            const entries = fs.readdirSync(dir, { withFileTypes: true });
+            return entries
+                .filter((e) =>
+                    e.isFile() && e.name.toLowerCase().endsWith(".zip")
+                )
+                .map((e) => path.join(dir, e.name));
+        } catch {
+            return [];
+        }
+    }
+
+    function shardNameFromZipPath(zipPath: string): string {
+        const base = path.basename(zipPath, path.extname(zipPath));
+        return base || "LOCAL_ZIP";
+    }
+
+    function findLocalZipContainingMember(params: {
+        y: number;
+        memberName: string;
+    }): { zipPath: string; shard: string } | null {
+        const { y, memberName } = params;
+        const zips = listLocalZipPathsForYear(y);
+        if (!zips.length) return null;
+
+        for (const zp of zips) {
+            try {
+                if (zipHasMember(zp, memberName)) {
+                    return { zipPath: zp, shard: shardNameFromZipPath(zp) };
+                }
+            } catch {
+                // keep searching
+            }
+        }
+
+        return null;
+    }
+
     const keptRowsLimited = maxObjects > 0
         ? keptRows.slice(0, maxObjects)
         : keptRows;
 
+    function inferShardFromXmlPath(p: string): string | null {
+        const m = String(p || "").match(
+            /(?:^|[\\/])(\d{4}_TEOS_XML_[0-9A-Z]+)(?:[\\/]|$)/i,
+        );
+        return m?.[1] ? String(m[1]) : null;
+    }
+
     for (const r of keptRowsLimited) {
-        const shard = r.shard || "DIRECT_XML";
+        // `outShardForPath` is only used to build the initial default output location.
+        // `effectiveShard` is the shard we actually used (can differ when we locate the XML inside a local ZIP).
+        const outShardForPath = r.shard || "DIRECT_XML";
+        const effectiveShard: string | undefined = r.shard || undefined;
+
         const member = `${r.object_id}_public.xml`;
         const xmlOut = persistentXmlOutPath({
             year,
-            shard,
+            shard: outShardForPath,
             member,
         });
         let xmlPath = xmlOut;
@@ -2329,25 +2215,9 @@ async function processYear(params: {
             }
 
             if (!directOk) {
-                if (!r.shard) {
-                    const localIdx = await getLocalXmlIndex(year);
-                    const localPath = localIdx
-                        ? localIdx.get(member) || null
-                        : null;
-                    if (localPath) {
-                        xmlPath = localPath;
-                        console.warn(
-                            `WARN: no shard info for object_id=${r.object_id}; using local cache at ${localPath}`,
-                        );
-                    } else {
-                        console.warn(
-                            `WARN: no shard info for object_id=${r.object_id}; direct XML also not found. ` +
-                                `If this is a new/partial publication year, try an earlier TEOS index year (e.g. 2024) or verify the IRS index schema includes a shard/url column. Skipping.`,
-                        );
-                        continue;
-                    }
-                }
+                const member = `${r.object_id}_public.xml`;
 
+                // 1) If shard info exists, use shard zip (current behavior)
                 if (r.shard) {
                     const zipPath = await ensureShardZip(r.shard);
                     if (!zipPath) {
@@ -2359,37 +2229,59 @@ async function processYear(params: {
 
                     try {
                         unzipExtractSingle(zipPath, member, xmlOut);
+                        xmlPath = xmlOut;
                     } catch (e) {
-                        const exists = zipHasMember(zipPath, member);
-                        const state = shardCache.get(r.shard);
-                        if (!exists && state && !state.retried) {
-                            state.retried = true;
-                            console.warn(
-                                `WARN: xml member not found in shard zip on first attempt; re-downloading shard ${r.shard} once and retrying...`,
-                            );
+                        console.warn(
+                            `WARN: shard extraction failed for object_id=${r.object_id} shard=${r.shard}: ${
+                                compactErr(e, 600)
+                            }`,
+                        );
+                        continue;
+                    }
+                } else {
+                    // 2) No shard info — DO NOT skip. Try local cache / local zips.
+
+                    // 2a) Optional: local extracted XML cache (can keep or remove later)
+                    const localIdx = await getLocalXmlIndex(year);
+                    const localPath = localIdx
+                        ? (localIdx.get(member) || null)
+                        : null;
+                    if (localPath) {
+                        xmlPath = localPath;
+                        console.warn(
+                            `WARN: no shard info for object_id=${r.object_id}; using local cache at ${localPath}`,
+                        );
+                    } else {
+                        // 2b) NEW: scan local ZIPs for the member and extract from the first match
+                        const found = findLocalZipContainingMember({
+                            y: year,
+                            memberName: member,
+                        });
+                        if (found) {
+                            const effectiveShard = found.shard; // label-only, for provenance
                             try {
-                                await fsp.rm(zipPath, { force: true });
-                            } catch {}
-                            try {
-                                await downloadZipWithRetry(
-                                    shardUrl(year, r.shard),
-                                    zipPath,
-                                    3,
+                                unzipExtractSingle(
+                                    found.zipPath,
+                                    member,
+                                    xmlOut,
                                 );
-                                unzipExtractSingle(zipPath, member, xmlOut);
-                            } catch (e2) {
+                                xmlPath = xmlOut;
                                 console.warn(
-                                    `WARN: shard extraction failed for object_id=${r.object_id} shard=${r.shard}: ${
-                                        compactErr(e2, 600)
-                                    }`,
+                                    `WARN: no shard info for object_id=${r.object_id}; extracted from local zip ${
+                                        path.basename(found.zipPath)
+                                    } (${effectiveShard})`,
+                                );
+                            } catch (e) {
+                                console.warn(
+                                    `WARN: local-zip extraction failed for object_id=${r.object_id} zip=${
+                                        path.basename(found.zipPath)
+                                    }: ${compactErr(e, 600)}`,
                                 );
                                 continue;
                             }
                         } else {
                             console.warn(
-                                `WARN: shard extraction failed for object_id=${r.object_id} shard=${r.shard}: ${
-                                    compactErr(e, 600)
-                                }`,
+                                `WARN: no shard info for object_id=${r.object_id}; direct XML not found; and no local zip contained ${member}. Skipping.`,
                             );
                             continue;
                         }
@@ -2408,7 +2300,7 @@ async function processYear(params: {
             organization_name: null,
             source: {
                 year,
-                shard: r.shard || undefined,
+                shard: effectiveShard,
                 index_return_id: r.return_id,
                 index_filing_type: r.filing_type,
                 index_tax_period: r.tax_period,
@@ -2467,7 +2359,6 @@ async function processYear(params: {
             `Upserted into irs.returns: ${upsertCount.toLocaleString()}`,
         );
     }
-
 }
 
 async function main() {
@@ -2830,7 +2721,9 @@ async function main() {
         const hasYearArgs = Boolean(
             args.year || args.years || args.from || args.to,
         );
-        const years = hasYearArgs ? parseYearsFromArgs(args) : await listLocalCacheYears();
+        const years = hasYearArgs
+            ? parseYearsFromArgs(args)
+            : await listLocalCacheYears();
 
         if (!years.length) {
             throw new Error(
@@ -2840,9 +2733,11 @@ async function main() {
 
         if (!hasYearArgs) {
             console.log(
-                `No year args provided; using local cache years: ${years.join(
-                    ", ",
-                )}`,
+                `No year args provided; using local cache years: ${
+                    years.join(
+                        ", ",
+                    )
+                }`,
             );
         }
 

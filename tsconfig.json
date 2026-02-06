@@ -17,5 +17,11 @@
       "@/utils/*": ["utils/*"]
     }
   },
-  "exclude": ["node_modules", ".next", "supabase/functions"]
+  "exclude": [
+    "node_modules",
+    ".next",
+    "supabase/functions",
+    "scratchfiles",
+    "scripts"
+  ]
 }

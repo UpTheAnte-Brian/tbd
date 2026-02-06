@@ -14,24 +14,15 @@ export type AdminScopeRow = {
 };
 
 export type OnboardingQueueRow = {
-  scope_id: string;
   district_entity_id: string | null;
   label: string | null;
   ein: string | null;
   entity_id: string | null;
-  status: ScopeStatus;
+  status: ScopeStatus | null;
+  tier: ScopeTier | null;
   has_entity: boolean;
-  has_irs_link: boolean;
+  has_irs_org: boolean;
   has_returns: boolean;
-  is_ready: boolean;
-  next_step:
-    | "create_entity"
-    | "identity"
-    | "link_irs"
-    | "ingest_irs"
-    | "verify"
-    | "unknown";
-  action_url: string;
 };
 
 export type AdminIrsOrganization = {

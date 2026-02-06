@@ -4,20 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { OnboardingQueueRow } from "@/app/admin/nonprofits/types";
 
-const STEP_LABELS: Record<OnboardingQueueRow["next_step"], string> = {
-  create_entity: "Create nonprofit shell",
-  identity: "Identity",
-  link_irs: "Link IRS",
-  ingest_irs: "Ingest IRS",
-  verify: "Mark ready",
-  unknown: "View",
-};
-
 export default function AdminNonprofitsClient() {
   const [rows, setRows] = useState<OnboardingQueueRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [updatingScopeId, setUpdatingScopeId] = useState<string | null>(null);
+  const [activatingEin, setActivatingEin] = useState<string | null>(null);
 
   const fetchQueue = async () => {
     setLoading(true);
@@ -46,48 +37,41 @@ export default function AdminNonprofitsClient() {
     fetchQueue();
   }, []);
 
-  const handleMarkReady = async (row: OnboardingQueueRow) => {
-    if (!row.ein) return;
-    setUpdatingScopeId(row.scope_id);
+  const handleActivate = async (row: OnboardingQueueRow) => {
+    if (!row.ein || !row.district_entity_id) return;
+    setActivatingEin(row.ein);
     setError(null);
     try {
-      const response = await fetch("/api/admin/nonprofits/scope", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ein: row.ein, status: "active" }),
-      });
+      const response = await fetch(
+        `/api/districts/${encodeURIComponent(row.district_entity_id)}/scope-nonprofits/activate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ eins: [row.ein] }),
+        },
+      );
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        throw new Error(body?.error ?? "Failed to mark ready");
+        throw new Error(body?.error ?? "Failed to activate nonprofit");
       }
       await fetchQueue();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to mark ready");
+      setError(
+        err instanceof Error ? err.message : "Failed to activate nonprofit",
+      );
     } finally {
-      setUpdatingScopeId(null);
+      setActivatingEin(null);
     }
-  };
-
-  const resolveNextStep = (row: OnboardingQueueRow) => {
-    const nextStep = row.has_entity
-      ? row.next_step
-      : ("create_entity" as const);
-    const href =
-      !row.has_entity && row.ein
-        ? `/admin/nonprofits/${encodeURIComponent(row.ein)}`
-        : row.action_url;
-
-    return { nextStep, href };
   };
 
   return (
     <section className="space-y-4">
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold text-text-on-light">
-          Onboarding Queue
+          Scope Queue (Exceptions)
         </h1>
         <p className="text-sm text-brand-secondary-0">
-          Scoped nonprofits that still need onboarding or verification.
+          In-scope nonprofits showing data gaps and activation status.
         </p>
       </header>
 
@@ -103,7 +87,7 @@ export default function AdminNonprofitsClient() {
             Queue ({rows.length})
           </h2>
           <span className="text-xs text-brand-secondary-0">
-            {loading ? "Loading…" : "Not ready"}
+            {loading ? "Loading…" : "In scope"}
           </span>
         </div>
         <div className="overflow-x-auto">
@@ -118,10 +102,26 @@ export default function AdminNonprofitsClient() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
-              {rows.map((row) => {
-                const { nextStep, href } = resolveNextStep(row);
+              {rows.map((row, index) => {
+                const ein = row.ein ?? "";
+                const canLink = Boolean(ein);
+                const detailHref = canLink
+                  ? `/admin/nonprofits/${encodeURIComponent(ein)}`
+                  : "#";
+                const isActivating = activatingEin === row.ein;
+
+                const nextAction = !row.has_irs_org
+                  ? "Investigate EIN"
+                  : !row.has_returns
+                    ? "Import returns"
+                    : !row.has_entity
+                      ? "Activate nonprofit"
+                      : "Open profile";
                 return (
-                  <tr key={row.scope_id} className="hover:bg-surface-inset/50">
+                  <tr
+                    key={`${row.district_entity_id ?? "district"}-${row.ein ?? row.label ?? "row"}-${index}`}
+                    className="hover:bg-surface-inset/50"
+                  >
                     <td className="px-4 py-3 font-medium text-text-on-light">
                       {row.label ?? row.ein ?? "Untitled"}
                     </td>
@@ -129,7 +129,7 @@ export default function AdminNonprofitsClient() {
                       {row.ein ?? "--"}
                     </td>
                     <td className="px-4 py-3 text-xs text-text-on-light">
-                      {row.status}
+                      {row.status ?? "--"}
                     </td>
                     <td className="px-4 py-3 text-xs text-text-on-light">
                       <div className="flex flex-wrap items-center gap-2">
@@ -137,7 +137,7 @@ export default function AdminNonprofitsClient() {
                           Entity: {row.has_entity ? "Yes" : "No"}
                         </span>
                         <span className="rounded-full bg-surface-inset px-2 py-1">
-                          IRS link: {row.has_irs_link ? "Yes" : "No"}
+                          IRS org: {row.has_irs_org ? "Yes" : "No"}
                         </span>
                         <span className="rounded-full bg-surface-inset px-2 py-1">
                           Returns: {row.has_returns ? "Yes" : "No"}
@@ -146,24 +146,26 @@ export default function AdminNonprofitsClient() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        {nextStep === "verify" ? (
+                        {!row.has_irs_org ||
+                        !row.has_returns ||
+                        row.has_entity ? (
+                          <Link
+                            href={detailHref}
+                            className={`rounded-md bg-brand-primary-0 px-3 py-1 text-xs font-semibold text-brand-primary-1 transition hover:bg-brand-primary-2 ${
+                              canLink ? "" : "pointer-events-none opacity-60"
+                            }`}
+                          >
+                            {nextAction}
+                          </Link>
+                        ) : (
                           <button
                             type="button"
-                            onClick={() => handleMarkReady(row)}
-                            disabled={updatingScopeId === row.scope_id}
+                            onClick={() => handleActivate(row)}
+                            disabled={isActivating}
                             className="rounded-md bg-brand-primary-0 px-3 py-1 text-xs font-semibold text-brand-primary-1 transition hover:bg-brand-primary-2 disabled:cursor-not-allowed disabled:opacity-60"
                           >
-                            {updatingScopeId === row.scope_id
-                              ? "Updating…"
-                              : STEP_LABELS[nextStep]}
+                            {isActivating ? "Activating…" : nextAction}
                           </button>
-                        ) : (
-                          <Link
-                            href={href}
-                            className="rounded-md bg-brand-primary-0 px-3 py-1 text-xs font-semibold text-brand-primary-1 transition hover:bg-brand-primary-2"
-                          >
-                            {STEP_LABELS[nextStep]}
-                          </Link>
                         )}
                       </div>
                     </td>
@@ -176,7 +178,7 @@ export default function AdminNonprofitsClient() {
                     colSpan={5}
                     className="px-4 py-8 text-center text-sm text-brand-secondary-0"
                   >
-                    No nonprofits waiting for onboarding.
+                    No scoped nonprofits in the queue.
                   </td>
                 </tr>
               ) : null}

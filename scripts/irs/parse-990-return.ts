@@ -26,7 +26,9 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import { createRequire } from "node:module";
+
 import { formatEinDashed, normalizeEinInput } from "./lib/ein";
+import { parseReturnFinancialsFromXmlPath } from "./parse-990-financials";
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -169,14 +171,9 @@ function parseArgs(argv: string[]) {
     return args;
 }
 
-type ParsedFinancials = {
-    total_revenue: number | null;
-    total_expenses: number | null;
-    contributions: number | null;
-    net_assets_begin: number | null;
-    net_assets_end: number | null;
-    source_map: Record<string, { path: string; raw?: unknown } | null>;
-};
+type ParsedFinancials = Awaited<
+    ReturnType<typeof parseReturnFinancialsFromXmlPath>
+>;
 
 type ParsedNarrative = {
     section: string;
@@ -1671,177 +1668,6 @@ function findFirstNumberFromXmlRegex(
     return { value: null, picked: null };
 }
 
-function parseReturnFinancialsFromLoaded(loaded: LoadedXml): ParsedFinancials {
-    const { xml, doc, usedParser } = loaded;
-
-    // IMPORTANT: IRS XML varies across years and return types (990/990EZ/990PF).
-    // Minimal v1 uses a best-effort set of common tags.
-    // We look both in Return.ReturnData.IRS990* and in Return-level summary nodes.
-
-    const baseCandidates = {
-        totalRevenue: [
-            "Return.ReturnData.IRS990.CYTotalRevenueAmt",
-            "Return.ReturnData.IRS990.TotalRevenueCurrentYearAmt",
-            "Return.ReturnData.IRS990.TotalRevenueAmt",
-            "Return.ReturnData.IRS990EZ.TotalRevenueAmt",
-            "Return.ReturnData.IRS990EZ.CYTotalRevenueAmt",
-            "Return.ReturnData.IRS990PF.TotalRevAndExpnssAmt",
-            "Return.ReturnHeader.TotalRevenueAmt",
-        ].map((p) => ({ path: p })),
-
-        totalExpenses: [
-            "Return.ReturnData.IRS990.CYTotalExpensesAmt",
-            "Return.ReturnData.IRS990.TotalFunctionalExpensesAmt",
-            "Return.ReturnData.IRS990.TotalExpensesCurrentYearAmt",
-            "Return.ReturnData.IRS990EZ.TotalExpensesAmt",
-            "Return.ReturnData.IRS990EZ.CYTotalExpensesAmt",
-            "Return.ReturnData.IRS990PF.TotalExpensesAmt",
-            "Return.ReturnHeader.TotalExpensesAmt",
-        ].map((p) => ({ path: p })),
-
-        contributions: [
-            "Return.ReturnData.IRS990.CYContributionsGrantsAmt",
-            "Return.ReturnData.IRS990.ContributionsGiftsGrantsEtcAmt",
-            "Return.ReturnData.IRS990.TotalContributionsAmt",
-            "Return.ReturnData.IRS990EZ.ContributionsGiftsGrantsEtcAmt",
-            "Return.ReturnData.IRS990EZ.TotalContributionsAmt",
-            "Return.ReturnData.IRS990PF.ContributionsGiftsAmt",
-            "Return.ReturnHeader.ContributionsAmt",
-        ].map((p) => ({ path: p })),
-
-        netAssetsEnd: [
-            "Return.ReturnData.IRS990.NetAssetsOrFundBalancesEOYAmt",
-            "Return.ReturnData.IRS990.TotalNetAssetsFundBalancesEOYAmt",
-            "Return.ReturnData.IRS990EZ.NetAssetsOrFundBalancesEOYAmt",
-            "Return.ReturnData.IRS990EZ.TotalNetAssetsFundBalancesEOYAmt",
-            "Return.ReturnData.IRS990PF.NetAssetsEOYAmt",
-            "Return.ReturnHeader.NetAssetsEOYAmt",
-        ].map((p) => ({ path: p })),
-
-        netAssetsBegin: [
-            "Return.ReturnData.IRS990.NetAssetsOrFundBalancesBOYAmt",
-            "Return.ReturnData.IRS990.TotalNetAssetsFundBalancesBOYAmt",
-            "Return.ReturnData.IRS990EZ.NetAssetsOrFundBalancesBOYAmt",
-            "Return.ReturnData.IRS990EZ.TotalNetAssetsFundBalancesBOYAmt",
-            "Return.ReturnData.IRS990PF.NetAssetsBOYAmt",
-            "Return.ReturnHeader.NetAssetsBOYAmt",
-        ].map((p) => ({ path: p })),
-    };
-
-    const source_map: ParsedFinancials["source_map"] = {
-        parser: usedParser ? { path: "fast-xml-parser" } : { path: "regex" },
-        total_revenue: null,
-        total_expenses: null,
-        contributions: null,
-        net_assets_begin: null,
-        net_assets_end: null,
-    };
-
-    let totalRevenue: number | null = null;
-    let totalExpenses: number | null = null;
-    let contributions: number | null = null;
-    let netAssetsEnd: number | null = null;
-    let netAssetsBegin: number | null = null;
-
-    if (usedParser && doc) {
-        const tr = findFirstNumberFromDoc(doc, baseCandidates.totalRevenue);
-        totalRevenue = tr.value;
-        if (tr.picked) {
-            source_map.total_revenue = { path: tr.picked, raw: tr.raw };
-        }
-
-        const te = findFirstNumberFromDoc(doc, baseCandidates.totalExpenses);
-        totalExpenses = te.value;
-        if (te.picked) {
-            source_map.total_expenses = { path: te.picked, raw: te.raw };
-        }
-
-        const c = findFirstNumberFromDoc(doc, baseCandidates.contributions);
-        contributions = c.value;
-        if (c.picked) source_map.contributions = { path: c.picked, raw: c.raw };
-
-        const nab = findFirstNumberFromDoc(doc, baseCandidates.netAssetsBegin);
-        netAssetsBegin = nab.value;
-        if (nab.picked) {
-            source_map.net_assets_begin = { path: nab.picked, raw: nab.raw };
-        }
-
-        const nae = findFirstNumberFromDoc(doc, baseCandidates.netAssetsEnd);
-        netAssetsEnd = nae.value;
-        if (nae.picked) {
-            source_map.net_assets_end = { path: nae.picked, raw: nae.raw };
-        }
-    } else {
-        const tr = findFirstNumberFromXmlRegex(xml, [
-            "CYTotalRevenueAmt",
-            "TotalRevenueAmt",
-            "TotalRevenueCurrentYearAmt",
-            "TotalRevAndExpnssAmt",
-        ]);
-        totalRevenue = tr.value;
-        if (tr.picked) {
-            source_map.total_revenue = { path: tr.picked, raw: tr.raw };
-        }
-
-        const te = findFirstNumberFromXmlRegex(xml, [
-            "CYTotalExpensesAmt",
-            "TotalFunctionalExpensesAmt",
-            "TotalExpensesAmt",
-            "TotalExpensesCurrentYearAmt",
-        ]);
-        totalExpenses = te.value;
-        if (te.picked) {
-            source_map.total_expenses = { path: te.picked, raw: te.raw };
-        }
-
-        const c = findFirstNumberFromXmlRegex(xml, [
-            "CYContributionsGrantsAmt",
-            "ContributionsGiftsGrantsEtcAmt",
-            "TotalContributionsAmt",
-            "ContributionsGiftsAmt",
-        ]);
-        contributions = c.value;
-        if (c.picked) source_map.contributions = { path: c.picked, raw: c.raw };
-
-        const nab = findFirstNumberFromXmlRegex(xml, [
-            "NetAssetsOrFundBalancesBOYAmt",
-            "TotalNetAssetsFundBalancesBOYAmt",
-            "NetAssetsBOYAmt",
-        ]);
-        netAssetsBegin = nab.value;
-        if (nab.picked) {
-            source_map.net_assets_begin = { path: nab.picked, raw: nab.raw };
-        }
-
-        const nae = findFirstNumberFromXmlRegex(xml, [
-            "NetAssetsOrFundBalancesEOYAmt",
-            "TotalNetAssetsFundBalancesEOYAmt",
-            "NetAssetsEOYAmt",
-        ]);
-        netAssetsEnd = nae.value;
-        if (nae.picked) {
-            source_map.net_assets_end = { path: nae.picked, raw: nae.raw };
-        }
-    }
-
-    return {
-        total_revenue: totalRevenue,
-        total_expenses: totalExpenses,
-        contributions,
-        net_assets_begin: netAssetsBegin,
-        net_assets_end: netAssetsEnd,
-        source_map,
-    };
-}
-
-async function parseReturnFinancials(
-    xmlPath: string,
-): Promise<ParsedFinancials> {
-    const xml = await fsp.readFile(xmlPath, "utf8");
-    const loaded = loadXmlDoc(xml);
-    return parseReturnFinancialsFromLoaded(loaded);
-}
-
 async function resolveReturnRowByReturnIdOrObjectId(params: {
     supabaseAdmin: any;
     returnIdOrObjectId: string;
@@ -1955,9 +1781,25 @@ async function upsertReturnFinancials(params: {
         return_id,
         total_revenue: parsed.total_revenue,
         total_expenses: parsed.total_expenses,
-        contributions: parsed.contributions,
+        excess_or_deficit: parsed.excess_or_deficit,
+
+        total_assets_begin: parsed.total_assets_begin,
+        total_assets_end: parsed.total_assets_end,
+        total_liabilities_begin: parsed.total_liabilities_begin,
+        total_liabilities_end: parsed.total_liabilities_end,
+
         net_assets_begin: parsed.net_assets_begin,
         net_assets_end: parsed.net_assets_end,
+
+        contributions: parsed.contributions,
+        program_service_revenue: parsed.program_service_revenue,
+        investment_income: parsed.investment_income,
+        fundraising_gross: parsed.fundraising_gross,
+
+        program_expenses: parsed.program_expenses,
+        management_general_expenses: parsed.management_general_expenses,
+        fundraising_expenses: parsed.fundraising_expenses,
+
         source_map: parsed.source_map,
         updated_at: now,
     };
@@ -2109,7 +1951,9 @@ async function processDistrict(params: {
                     const xml = await fsp.readFile(resolved.path, "utf8");
                     const loaded = loadXmlDoc(xml);
 
-                    const parsed = parseReturnFinancialsFromLoaded(loaded);
+                    const parsed = await parseReturnFinancialsFromXmlPath(
+                        resolved.path,
+                    );
                     const narratives = parseMissionAndProgramsFromLoaded(
                         loaded,
                     );

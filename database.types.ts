@@ -1399,6 +1399,7 @@ export type Database = {
         Row: {
           created_at: string
           ein: string
+          ein_normalized: string | null
           filed_on: string | null
           gross_receipts_cap: number | null
           id: string
@@ -1428,6 +1429,7 @@ export type Database = {
         Insert: {
           created_at?: string
           ein: string
+          ein_normalized?: string | null
           filed_on?: string | null
           gross_receipts_cap?: number | null
           id?: string
@@ -1457,6 +1459,7 @@ export type Database = {
         Update: {
           created_at?: string
           ein?: string
+          ein_normalized?: string | null
           filed_on?: string | null
           gross_receipts_cap?: number | null
           id?: string
@@ -1590,6 +1593,8 @@ export type Database = {
         | "schedule_d"
         | "schedule_a"
         | "other"
+        | "mission"
+        | "program_accomplishments"
       irs_person_role:
         | "officer"
         | "director"
@@ -2809,9 +2814,51 @@ export type Database = {
         }
         Relationships: []
       }
+      v_district_scope_nonprofits: {
+        Row: {
+          district_entity_id: string | null
+          ein: string | null
+          entity_id: string | null
+          filing_recency_days: number | null
+          has_entity: boolean | null
+          has_irs_org: boolean | null
+          has_returns: boolean | null
+          irs_city: string | null
+          irs_legal_name: string | null
+          irs_state: string | null
+          latest_return_type: string | null
+          latest_tax_year: number | null
+          narratives_ok: boolean | null
+          net_assets_end: number | null
+          people_parse_ok: boolean | null
+          scope_label: string | null
+          status: string | null
+          tier: string | null
+          total_expenses: number | null
+          total_revenue: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "superintendent_scope_nonprofits_district_entity_id_fkey"
+            columns: ["district_entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       _geom_from_geojson_4326: { Args: { p_geojson: Json }; Returns: unknown }
+      activate_scoped_nonprofits: {
+        Args: { p_district_entity_id: string; p_eins?: string[] }
+        Returns: {
+          activated_count: number
+          activated_eins: string[]
+          errors: Json
+          skipped_count: number
+        }[]
+      }
       authorize: {
         Args: {
           requested_permission: Database["public"]["Enums"]["app_permission"]
@@ -3100,6 +3147,8 @@ export const Constants = {
         "schedule_d",
         "schedule_a",
         "other",
+        "mission",
+        "program_accomplishments",
       ],
       irs_person_role: [
         "officer",

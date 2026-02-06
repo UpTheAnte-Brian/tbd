@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import SuperintendentDashboard from "@/app/components/districts/superintendent/SuperintendentDashboard";
+import ScopedNonprofitsTable from "@/app/districts/[id]/_components/ScopedNonprofitsTable";
 import type {
   ScopeSummary,
   SuperintendentDashboardResponse,
@@ -138,6 +139,8 @@ export default function EntitySuperintendentTab({
           error={error}
         />
       )}
+
+      <ScopedNonprofitsTable districtEntityId={entityId} />
     </div>
   );
 }
