@@ -24,9 +24,8 @@ export default function EntitySuperintendentTab({
   entityId,
   entityType,
 }: Props) {
-  const [data, setData] = useState<SuperintendentDashboardResponse>(
-    emptyDashboard,
-  );
+  const [data, setData] =
+    useState<SuperintendentDashboardResponse>(emptyDashboard);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scopeSummary, setScopeSummary] = useState<ScopeSummary | null>(null);
@@ -53,7 +52,8 @@ export default function EntitySuperintendentTab({
 
         const json =
           (await dashboardResponse.json()) as SuperintendentDashboardResponse;
-
+        console.log("Loaded superintendent dashboard data:", json);
+        console.log("cancelled:", cancelled);
         if (!cancelled) {
           setData(json);
         }
@@ -80,7 +80,28 @@ export default function EntitySuperintendentTab({
 
         let summary: ScopeSummary | null = null;
         if (summaryResponse.ok) {
-          summary = (await summaryResponse.json()) as ScopeSummary;
+          const raw = (await summaryResponse.json()) as Record<string, unknown>;
+
+          const totalRevenueRaw =
+            raw.total_revenue ?? raw.totalRevenue ?? raw.totalRevenueTotal ?? 0;
+          const totalNetAssetsRaw =
+            raw.total_net_assets ??
+            raw.totalNetAssets ??
+            raw.totalNetAssetsTotal ??
+            0;
+
+          const totalRevenue = Number(totalRevenueRaw ?? 0);
+          const totalNetAssets = Number(totalNetAssetsRaw ?? 0);
+
+          summary = {
+            nonprofits_in_scope: Number(raw.nonprofits_in_scope ?? 0),
+            nonprofits_active: Number(raw.nonprofits_active ?? 0),
+            nonprofits_candidate: Number(raw.nonprofits_candidate ?? 0),
+            total_revenue: Number.isFinite(totalRevenue) ? totalRevenue : 0,
+            total_net_assets: Number.isFinite(totalNetAssets)
+              ? totalNetAssets
+              : 0,
+          };
         } else {
           const body = await summaryResponse.json().catch(() => ({}));
           console.warn(

@@ -15,6 +15,7 @@ export type CreateNonprofitResponse = {
   entity_id: string;
   nonprofit_id: string;
   slug: string;
+  scope_id?: string | null;
 };
 
 export type OnboardingProgressRow =
@@ -102,6 +103,7 @@ export type NonprofitOnboardingData = {
   person_claims: EntityPersonClaimRow[];
   documents: DocumentSummary[];
   scope: ScopeReadyRow | null;
+  scope_id: string | null;
 };
 
 export type UpdateOnboardingProgressRequest = {

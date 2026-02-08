@@ -48,7 +48,7 @@
 
   Notes
   - This script intentionally focuses on the “organizations registry” surface area first:
-      ein / ein_normalized / legal_name / normalized_legal_name / city / state / country
+      ein (normalized 9 digits) / legal_name / normalized_legal_name / city / state / country
     so the superintendent dashboard can get good results quickly.
   - TEOS 990 XML is a *second* phase (the Form 990 series downloads), and should land in
     `irs.returns` / `irs.return_*` tables. This script includes a stub for that.
@@ -319,8 +319,7 @@ function looksLikeState2(s: unknown): boolean {
 }
 
 type OrgParsedRow = {
-    ein: string; // formatted 12-3456789
-    ein_normalized: string; // 123456789 (used for matching / filtering)
+    ein: string; // normalized 9 digits (e.g. "411619499")
     legal_name: string | null;
     normalized_legal_name: string | null;
     city: string | null;
@@ -334,7 +333,7 @@ type OrgParsedRow = {
 };
 
 type OrgUpsertRow = {
-    ein: string; // formatted 12-3456789
+    ein: string; // normalized 9 digits (e.g. "411619499")
     legal_name: string | null;
     normalized_legal_name: string | null;
     city: string | null;
@@ -352,13 +351,11 @@ async function loadScopedScopeRows(params: {
     districtEntityId: string;
     statuses: string[];
 }): Promise<
-    Array<{ ein_normalized: string; ein_dashed: string; label: string | null }>
+    Array<{ ein: string; ein_dashed: string; label: string | null }>
 > {
     const { supabaseAdmin, districtEntityId, statuses } = params;
 
-    const rowsOut: Array<
-        { ein_normalized: string; ein_dashed: string; label: string | null }
-    > = [];
+    const rowsOut: Array<{ ein: string; ein_dashed: string; label: string | null }> = [];
 
     const pageSize = 1000;
     let from = 0;
@@ -381,16 +378,14 @@ async function loadScopedScopeRows(params: {
             throw new Error(`Failed to load scoped EINs: ${error.message}`);
         }
 
-        const rows = (data || []) as Array<
-            { ein: string; label?: string | null }
-        >;
+        const rows = (data || []) as Array<{ ein: string; label?: string | null }>;
         for (const r of rows) {
             const n = normalizeEinInput(r.ein);
             if (!n) continue;
             rowsOut.push({
-                ein_normalized: n,
+                ein: n,
                 ein_dashed: formatEinDashed(n),
-                label: (r as any).label ?? null,
+                label: r.label ?? null,
             });
         }
 
@@ -401,11 +396,9 @@ async function loadScopedScopeRows(params: {
     return rowsOut;
 }
 
-function buildScopedEinSet(
-    scopeRows: Array<{ ein_normalized: string }>,
-): Set<string> {
+function buildScopedEinSet(scopeRows: Array<{ ein: string }>): Set<string> {
     const set = new Set<string>();
-    for (const r of scopeRows) set.add(r.ein_normalized);
+    for (const r of scopeRows) set.add(r.ein);
     return set;
 }
 
@@ -467,8 +460,7 @@ function mapPub78Row(cols: string[]): OrgParsedRow | null {
     }
 
     return {
-        ein: formatEinDashed(einN),
-        ein_normalized: einN,
+        ein: einN,
         legal_name: legalName,
         normalized_legal_name: normalizeLegalName(legalName),
         city,
@@ -521,8 +513,7 @@ function mapRevocationRow(cols: string[]): OrgParsedRow | null {
     if (state && !looksLikeState2(state)) state = null;
 
     return {
-        ein: formatEinDashed(einN),
-        ein_normalized: einN,
+        ein: einN,
         legal_name: legalName,
         normalized_legal_name: normalizeLegalName(legalName),
         city,
@@ -554,8 +545,7 @@ function mapEpostcardRow(cols: string[]): OrgParsedRow | null {
     // City/State are usually later, but are not reliable enough to pin without the data dictionary.
     // We'll keep them null and preserve payload.
     return {
-        ein: formatEinDashed(einN),
-        ein_normalized: einN,
+        ein: einN,
         legal_name: legalName,
         normalized_legal_name: normalizeLegalName(legalName),
         city: null,
@@ -624,21 +614,19 @@ async function upsertOrganizations(supabaseAdmin: any, rows: OrgParsedRow[]) {
 
 async function seedOrganizationsFromScope(params: {
     supabaseAdmin: any;
-    scopeRows: Array<
-        { ein_dashed: string; ein_normalized: string; label: string | null }
-    >;
+    scopeRows: Array<{ ein_dashed: string; ein: string; label: string | null }>;
 }) {
     const { supabaseAdmin, scopeRows } = params;
     if (!scopeRows.length) return { seeded: 0 };
 
     const nowIso = new Date().toISOString();
 
-    // Seed minimal rows to ensure every scoped EIN exists in irs.organizations.
+    // Seed minimal rows to ensure every scoped EIN exists in irs.organizations (EIN stored as 9 digits, no dash).
     // legal_name is NOT NULL in the table, so we always provide something.
     const payload = scopeRows.map((r) => {
         const fallbackName = `UNKNOWN ORG (${r.ein_dashed})`;
         return {
-            ein: r.ein_dashed,
+            ein: r.ein,
             legal_name: (r.label && String(r.label).trim().length)
                 ? String(r.label).trim()
                 : fallbackName,
@@ -699,7 +687,7 @@ async function parseAndIngestPipeFile(params: {
 
         // If a district scope set is provided, only ingest organizations that are in scope.
         if (scopedEinSet && scopedEinSet.size) {
-            if (!scopedEinSet.has(mapped.ein_normalized)) {
+            if (!scopedEinSet.has(mapped.ein)) {
                 totalScopedSkipped++;
                 continue;
             }
@@ -831,8 +819,7 @@ function mapEobmfCsvRow(
     const deductibility = get("DEDUCTIBILITY");
 
     return {
-        ein: formatEinDashed(einN),
-        ein_normalized: einN,
+        ein: einN,
         legal_name: legalName,
         normalized_legal_name: normalizeLegalName(legalName),
         city: city && !looksLikeAddressLine(city) && !looksLikeZip(city)
@@ -902,7 +889,7 @@ async function parseAndIngestCsvFile(params: {
         if (!mapped) continue;
 
         if (scopedEinSet && scopedEinSet.size) {
-            if (!scopedEinSet.has(mapped.ein_normalized)) {
+            if (!scopedEinSet.has(mapped.ein)) {
                 totalScopedSkipped++;
                 continue;
             }
@@ -979,9 +966,7 @@ async function main() {
     });
 
     let scopedEinSet: Set<string> | null = null;
-    let scopeRows: Array<
-        { ein_normalized: string; ein_dashed: string; label: string | null }
-    > = [];
+    let scopeRows: Array<{ ein: string; ein_dashed: string; label: string | null }> = [];
 
     if (districtEntityId) {
         console.log(

@@ -54,6 +54,14 @@ type IrsPersonSelect = Pick<
   | "other_compensation"
   | "is_current"
 >;
+type OrgType = Database["public"]["Enums"]["org_type"];
+
+type PostgrestErrorLike = {
+  code?: string | null;
+  message?: string | null;
+  details?: string | null;
+  hint?: string | null;
+};
 
 const JUNK_TEXT_HINTS = [
   "internal revenue",
@@ -73,6 +81,17 @@ const SCOPE_TIERS: ScopeTier[] = [
 ];
 
 const SCOPE_STATUSES: ScopeStatus[] = ["candidate", "active", "archived"];
+const DISTRICT_FOUNDATION_CONSTRAINT =
+  "ssn_one_district_foundation_per_district";
+
+function isDistrictFoundationConstraint(error: PostgrestErrorLike | null) {
+  if (!error || error.code !== "23505") return false;
+  return [
+    error.message,
+    error.details,
+    error.hint,
+  ].some((text) => text?.includes(DISTRICT_FOUNDATION_CONSTRAINT));
+}
 
 function getIrsClient(): IrsPostgrestClient {
   return createIrsAdminClient();
@@ -94,10 +113,115 @@ function normalizeEinInput(value: string | null | undefined): string | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
   const digits = trimmed.replace(/\D/g, "");
-  if (digits.length === 9) {
-    return `${digits.slice(0, 2)}-${digits.slice(2)}`;
+  return digits.length === 9 ? digits : null;
+}
+
+async function resolveEntityIdForEin(
+  ein: string,
+  scopeEntityId?: string | null,
+): Promise<string | null> {
+  if (scopeEntityId) return scopeEntityId;
+
+  const irs: IrsPostgrestClient = getIrsClient();
+  const { data: link, error: linkError } = await irs
+    .from("entity_links")
+    .select("entity_id")
+    .eq("ein", ein)
+    .maybeSingle();
+
+  if (linkError) {
+    throw new Error(linkError.message);
   }
-  return trimmed;
+
+  if (link?.entity_id) {
+    return String(link.entity_id);
+  }
+
+  const { data: entity, error: entityError } = await supabaseAdmin
+    .from("entities")
+    .select("id")
+    .contains("external_ids", { ein })
+    .maybeSingle();
+
+  if (entityError) {
+    throw new Error(entityError.message);
+  }
+
+  return entity?.id ? String(entity.id) : null;
+}
+
+async function syncNonprofitOrgType(params: {
+  ein: string;
+  org_type: OrgType;
+  scopeLabel?: string | null;
+  scopeEntityId?: string | null;
+}) {
+  const { ein, org_type, scopeLabel, scopeEntityId } = params;
+  const entityId = await resolveEntityIdForEin(ein, scopeEntityId);
+  if (!entityId) return;
+
+  let name = scopeLabel?.trim() ?? "";
+
+  if (!name) {
+    const irs: IrsPostgrestClient = getIrsClient();
+    const { data: org, error: orgError } = await irs
+      .from("organizations")
+      .select("legal_name")
+      .eq("ein", ein)
+      .maybeSingle();
+
+    if (orgError) {
+      throw new Error(orgError.message);
+    }
+
+    name = org?.legal_name?.trim() ?? "";
+  }
+
+  if (!name) {
+    name = `Nonprofit ${ein}`;
+  }
+
+  const { error } = await supabaseAdmin
+    .from("nonprofits")
+    .upsert(
+      {
+        entity_id: entityId,
+        name,
+        ein,
+        org_type,
+      },
+      { onConflict: "ein" },
+    );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+async function fetchScopeOrgType(
+  ein: string,
+  scopeId?: string | null,
+): Promise<OrgType | null> {
+  let query = supabaseAdmin
+    .from("superintendent_scope_nonprofits")
+    .select("org_type")
+    .eq("ein", ein);
+
+  if (scopeId) {
+    query = query.eq("id", scopeId);
+  }
+
+  if (!scopeId) {
+    query = query.order("updated_at", { ascending: false }).limit(1);
+  }
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data?.org_type ?? null;
 }
 
 function looksOcrGarbage(text: string): boolean {
@@ -170,6 +294,7 @@ function mapScopeRow(
     entity_id: row.entity_id ?? null,
     ein: row.ein,
     label: row.label ?? null,
+    org_type: row.org_type ?? null,
     tier: coerceTier(row.tier),
     status: coerceStatus(row.status),
     created_at: row.created_at,
@@ -186,7 +311,7 @@ async function fetchScopeRows(
   const { data, error } = await supabaseAdmin
     .from("superintendent_scope_nonprofits")
     .select(
-      "id, district_entity_id, entity_id, ein, label, tier, status, created_at, updated_at",
+      "id, district_entity_id, entity_id, ein, label, org_type, tier, status, created_at, updated_at",
     )
     .in("ein", eins);
 
@@ -202,6 +327,7 @@ async function fetchScopeRows(
       entity_id: row.entity_id ?? null,
       ein: row.ein,
       label: row.label ?? null,
+      org_type: row.org_type ?? null,
       tier: coerceTier(row.tier),
       status: coerceStatus(row.status),
       created_at: row.created_at as string,
@@ -222,7 +348,7 @@ export async function searchNonprofits(
   const byEinMap = new Map<string, IrsOrganizationSelect>();
 
   const maybeEin = normalizeEinInput(trimmed);
-  const einMatches = maybeEin && /\d{2}-\d{7}/.test(maybeEin) ? [maybeEin] : [];
+  const einMatches = maybeEin && /^\d{9}$/.test(maybeEin) ? [maybeEin] : [];
 
   if (einMatches.length > 0) {
     const { data, error } = await irs
@@ -291,7 +417,10 @@ export async function searchNonprofits(
 export async function getNonprofitReview(
   ein: string,
 ): Promise<AdminNonprofitReview> {
-  const normalizedEin = normalizeEinInput(ein) ?? ein.trim();
+  const normalizedEin = normalizeEinInput(ein);
+  if (!normalizedEin) {
+    throw new Error("Invalid EIN");
+  }
   const irs: IrsPostgrestClient = getIrsClient();
 
   const { data: organization, error: orgError } = await irs
@@ -451,6 +580,7 @@ export async function getNonprofitReview(
     people_parse_quality: peopleParseQuality,
     missing_filings: missingFilings,
     scope: mapScopeRow(scopeRow as SuperintendentScopeRow | null),
+    scope_id: scopeRow?.id ? String(scopeRow.id) : null,
     entity,
   };
 }
@@ -459,6 +589,7 @@ export async function addScopeNonprofit(params: {
   district_entity_id: string;
   ein: string;
   label?: string | null;
+  org_type?: OrgType;
   tier?: ScopeTier;
   status?: ScopeStatus;
 }): Promise<AdminScopeRow> {
@@ -473,6 +604,7 @@ export async function addScopeNonprofit(params: {
         district_entity_id: params.district_entity_id,
         ein: normalizedEin,
         label: params.label ?? undefined,
+        org_type: params.org_type ?? undefined,
         tier: params.tier ?? "registry_only",
         status: params.status ?? "candidate",
       };
@@ -482,12 +614,26 @@ export async function addScopeNonprofit(params: {
     // EIN is only unique within a district now.
     .upsert(payload, { onConflict: "district_entity_id,ein" })
     .select(
-      "id, district_entity_id, entity_id, ein, label, tier, status, created_at, updated_at",
+      "id, district_entity_id, entity_id, ein, label, org_type, tier, status, created_at, updated_at",
     )
     .single();
 
   if (error) {
+    if (isDistrictFoundationConstraint(error)) {
+      throw new Error(
+        "This district already has a District Foundation. Change the existing one first.",
+      );
+    }
     throw new Error(error.message);
+  }
+
+  if (params.org_type) {
+    await syncNonprofitOrgType({
+      ein: normalizedEin,
+      org_type: params.org_type,
+      scopeLabel: data.label ?? null,
+      scopeEntityId: data.entity_id ?? null,
+    });
   }
 
   return {
@@ -496,6 +642,7 @@ export async function addScopeNonprofit(params: {
     entity_id: data.entity_id ?? null,
     ein: data.ein,
     label: data.label ?? null,
+    org_type: data.org_type ?? null,
     tier: data.tier as ScopeTier,
     status: data.status as ScopeStatus,
     created_at: data.created_at as string,
@@ -509,7 +656,7 @@ export async function getScopeNonprofitById(
   const { data, error } = await supabaseAdmin
     .from("superintendent_scope_nonprofits")
     .select(
-      "id, district_entity_id, entity_id, ein, label, tier, status, created_at, updated_at",
+      "id, district_entity_id, entity_id, ein, label, org_type, tier, status, created_at, updated_at",
     )
     .eq("id", id)
     .maybeSingle();
@@ -534,7 +681,7 @@ export async function backfillScopeNonprofitEntity(params: {
     .update({ entity_id })
     .eq("id", scope_id)
     .select(
-      "id, district_entity_id, entity_id, ein, label, tier, status, created_at, updated_at",
+      "id, district_entity_id, entity_id, ein, label, org_type, tier, status, created_at, updated_at",
     )
     .single();
 
@@ -545,6 +692,7 @@ export async function backfillScopeNonprofitEntity(params: {
     entity_id: data.entity_id ?? null,
     ein: data.ein,
     label: data.label ?? null,
+    org_type: data.org_type ?? null,
     tier: data.tier as ScopeTier,
     status: data.status as ScopeStatus,
     created_at: data.created_at as string,
@@ -558,6 +706,7 @@ export async function updateScopeNonprofit(params: {
   tier?: ScopeTier;
   status?: ScopeStatus;
   label?: string | null;
+  org_type?: OrgType;
 }): Promise<AdminScopeRow> {
   const normalizedEin = normalizeEinInput(params.ein);
   if (!normalizedEin) {
@@ -572,12 +721,14 @@ export async function updateScopeNonprofit(params: {
   if (params.tier !== undefined) updates.tier = params.tier;
   if (params.status !== undefined) updates.status = params.status;
   if (params.label !== undefined) updates.label = params.label; // allow null to clear
+  if (params.org_type !== undefined) updates.org_type = params.org_type;
 
   // (Optional) avoid a no-op update
   if (
     params.tier === undefined &&
     params.status === undefined &&
-    params.label === undefined
+    params.label === undefined &&
+    params.org_type === undefined
   ) {
     throw new Error("No updates provided");
   }
@@ -589,15 +740,32 @@ export async function updateScopeNonprofit(params: {
     .eq("district_entity_id", params.district_entity_id)
     .eq("ein", normalizedEin)
     .select(
-      "id, district_entity_id, entity_id, ein, label, tier, status, created_at, updated_at",
+      "id, district_entity_id, entity_id, ein, label, org_type, tier, status, created_at, updated_at",
     )
     .single();
 
   if (error) {
+    if (isDistrictFoundationConstraint(error)) {
+      throw new Error(
+        "This district already has a District Foundation. Change the existing one first.",
+      );
+    }
     throw new Error(error.message);
   }
   if (!data) {
     throw new Error("Update failed: no data returned");
+  }
+
+  if (params.org_type !== undefined) {
+    const nextOrgType = data.org_type ?? params.org_type;
+    if (nextOrgType) {
+      await syncNonprofitOrgType({
+        ein: normalizedEin,
+        org_type: nextOrgType,
+        scopeLabel: data.label ?? null,
+        scopeEntityId: data.entity_id ?? null,
+      });
+    }
   }
 
   return {
@@ -606,6 +774,7 @@ export async function updateScopeNonprofit(params: {
     entity_id: data.entity_id ?? null,
     ein: data.ein,
     label: data.label ?? null,
+    org_type: data.org_type ?? null,
     tier: data.tier as ScopeTier,
     status: data.status as ScopeStatus,
     created_at: data.created_at as string,
@@ -622,6 +791,11 @@ export async function createEntityFromEin(
     throw new Error("EIN is required");
   }
 
+  const scopedOrgType = await fetchScopeOrgType(
+    normalizedEin,
+    opts?.scope_id ?? null,
+  );
+
   const irs: IrsPostgrestClient = getIrsClient();
 
   // Helper to ensure nonprofit shell and onboarding progress are up to date
@@ -630,8 +804,9 @@ export async function createEntityFromEin(
     ein: string;
     name?: string | null;
     scopeId?: string | null;
+    orgType?: OrgType | null;
   }): Promise<void> {
-    const { entityId, ein, name, scopeId } = params;
+    const { entityId, ein, name, scopeId, orgType } = params;
 
     // 1) Ensure a canonical nonprofit shell exists (public.nonprofits)
     const { error: nonprofitUpsertError } = await supabaseAdmin
@@ -642,7 +817,7 @@ export async function createEntityFromEin(
           name: (name && name.trim()) ? name.trim() : `Nonprofit ${ein}`,
           ein,
           // REQUIRED (no DB default)
-          org_type: "external_charity",
+          org_type: orgType ?? "external_charity",
         },
         { onConflict: "entity_id" },
       );
@@ -714,6 +889,7 @@ export async function createEntityFromEin(
         ein: normalizedEin,
         name: entityRow.name ?? null,
         scopeId: opts?.scope_id ?? null,
+        orgType: scopedOrgType,
       });
     }
 
@@ -758,6 +934,7 @@ export async function createEntityFromEin(
       ein: normalizedEin,
       name: existingEntity.name ?? null,
       scopeId: opts?.scope_id ?? null,
+      orgType: scopedOrgType,
     });
 
     return {
@@ -816,6 +993,7 @@ export async function createEntityFromEin(
     ein: normalizedEin,
     name: entityRow.name ?? null,
     scopeId: opts?.scope_id ?? null,
+    orgType: scopedOrgType,
   });
 
   return {

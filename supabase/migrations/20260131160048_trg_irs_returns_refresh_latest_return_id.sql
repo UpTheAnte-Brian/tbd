@@ -5,22 +5,22 @@
 
 begin;
 
--- Helper: refresh latest_return_id for a single EIN (normalized)
-create or replace function irs.refresh_latest_return_id(p_ein_normalized text)
+-- Helper: refresh latest_return_id for a single EIN
+create or replace function irs.refresh_latest_return_id(p_ein text)
 returns void
 language plpgsql
 as $$
 declare
   v_best_return_id uuid;
 begin
-  if p_ein_normalized is null or p_ein_normalized = '' then
+  if p_ein is null or p_ein = '' then
     return;
   end if;
 
   select r.id
     into v_best_return_id
   from irs.returns r
-  where irs.normalize_ein(r.ein) = p_ein_normalized
+  where r.ein = p_ein
   order by
     r.tax_period_end desc nulls last,
     r.filed_on desc nulls last,
@@ -30,7 +30,7 @@ begin
 
   update irs.organizations o
   set latest_return_id = v_best_return_id
-  where o.ein_normalized = p_ein_normalized;
+  where o.ein = p_ein;
 end;
 $$;
 
@@ -41,14 +41,14 @@ language plpgsql
 as $$
 begin
   if (tg_op = 'INSERT') then
-    perform irs.refresh_latest_return_id(irs.normalize_ein(new.ein));
+    perform irs.refresh_latest_return_id(new.ein);
     return new;
   elsif (tg_op = 'UPDATE') then
-    perform irs.refresh_latest_return_id(irs.normalize_ein(old.ein));
-    perform irs.refresh_latest_return_id(irs.normalize_ein(new.ein));
+    perform irs.refresh_latest_return_id(old.ein);
+    perform irs.refresh_latest_return_id(new.ein);
     return new;
   elsif (tg_op = 'DELETE') then
-    perform irs.refresh_latest_return_id(irs.normalize_ein(old.ein));
+    perform irs.refresh_latest_return_id(old.ein);
     return old;
   end if;
   return null;

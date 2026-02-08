@@ -1024,7 +1024,6 @@ export type Database = {
           created_at: string
           deductibility_code: string | null
           ein: string
-          ein_normalized: string | null
           foundation_code: string | null
           last_seen_at: string
           latest_return_id: string | null
@@ -1043,7 +1042,6 @@ export type Database = {
           created_at?: string
           deductibility_code?: string | null
           ein: string
-          ein_normalized?: string | null
           foundation_code?: string | null
           last_seen_at?: string
           latest_return_id?: string | null
@@ -1062,7 +1060,6 @@ export type Database = {
           created_at?: string
           deductibility_code?: string | null
           ein?: string
-          ein_normalized?: string | null
           foundation_code?: string | null
           last_seen_at?: string
           latest_return_id?: string | null
@@ -1399,7 +1396,6 @@ export type Database = {
         Row: {
           created_at: string
           ein: string
-          ein_normalized: string | null
           filed_on: string | null
           gross_receipts_cap: number | null
           id: string
@@ -1429,7 +1425,6 @@ export type Database = {
         Insert: {
           created_at?: string
           ein: string
-          ein_normalized?: string | null
           filed_on?: string | null
           gross_receipts_cap?: number | null
           id?: string
@@ -1459,7 +1454,6 @@ export type Database = {
         Update: {
           created_at?: string
           ein?: string
-          ein_normalized?: string | null
           filed_on?: string | null
           gross_receipts_cap?: number | null
           id?: string
@@ -1579,11 +1573,9 @@ export type Database = {
     }
     Functions: {
       can_access_ein: { Args: { p_ein: string }; Returns: boolean }
+      format_ein: { Args: { ein_digits: string }; Returns: string }
       normalize_ein: { Args: { p_ein: string }; Returns: string }
-      refresh_latest_return_id: {
-        Args: { p_ein_normalized: string }
-        Returns: undefined
-      }
+      refresh_latest_return_id: { Args: { p_ein: string }; Returns: undefined }
     }
     Enums: {
       irs_doc_type: "pdf" | "xml" | "other"
@@ -2670,6 +2662,7 @@ export type Database = {
           entity_id: string | null
           id: string
           label: string | null
+          org_type: Database["public"]["Enums"]["org_type"]
           status: string
           tier: string
           updated_at: string
@@ -2681,6 +2674,7 @@ export type Database = {
           entity_id?: string | null
           id?: string
           label?: string | null
+          org_type?: Database["public"]["Enums"]["org_type"]
           status?: string
           tier?: string
           updated_at?: string
@@ -2692,6 +2686,7 @@ export type Database = {
           entity_id?: string | null
           id?: string
           label?: string | null
+          org_type?: Database["public"]["Enums"]["org_type"]
           status?: string
           tier?: string
           updated_at?: string
@@ -2717,49 +2712,21 @@ export type Database = {
     Views: {
       superintendent_scope_nonprofits_ready: {
         Row: {
-          created_at: string | null
           district_entity_id: string | null
           ein: string | null
           entity_id: string | null
-          has_entity: boolean | null
-          has_irs_link: boolean | null
+          filed_on: string | null
+          has_irs_org: boolean | null
           has_returns: boolean | null
-          id: string | null
-          is_ready: boolean | null
           label: string | null
+          latest_tax_year: number | null
+          org_type: Database["public"]["Enums"]["org_type"] | null
+          scope_id: string | null
           status: string | null
+          tax_period_end: string | null
           tier: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          district_entity_id?: string | null
-          ein?: string | null
-          entity_id?: string | null
-          has_entity?: never
-          has_irs_link?: never
-          has_returns?: never
-          id?: string | null
-          is_ready?: never
-          label?: string | null
-          status?: string | null
-          tier?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          district_entity_id?: string | null
-          ein?: string | null
-          entity_id?: string | null
-          has_entity?: never
-          has_irs_link?: never
-          has_returns?: never
-          id?: string | null
-          is_ready?: never
-          label?: string | null
-          status?: string | null
-          tier?: string | null
-          updated_at?: string | null
+          total_net_assets: number | null
+          total_revenue: number | null
         }
         Relationships: [
           {
@@ -2830,6 +2797,7 @@ export type Database = {
           latest_tax_year: number | null
           narratives_ok: boolean | null
           net_assets_end: number | null
+          org_type: Database["public"]["Enums"]["org_type"] | null
           people_parse_ok: boolean | null
           scope_label: string | null
           status: string | null

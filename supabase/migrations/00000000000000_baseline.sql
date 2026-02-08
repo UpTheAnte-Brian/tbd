@@ -2933,7 +2933,6 @@ ALTER TABLE "irs"."latest_financials" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "irs"."organizations" (
     "ein" "text" NOT NULL,
-    "ein_normalized" "text" GENERATED ALWAYS AS ("regexp_replace"("ein", '-'::"text", ''::"text", 'g'::"text")) STORED,
     "legal_name" "text" NOT NULL,
     "normalized_legal_name" "text",
     "aka_names" "text"[] DEFAULT '{}'::"text"[] NOT NULL,
@@ -3932,7 +3931,6 @@ CREATE INDEX "irs_entity_links_entity_id_idx" ON "irs"."entity_links" USING "btr
 
 
 
-CREATE INDEX "organizations_ein_normalized_idx" ON "irs"."organizations" USING "btree" ("ein_normalized");
 
 
 

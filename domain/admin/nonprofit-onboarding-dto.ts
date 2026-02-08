@@ -44,10 +44,7 @@ function normalizeEinInput(value: string | null | undefined): string | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
   const digits = trimmed.replace(/\D/g, "");
-  if (digits.length === 9) {
-    return `${digits.slice(0, 2)}-${digits.slice(2)}`;
-  }
-  return trimmed;
+  return digits.length === 9 ? digits : null;
 }
 
 async function updateScopeById(
@@ -87,25 +84,98 @@ async function fetchScopeReadyRow(
   params: { scopeId?: string | null; entityId?: string | null },
 ) {
   const { scopeId, entityId } = params;
-  let query = supabase
-    .from("superintendent_scope_nonprofits_ready")
+
+  // We intentionally do a two-query merge here:
+  // 1) Base scope row from `superintendent_scope_nonprofits` (authoritative identity fields)
+  // 2) Readiness/rollups from `superintendent_scope_nonprofits_ready` (derived signals)
+  // This avoids coupling TypeScript to view column drift and keeps the UI stable.
+
+  type BaseScopeRow = Pick<
+    Database["public"]["Tables"]["superintendent_scope_nonprofits"]["Row"],
+    | "id"
+    | "district_entity_id"
+    | "entity_id"
+    | "ein"
+    | "label"
+    | "org_type"
+    | "status"
+    | "tier"
+    | "created_at"
+    | "updated_at"
+  >;
+
+  type ReadyScopeRow = Pick<
+    Database["public"]["Views"]["superintendent_scope_nonprofits_ready"]["Row"],
+    | "scope_id"
+    | "has_irs_org"
+    | "has_returns"
+    | "latest_tax_year"
+    | "total_revenue"
+    | "total_net_assets"
+    | "tax_period_end"
+    | "filed_on"
+  >;
+
+  let baseQuery = supabase
+    .from("superintendent_scope_nonprofits")
     .select(
-      "id, district_entity_id, entity_id, ein, label, status, tier, created_at, updated_at, has_entity, has_irs_link, has_returns, is_ready",
-    );
+      "id, district_entity_id, entity_id, ein, label, org_type, status, tier, created_at, updated_at",
+    )
+    .limit(1);
 
   if (scopeId) {
-    query = query.eq("id", scopeId);
+    baseQuery = baseQuery.eq("id", scopeId);
   } else if (entityId) {
-    query = query.eq("entity_id", entityId);
+    baseQuery = baseQuery.eq("entity_id", entityId);
   } else {
     return null;
   }
 
-  const { data, error } = await query.maybeSingle();
-  if (error && !isNotFoundError(error)) {
-    throw new Error(error.message);
+  const { data: baseRaw, error: baseError } = await baseQuery.maybeSingle();
+  const base = (baseRaw as BaseScopeRow | null) ?? null;
+  if (baseError && !isNotFoundError(baseError as PostgrestMaybeSingleError)) {
+    throw new Error(baseError.message);
   }
-  return data ?? null;
+  if (!base?.id) return null;
+
+  const baseScopeId = String(base.id);
+
+  // Derived view: by convention this view exposes `scope_id` as the PK from
+  // `superintendent_scope_nonprofits.id`.
+  const { data: readyRaw, error: readyError } = await supabase
+    .from("superintendent_scope_nonprofits_ready")
+    .select(
+      "scope_id, has_irs_org, has_returns, latest_tax_year, total_revenue, total_net_assets, tax_period_end, filed_on",
+    )
+    .eq("scope_id", baseScopeId)
+    .maybeSingle();
+  const ready = (readyRaw as ReadyScopeRow | null) ?? null;
+
+  if (readyError && !isNotFoundError(readyError as PostgrestMaybeSingleError)) {
+    throw new Error(readyError.message);
+  }
+
+  return {
+    scope_id: baseScopeId,
+    district_entity_id: base.district_entity_id ?? null,
+    entity_id: base.entity_id ?? null,
+    ein: base.ein ?? null,
+    label: base.label ?? null,
+    org_type: base.org_type ?? null,
+    status: base.status ?? null,
+    tier: base.tier ?? null,
+    created_at: base.created_at ?? null,
+    updated_at: base.updated_at ?? null,
+
+    // Readiness/rollups (nullable if the view row isn't present yet)
+    has_irs_org: ready?.has_irs_org ?? null,
+    has_returns: ready?.has_returns ?? null,
+    latest_tax_year: ready?.latest_tax_year ?? null,
+    total_revenue: ready?.total_revenue ?? null,
+    total_net_assets: ready?.total_net_assets ?? null,
+    tax_period_end: ready?.tax_period_end ?? null,
+    filed_on: ready?.filed_on ?? null,
+  };
 }
 
 async function ensureUniqueSlug(
@@ -200,7 +270,10 @@ export async function createNonprofitShell(
       .eq("id", scopeId)
       .maybeSingle();
 
-    if (scopeLookupError && !isNotFoundError(scopeLookupError as any)) {
+    if (
+      scopeLookupError &&
+      !isNotFoundError(scopeLookupError as PostgrestMaybeSingleError)
+    ) {
       throw new Error(scopeLookupError.message);
     }
 
@@ -221,14 +294,24 @@ export async function createNonprofitShell(
           .eq("id", existingEntityId)
           .maybeSingle();
 
-      if (existingEntityError && !isNotFoundError(existingEntityError as any)) {
+      if (
+        existingEntityError &&
+        !isNotFoundError(existingEntityError as PostgrestMaybeSingleError)
+      ) {
         throw new Error(existingEntityError.message);
+      }
+
+      if (scopeId && orgType) {
+        await updateScopeById(supabase, scopeId, {
+          org_type: orgType,
+        });
       }
 
       return {
         entity_id: existingEntityId,
         nonprofit_id: existingEntityId,
         slug: String(existingEntity?.slug ?? ""),
+        scope_id: scopeId,
       };
     }
   }
@@ -244,7 +327,7 @@ export async function createNonprofitShell(
 
     if (
       existingNonprofitError &&
-      !isNotFoundError(existingNonprofitError as any)
+      !isNotFoundError(existingNonprofitError as PostgrestMaybeSingleError)
     ) {
       throw new Error(existingNonprofitError.message);
     }
@@ -261,7 +344,10 @@ export async function createNonprofitShell(
           .eq("id", existingEntityId)
           .maybeSingle();
 
-      if (existingEntityError && !isNotFoundError(existingEntityError as any)) {
+      if (
+        existingEntityError &&
+        !isNotFoundError(existingEntityError as PostgrestMaybeSingleError)
+      ) {
         throw new Error(existingEntityError.message);
       }
 
@@ -270,6 +356,7 @@ export async function createNonprofitShell(
         await updateScopeById(supabase, scopeId, {
           entity_id: existingEntityId,
           ein: normalizedEin ?? undefined,
+          org_type: orgType ?? undefined,
         });
       }
 
@@ -336,6 +423,7 @@ export async function createNonprofitShell(
       await updateScopeById(supabase, scopeId, {
         entity_id: entityId,
         ein: normalizedEin ?? undefined,
+        org_type: orgType,
       });
     }
 
@@ -359,6 +447,7 @@ export async function createNonprofitShell(
       await updateScopeById(supabase, scopeId, {
         entity_id: entityId,
         ein: insertPayload.ein ?? undefined,
+        org_type: orgType,
       });
     }
 
@@ -389,6 +478,7 @@ export async function createNonprofitShell(
       entity_id: entityId,
       nonprofit_id: nonprofitId,
       slug: String(entity.slug ?? slug),
+      scope_id: scopeId,
     };
   } catch (err) {
     await bestEffortCleanup(supabase, entityId, nonprofitId);
@@ -639,6 +729,7 @@ export async function getNonprofitOnboardingData(
       updated_at: String(row.updated_at),
     })),
     scope,
+    scope_id: scope?.scope_id ? String(scope.scope_id) : null,
   };
 }
 
@@ -678,9 +769,9 @@ export async function updateNonprofitIdentity(
         linkEin: link?.ein ?? null,
         linkError: linkError
           ? {
-            code: (linkError as any).code,
-            status: (linkError as any).status,
-            message: (linkError as any).message,
+            code: linkError?.code,
+            status: (linkError as any)?.status,
+            message: linkError?.message,
           }
           : null,
       });

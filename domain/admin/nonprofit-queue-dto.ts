@@ -11,7 +11,7 @@ export async function getOnboardingQueue(): Promise<OnboardingQueueRow[]> {
   const { data, error } = await supabaseAdmin
     .from("v_district_scope_nonprofits")
     .select(
-      "district_entity_id, ein, scope_label, tier, status, has_entity, entity_id, irs_legal_name, has_irs_org, has_returns",
+      "district_entity_id, ein, scope_label, tier, status, org_type, has_entity, entity_id, irs_legal_name, has_irs_org, has_returns",
     )
     .neq("status", "archived")
     .order("scope_label", { ascending: true, nullsFirst: false })
@@ -29,6 +29,7 @@ export async function getOnboardingQueue(): Promise<OnboardingQueueRow[]> {
     entity_id: row.entity_id ?? null,
     status: (row.status ?? null) as OnboardingQueueRow["status"],
     tier: (row.tier ?? null) as OnboardingQueueRow["tier"],
+    org_type: (row.org_type ?? null) as OnboardingQueueRow["org_type"],
     has_entity: Boolean(row.has_entity),
     has_irs_org: Boolean(row.has_irs_org),
     has_returns: Boolean(row.has_returns),

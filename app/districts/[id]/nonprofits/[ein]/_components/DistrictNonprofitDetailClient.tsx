@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Database } from "@/database.types";
 import type { ScopeStatus, ScopeTier } from "@/app/admin/nonprofits/types";
 import SectionCard from "@/app/components/districts/superintendent/SectionCard";
+import { formatEinDashed } from "@/domain/irs/ein";
 
 const TIERS: ScopeTier[] = [
   "registry_only",
@@ -194,7 +195,8 @@ export default function DistrictNonprofitDetailClient({
             {displayName}
           </h1>
           <p className="text-sm text-text-on-light">
-            EIN {formatText(data?.scope?.ein || ein)} · {location}
+            EIN {formatText(formatEinDashed(data?.scope?.ein || ein))} ·{" "}
+            {location}
           </p>
         </div>
         <Link

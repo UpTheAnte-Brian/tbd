@@ -11,6 +11,7 @@ import type {
   NonprofitOnboardingData,
   UpdateOnboardingIdentityRequest,
 } from "@/app/lib/types/nonprofit-onboarding";
+import { formatEinDashed } from "@/domain/irs/ein";
 
 const OVERRIDE_NAMESPACE = "nonprofit.profile";
 const DOCUMENT_TYPE_OPTIONS = [
@@ -79,8 +80,8 @@ export default function AdminNonprofitOnboardingClient({
       }
       const payload = (await response.json()) as NonprofitOnboardingData;
       setData(payload);
-      if (!resolvedScopeId && payload.scope?.id) {
-        setResolvedScopeId(String(payload.scope.id));
+      if (!resolvedScopeId && payload.scope_id) {
+        setResolvedScopeId(String(payload.scope_id));
       }
     } catch (err) {
       setLoadError(
@@ -453,8 +454,7 @@ export default function AdminNonprofitOnboardingClient({
   const scope = data.scope ?? null;
   const scopeLabel = scope?.label ?? scope?.ein ?? null;
   const scopeStatus = scope?.status ?? null;
-  const canViewDashboard =
-    Boolean(scope?.is_ready) && Boolean(scope?.district_entity_id);
+  const canViewDashboard = Boolean(scope?.district_entity_id);
 
   return (
     <div className="space-y-6">
@@ -604,7 +604,7 @@ export default function AdminNonprofitOnboardingClient({
                   ) : null}
                   {isEinLocked && data.linkedEin ? (
                     <span className="text-xs text-brand-secondary-0">
-                      Linked EIN: {data.linkedEin}
+                      Linked EIN: {formatEinDashed(data.linkedEin) ?? data.linkedEin}
                     </span>
                   ) : null}
                 </label>
@@ -679,7 +679,9 @@ export default function AdminNonprofitOnboardingClient({
                   </span>
                 ) : (
                   <div className="grid gap-1">
-                    <span>Canonical EIN: {irsCanonicalEin}</span>
+                    <span>
+                      Canonical EIN: {formatEinDashed(irsCanonicalEin) ?? irsCanonicalEin}
+                    </span>
                     <span>IRS legal name: {irsOrgName}</span>
                     <span>
                       Link status: {irsLinkStatus}

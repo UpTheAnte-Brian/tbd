@@ -47,15 +47,10 @@ export async function POST(
     const supabase = supabaseAdmin;
     const irs = createIrsAdminClient();
 
-    // PostgREST filter values with special characters (like EIN dashes) must be quoted.
-    // See: https://postgrest.org/en/stable/references/api/tables_views.html#operators
-    const rawEinQuoted = JSON.stringify(rawEin); // produces a double-quoted, escaped string
-    const einNormalizedQuoted = JSON.stringify(einNormalized);
-
     const { data: orgRow, error: orgErr } = await irs
       .from("organizations")
-      .select("ein, ein_normalized, legal_name, website, city, state, country")
-      .or(`ein.eq.${rawEinQuoted},ein_normalized.eq.${einNormalizedQuoted}`)
+      .select("ein, legal_name, website, city, state, country")
+      .eq("ein", einNormalized)
       .maybeSingle();
 
     if (orgErr) {
@@ -66,8 +61,6 @@ export async function POST(
       console.error("IRS org lookup failed", {
         rawEin,
         einNormalized,
-        rawEinQuoted,
-        einNormalizedQuoted,
       });
       return jsonError("IRS organization not found for EIN", 404);
     }

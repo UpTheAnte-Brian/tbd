@@ -8,6 +8,7 @@ import {
 } from "@/domain/admin/nonprofits-admin-dto";
 import type { ScopeStatus, ScopeTier } from "@/app/admin/nonprofits/types";
 import { areAdminToolsDisabled } from "@/utils/admin-tools";
+import type { OrgType } from "@/app/lib/types/nonprofits";
 
 const TIERS: ScopeTier[] = [
   "registry_only",
@@ -15,6 +16,18 @@ const TIERS: ScopeTier[] = [
   "institutional",
 ];
 const STATUSES: ScopeStatus[] = ["candidate", "active", "archived"];
+const ORG_TYPES: OrgType[] = [
+  "district_foundation",
+  "up_the_ante",
+  "external_charity",
+];
+
+const DISTRICT_FOUNDATION_ERROR =
+  "This district already has a District Foundation. Change the existing one first.";
+
+function isDistrictFoundationError(err: unknown): boolean {
+  return err instanceof Error && err.message.includes("District Foundation");
+}
 
 function asTier(value: unknown): ScopeTier | undefined {
   return TIERS.includes(value as ScopeTier) ? (value as ScopeTier) : undefined;
@@ -24,6 +37,10 @@ function asStatus(value: unknown): ScopeStatus | undefined {
   return STATUSES.includes(value as ScopeStatus)
     ? (value as ScopeStatus)
     : undefined;
+}
+
+function asOrgType(value: unknown): OrgType | undefined {
+  return ORG_TYPES.includes(value as OrgType) ? (value as OrgType) : undefined;
 }
 
 export async function GET(req: Request) {
@@ -61,6 +78,7 @@ export async function POST(req: Request) {
         label?: string | null;
         tier?: ScopeTier;
         status?: ScopeStatus;
+        org_type?: OrgType;
       }
       | null;
 
@@ -71,15 +89,23 @@ export async function POST(req: Request) {
       return jsonError("district_entity_id is required", 400);
     }
 
-    const scope = await addScopeNonprofit({
-      district_entity_id: body.district_entity_id,
-      ein: body.ein,
-      label: body.label ?? null,
-      tier: asTier(body.tier),
-      status: asStatus(body.status),
-    });
+    try {
+      const scope = await addScopeNonprofit({
+        district_entity_id: body.district_entity_id,
+        ein: body.ein,
+        label: body.label ?? null,
+        tier: asTier(body.tier),
+        status: asStatus(body.status),
+        org_type: asOrgType(body.org_type),
+      });
 
-    return NextResponse.json(scope);
+      return NextResponse.json(scope);
+    } catch (err) {
+      if (isDistrictFoundationError(err)) {
+        return jsonError(DISTRICT_FOUNDATION_ERROR, 409);
+      }
+      throw err;
+    }
   });
 }
 
@@ -96,6 +122,7 @@ export async function PATCH(req: Request) {
         label?: string | null;
         tier?: ScopeTier;
         status?: ScopeStatus;
+        org_type?: OrgType;
       }
       | null;
 
@@ -109,19 +136,28 @@ export async function PATCH(req: Request) {
     const tier = asTier(body.tier);
     const status = asStatus(body.status);
     const label = body.label;
+    const orgType = asOrgType(body.org_type);
 
-    if (!tier && !status && label === undefined) {
+    if (!tier && !status && label === undefined && orgType === undefined) {
       return jsonError("No updates provided", 400);
     }
 
-    const scope = await updateScopeNonprofit({
-      district_entity_id: body.district_entity_id,
-      ein: body.ein,
-      tier,
-      status,
-      label,
-    });
+    try {
+      const scope = await updateScopeNonprofit({
+        district_entity_id: body.district_entity_id,
+        ein: body.ein,
+        tier,
+        status,
+        label,
+        org_type: orgType,
+      });
 
-    return NextResponse.json(scope);
+      return NextResponse.json(scope);
+    } catch (err) {
+      if (isDistrictFoundationError(err)) {
+        return jsonError(DISTRICT_FOUNDATION_ERROR, 409);
+      }
+      throw err;
+    }
   });
 }

@@ -1884,20 +1884,11 @@ async function processDistrict(params: {
         let pageFrom = 0;
 
         while (true) {
-            // TEOS ingestion currently stores EINs both as `ein` (often dashed) and `ein_normalized` (9 digits).
-            // District scope EINs are normalized to 9 digits, so prefer matching on `ein_normalized`.
-            // We also include a fallback match against dashed EINs in case some rows haven't had the trigger run yet.
-            const dashedChunk = chunk.map((n) => formatEinDashed(n) || n);
-
             const q = supabaseAdmin
                 .schema("irs")
                 .from("returns")
-                .select("id, ein, ein_normalized, xml_path")
-                .or(
-                    `ein_normalized.in.(${chunk.join(",")}),ein.in.(${
-                        dashedChunk.join(",")
-                    })`,
-                )
+                .select("id, ein, xml_path")
+                .in("ein", chunk)
                 .not("xml_path", "is", null)
                 .range(pageFrom, pageFrom + returnsPageSize - 1);
 
@@ -1911,7 +1902,6 @@ async function processDistrict(params: {
             const rows = (data || []) as Array<{
                 id: string;
                 ein: string | null;
-                ein_normalized: string | null;
                 xml_path: string | null;
             }>;
             if (!rows.length) break;

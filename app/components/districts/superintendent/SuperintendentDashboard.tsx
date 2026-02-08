@@ -39,12 +39,11 @@ function formatPercent(value: number | null): string {
   return percentFormatter.format(value);
 }
 
-function sumValues(values: Array<number | null>): number {
-    return values.reduce<number>(
-        (acc, value) => (isValidNumber(value) ? acc + value : acc),
-        0,
-    );
-}
+const ORG_TYPE_RANK: Record<string, number> = {
+  district_foundation: 0,
+  up_the_ante: 1,
+  external_charity: 2,
+};
 
 type KpiTone = "neutral" | "good" | "warn";
 
@@ -75,7 +74,7 @@ export default function SuperintendentDashboard({
   const [sortKey, setSortKey] = useState<SortKey>("revenue");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
-
+  console.log("Rendering SuperintendentDashboard with rows:", rows);
   const filteredRows = useMemo(() => {
     const trimmed = search.trim().toLowerCase();
     const filtered = trimmed
@@ -87,6 +86,13 @@ export default function SuperintendentDashboard({
       : rows;
 
     const sorted = [...filtered].sort((a, b) => {
+      const rankA = ORG_TYPE_RANK[a.org_type ?? ""] ?? 3;
+      const rankB = ORG_TYPE_RANK[b.org_type ?? ""] ?? 3;
+
+      if (rankA !== rankB) {
+        return rankA - rankB;
+      }
+
       const valueA =
         sortKey === "revenue"
           ? a.total_revenue
@@ -114,15 +120,21 @@ export default function SuperintendentDashboard({
     const currentYear = new Date().getFullYear();
     const recentCount = rows.filter(
       (row) =>
-        row.latest_tax_year !== null && row.latest_tax_year >= currentYear - 2,
+        row.latest_tax_year !== null && row.latest_tax_year >= currentYear - 3,
     ).length;
     const recentRate = total > 0 ? recentCount / total : null;
 
-    const totalRevenue = sumValues(rows.map((row) => row.total_revenue));
-    const totalNetAssets = sumValues(rows.map((row) => row.net_assets_end));
+    const totalRevenue = scopeSummary?.total_revenue ?? null;
+    const totalNetAssets = scopeSummary?.total_net_assets ?? null;
     const narrativesCount = rows.filter((row) => row.has_narrative).length;
     const peopleIssuesCount = rows.filter((row) =>
       ["mixed", "poor"].includes(row.people_parse_quality),
+    ).length;
+    const activatedCount = rows.filter(
+      (row) => !row.entity_id.startsWith("ein:"),
+    ).length;
+    const einOnlyCount = rows.filter((row) =>
+      row.entity_id.startsWith("ein:"),
     ).length;
 
     return [
@@ -134,7 +146,7 @@ export default function SuperintendentDashboard({
       {
         label: "Recent filing rate",
         value: formatPercent(recentRate),
-        helper: `${recentCount} filed in last 2 years`,
+        helper: `${recentCount} filed in last 3 years`,
         tone:
           recentRate === null ? "neutral" : recentRate > 0.6 ? "good" : "warn",
       },
@@ -149,6 +161,14 @@ export default function SuperintendentDashboard({
       {
         label: "Narratives available",
         value: narrativesCount.toString(),
+      },
+      {
+        label: "Activated",
+        value: activatedCount.toString(),
+      },
+      {
+        label: "EIN-only",
+        value: einOnlyCount.toString(),
       },
       {
         label: "People parse flagged",
@@ -167,6 +187,7 @@ export default function SuperintendentDashboard({
   const handleExport = () => {
     const headers = [
       "Nonprofit Name",
+      "Type",
       "EIN",
       "Latest Tax Year",
       "Total Revenue",
@@ -188,6 +209,7 @@ export default function SuperintendentDashboard({
     const rowsCsv = filteredRows.map((row) =>
       [
         row.entity_name,
+        row.org_type ?? "",
         row.ein ?? "",
         row.latest_tax_year?.toString() ?? "",
         row.total_revenue?.toString() ?? "",

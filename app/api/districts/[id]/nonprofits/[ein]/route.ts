@@ -1,11 +1,28 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { safeRoute } from "@/app/lib/api/handler";
 import { jsonError } from "@/app/lib/api/errors";
 import { supabaseAdmin } from "@/utils/supabase/service-worker";
 import type { Database } from "@/database.types";
+import { isValidEin, normalizeEin } from "@/domain/irs/ein";
 
 type ScopeViewRow =
   Database["public"]["Views"]["v_district_scope_nonprofits"]["Row"];
+
+type ReadyScopeRow = Pick<
+  Database["public"]["Views"]["superintendent_scope_nonprofits_ready"]["Row"],
+  | "district_entity_id"
+  | "ein"
+  | "entity_id"
+  | "org_type"
+  | "has_irs_org"
+  | "has_returns"
+  | "latest_tax_year"
+  | "total_revenue"
+  | "total_net_assets"
+  | "tax_period_end"
+  | "filed_on"
+  | "scope_id"
+>;
 
 type IrsOrgRow = Database["irs"]["Tables"]["organizations"]["Row"];
 
@@ -22,21 +39,38 @@ export async function GET(
     if (!id) return jsonError("district id is required", 400);
     if (!ein) return jsonError("ein is required", 400);
 
+    const normalizedEin = normalizeEin(ein);
+    if (!isValidEin(normalizedEin)) {
+      return jsonError("Invalid EIN", 400);
+    }
+
     const { data: scopeRow, error: scopeError } = await supabaseAdmin
       .from("v_district_scope_nonprofits")
       .select("*")
       .eq("district_entity_id", id)
-      .eq("ein", ein)
+      .eq("ein", normalizedEin)
       .maybeSingle()
       .returns<ScopeViewRow>();
 
     if (scopeError) throw scopeError;
 
+    const { data: readyRow, error: readyError } = await supabaseAdmin
+      .from("superintendent_scope_nonprofits_ready")
+      .select(
+        "district_entity_id,ein,entity_id,org_type,has_irs_org,has_returns,latest_tax_year,total_revenue,total_net_assets,tax_period_end,filed_on,scope_id",
+      )
+      .eq("district_entity_id", id)
+      .eq("ein", normalizedEin)
+      .maybeSingle()
+      .returns<ReadyScopeRow>();
+
+    if (readyError) throw readyError;
+
     const { data: org, error: orgError } = await supabaseAdmin
       .schema("irs")
       .from("organizations")
       .select("*")
-      .eq("ein", ein)
+      .eq("ein", normalizedEin)
       .maybeSingle()
       .returns<IrsOrgRow>();
 
@@ -45,7 +79,22 @@ export async function GET(
     let latestReturn: IrsReturnRow | null = null;
     let latestFinancials: IrsFinancialRow | null = null;
 
-    const latestReturnId = org?.latest_return_id ?? null;
+    let latestReturnId = org?.latest_return_id ?? null;
+
+    if (!latestReturnId) {
+      const { data: latestReturnRow, error: latestReturnError } =
+        await supabaseAdmin
+          .schema("irs")
+          .from("latest_returns")
+          .select("id")
+          .eq("ein", normalizedEin)
+          .order("tax_year", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+      if (latestReturnError) throw latestReturnError;
+      latestReturnId = latestReturnRow?.id ?? null;
+    }
 
     if (latestReturnId) {
       const { data: returnRow, error: returnError } = await supabaseAdmin
@@ -80,8 +129,10 @@ export async function GET(
       latest_return: latestReturn,
       latest_financials: latestFinancials,
       health: {
-        has_irs_org: scopeRow?.has_irs_org ?? Boolean(org?.ein),
-        has_returns: scopeRow?.has_returns ?? Boolean(latestReturn?.id),
+        has_irs_org: readyRow?.has_irs_org ?? scopeRow?.has_irs_org ??
+          Boolean(org?.ein),
+        has_returns: readyRow?.has_returns ?? scopeRow?.has_returns ??
+          Boolean(latestReturn?.id),
         has_entity: scopeRow?.has_entity ?? false,
         filing_recency_days: scopeRow?.filing_recency_days ?? null,
         people_parse_ok: scopeRow?.people_parse_ok ?? null,

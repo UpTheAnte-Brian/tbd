@@ -1,3 +1,5 @@
+import type { OrgType } from "@/app/lib/types/nonprofits";
+
 export type ScopeTier = "registry_only" | "disclosure_grade" | "institutional";
 export type ScopeStatus = "candidate" | "active" | "archived";
 
@@ -7,6 +9,7 @@ export type AdminScopeRow = {
   entity_id: string | null;
   ein: string;
   label: string | null;
+  org_type: OrgType | null;
   tier: ScopeTier;
   status: ScopeStatus;
   created_at: string;
@@ -20,6 +23,7 @@ export type OnboardingQueueRow = {
   entity_id: string | null;
   status: ScopeStatus | null;
   tier: ScopeTier | null;
+  org_type: OrgType | null;
   has_entity: boolean;
   has_irs_org: boolean;
   has_returns: boolean;
@@ -68,6 +72,7 @@ export type AdminNonprofitReview = {
   people_parse_quality: "good" | "mixed" | "poor" | "unknown";
   missing_filings: boolean;
   scope: AdminScopeRow | null;
+  scope_id: string | null;
   entity: {
     id: string;
     name: string;

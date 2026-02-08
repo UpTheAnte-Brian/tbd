@@ -940,7 +940,6 @@ async function main() {
           irs.from("organizations").insert(
               {
                 ein,
-                ein_normalized: einNormalized,
                 legal_name: nextLegalName,
                 last_seen_at: new Date().toISOString(),
               },

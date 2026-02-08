@@ -37,21 +37,21 @@ create index if not exists returns_ein_tax_period_end_idx
   on irs.returns (ein, tax_period_end desc);
 
 -- 3) Refresh function (single-EIN)
-create or replace function irs.refresh_latest_return_id(p_ein_normalized text)
+create or replace function irs.refresh_latest_return_id(p_ein text)
 returns void
 language plpgsql
 as $$
 declare
   v_best_return_id uuid;
 begin
-  if p_ein_normalized is null or p_ein_normalized = '' then
+  if p_ein is null or p_ein = '' then
     return;
   end if;
 
   select r.id
     into v_best_return_id
   from irs.returns r
-  where irs.normalize_ein(r.ein) = p_ein_normalized
+  where r.ein = p_ein
   order by
     r.tax_period_end desc nulls last,
     r.filed_on desc nulls last,
@@ -61,7 +61,7 @@ begin
 
   update irs.organizations o
   set latest_return_id = v_best_return_id
-  where o.ein_normalized = p_ein_normalized;
+  where o.ein = p_ein;
 end;
 $$;
 
@@ -71,20 +71,20 @@ returns trigger
 language plpgsql
 as $$
 declare
-  v_ein_norm text;
+  v_ein text;
 begin
   if (tg_op = 'INSERT') then
-    v_ein_norm := irs.normalize_ein(new.ein);
-    perform irs.refresh_latest_return_id(v_ein_norm);
+    v_ein := new.ein;
+    perform irs.refresh_latest_return_id(v_ein);
     return new;
   elsif (tg_op = 'UPDATE') then
     -- refresh for both old and new EIN in case it changed
-    perform irs.refresh_latest_return_id(irs.normalize_ein(old.ein));
-    perform irs.refresh_latest_return_id(irs.normalize_ein(new.ein));
+    perform irs.refresh_latest_return_id(old.ein);
+    perform irs.refresh_latest_return_id(new.ein);
     return new;
   elsif (tg_op = 'DELETE') then
-    v_ein_norm := irs.normalize_ein(old.ein);
-    perform irs.refresh_latest_return_id(v_ein_norm);
+    v_ein := old.ein;
+    perform irs.refresh_latest_return_id(v_ein);
     return old;
   end if;
 
@@ -104,11 +104,11 @@ execute function irs.tg_refresh_latest_return_id();
 -- 5) Backfill latest_return_id for existing data
 with best as (
   select
-    o.ein_normalized as org_ein_normalized,
+    o.ein as org_ein,
     (
       select r.id
       from irs.returns r
-      where irs.normalize_ein(r.ein) = o.ein_normalized
+      where r.ein = o.ein
       order by
         r.tax_period_end desc nulls last,
         r.filed_on desc nulls last,
@@ -117,12 +117,12 @@ with best as (
       limit 1
     ) as best_return_id
   from irs.organizations o
-  where o.ein_normalized is not null
+  where o.ein is not null
 )
 update irs.organizations o
 set latest_return_id = b.best_return_id
 from best b
-where o.ein_normalized = b.org_ein_normalized
+where o.ein = b.org_ein
   and o.latest_return_id is distinct from b.best_return_id;
 
 commit;

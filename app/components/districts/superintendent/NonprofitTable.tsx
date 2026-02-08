@@ -3,6 +3,8 @@ import type {
     SortDirection,
     SortKey,
 } from "@/app/components/districts/superintendent/types";
+import type { OrgType } from "@/app/lib/types/nonprofits";
+import { formatEinDashed } from "@/domain/irs/ein";
 
 const moneyFormatter = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -19,6 +21,17 @@ function formatMoney(value: number | null): string {
 function formatText(value: string | null | undefined): string {
     if (!value) return "--";
     return value;
+}
+
+const ORG_TYPE_LABELS: Record<OrgType, string> = {
+    district_foundation: "District Foundation",
+    up_the_ante: "Up the Ante",
+    external_charity: "External Charity",
+};
+
+function formatOrgType(value: OrgType | null | undefined): string {
+    if (!value) return "--";
+    return ORG_TYPE_LABELS[value] ?? value;
 }
 
 type NonprofitTableProps = {
@@ -108,11 +121,14 @@ export default function NonprofitTable({
             </div>
 
             <div className="overflow-x-auto rounded-lg border border-border-subtle">
-                <table className="min-w-[1000px] w-full text-sm">
+                <table className="min-w-[1100px] w-full text-sm">
                     <thead className="bg-brand-secondary-1 text-brand-primary-1">
                         <tr>
                             <th className="px-3 py-2 text-left font-medium">
                                 Nonprofit Name
+                            </th>
+                            <th className="px-3 py-2 text-left font-medium">
+                                Type
                             </th>
                             <th className="px-3 py-2 text-left font-medium">
                                 EIN
@@ -144,7 +160,7 @@ export default function NonprofitTable({
                         {rows.length === 0 ? (
                             <tr>
                                 <td
-                                    colSpan={9}
+                                    colSpan={10}
                                     className="px-3 py-6 text-center text-sm text-text-on-light"
                                 >
                                     No nonprofits match this filter.
@@ -172,10 +188,22 @@ export default function NonprofitTable({
                                         onClick={() => onRowClick(row)}
                                     >
                                         <td className="px-3 py-2 font-medium text-text-on-light">
-                                            {row.entity_name}
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <span>{row.entity_name}</span>
+                                                {row.entity_id.startsWith(
+                                                    "ein:",
+                                                ) ? (
+                                                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+                                                        EIN-only
+                                                    </span>
+                                                ) : null}
+                                            </div>
                                         </td>
                                         <td className="px-3 py-2 text-text-on-light">
-                                            {formatText(row.ein)}
+                                            {formatOrgType(row.org_type)}
+                                        </td>
+                                        <td className="px-3 py-2 text-text-on-light">
+                                            {formatText(formatEinDashed(row.ein))}
                                         </td>
                                         <td className="px-3 py-2 text-text-on-light">
                                             {row.latest_tax_year ?? "--"}

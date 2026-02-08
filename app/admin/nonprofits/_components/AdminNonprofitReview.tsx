@@ -9,6 +9,7 @@ import type {
   ScopeTier,
 } from "@/app/admin/nonprofits/types";
 import { useRouter } from "next/navigation";
+import { formatEinDashed } from "@/domain/irs/ein";
 
 const TIERS: ScopeTier[] = [
   "registry_only",
@@ -124,9 +125,9 @@ export default function AdminNonprofitReview({ ein }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: data.organization?.legal_name ?? data.scope?.label ?? data.ein,
-          org_type: "external_charity",
+          org_type: data.scope?.org_type ?? "external_charity",
           district_entity_id: data.scope.district_entity_id,
-          scope_id: data.scope?.id ?? null,
+          scope_id: data.scope_id ?? null,
           ein: data.ein,
           website_url: null,
           mission_statement: null,
@@ -142,6 +143,7 @@ export default function AdminNonprofitReview({ ein }: Props) {
             entity_id: string;
             nonprofit_id: string;
             slug?: string;
+            scope_id?: string | null;
           }
         | {
             entity?: {
@@ -149,6 +151,7 @@ export default function AdminNonprofitReview({ ein }: Props) {
               slug?: string;
             } | null;
             scope?: AdminScopeRow | null;
+            scope_id?: string | null;
           };
 
       const payload = (await response.json()) as CreateNonprofitShellResponse;
@@ -157,7 +160,8 @@ export default function AdminNonprofitReview({ ein }: Props) {
           ? payload.entity_id
           : (payload.entity?.id ?? null);
       const scopeId =
-        data.scope?.id ??
+        data.scope_id ??
+        ("scope_id" in payload ? payload.scope_id ?? null : null) ??
         ("scope" in payload ? (payload.scope?.id ?? null) : null);
 
       if (createdEntityId) {
@@ -212,7 +216,7 @@ export default function AdminNonprofitReview({ ein }: Props) {
   const linkedEntityName = data.entity?.name ?? null;
 
   const onboardingQs = new URLSearchParams();
-  if (data.scope?.id) onboardingQs.set("scope_id", data.scope.id);
+  if (data.scope_id) onboardingQs.set("scope_id", data.scope_id);
   onboardingQs.set("ein", data.ein);
   const onboardingHref = linkedEntityId
     ? `/admin/nonprofits/${encodeURIComponent(linkedEntityId)}/onboarding?${onboardingQs.toString()}`
@@ -230,7 +234,7 @@ export default function AdminNonprofitReview({ ein }: Props) {
               {org?.legal_name ?? "Unknown organization"}
             </h1>
             <p className="mt-2 text-sm text-brand-secondary-2">
-              EIN {data.ein}
+              EIN {formatEinDashed(data.ein) ?? data.ein}
             </p>
             <p className="mt-1 text-sm text-brand-secondary-2">
               {[org?.city, org?.state].filter(Boolean).join(", ") ||

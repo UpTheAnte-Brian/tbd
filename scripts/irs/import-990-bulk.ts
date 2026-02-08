@@ -269,7 +269,7 @@ function tryLoadDotenvOnce() {
 type IndexRow = {
     return_id: string | null;
     filing_type: string | null;
-    ein_normalized: string;
+    ein: string;
     tax_period: string | null; // YYYYMM (from index)
     tax_year: string | null; // YYYY (from index)
     taxpayer_name: string | null;
@@ -279,7 +279,7 @@ type IndexRow = {
 };
 
 type ParsedReturn = {
-    ein_normalized: string;
+    ein: string;
     object_id: string;
     tax_year: number | null;
     tax_period_begin_dt: string | null; // ISO date
@@ -1056,7 +1056,7 @@ function summarizeKeptRows(rows: IndexRow[]) {
         console.log("Kept rows (object_id ein return_type tax_period shard):");
         for (const r of rows) {
             console.log(
-                `- ${r.object_id} ${r.ein_normalized} ${
+                `- ${r.object_id} ${r.ein} ${
                     r.return_type || r.filing_type || "?"
                 } ${r.tax_period || "?"} ${r.shard || "?"}`,
             );
@@ -1358,7 +1358,7 @@ function inferIndexRow(params: {
             ? (cols[colIndex.iFilingType] ||
                 null)
             : null,
-        ein_normalized: ein,
+        ein,
         tax_period: colIndex.iTaxPeriod !== -1
             ? (cols[colIndex.iTaxPeriod] || null)
             : null,
@@ -1535,7 +1535,7 @@ async function parseXmlToReturn(
         }
     }
 
-    const einN = ein || fallback.ein_normalized;
+    const einN = ein || fallback.ein;
     if (!einN) {
         throw new Error(`Could not parse EIN from XML: ${xmlPath}`);
     }
@@ -1543,7 +1543,7 @@ async function parseXmlToReturn(
     const sha = sha256File(xmlPath);
 
     return {
-        ein_normalized: einN,
+        ein: einN,
         object_id: fallback.object_id!,
         tax_year: taxYear,
         tax_period_begin_dt: taxPeriodBegin,
@@ -1563,13 +1563,13 @@ async function ensureOrganizationsExist(
     if (!rows.length) return;
 
     // The FK error you hit (returns_ein_fkey) means `irs.returns.ein` must reference an existing row
-    // in `irs.organizations`. In your schema, you also have a UNIQUE constraint on `ein_normalized`.
+    // in `irs.organizations`.
     // TEOS can surface a return before we have an organizations row, so we upsert a minimal org record.
 
     // De-dupe EINs.
     const byEin = new Map<string, ParsedReturn>();
     for (const r of rows) {
-        const ein = r.ein_normalized;
+        const ein = r.ein;
         if (!ein) continue;
         if (!byEin.has(ein)) byEin.set(ein, r);
     }
@@ -1578,12 +1578,10 @@ async function ensureOrganizationsExist(
 
     const payload = Array.from(byEin.entries()).map(([ein, r]) => {
         // IMPORTANT:
-        // - `ein_normalized` is the stable unique key (unique index: organizations_ein_normalized_uidx)
-        // - we still populate `ein` with the same 9-digit string for convenience
+        // - `ein` is the stable unique key (9-digit string)
         // - keep other fields minimal/nullable so we don't fight schema evolution
         return {
-            ein: formatEinDashed(ein),
-            ein_normalized: ein,
+            ein,
             legal_name: r.organization_name ?? null,
             last_seen_at: now,
         };
@@ -1593,23 +1591,25 @@ async function ensureOrganizationsExist(
 
     // We only need org rows to exist so `irs.returns.ein` FK is satisfied.
     // If rows already exist, we should NOT fail ingestion.
-    // Prefer UPSERT on the stable unique key (ein_normalized if present).
+    // Prefer UPSERT on the stable unique key (ein).
 
     // Try the most likely unique key first.
     try {
         const { error } = await supabaseAdmin
             .schema("irs")
             .from("organizations")
-            .upsert(payload, { onConflict: "ein_normalized" });
+            .upsert(payload, { onConflict: "ein" });
 
         if (error) {
-            // If the table doesn't have ein_normalized (or the conflict target is wrong), fall through.
+            // If the conflict target is wrong, fall through.
             throw error;
         }
 
         return;
-    } catch (e: any) {
-        const msg = String(e?.message || e);
+    } catch (e) {
+        const msg = String(
+            e instanceof Error ? e.message : e,
+        );
 
         // If this was simply a primary key duplicate, that means the org row already exists.
         // That's fine for our FK precondition.
@@ -1673,7 +1673,7 @@ async function upsertReturns(supabaseAdmin: any, rows: ParsedReturn[]) {
         return {
             // Core identity
             irs_object_id: r.object_id,
-            ein: formatEinDashed(r.ein_normalized),
+            ein: r.ein,
 
             // Filing basics
             return_type: returnType,
@@ -1975,7 +1975,7 @@ async function processYear(params: {
         }
 
         if (scopedEinSet && scopedEinSet.size) {
-            if (!scopedEinSet.has(row.ein_normalized)) continue;
+            if (!scopedEinSet.has(row.ein)) continue;
         }
 
         totalScopedKept++;
@@ -2019,7 +2019,7 @@ async function processYear(params: {
                 const tp = r.tax_period ? ` tax_period=${r.tax_period}` : "";
                 const rt = r.return_type ? ` return_type=${r.return_type}` : "";
                 console.log(
-                    `    ein=${r.ein_normalized} object_id=${r.object_id}${rt}${tp}`,
+                    `    ein=${r.ein} object_id=${r.object_id}${rt}${tp}`,
                 );
             }
         }
@@ -2291,7 +2291,7 @@ async function processYear(params: {
         }
 
         const parsed = await parseXmlToReturn(xmlPath, {
-            ein_normalized: r.ein_normalized,
+            ein: r.ein,
             object_id: r.object_id,
             tax_year: r.tax_year ? Number(r.tax_year) : null,
             tax_period_begin_dt: null,
@@ -2422,7 +2422,7 @@ async function main() {
         }
 
         const parsed = await parseXmlToReturn(p, {
-            ein_normalized: "000000000",
+            ein: "000000000",
             object_id: path.basename(p).replace(/_public\.xml$/i, "").replace(
                 /\.xml$/i,
                 "",
@@ -2634,7 +2634,7 @@ async function main() {
         }
 
         const parsed = await parseXmlToReturn(xmlOut, {
-            ein_normalized: "000000000",
+            ein: "000000000",
             object_id: String(objectIdArg),
             tax_year: Number.isFinite(yearArg) ? yearArg : null,
             tax_period_begin_dt: null,
@@ -2682,7 +2682,7 @@ async function main() {
         }
 
         const parsed = await parseXmlToReturn(xmlOut, {
-            ein_normalized: "000000000",
+            ein: "000000000",
             object_id: String(objectIdArg),
             tax_year: Number.isFinite(yearArg) ? yearArg : null,
             tax_period_begin_dt: null,

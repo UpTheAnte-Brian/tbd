@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/database.types";
+import { normalizeEin as normalizeEinDigits } from "@/domain/irs/ein";
 
 import type {
     FinancialTrendRow,
@@ -57,6 +58,12 @@ type IrsFinancialRow = {
     net_assets_end: number | null;
 };
 
+type IrsLatestFinancialRow = IrsFinancialRow & {
+    ein: string;
+    return_type: string;
+    tax_year: number | null;
+};
+
 type IrsNarrativeRow = {
     id: string;
     return_id: string;
@@ -92,11 +99,7 @@ type IrsSchema = {
             Relationships: [];
         };
         latest_financials: {
-            Row: IrsFinancialRow & {
-                ein: string;
-                return_type: string;
-                tax_year: number;
-            };
+            Row: IrsLatestFinancialRow;
             Relationships: [];
         };
     };
@@ -108,7 +111,11 @@ type IrsSchema = {
 type IrsDatabase = Database & { irs: IrsSchema };
 
 type SuperintendentScopeReadyRow =
-    IrsDatabase["public"]["Views"]["superintendent_scope_nonprofits_ready"]["Row"];
+    IrsDatabase["public"]["Views"]["superintendent_scope_nonprofits_ready"][
+        "Row"
+    ];
+type SuperintendentScopeRow =
+    IrsDatabase["public"]["Tables"]["superintendent_scope_nonprofits"]["Row"];
 
 const JUNK_TEXT_HINTS = [
     "internal revenue",
@@ -157,6 +164,12 @@ function normalizeEin(value: string | null | undefined): string | null {
     if (!value) return null;
     const trimmed = value.trim();
     return trimmed.length > 0 ? trimmed : null;
+}
+
+function normalizeEinStrict(value: string | null | undefined): string | null {
+    if (!value) return null;
+    const normalized = normalizeEinDigits(value);
+    return normalized.length === 9 ? normalized : null;
 }
 
 function looksOcrGarbage(text: string): boolean {
@@ -214,8 +227,7 @@ function buildNonprofitRow(params: {
         latestNarratives,
         latestPeople,
     } = params;
-    const displayName =
-        scopeRow.label ??
+    const displayName = scopeRow.label ??
         organization?.legal_name ??
         scopeRow.ein ??
         "Unknown nonprofit";
@@ -224,13 +236,21 @@ function buildNonprofitRow(params: {
     const peopleQuality = latestReturn
         ? assessPeopleParseQuality(latestPeople)
         : "unknown";
+    const resolvedEntityId =
+        scopeRow.entity_id ??
+        scopeRow.scope_id ??
+        (ein ? `ein:${ein}` : "ein:unknown");
 
     return {
-        entity_id: String(scopeRow.entity_id ?? scopeRow.id),
+        // `superintendent_scope_nonprofits_ready` may expose different identifiers depending on
+        // whether the row is EIN-first or already activated. Prefer an explicit entity_id if present,
+        // then fall back to scope_id, and finally an EIN-based synthetic id.
+        entity_id: String(resolvedEntityId),
         entity_name: displayName,
         ein,
         city: organization?.city ?? null,
         state: organization?.state ?? null,
+        org_type: scopeRow.org_type ?? null,
         latest_tax_year: latestTaxYear,
         total_revenue: toNumber(latestFinancials?.total_revenue),
         total_expenses: toNumber(latestFinancials?.total_expenses),
@@ -312,6 +332,237 @@ function mapFinancials(
     };
 }
 
+async function getSuperintendentDashboardByScopeEin(
+    districtEntityId: string,
+): Promise<SuperintendentDashboardResponse> {
+    const supabase = getServiceRoleSupabaseClient();
+    const irs = supabase.schema("irs");
+
+    const { data: scopeRaw, error: scopeError } = await supabase
+        .from("superintendent_scope_nonprofits")
+        .select("ein, label, tier, status, org_type, entity_id")
+        .eq("district_entity_id", districtEntityId)
+        .in("status", ["candidate", "active"]);
+
+    if (scopeError) {
+        throw new Error(scopeError.message);
+    }
+
+    const scopeRows = (scopeRaw as SuperintendentScopeRow[] | null) ?? null;
+    const scoped = scopeRows ?? [];
+    const scopedEins = scoped
+        .map((row) => normalizeEinStrict(row.ein))
+        .filter((ein): ein is string => Boolean(ein));
+
+    const uniqueEins = Array.from(new Set(scopedEins));
+
+    if (uniqueEins.length === 0) {
+        return { nonprofits: [], detailsByEntityId: {} };
+    }
+
+    const organizationsByEin = new Map<string, IrsOrganizationRow>();
+    const latestReturnByEin = new Map<string, IrsReturnRow>();
+    const latestFinancialsByEin = new Map<string, IrsLatestFinancialRow>();
+    const narrativesByReturnId = new Map<string, IrsNarrativeRow[]>();
+    const peopleByReturnId = new Map<string, IrsPersonRow[]>();
+
+    const { data: organizations, error: orgError } = await irs
+        .from("organizations")
+        .select(
+            "ein, legal_name, city, state, website, ruling_year, subsection_code, foundation_code, deductibility_code",
+        )
+        .in("ein", uniqueEins);
+
+    if (orgError) {
+        throw new Error(orgError.message);
+    }
+
+    (organizations ?? []).forEach((row) => {
+        const key = normalizeEinStrict(row.ein);
+        if (!key) return;
+        organizationsByEin.set(key, row);
+    });
+
+    const { data: latestReturns, error: returnsError } = await irs
+        .from("latest_returns")
+        .select(
+            "id, ein, return_type, tax_year, tax_period_start, tax_period_end, filed_on, is_amended, is_terminated, principal_officer_name",
+        )
+        .in("ein", uniqueEins);
+
+    if (returnsError) {
+        throw new Error(returnsError.message);
+    }
+
+    (latestReturns ?? []).forEach((row) => {
+        const key = normalizeEinStrict(row.ein);
+        if (!key) return;
+        const current = latestReturnByEin.get(key);
+        const rowYear = row.tax_year ?? -1;
+        const currentYear = current?.tax_year ?? -1;
+        if (!current || rowYear > currentYear) {
+            latestReturnByEin.set(key, row);
+        }
+    });
+
+    const latestReturnIds = Array.from(
+        new Set(
+            Array.from(latestReturnByEin.values())
+                .map((row) => row.id)
+                .filter((id): id is string => Boolean(id)),
+        ),
+    );
+
+    if (latestReturnIds.length > 0) {
+        const { data: narratives, error: narrativesError } = await irs
+            .from("return_narratives")
+            .select("id, return_id, section, label, raw_text, ai_summary")
+            .in("return_id", latestReturnIds);
+
+        if (narrativesError) {
+            throw new Error(narrativesError.message);
+        }
+
+        (narratives ?? []).forEach((row) => {
+            const list = narrativesByReturnId.get(row.return_id) ?? [];
+            list.push(row);
+            narrativesByReturnId.set(row.return_id, list);
+        });
+
+        const { data: people, error: peopleError } = await irs
+            .from("return_people")
+            .select(
+                "id, return_id, role, name, title, average_hours_per_week, reportable_compensation, other_compensation, is_current",
+            )
+            .in("return_id", latestReturnIds);
+
+        if (peopleError) {
+            throw new Error(peopleError.message);
+        }
+
+        (people ?? []).forEach((row) => {
+            const list = peopleByReturnId.get(row.return_id) ?? [];
+            list.push(row);
+            peopleByReturnId.set(row.return_id, list);
+        });
+    }
+
+    const { data: latestFinancials, error: financialsError } = await irs
+        .from("latest_financials")
+        .select(
+            "ein, return_id, return_type, tax_year, total_revenue, total_expenses, total_assets_end, total_liabilities_end, net_assets_end",
+        )
+        .in("ein", uniqueEins);
+
+    if (financialsError) {
+        throw new Error(financialsError.message);
+    }
+
+    (latestFinancials ?? []).forEach((row) => {
+        const key = normalizeEinStrict(row.ein);
+        if (!key) return;
+        const current = latestFinancialsByEin.get(key);
+        const rowYear = row.tax_year ?? -1;
+        const currentYear = current?.tax_year ?? -1;
+        if (!current || rowYear > currentYear) {
+            latestFinancialsByEin.set(key, row);
+        }
+    });
+
+    const detailsByEntityId: Record<string, NonprofitDetail> = {};
+    const nonprofits: NonprofitRow[] = scoped.map((scopeRow) => {
+        const ein = normalizeEinStrict(scopeRow.ein);
+        if (!ein) {
+            const entityId = "ein:unknown";
+            detailsByEntityId[entityId] = {
+                organization: null,
+                returns: [],
+                narratives: [],
+                people: [],
+                financials_by_year: [],
+            };
+            return {
+                entity_id: "ein:unknown",
+                entity_name: scopeRow.label ?? "Unknown nonprofit",
+                ein: null,
+                city: null,
+                state: null,
+                org_type: scopeRow.org_type ?? null,
+                latest_tax_year: null,
+                total_revenue: null,
+                total_expenses: null,
+                total_assets_end: null,
+                total_liabilities_end: null,
+                net_assets_end: null,
+                return_id: null,
+                has_narrative: false,
+                people_count: null,
+                people_parse_quality: "unknown",
+            };
+        }
+
+        const entityId = `ein:${ein}`;
+        const organization = organizationsByEin.get(ein) ?? null;
+        const latestReturn = latestReturnByEin.get(ein) ?? null;
+        const latestFinancials = latestFinancialsByEin.get(ein) ?? null;
+        const latestReturnId = latestReturn?.id ?? null;
+        const narratives = latestReturnId
+            ? narrativesByReturnId.get(latestReturnId) ?? []
+            : [];
+        const people = latestReturnId
+            ? peopleByReturnId.get(latestReturnId) ?? []
+            : [];
+        const mappedReturns = latestReturn ? [mapReturn(latestReturn)] : [];
+        const mappedNarratives = narratives.map(mapNarrative);
+        const mappedPeople = people.map(mapPerson);
+        const latestFinancialRow = latestFinancials
+            ? mapFinancials(
+                latestFinancials,
+                latestReturn?.tax_year ?? latestFinancials.tax_year ?? null,
+            )
+            : null;
+
+        detailsByEntityId[entityId] = {
+            organization: organization ? mapOrganization(organization) : null,
+            returns: mappedReturns,
+            narratives: mappedNarratives,
+            people: mappedPeople,
+            financials_by_year: latestFinancialRow ? [latestFinancialRow] : [],
+        };
+
+        return {
+            entity_id: entityId,
+            entity_name: scopeRow.label ??
+                organization?.legal_name ??
+                `EIN ${ein}`,
+            ein,
+            city: organization?.city ?? null,
+            state: organization?.state ?? null,
+            org_type: scopeRow.org_type ?? null,
+            latest_tax_year: latestReturn?.tax_year ??
+                latestFinancials?.tax_year ??
+                null,
+            total_revenue: toNumber(latestFinancials?.total_revenue ?? null),
+            total_expenses: toNumber(latestFinancials?.total_expenses ?? null),
+            total_assets_end: toNumber(
+                latestFinancials?.total_assets_end ?? null,
+            ),
+            total_liabilities_end: toNumber(
+                latestFinancials?.total_liabilities_end ?? null,
+            ),
+            net_assets_end: toNumber(latestFinancials?.net_assets_end ?? null),
+            return_id: latestReturn?.id ??
+                latestFinancials?.return_id ??
+                null,
+            has_narrative: narratives.length > 0,
+            people_count: people.length || null,
+            people_parse_quality: assessPeopleParseQuality(people),
+        };
+    });
+
+    return { nonprofits, detailsByEntityId };
+}
+
 export async function getSuperintendentDashboardDTO(
     districtEntityId?: string | null,
 ): Promise<SuperintendentDashboardResponse> {
@@ -325,9 +576,8 @@ export async function getSuperintendentDashboardDTO(
     let scopeQuery = supabase
         .from("superintendent_scope_nonprofits_ready")
         .select(
-            "id, district_entity_id, entity_id, ein, label, tier, status, created_at, updated_at, has_entity, has_irs_link, has_returns, is_ready",
-        )
-        .eq("is_ready", true);
+            "scope_id, district_entity_id, entity_id, ein, label, org_type, tier, status, has_irs_org, has_returns, latest_tax_year, total_revenue, total_net_assets, tax_period_end, filed_on",
+        );
 
     if (districtEntityId) {
         scopeQuery = scopeQuery.eq("district_entity_id", districtEntityId);
@@ -482,7 +732,11 @@ export async function getSuperintendentDashboardDTO(
             })
             .filter((row): row is FinancialTrendRow => Boolean(row));
 
-        const entityId = String(scopeRow.entity_id ?? scopeRow.id);
+        const entityId = String(
+            scopeRow.entity_id ??
+                scopeRow.scope_id ??
+                (ein ? `ein:${ein}` : "ein:unknown"),
+        );
 
         detailsByEntityId[entityId] = {
             organization: organization ? mapOrganization(organization) : null,
@@ -502,6 +756,10 @@ export async function getSuperintendentDashboardDTO(
             latestPeople,
         });
     });
+
+    if (districtEntityId && nonprofits.length === 0) {
+        return await getSuperintendentDashboardByScopeEin(districtEntityId);
+    }
 
     return { nonprofits, detailsByEntityId };
 }

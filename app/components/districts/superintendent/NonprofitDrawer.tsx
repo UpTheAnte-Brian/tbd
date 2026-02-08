@@ -6,6 +6,8 @@ import type {
     NonprofitDetail,
     NonprofitRow,
 } from "@/app/components/districts/superintendent/types";
+import { formatEinDashed } from "@/domain/irs/ein";
+import type { OrgType } from "@/app/lib/types/nonprofits";
 
 type DrawerProps = {
     open: boolean;
@@ -34,6 +36,17 @@ function formatRole(role: string): string {
     return role
         .replace(/_/g, " ")
         .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+const ORG_TYPE_LABELS: Record<OrgType, string> = {
+    district_foundation: "District Foundation",
+    up_the_ante: "Up the Ante",
+    external_charity: "External Charity",
+};
+
+function formatOrgType(value: OrgType | null | undefined): string {
+    if (!value) return "--";
+    return ORG_TYPE_LABELS[value] ?? value;
 }
 
 export default function NonprofitDrawer({
@@ -146,7 +159,15 @@ export default function NonprofitDrawer({
                                         EIN
                                     </div>
                                     <div className="mt-2 text-sm font-semibold text-text-on-light">
-                                        {row.ein ?? "--"}
+                                        {formatEinDashed(row.ein) ?? "--"}
+                                    </div>
+                                </div>
+                                <div className="rounded-md border border-border-subtle p-3">
+                                    <div className="text-xs uppercase tracking-wide text-text-on-light">
+                                        Type
+                                    </div>
+                                    <div className="mt-2 text-sm font-semibold text-text-on-light">
+                                        {formatOrgType(row.org_type)}
                                     </div>
                                 </div>
                                 <div className="rounded-md border border-border-subtle p-3">

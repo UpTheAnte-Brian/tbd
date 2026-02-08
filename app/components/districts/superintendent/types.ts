@@ -1,3 +1,5 @@
+import type { OrgType } from "@/app/lib/types/nonprofits";
+
 export type PeopleParseQuality = "good" | "mixed" | "poor" | "unknown";
 
 export type NonprofitRow = {
@@ -6,6 +8,7 @@ export type NonprofitRow = {
     ein: string | null;
     city: string | null;
     state: string | null;
+    org_type: OrgType | null;
     latest_tax_year: number | null;
     total_revenue: number | null;
     total_expenses: number | null;
@@ -88,6 +91,8 @@ export type ScopeSummary = {
     nonprofits_in_scope: number;
     nonprofits_active: number;
     nonprofits_candidate: number;
+    total_revenue: number;
+    total_net_assets: number;
 };
 
 export type SortKey = "revenue" | "assets" | "net_assets";

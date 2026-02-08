@@ -3,12 +3,29 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { OnboardingQueueRow } from "@/app/admin/nonprofits/types";
+import type { OrgType } from "@/app/lib/types/nonprofits";
+
+const ORG_TYPE_LABELS: Record<OrgType, string> = {
+  district_foundation: "District Foundation",
+  up_the_ante: "Up the Ante",
+  external_charity: "External Charity",
+};
+
+const ORG_TYPE_OPTIONS: OrgType[] = [
+  "district_foundation",
+  "up_the_ante",
+  "external_charity",
+];
 
 export default function AdminNonprofitsClient() {
   const [rows, setRows] = useState<OnboardingQueueRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activatingEin, setActivatingEin] = useState<string | null>(null);
+  const [orgTypeEdits, setOrgTypeEdits] = useState<Record<string, OrgType>>(
+    {},
+  );
+  const [savingOrgType, setSavingOrgType] = useState<Set<string>>(new Set());
 
   const fetchQueue = async () => {
     setLoading(true);
@@ -24,6 +41,15 @@ export default function AdminNonprofitsClient() {
       }
       const payload = (await response.json()) as OnboardingQueueRow[];
       setRows(payload ?? []);
+      const nextOrgTypes: Record<string, OrgType> = {};
+      (payload ?? []).forEach((row) => {
+        if (!row.district_entity_id || !row.ein) return;
+        const key = `${row.district_entity_id}:${row.ein}`;
+        if (row.org_type) {
+          nextOrgTypes[key] = row.org_type;
+        }
+      });
+      setOrgTypeEdits(nextOrgTypes);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to load onboarding queue",
@@ -36,6 +62,54 @@ export default function AdminNonprofitsClient() {
   useEffect(() => {
     fetchQueue();
   }, []);
+
+  const updateOrgType = async (row: OnboardingQueueRow, orgType: OrgType) => {
+    if (!row.ein || !row.district_entity_id) return;
+    const key = `${row.district_entity_id}:${row.ein}`;
+    const previous = orgTypeEdits[key] ??
+      row.org_type ??
+      "external_charity";
+    setOrgTypeEdits((prev) => ({ ...prev, [key]: orgType }));
+    setSavingOrgType((prev) => new Set(prev).add(key));
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin/nonprofits/scope", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          district_entity_id: row.district_entity_id,
+          ein: row.ein,
+          org_type: orgType,
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body?.error ?? "Failed to update org type");
+      }
+
+      setRows((prev) =>
+        prev.map((item) =>
+          item.district_entity_id === row.district_entity_id &&
+              item.ein === row.ein
+            ? { ...item, org_type: orgType }
+            : item,
+        ),
+      );
+    } catch (err) {
+      setOrgTypeEdits((prev) => ({ ...prev, [key]: previous }));
+      setError(
+        err instanceof Error ? err.message : "Failed to update org type",
+      );
+    } finally {
+      setSavingOrgType((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }
+  };
 
   const handleActivate = async (row: OnboardingQueueRow) => {
     if (!row.ein || !row.district_entity_id) return;
@@ -97,6 +171,7 @@ export default function AdminNonprofitsClient() {
                 <th className="px-4 py-3">Label</th>
                 <th className="px-4 py-3">EIN</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Type</th>
                 <th className="px-4 py-3">Signals</th>
                 <th className="px-4 py-3">Next step</th>
               </tr>
@@ -109,6 +184,18 @@ export default function AdminNonprofitsClient() {
                   ? `/admin/nonprofits/${encodeURIComponent(ein)}`
                   : "#";
                 const isActivating = activatingEin === row.ein;
+                const orgTypeKey =
+                  row.district_entity_id && row.ein
+                    ? `${row.district_entity_id}:${row.ein}`
+                    : null;
+                const orgTypeValue = orgTypeKey
+                  ? orgTypeEdits[orgTypeKey] ??
+                    row.org_type ??
+                    "external_charity"
+                  : row.org_type ?? "external_charity";
+                const isOrgTypeSaving = orgTypeKey
+                  ? savingOrgType.has(orgTypeKey)
+                  : false;
 
                 const nextAction = !row.has_irs_org
                   ? "Investigate EIN"
@@ -130,6 +217,43 @@ export default function AdminNonprofitsClient() {
                     </td>
                     <td className="px-4 py-3 text-xs text-text-on-light">
                       {row.status ?? "--"}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-text-on-light">
+                      <div className="flex flex-col gap-2">
+                        <select
+                          value={orgTypeValue}
+                          onChange={(event) => {
+                            const next = event.target.value as OrgType;
+                            void updateOrgType(row, next);
+                          }}
+                          disabled={!orgTypeKey || isOrgTypeSaving}
+                          className="w-full rounded-md border border-border-subtle bg-surface-card px-2 py-1 text-xs text-text-on-light"
+                        >
+                          {ORG_TYPE_OPTIONS.map((option) => (
+                            <option key={option} value={option}>
+                              {ORG_TYPE_LABELS[option]}
+                            </option>
+                          ))}
+                        </select>
+                        {row.org_type !== "district_foundation" &&
+                        orgTypeKey ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateOrgType(row, "district_foundation")
+                            }
+                            disabled={isOrgTypeSaving}
+                            className="rounded-md border border-border-subtle px-2 py-1 text-[11px] font-semibold text-text-on-light transition hover:border-brand-primary hover:text-brand-primary disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Set as District Foundation
+                          </button>
+                        ) : null}
+                        {isOrgTypeSaving ? (
+                          <span className="text-[11px] text-brand-secondary-0">
+                            Saving…
+                          </span>
+                        ) : null}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-xs text-text-on-light">
                       <div className="flex flex-wrap items-center gap-2">
@@ -175,7 +299,7 @@ export default function AdminNonprofitsClient() {
               {!loading && rows.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-4 py-8 text-center text-sm text-brand-secondary-0"
                   >
                     No scoped nonprofits in the queue.
