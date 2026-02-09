@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import type { TabKey } from "@/app/components/entities/hooks/useEntityTabParam";
+import type { EntityTabId } from "@/app/components/entities/hooks/useEntityTabParam";
 import type { EntityType } from "@/domain/entities/types";
 import EntitySidebar from "@/app/components/entities/shared/EntitySidebar";
 
@@ -9,11 +9,11 @@ type Props = {
   entityId: string;
   entityName: string;
   entityType: EntityType | null;
-  activeTab: TabKey;
-  onTabChange: (tab: TabKey) => void;
+  activeTab: EntityTabId;
+  onTabChange: (tab: EntityTabId) => void;
   mobileHeader?: ReactNode;
   tabs?: ReactNode;
-  allowedTabs?: TabKey[];
+  allowedTabs?: EntityTabId[];
   children: ReactNode;
 };
 

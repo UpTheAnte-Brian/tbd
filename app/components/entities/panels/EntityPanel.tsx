@@ -6,7 +6,7 @@ import EntityPanelTabs from "@/app/components/entities/panels/EntityPanelTabs";
 import EntityPanelContent from "@/app/components/entities/panels/EntityPanelContent";
 import EntityPageLayout from "@/app/components/entities/EntityPageLayout";
 import { EntityLogo } from "@/app/components/branding/EntityLogo";
-import { useUser } from "@/app/hooks/useUser";
+import EntityHeader from "@/app/components/entities/shared/EntityHeader";
 import {
   getEntityTabKeys,
   useEntityTabParam,
@@ -19,6 +19,8 @@ type EntityDetails = {
   slug: string | null;
   name: string | null;
   active: boolean | null;
+  ein?: string | null;
+  has_irs_link?: boolean | null;
 };
 
 type Props = {
@@ -27,7 +29,6 @@ type Props = {
 };
 
 export default function EntityPanel({ entityId, entityType }: Props) {
-  const { user } = useUser();
   const [entity, setEntity] = useState<EntityDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,12 +76,18 @@ export default function EntityPanel({ entityId, entityType }: Props) {
     return null;
   }, [entityType, entity?.entity_type]);
 
+  const showIrsTab = useMemo(
+    () => Boolean(entity?.has_irs_link),
+    [entity?.has_irs_link],
+  );
+
   const allowedTabs = useMemo(
     () =>
-      getEntityTabKeys(resolvedType, {
-        includeSuperintendent: Boolean(user),
+      getEntityTabKeys({
+        includeIrs: showIrsTab,
+        includeSuperintendent: resolvedType === "district",
       }),
-    [resolvedType, user],
+    [resolvedType, showIrsTab],
   );
   const { activeTab, setActiveTab } = useEntityTabParam(allowedTabs);
 
@@ -120,9 +127,9 @@ export default function EntityPanel({ entityId, entityType }: Props) {
     <EntityPanelTabs
       activeTab={activeTab}
       onTabChange={setActiveTab}
-      entityType={resolvedType}
       tabsVariant="select"
       allowedTabs={allowedTabs}
+      entityType={resolvedType}
     />
   );
 
@@ -138,21 +145,22 @@ export default function EntityPanel({ entityId, entityType }: Props) {
         tabs={mobileTabs}
         allowedTabs={allowedTabs}
       >
-        {/* <div className="space-y-6"> */}
-        {/* <EntityHeader
+        <div className="space-y-6">
+          <EntityHeader
             entityId={entity.id}
             entityName={entity.name ?? "Entity"}
             entityType={resolvedType}
             slug={entity.slug ?? null}
             active={entity.active ?? null}
-          /> */}
-        <EntityPanelContent
-          entityId={entity.id}
-          entityType={resolvedType}
-          entityName={entity.name ?? "Entity"}
-          activeTab={activeTab}
-        />
-        {/* </div> */}
+            showSuperintendentButton={resolvedType === "district"}
+          />
+          <EntityPanelContent
+            entityId={entity.id}
+            entityType={resolvedType}
+            entityName={entity.name ?? "Entity"}
+            activeTab={activeTab}
+          />
+        </div>
       </EntityPageLayout>
     </div>
   );

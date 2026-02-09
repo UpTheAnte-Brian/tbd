@@ -6,6 +6,7 @@
     "dev": "dotenv -e .env.local -- npm run tailwind:watch & next dev --turbopack",
     "start": "next start",
     "lint": "eslint .",
+    "gen:structure": "tsx scripts/generate-project-structure.ts",
     "env:check": "tsx scripts/check-env.ts",
     "assert:test": "dotenv -e .env.test.local -- tsx scripts/assert-test-env.ts",
     "tailwind": "npx tailwindcss -i ./app/lib/styles/global.css -o ./app/lib/styles/style.css",

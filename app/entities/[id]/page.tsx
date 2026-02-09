@@ -1,17 +1,17 @@
-import EntityPanel from "@/app/components/entities/panels/EntityPanel";
-import EntityThemeProvider from "@/app/providers/EntityThemeProvider";
+import EntityPageShell from "@/app/components/entities/EntityPageShell";
 
 interface EntityPageProps {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ tab?: string }>;
 }
 
-export default async function EntityPage({ params }: EntityPageProps) {
+export default async function EntityPage({
+  params,
+  searchParams,
+}: EntityPageProps) {
   const { id } = await params;
+  const resolvedSearchParams = (await searchParams) ?? {};
   return (
-    <EntityThemeProvider entityId={id}>
-      <main className="min-h-screen bg-brand-secondary-1 p-4 text-brand-secondary-0">
-        <EntityPanel entityId={id} />
-      </main>
-    </EntityThemeProvider>
+    <EntityPageShell entityId={id} tab={resolvedSearchParams.tab ?? null} />
   );
 }

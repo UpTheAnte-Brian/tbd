@@ -17,6 +17,7 @@ import Link from "next/link";
 import type { ICellRendererParams } from "ag-grid-community";
 import LoadingSpinner from "@/app/components/loading-spinner";
 import { useMediaQuery } from "react-responsive";
+import { entityPath } from "@/app/lib/routes";
 
 type FullGridApi<T> = GridApi<T> & {
   getModel(): IClientSideRowModel;
@@ -98,12 +99,12 @@ export default function DistrictsPage() {
         flex: 1.5,
         valueGetter: (params) => params.data?.prefname,
         cellRenderer: (params: ICellRendererParams<DistrictDetails>) => {
-          const id = params.data?.id;
+          const id = params.data?.entity_id ?? params.data?.id;
           const name = params.data?.prefname ?? params.value;
           if (!id) return name;
           return (
             <Link
-              href={`/districts/${id}`}
+              href={entityPath(id)}
               style={{ color: "#4dabf7", textDecoration: "none" }}
             >
               {name}

@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { entityPath } from "@/app/lib/routes";
 import type { EntityType } from "@/domain/entities/types";
 
 type Props = {
@@ -8,6 +10,7 @@ type Props = {
   entityType: EntityType | null;
   slug?: string | null;
   active?: boolean | null;
+  showSuperintendentButton?: boolean;
 };
 
 export default function EntityHeader({
@@ -16,6 +19,7 @@ export default function EntityHeader({
   entityType,
   slug,
   active,
+  showSuperintendentButton = false,
 }: Props) {
   return (
     <div className="rounded border border-brand-secondary-1 bg-brand-secondary-2 p-4">
@@ -33,6 +37,14 @@ export default function EntityHeader({
             inactive
           </span>
         )}
+        {showSuperintendentButton ? (
+          <Link
+            href={entityPath(entityId, "superintendent")}
+            className="rounded bg-brand-primary-0 px-3 py-1 text-xs font-semibold text-brand-secondary-2 transition hover:bg-brand-primary-2"
+          >
+            District Dashboard
+          </Link>
+        ) : null}
       </div>
       <div className="mt-2 text-xs text-brand-secondary-0 opacity-70">
         <span>ID: {entityId}</span>

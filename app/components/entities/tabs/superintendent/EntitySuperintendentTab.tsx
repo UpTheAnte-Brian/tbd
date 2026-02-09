@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import SuperintendentDashboard from "@/app/components/districts/superintendent/SuperintendentDashboard";
-import ScopedNonprofitsTable from "@/app/districts/[id]/_components/ScopedNonprofitsTable";
 import type {
   ScopeSummary,
   SuperintendentDashboardResponse,
 } from "@/app/components/districts/superintendent/types";
-import LeadershipSection from "@/app/components/districts/LeadershipSection";
+import { useUser } from "@/app/hooks/useUser";
+import { isEntityAdmin } from "@/app/lib/auth/entityRoles";
 import type { EntityType } from "@/domain/entities/types";
 
 type Props = {
@@ -24,12 +25,18 @@ export default function EntitySuperintendentTab({
   entityId,
   entityType,
 }: Props) {
+  const { user } = useUser();
   const [data, setData] =
     useState<SuperintendentDashboardResponse>(emptyDashboard);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scopeSummary, setScopeSummary] = useState<ScopeSummary | null>(null);
   const [scopeLoading, setScopeLoading] = useState(false);
+  const isAdmin = useMemo(() => {
+    if (!user) return false;
+    if (user.global_role === "admin") return true;
+    return isEntityAdmin(user.entity_users ?? [], entityType, entityId);
+  }, [entityId, entityType, user]);
 
   useEffect(() => {
     if (entityType !== "district") return;
@@ -145,8 +152,6 @@ export default function EntitySuperintendentTab({
 
   return (
     <div className="space-y-6">
-      <LeadershipSection entityId={entityId} />
-
       {loading ? (
         <div className="rounded border border-dashed border-brand-secondary-1 p-4 text-sm text-brand-secondary-0 opacity-70">
           Loading superintendent dashboard…
@@ -161,7 +166,33 @@ export default function EntitySuperintendentTab({
         />
       )}
 
-      <ScopedNonprofitsTable districtEntityId={entityId} />
+      {isAdmin ? (
+        <section className="rounded border border-brand-secondary-1 bg-brand-secondary-2 p-4">
+          <div className="text-base font-semibold text-brand-secondary-0">
+            Onboarding / Admin tools
+          </div>
+          <div className="mt-1 text-sm text-brand-secondary-0/80">
+            Jump into nonprofit onboarding and scope management for this
+            district.
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-sm text-brand-secondary-0 transition hover:bg-brand-secondary-1"
+              href="/admin/nonprofits"
+            >
+              Onboarding queue
+            </Link>
+            <Link
+              className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-sm text-brand-secondary-0 transition hover:bg-brand-secondary-1"
+              href={`/admin/nonprofits/new?district_entity_id=${encodeURIComponent(
+                entityId,
+              )}`}
+            >
+              Create nonprofit
+            </Link>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

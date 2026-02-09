@@ -19,6 +19,8 @@ type EntityRecord = {
   slug: string | null;
   name: string | null;
   active: boolean | null;
+  ein: string | null;
+  has_irs_link: boolean;
 };
 
 const PROFILE_FIELDS =
@@ -99,12 +101,36 @@ export async function getEntityById(
 
   if (!data) return null;
 
+  let ein: string | null = null;
+  let hasIrsLink = false;
+
+  const { data: irsLinks, error: irsLinkErr } = await supabase
+    .schema("irs")
+    .from("entity_links")
+    .select("ein")
+    .eq("entity_id", entityId);
+
+  if (irsLinkErr) {
+    throw new Error(`Failed to fetch IRS links: ${irsLinkErr.message}`);
+  }
+
+  const firstEin = (irsLinks ?? [])
+    .map((row) => row?.ein)
+    .find((value) => typeof value === "string" && value.length > 0);
+
+  if (firstEin) {
+    hasIrsLink = true;
+    ein = firstEin;
+  }
+
   return {
     id: String(data.id),
     entity_type: (data.entity_type as string | null) ?? null,
     slug: (data.slug as string | null) ?? null,
     name: (data.name as string | null) ?? null,
     active: (data.active as boolean | null) ?? null,
+    ein,
+    has_irs_link: hasIrsLink,
   };
 }
 

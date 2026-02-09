@@ -3,62 +3,93 @@
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { EntityType } from "@/domain/entities/types";
-
-export type TabKey =
+export type EntityTabId =
   | "overview"
   | "branding"
-  | "users"
+  | "contacts"
   | "map"
   | "governance"
+  | "users"
+  | "irs"
   | "superintendent";
 
-const BASE_TABS: TabKey[] = ["overview", "branding", "users", "map"];
+export const ENTITY_TAB_LABELS: Record<EntityTabId, string> = {
+  overview: "Overview",
+  map: "Map",
+  contacts: "Contacts",
+  branding: "Branding",
+  governance: "Governance",
+  users: "Users",
+  irs: "IRS",
+  superintendent: "Superintendent",
+};
 
-export function getEntityTabKeys(
-  entityType?: EntityType | null,
-  options?: { includeSuperintendent?: boolean },
-): TabKey[] {
-  const includeSuperintendent = options?.includeSuperintendent ?? true;
-  if (entityType === "nonprofit") {
-    return [
-      ...BASE_TABS.slice(0, 3),
-      "governance" as TabKey,
-      ...BASE_TABS.slice(3),
-    ];
-  }
-  if (entityType === "district") {
-    return includeSuperintendent
-      ? ["overview", "superintendent", "branding", "users", "map"]
-      : ["overview", "branding", "users", "map"];
-  }
-  return BASE_TABS;
+const BASE_TABS: EntityTabId[] = [
+  "overview",
+  "map",
+  "contacts",
+  "branding",
+  "governance",
+  "users",
+];
+
+export function getEntityTabKeys(options?: {
+  includeIrs?: boolean;
+  includeSuperintendent?: boolean;
+}): EntityTabId[] {
+  const tabs = [...BASE_TABS];
+  if (options?.includeIrs) tabs.push("irs");
+  if (options?.includeSuperintendent) tabs.push("superintendent");
+  return tabs;
 }
 
-function coerceTabKey(value: string | null): TabKey {
+const VALID_TABS = new Set<EntityTabId>([
+  "overview",
+  "branding",
+  "contacts",
+  "map",
+  "governance",
+  "users",
+  "irs",
+  "superintendent",
+]);
+
+function coerceTabKey(value: string | null): EntityTabId {
   const lower = (value ?? "overview").toLowerCase();
-  if (lower === "branding") return "branding";
-  if (lower === "users") return "users";
-  if (lower === "map") return "map";
-  if (lower === "governance") return "governance";
-  if (lower === "superintendent") return "superintendent";
+  if (VALID_TABS.has(lower as EntityTabId)) {
+    return lower as EntityTabId;
+  }
   return "overview";
 }
 
-export function useEntityTabParam(allowedTabs?: TabKey[]) {
+export function getEntityTabLabel(
+  tab: EntityTabId,
+  entityType?: EntityType | null,
+): string {
+  if (tab === "governance" && entityType === "district") {
+    return "School Board";
+  }
+  if (tab === "superintendent" && entityType === "district") {
+    return "District Dashboard";
+  }
+  return ENTITY_TAB_LABELS[tab];
+}
+
+export function useEntityTabParam(allowedTabs?: EntityTabId[]) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const activeTab = useMemo<TabKey>(() => {
+  const activeTab = useMemo<EntityTabId>(() => {
     const candidate = coerceTabKey(searchParams.get("tab"));
     if (allowedTabs && !allowedTabs.includes(candidate)) {
-      return allowedTabs[0] ?? "overview";
+      return "overview";
     }
     return candidate;
   }, [allowedTabs, searchParams]);
 
   const setActiveTab = useCallback(
-    (tab: TabKey) => {
+    (tab: EntityTabId) => {
       const params = new URLSearchParams(searchParams.toString());
       params.set("tab", tab);
       router.replace(`${pathname}?${params.toString()}`);

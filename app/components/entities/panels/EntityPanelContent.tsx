@@ -1,20 +1,22 @@
 "use client";
 
 import { useMemo } from "react";
-import type { EntityType } from "@/domain/entities/types";
 import EntityOverviewTab from "@/app/components/entities/tabs/overview/EntityOverviewTab";
+import EntityContactsTab from "@/app/components/entities/tabs/contacts/EntityContactsTab";
 import EntityBrandingTab from "@/app/components/entities/tabs/branding/EntityBrandingTab";
-import EntityUsersTab from "@/app/components/entities/tabs/users/EntityUsersTab";
+import EntityIrsTab from "@/app/components/entities/tabs/irs/EntityIrsTab";
 import EntityMapTab from "@/app/components/entities/tabs/map/EntityMapTab";
 import EntityGovernanceTab from "@/app/components/entities/tabs/governance/EntityGovernanceTab";
+import EntityUsersTab from "@/app/components/entities/tabs/users/EntityUsersTab";
 import EntitySuperintendentTab from "@/app/components/entities/tabs/superintendent/EntitySuperintendentTab";
-import type { TabKey } from "@/app/components/entities/hooks/useEntityTabParam";
+import { type EntityTabId } from "@/app/components/entities/hooks/useEntityTabParam";
+import type { EntityType } from "@/domain/entities/types";
 
 type Props = {
   entityId: string;
   entityType: EntityType | null;
   entityName?: string;
-  activeTab: TabKey;
+  activeTab: EntityTabId;
 };
 
 export default function EntityPanelContent({
@@ -34,13 +36,9 @@ export default function EntityPanelContent({
 
     switch (activeTab) {
       case "overview":
-        return (
-          <EntityOverviewTab
-            entityId={entityId}
-            entityType={entityType}
-            entityName={entityName ?? "Entity"}
-          />
-        );
+        return <EntityOverviewTab entityId={entityId} />;
+      case "contacts":
+        return <EntityContactsTab entityId={entityId} />;
       case "branding":
         return (
           <EntityBrandingTab
@@ -49,17 +47,30 @@ export default function EntityPanelContent({
             entityName={entityName ?? "Entity"}
           />
         );
-      case "users":
-        return <EntityUsersTab entityId={entityId} />;
       case "map":
-        return <EntityMapTab entityId={entityId} entityType={entityType} />;
+        return (
+          <EntityMapTab
+            entityId={entityId}
+            entityType={entityType}
+          />
+        );
       case "governance":
         return (
-          <EntityGovernanceTab entityId={entityId} entityType={entityType} />
+          <EntityGovernanceTab
+            entityId={entityId}
+            entityType={entityType}
+          />
         );
+      case "users":
+        return <EntityUsersTab entityId={entityId} />;
+      case "irs":
+        return <EntityIrsTab entityId={entityId} />;
       case "superintendent":
         return (
-          <EntitySuperintendentTab entityId={entityId} entityType={entityType} />
+          <EntitySuperintendentTab
+            entityId={entityId}
+            entityType={entityType}
+          />
         );
       default:
         return null;

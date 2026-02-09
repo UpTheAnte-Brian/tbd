@@ -4,96 +4,6 @@
     "name": ".",
     "contents": [
       {
-        "type": "file",
-        "name": ".DS_Store"
-      },
-      {
-        "type": "file",
-        "name": ".env.example"
-      },
-      {
-        "type": "file",
-        "name": ".env.local"
-      },
-      {
-        "type": "file",
-        "name": ".env.test.local"
-      },
-      {
-        "type": "file",
-        "name": ".eslintrc.js"
-      },
-      {
-        "type": "directory",
-        "name": ".github",
-        "contents": [
-          {
-            "type": "file",
-            "name": "SECURITY.md"
-          },
-          {
-            "type": "file",
-            "name": "copilot-instructions.md"
-          },
-          {
-            "type": "file",
-            "name": "dependabot.yml"
-          },
-          {
-            "type": "directory",
-            "name": "prompts",
-            "contents": [
-              {
-                "type": "file",
-                "name": "new-react-form.prompt.md"
-              },
-              {
-                "type": "file",
-                "name": "security.prompt.md"
-              }
-            ]
-          },
-          {
-            "type": "file",
-            "name": "pull_request_template.md"
-          }
-        ]
-      },
-      {
-        "type": "file",
-        "name": ".gitignore"
-      },
-      {
-        "type": "directory",
-        "name": ".vscode",
-        "contents": [
-          {
-            "type": "file",
-            "name": "extensions.json"
-          },
-          {
-            "type": "file",
-            "name": "launch.json"
-          },
-          {
-            "type": "file",
-            "name": "settings.json"
-          }
-        ]
-      },
-      {
-        "type": "file",
-        "name": "AGENT.md"
-      },
-      {
-        "type": "file",
-        "name": "DEPENDABOT.md"
-      },
-      {
-        "type": "file",
-        "name": "README.md"
-      },
-      {
         "type": "directory",
         "name": "app",
         "contents": [
@@ -161,6 +71,20 @@
                 "contents": [
                   {
                     "type": "directory",
+                    "name": "_components",
+                    "contents": [
+                      {
+                        "type": "file",
+                        "name": "AdminNonprofitReview.tsx"
+                      },
+                      {
+                        "type": "file",
+                        "name": "AdminNonprofitsClient.tsx"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "directory",
                     "name": "[id]",
                     "contents": [
                       {
@@ -173,8 +97,7 @@
                             "contents": [
                               {
                                 "type": "file",
-                                "name": "AdminNonprofitOnboardingClient.tsx",
-                                "gitStatus": "modified"
+                                "name": "AdminNonprofitOnboardingClient.tsx"
                               }
                             ]
                           },
@@ -186,24 +109,7 @@
                       },
                       {
                         "type": "file",
-                        "name": "page.tsx",
-                        "gitStatus": "modified"
-                      }
-                    ]
-                  },
-                  {
-                    "type": "directory",
-                    "name": "_components",
-                    "contents": [
-                      {
-                        "type": "file",
-                        "name": "AdminNonprofitReview.tsx",
-                        "gitStatus": "modified"
-                      },
-                      {
-                        "type": "file",
-                        "name": "AdminNonprofitsClient.tsx",
-                        "gitStatus": "modified"
+                        "name": "page.tsx"
                       }
                     ]
                   },
@@ -236,10 +142,6 @@
                     "name": "types.ts"
                   }
                 ]
-              },
-              {
-                "type": "file",
-                "name": "page.tsx"
               },
               {
                 "type": "directory",
@@ -290,6 +192,10 @@
                     "name": "page.tsx"
                   }
                 ]
+              },
+              {
+                "type": "file",
+                "name": "page.tsx"
               }
             ]
           },
@@ -316,18 +222,7 @@
                               {
                                 "type": "directory",
                                 "name": "[versionId]",
-                                "contents": [
-                                  {
-                                    "type": "directory",
-                                    "name": "ingest",
-                                    "contents": [
-                                      {
-                                        "type": "file",
-                                        "name": "route.ts"
-                                      }
-                                    ]
-                                  }
-                                ]
+                                "contents": []
                               },
                               {
                                 "type": "file",
@@ -342,63 +237,32 @@
                               {
                                 "type": "directory",
                                 "name": "activate",
-                                "contents": [
-                                  {
-                                    "type": "file",
-                                    "name": "route.ts"
-                                  }
-                                ]
+                                "contents": []
                               },
                               {
                                 "type": "directory",
                                 "name": "identity",
-                                "contents": [
-                                  {
-                                    "type": "file",
-                                    "name": "route.ts"
-                                  }
-                                ]
+                                "contents": []
                               },
                               {
                                 "type": "directory",
                                 "name": "irs-link",
-                                "contents": [
-                                  {
-                                    "type": "file",
-                                    "name": "route.ts",
-                                    "gitStatus": "modified"
-                                  }
-                                ]
+                                "contents": []
                               },
                               {
                                 "type": "directory",
                                 "name": "overrides",
-                                "contents": [
-                                  {
-                                    "type": "file",
-                                    "name": "route.ts"
-                                  }
-                                ]
+                                "contents": []
                               },
                               {
                                 "type": "directory",
                                 "name": "person-claims",
-                                "contents": [
-                                  {
-                                    "type": "file",
-                                    "name": "route.ts"
-                                  }
-                                ]
+                                "contents": []
                               },
                               {
                                 "type": "directory",
                                 "name": "progress",
-                                "contents": [
-                                  {
-                                    "type": "file",
-                                    "name": "route.ts"
-                                  }
-                                ]
+                                "contents": []
                               },
                               {
                                 "type": "file",
@@ -408,8 +272,7 @@
                           },
                           {
                             "type": "file",
-                            "name": "route.ts",
-                            "gitStatus": "modified"
+                            "name": "route.ts"
                           }
                         ]
                       },
@@ -419,15 +282,9 @@
                         "contents": [
                           {
                             "type": "file",
-                            "name": "route.ts",
-                            "gitStatus": "modified"
+                            "name": "route.ts"
                           }
                         ]
-                      },
-                      {
-                        "type": "file",
-                        "name": "route.ts",
-                        "gitStatus": "modified"
                       },
                       {
                         "type": "directory",
@@ -435,8 +292,7 @@
                         "contents": [
                           {
                             "type": "file",
-                            "name": "route.ts",
-                            "gitStatus": "modified"
+                            "name": "route.ts"
                           }
                         ]
                       },
@@ -449,6 +305,10 @@
                             "name": "route.ts"
                           }
                         ]
+                      },
+                      {
+                        "type": "file",
+                        "name": "route.ts"
                       }
                     ]
                   },
@@ -487,10 +347,6 @@
                         "name": "[id]",
                         "contents": [
                           {
-                            "type": "file",
-                            "name": "route.ts"
-                          },
-                          {
                             "type": "directory",
                             "name": "upload-url",
                             "contents": [
@@ -499,6 +355,10 @@
                                 "name": "route.ts"
                               }
                             ]
+                          },
+                          {
+                            "type": "file",
+                            "name": "route.ts"
                           }
                         ]
                       },
@@ -574,6 +434,42 @@
                     "name": "[id]",
                     "contents": [
                       {
+                        "type": "directory",
+                        "name": "nonprofits",
+                        "contents": [
+                          {
+                            "type": "directory",
+                            "name": "[ein]",
+                            "contents": [
+                              {
+                                "type": "file",
+                                "name": "route.ts"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "type": "directory",
+                        "name": "scope-nonprofits",
+                        "contents": [
+                          {
+                            "type": "directory",
+                            "name": "activate",
+                            "contents": [
+                              {
+                                "type": "file",
+                                "name": "route.ts"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "file",
+                            "name": "route.ts"
+                          }
+                        ]
+                      },
+                      {
                         "type": "file",
                         "name": "route.ts"
                       }
@@ -625,38 +521,13 @@
                               {
                                 "type": "directory",
                                 "name": "[paletteId]",
-                                "contents": [
-                                  {
-                                    "type": "directory",
-                                    "name": "colors",
-                                    "contents": [
-                                      {
-                                        "type": "directory",
-                                        "name": "[slot]",
-                                        "contents": [
-                                          {
-                                            "type": "file",
-                                            "name": "route.ts"
-                                          }
-                                        ]
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "type": "file",
-                                    "name": "route.ts"
-                                  }
-                                ]
+                                "contents": []
                               },
                               {
                                 "type": "file",
                                 "name": "route.ts"
                               }
                             ]
-                          },
-                          {
-                            "type": "file",
-                            "name": "route.ts"
                           },
                           {
                             "type": "directory",
@@ -667,6 +538,10 @@
                                 "name": "route.ts"
                               }
                             ]
+                          },
+                          {
+                            "type": "file",
+                            "name": "route.ts"
                           }
                         ]
                       },
@@ -701,12 +576,7 @@
                               {
                                 "type": "directory",
                                 "name": "[memberId]",
-                                "contents": [
-                                  {
-                                    "type": "file",
-                                    "name": "route.ts"
-                                  }
-                                ]
+                                "contents": []
                               }
                             ]
                           },
@@ -717,28 +587,7 @@
                               {
                                 "type": "directory",
                                 "name": "[boardId]",
-                                "contents": [
-                                  {
-                                    "type": "directory",
-                                    "name": "meetings",
-                                    "contents": [
-                                      {
-                                        "type": "file",
-                                        "name": "route.ts"
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "type": "directory",
-                                    "name": "members",
-                                    "contents": [
-                                      {
-                                        "type": "file",
-                                        "name": "route.ts"
-                                      }
-                                    ]
-                                  }
-                                ]
+                                "contents": []
                               }
                             ]
                           },
@@ -749,168 +598,7 @@
                               {
                                 "type": "directory",
                                 "name": "[meetingId]",
-                                "contents": [
-                                  {
-                                    "type": "directory",
-                                    "name": "adjourn",
-                                    "contents": [
-                                      {
-                                        "type": "file",
-                                        "name": "route.ts"
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "type": "directory",
-                                    "name": "attendance",
-                                    "contents": [
-                                      {
-                                        "type": "file",
-                                        "name": "route.ts"
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "type": "directory",
-                                    "name": "board-packet",
-                                    "contents": [
-                                      {
-                                        "type": "directory",
-                                        "name": "approve",
-                                        "contents": [
-                                          {
-                                            "type": "file",
-                                            "name": "route.ts"
-                                          }
-                                        ]
-                                      },
-                                      {
-                                        "type": "directory",
-                                        "name": "create",
-                                        "contents": [
-                                          {
-                                            "type": "file",
-                                            "name": "route.ts"
-                                          }
-                                        ]
-                                      },
-                                      {
-                                        "type": "directory",
-                                        "name": "update-content",
-                                        "contents": [
-                                          {
-                                            "type": "file",
-                                            "name": "route.ts"
-                                          }
-                                        ]
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "type": "directory",
-                                    "name": "finalize",
-                                    "contents": [
-                                      {
-                                        "type": "file",
-                                        "name": "route.ts"
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "type": "directory",
-                                    "name": "minutes",
-                                    "contents": [
-                                      {
-                                        "type": "directory",
-                                        "name": "amend",
-                                        "contents": [
-                                          {
-                                            "type": "file",
-                                            "name": "route.ts"
-                                          }
-                                        ]
-                                      },
-                                      {
-                                        "type": "directory",
-                                        "name": "approve",
-                                        "contents": [
-                                          {
-                                            "type": "file",
-                                            "name": "route.ts"
-                                          }
-                                        ]
-                                      },
-                                      {
-                                        "type": "directory",
-                                        "name": "expanded",
-                                        "contents": [
-                                          {
-                                            "type": "file",
-                                            "name": "route.ts"
-                                          }
-                                        ]
-                                      },
-                                      {
-                                        "type": "directory",
-                                        "name": "finalize",
-                                        "contents": [
-                                          {
-                                            "type": "file",
-                                            "name": "route.ts"
-                                          }
-                                        ]
-                                      },
-                                      {
-                                        "type": "directory",
-                                        "name": "lock",
-                                        "contents": [
-                                          {
-                                            "type": "file",
-                                            "name": "route.ts"
-                                          }
-                                        ]
-                                      },
-                                      {
-                                        "type": "file",
-                                        "name": "route.ts"
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "type": "directory",
-                                    "name": "motions",
-                                    "contents": [
-                                      {
-                                        "type": "file",
-                                        "name": "route.ts"
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "type": "directory",
-                                    "name": "quorum",
-                                    "contents": [
-                                      {
-                                        "type": "file",
-                                        "name": "route.ts"
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "type": "file",
-                                    "name": "route.ts"
-                                  },
-                                  {
-                                    "type": "directory",
-                                    "name": "start",
-                                    "contents": [
-                                      {
-                                        "type": "file",
-                                        "name": "route.ts"
-                                      }
-                                    ]
-                                  }
-                                ]
+                                "contents": []
                               }
                             ]
                           },
@@ -921,34 +609,39 @@
                               {
                                 "type": "directory",
                                 "name": "[motionId]",
-                                "contents": [
-                                  {
-                                    "type": "directory",
-                                    "name": "finalize",
-                                    "contents": [
-                                      {
-                                        "type": "file",
-                                        "name": "route.ts"
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "type": "directory",
-                                    "name": "votes",
-                                    "contents": [
-                                      {
-                                        "type": "file",
-                                        "name": "route.ts"
-                                      }
-                                    ]
-                                  }
-                                ]
+                                "contents": []
                               }
                             ]
                           },
                           {
                             "type": "file",
                             "name": "route.ts"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "directory",
+                        "name": "irs",
+                        "contents": [
+                          {
+                            "type": "directory",
+                            "name": "links",
+                            "contents": [
+                              {
+                                "type": "file",
+                                "name": "route.ts"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "directory",
+                            "name": "overview",
+                            "contents": [
+                              {
+                                "type": "file",
+                                "name": "route.ts"
+                              }
+                            ]
                           }
                         ]
                       },
@@ -963,8 +656,14 @@
                         ]
                       },
                       {
-                        "type": "file",
-                        "name": "route.ts"
+                        "type": "directory",
+                        "name": "overview",
+                        "contents": [
+                          {
+                            "type": "file",
+                            "name": "route.ts"
+                          }
+                        ]
                       },
                       {
                         "type": "directory",
@@ -975,6 +674,10 @@
                             "name": "route.ts"
                           }
                         ]
+                      },
+                      {
+                        "type": "file",
+                        "name": "route.ts"
                       }
                     ]
                   },
@@ -1111,10 +814,6 @@
                         "name": "[motionId]",
                         "contents": [
                           {
-                            "type": "file",
-                            "name": "route.ts"
-                          },
-                          {
                             "type": "directory",
                             "name": "votes",
                             "contents": [
@@ -1123,6 +822,10 @@
                                 "name": "route.ts"
                               }
                             ]
+                          },
+                          {
+                            "type": "file",
+                            "name": "route.ts"
                           }
                         ]
                       }
@@ -1292,10 +995,6 @@
                 ]
               },
               {
-                "type": "file",
-                "name": "set-token-cookie.ts"
-              },
-              {
                 "type": "directory",
                 "name": "stripe",
                 "contents": [
@@ -1366,10 +1065,6 @@
                 "name": "superintendent",
                 "contents": [
                   {
-                    "type": "file",
-                    "name": "route.ts"
-                  },
-                  {
                     "type": "directory",
                     "name": "scope",
                     "contents": [
@@ -1384,6 +1079,10 @@
                         ]
                       }
                     ]
+                  },
+                  {
+                    "type": "file",
+                    "name": "route.ts"
                   }
                 ]
               },
@@ -1436,6 +1135,10 @@
                     "name": "route.ts"
                   }
                 ]
+              },
+              {
+                "type": "file",
+                "name": "set-token-cookie.ts"
               }
             ]
           },
@@ -1447,14 +1150,6 @@
                 "type": "directory",
                 "name": "(login)",
                 "contents": [
-                  {
-                    "type": "file",
-                    "name": "actions.ts"
-                  },
-                  {
-                    "type": "file",
-                    "name": "login.tsx"
-                  },
                   {
                     "type": "directory",
                     "name": "sign-in",
@@ -1474,6 +1169,14 @@
                         "name": "page.tsx"
                       }
                     ]
+                  },
+                  {
+                    "type": "file",
+                    "name": "actions.ts"
+                  },
+                  {
+                    "type": "file",
+                    "name": "login.tsx"
                   }
                 ]
               },
@@ -1493,11 +1196,11 @@
                 "contents": [
                   {
                     "type": "file",
-                    "name": "TokenSync.tsx"
+                    "name": "button.tsx"
                   },
                   {
                     "type": "file",
-                    "name": "button.tsx"
+                    "name": "TokenSync.tsx"
                   }
                 ]
               },
@@ -1568,38 +1271,6 @@
             "name": "components",
             "contents": [
               {
-                "type": "file",
-                "name": "AUNLogo.tsx"
-              },
-              {
-                "type": "file",
-                "name": "Account.tsx"
-              },
-              {
-                "type": "file",
-                "name": "AppEnvBanner.tsx"
-              },
-              {
-                "type": "file",
-                "name": "DesktopMenu.tsx"
-              },
-              {
-                "type": "file",
-                "name": "DonationsTable.tsx"
-              },
-              {
-                "type": "file",
-                "name": "DynamicIcon.tsx"
-              },
-              {
-                "type": "file",
-                "name": "MobMenu.tsx"
-              },
-              {
-                "type": "file",
-                "name": "SignInButton.tsx"
-              },
-              {
                 "type": "directory",
                 "name": "admin",
                 "contents": [
@@ -1622,16 +1293,42 @@
                 "name": "branding",
                 "contents": [
                   {
+                    "type": "directory",
+                    "name": "panels",
+                    "contents": [
+                      {
+                        "type": "file",
+                        "name": "BrandAssetsSection.tsx"
+                      },
+                      {
+                        "type": "file",
+                        "name": "BrandingTips.tsx"
+                      },
+                      {
+                        "type": "file",
+                        "name": "BrandPalettesSection.tsx"
+                      },
+                      {
+                        "type": "file",
+                        "name": "BrandTypographySection.tsx"
+                      },
+                      {
+                        "type": "file",
+                        "name": "EntityBrandingPanel.tsx"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "file",
+                    "name": "BrandingDebug.tsx"
+                  },
+                  {
                     "type": "file",
                     "name": "BrandPaletteCube.tsx"
                   },
                   {
                     "type": "file",
                     "name": "BrandPaletteGrid.tsx"
-                  },
-                  {
-                    "type": "file",
-                    "name": "BrandingDebug.tsx"
                   },
                   {
                     "type": "file",
@@ -1648,32 +1345,6 @@
                   {
                     "type": "file",
                     "name": "TypographyShowcase.tsx"
-                  },
-                  {
-                    "type": "directory",
-                    "name": "panels",
-                    "contents": [
-                      {
-                        "type": "file",
-                        "name": "BrandAssetsSection.tsx"
-                      },
-                      {
-                        "type": "file",
-                        "name": "BrandPalettesSection.tsx"
-                      },
-                      {
-                        "type": "file",
-                        "name": "BrandTypographySection.tsx"
-                      },
-                      {
-                        "type": "file",
-                        "name": "BrandingTips.tsx"
-                      },
-                      {
-                        "type": "file",
-                        "name": "EntityBrandingPanel.tsx"
-                      }
-                    ]
                   }
                 ]
               },
@@ -1706,25 +1377,9 @@
                 "name": "districts",
                 "contents": [
                   {
-                    "type": "file",
-                    "name": "DistrictDonationsSummary.tsx"
-                  },
-                  {
-                    "type": "file",
-                    "name": "LeadershipSection.tsx"
-                  },
-                  {
                     "type": "directory",
                     "name": "branding",
                     "contents": []
-                  },
-                  {
-                    "type": "file",
-                    "name": "district-pop-up.tsx"
-                  },
-                  {
-                    "type": "file",
-                    "name": "district-search.tsx"
                   },
                   {
                     "type": "directory",
@@ -1769,6 +1424,22 @@
                         "name": "types.ts"
                       }
                     ]
+                  },
+                  {
+                    "type": "file",
+                    "name": "district-pop-up.tsx"
+                  },
+                  {
+                    "type": "file",
+                    "name": "district-search.tsx"
+                  },
+                  {
+                    "type": "file",
+                    "name": "DistrictDonationsSummary.tsx"
+                  },
+                  {
+                    "type": "file",
+                    "name": "LeadershipSection.tsx"
                   }
                 ]
               },
@@ -1776,10 +1447,6 @@
                 "type": "directory",
                 "name": "entities",
                 "contents": [
-                  {
-                    "type": "file",
-                    "name": "EntityPageLayout.tsx"
-                  },
                   {
                     "type": "directory",
                     "name": "hooks",
@@ -1842,20 +1509,18 @@
                       },
                       {
                         "type": "directory",
-                        "name": "governance",
+                        "name": "contacts",
                         "contents": [
                           {
                             "type": "file",
-                            "name": "BoardOfDirectors.tsx"
-                          },
-                          {
-                            "type": "file",
-                            "name": "EntityGovernanceTab.tsx"
-                          },
-                          {
-                            "type": "file",
-                            "name": "GovernancePanel.tsx"
-                          },
+                            "name": "EntityContactsTab.tsx"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "directory",
+                        "name": "governance",
+                        "contents": [
                           {
                             "type": "directory",
                             "name": "meeting",
@@ -1882,13 +1547,35 @@
                               },
                               {
                                 "type": "file",
-                                "name": "VersionHistory.tsx"
+                                "name": "types.ts"
                               },
                               {
                                 "type": "file",
-                                "name": "types.ts"
+                                "name": "VersionHistory.tsx"
                               }
                             ]
+                          },
+                          {
+                            "type": "file",
+                            "name": "BoardOfDirectors.tsx"
+                          },
+                          {
+                            "type": "file",
+                            "name": "EntityGovernanceTab.tsx"
+                          },
+                          {
+                            "type": "file",
+                            "name": "GovernancePanel.tsx"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "directory",
+                        "name": "irs",
+                        "contents": [
+                          {
+                            "type": "file",
+                            "name": "EntityIrsTab.tsx"
                           }
                         ]
                       },
@@ -1906,6 +1593,10 @@
                         "type": "directory",
                         "name": "overview",
                         "contents": [
+                          {
+                            "type": "file",
+                            "name": "EntityOverviewPanel.tsx"
+                          },
                           {
                             "type": "file",
                             "name": "EntityOverviewTab.tsx"
@@ -1933,6 +1624,14 @@
                         ]
                       }
                     ]
+                  },
+                  {
+                    "type": "file",
+                    "name": "EntityPageLayout.tsx"
+                  },
+                  {
+                    "type": "file",
+                    "name": "EntityPageShell.tsx"
                   }
                 ]
               },
@@ -1940,10 +1639,6 @@
                 "type": "directory",
                 "name": "keeper-archive",
                 "contents": [
-                  {
-                    "type": "file",
-                    "name": "README.md"
-                  },
                   {
                     "type": "file",
                     "name": "buttons.tsx"
@@ -1962,6 +1657,10 @@
                   },
                   {
                     "type": "file",
+                    "name": "README.md"
+                  },
+                  {
+                    "type": "file",
                     "name": "search.tsx"
                   },
                   {
@@ -1975,21 +1674,9 @@
                 ]
               },
               {
-                "type": "file",
-                "name": "loading-spinner.tsx"
-              },
-              {
                 "type": "directory",
                 "name": "map",
                 "contents": [
-                  {
-                    "type": "file",
-                    "name": "LayerLegend.tsx"
-                  },
-                  {
-                    "type": "file",
-                    "name": "LayerSources.tsx"
-                  },
                   {
                     "type": "file",
                     "name": "attendance-overlay-style.ts"
@@ -2004,6 +1691,14 @@
                   },
                   {
                     "type": "file",
+                    "name": "LayerLegend.tsx"
+                  },
+                  {
+                    "type": "file",
+                    "name": "LayerSources.tsx"
+                  },
+                  {
+                    "type": "file",
                     "name": "marker.tsx"
                   }
                 ]
@@ -2014,11 +1709,11 @@
                 "contents": [
                   {
                     "type": "file",
-                    "name": "NavBar.tsx"
+                    "name": "breadcrumbs.tsx"
                   },
                   {
                     "type": "file",
-                    "name": "breadcrumbs.tsx"
+                    "name": "NavBar.tsx"
                   }
                 ]
               },
@@ -2026,6 +1721,11 @@
                 "type": "directory",
                 "name": "nonprofits",
                 "contents": [
+                  {
+                    "type": "directory",
+                    "name": "panels",
+                    "contents": []
+                  },
                   {
                     "type": "file",
                     "name": "BoardOfDirectors.tsx"
@@ -2045,11 +1745,6 @@
                   {
                     "type": "file",
                     "name": "overview.tsx"
-                  },
-                  {
-                    "type": "directory",
-                    "name": "panels",
-                    "contents": []
                   }
                 ]
               },
@@ -2059,11 +1754,11 @@
                 "contents": [
                   {
                     "type": "file",
-                    "name": "PlaceDetails.tsx"
+                    "name": "place-map.tsx"
                   },
                   {
                     "type": "file",
-                    "name": "place-map.tsx"
+                    "name": "PlaceDetails.tsx"
                   }
                 ]
               },
@@ -2140,6 +1835,42 @@
                     "name": "MyProfile.tsx"
                   }
                 ]
+              },
+              {
+                "type": "file",
+                "name": "Account.tsx"
+              },
+              {
+                "type": "file",
+                "name": "AppEnvBanner.tsx"
+              },
+              {
+                "type": "file",
+                "name": "AUNLogo.tsx"
+              },
+              {
+                "type": "file",
+                "name": "DesktopMenu.tsx"
+              },
+              {
+                "type": "file",
+                "name": "DonationsTable.tsx"
+              },
+              {
+                "type": "file",
+                "name": "DynamicIcon.tsx"
+              },
+              {
+                "type": "file",
+                "name": "loading-spinner.tsx"
+              },
+              {
+                "type": "file",
+                "name": "MobMenu.tsx"
+              },
+              {
+                "type": "file",
+                "name": "SignInButton.tsx"
               }
             ]
           },
@@ -2208,6 +1939,42 @@
                 "name": "[id]",
                 "contents": [
                   {
+                    "type": "directory",
+                    "name": "_components",
+                    "contents": [
+                      {
+                        "type": "file",
+                        "name": "ScopedNonprofitsTable.tsx"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "directory",
+                    "name": "nonprofits",
+                    "contents": [
+                      {
+                        "type": "directory",
+                        "name": "[ein]",
+                        "contents": [
+                          {
+                            "type": "directory",
+                            "name": "_components",
+                            "contents": [
+                              {
+                                "type": "file",
+                                "name": "DistrictNonprofitDetailClient.tsx"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "file",
+                            "name": "page.tsx"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
                     "type": "file",
                     "name": "layout.tsx"
                   },
@@ -2238,10 +2005,6 @@
                 ]
               },
               {
-                "type": "file",
-                "name": "page.tsx"
-              },
-              {
                 "type": "directory",
                 "name": "success",
                 "contents": [
@@ -2250,6 +2013,10 @@
                     "name": "page.tsx"
                   }
                 ]
+              },
+              {
+                "type": "file",
+                "name": "page.tsx"
               }
             ]
           },
@@ -2261,6 +2028,14 @@
                 "type": "directory",
                 "name": "[id]",
                 "contents": [
+                  {
+                    "type": "file",
+                    "name": "loading.tsx"
+                  },
+                  {
+                    "type": "file",
+                    "name": "not-found.tsx"
+                  },
                   {
                     "type": "file",
                     "name": "page.tsx"
@@ -2358,10 +2133,6 @@
                 ]
               },
               {
-                "type": "file",
-                "name": "page.tsx"
-              },
-              {
                 "type": "directory",
                 "name": "uptheante",
                 "contents": [
@@ -2370,21 +2141,17 @@
                     "name": "page.tsx"
                   }
                 ]
+              },
+              {
+                "type": "file",
+                "name": "page.tsx"
               }
             ]
-          },
-          {
-            "type": "file",
-            "name": "layout.tsx"
           },
           {
             "type": "directory",
             "name": "lib",
             "contents": [
-              {
-                "type": "file",
-                "name": "agGridSetup.ts"
-              },
               {
                 "type": "directory",
                 "name": "api",
@@ -2450,10 +2217,6 @@
                 ]
               },
               {
-                "type": "file",
-                "name": "entities.ts"
-              },
-              {
                 "type": "directory",
                 "name": "fetch",
                 "contents": [
@@ -2478,10 +2241,6 @@
                 ]
               },
               {
-                "type": "file",
-                "name": "getBoundsFromGeoJSON.ts"
-              },
-              {
                 "type": "directory",
                 "name": "keeper-archive",
                 "contents": [
@@ -2504,10 +2263,6 @@
                 ]
               },
               {
-                "type": "file",
-                "name": "mail.ts"
-              },
-              {
                 "type": "directory",
                 "name": "map",
                 "contents": [
@@ -2516,22 +2271,6 @@
                     "name": "layers.ts"
                   }
                 ]
-              },
-              {
-                "type": "file",
-                "name": "map-context.ts"
-              },
-              {
-                "type": "file",
-                "name": "menuUtils.ts"
-              },
-              {
-                "type": "file",
-                "name": "menus.ts"
-              },
-              {
-                "type": "file",
-                "name": "nonprofit-onboarding.ts"
               },
               {
                 "type": "directory",
@@ -2551,6 +2290,16 @@
                 "type": "directory",
                 "name": "server",
                 "contents": [
+                  {
+                    "type": "directory",
+                    "name": "users",
+                    "contents": [
+                      {
+                        "type": "file",
+                        "name": "handlers.ts"
+                      }
+                    ]
+                  },
                   {
                     "type": "file",
                     "name": "entities.ts"
@@ -2574,16 +2323,6 @@
                   {
                     "type": "file",
                     "name": "route-context.ts"
-                  },
-                  {
-                    "type": "directory",
-                    "name": "users",
-                    "contents": [
-                      {
-                        "type": "file",
-                        "name": "handlers.ts"
-                      }
-                    ]
                   }
                 ]
               },
@@ -2649,6 +2388,42 @@
                     "name": "types.ts"
                   }
                 ]
+              },
+              {
+                "type": "file",
+                "name": "agGridSetup.ts"
+              },
+              {
+                "type": "file",
+                "name": "entities.ts"
+              },
+              {
+                "type": "file",
+                "name": "getBoundsFromGeoJSON.ts"
+              },
+              {
+                "type": "file",
+                "name": "mail.ts"
+              },
+              {
+                "type": "file",
+                "name": "map-context.ts"
+              },
+              {
+                "type": "file",
+                "name": "menus.ts"
+              },
+              {
+                "type": "file",
+                "name": "menuUtils.ts"
+              },
+              {
+                "type": "file",
+                "name": "nonprofit-onboarding.ts"
+              },
+              {
+                "type": "file",
+                "name": "routes.ts"
               }
             ]
           },
@@ -2671,10 +2446,6 @@
                 "name": "page.tsx"
               }
             ]
-          },
-          {
-            "type": "file",
-            "name": "page.tsx"
           },
           {
             "type": "directory",
@@ -2772,17 +2543,37 @@
                 "name": "page.tsx"
               }
             ]
+          },
+          {
+            "type": "file",
+            "name": "layout.tsx"
+          },
+          {
+            "type": "file",
+            "name": "page.tsx"
           }
         ]
-      },
-      {
-        "type": "file",
-        "name": "config.ts"
       },
       {
         "type": "directory",
         "name": "data",
         "contents": [
+          {
+            "type": "directory",
+            "name": "irs-eobmf",
+            "contents": [
+              {
+                "type": "directory",
+                "name": "mn",
+                "contents": [
+                  {
+                    "type": "file",
+                    "name": "eo_mn.csv"
+                  }
+                ]
+              }
+            ]
+          },
           {
             "type": "directory",
             "name": "irs-teos",
@@ -2793,38 +2584,65 @@
                 "contents": [
                   {
                     "type": "file",
-                    "name": "ein_list_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e_2019.txt",
-                    "gitStatus": "untracked"
+                    "name": "ein_list_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e_2019.txt"
                   },
                   {
                     "type": "file",
-                    "name": "ein_list_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e_2020.txt",
-                    "gitStatus": "untracked"
+                    "name": "ein_list_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e_2020.txt"
                   },
                   {
                     "type": "file",
-                    "name": "ein_list_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e_2021.txt",
-                    "gitStatus": "untracked"
+                    "name": "ein_list_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e_2021.txt"
                   },
                   {
                     "type": "file",
-                    "name": "ein_list_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e_2022.txt",
-                    "gitStatus": "untracked"
+                    "name": "ein_list_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e_2022.txt"
                   },
                   {
                     "type": "file",
-                    "name": "ein_list_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e_2023.txt",
-                    "gitStatus": "untracked"
+                    "name": "ein_list_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e_2023.txt"
                   },
                   {
                     "type": "file",
-                    "name": "ein_list_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e_2024.txt",
-                    "gitStatus": "untracked"
+                    "name": "ein_list_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e_2024.txt"
                   },
                   {
                     "type": "file",
-                    "name": "ein_list_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e_2025.txt",
-                    "gitStatus": "untracked"
+                    "name": "ein_list_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e_2025.txt"
+                  }
+                ]
+              },
+              {
+                "type": "directory",
+                "name": "index",
+                "contents": [
+                  {
+                    "type": "file",
+                    "name": "index_2019.csv"
+                  },
+                  {
+                    "type": "file",
+                    "name": "index_2020.csv"
+                  },
+                  {
+                    "type": "file",
+                    "name": "index_2021.csv"
+                  },
+                  {
+                    "type": "file",
+                    "name": "index_2022.csv"
+                  },
+                  {
+                    "type": "file",
+                    "name": "index_2023.csv"
+                  },
+                  {
+                    "type": "file",
+                    "name": "index_2024.csv"
+                  },
+                  {
+                    "type": "file",
+                    "name": "index_2025.csv"
                   }
                 ]
               },
@@ -2834,58 +2652,47 @@
                 "contents": [
                   {
                     "type": "file",
-                    "name": "teos_2019_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl",
-                    "gitStatus": "untracked"
+                    "name": "teos_2019_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl"
                   },
                   {
                     "type": "file",
-                    "name": "teos_2020_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl",
-                    "gitStatus": "untracked"
+                    "name": "teos_2020_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl"
                   },
                   {
                     "type": "file",
-                    "name": "teos_2021_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl",
-                    "gitStatus": "untracked"
+                    "name": "teos_2021_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl"
                   },
                   {
                     "type": "file",
-                    "name": "teos_2022_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl",
-                    "gitStatus": "untracked"
+                    "name": "teos_2021_all.jsonl"
                   },
                   {
                     "type": "file",
-                    "name": "teos_2022_all.jsonl",
-                    "gitStatus": "untracked"
+                    "name": "teos_2022_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl"
                   },
                   {
                     "type": "file",
-                    "name": "teos_2023_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl",
-                    "gitStatus": "untracked"
+                    "name": "teos_2023_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl"
                   },
                   {
                     "type": "file",
-                    "name": "teos_2023_all.jsonl",
-                    "gitStatus": "untracked"
+                    "name": "teos_2023_all.jsonl"
                   },
                   {
                     "type": "file",
-                    "name": "teos_2024_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl",
-                    "gitStatus": "untracked"
+                    "name": "teos_2024_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl"
                   },
                   {
                     "type": "file",
-                    "name": "teos_2024_all.jsonl",
-                    "gitStatus": "untracked"
+                    "name": "teos_2024_all.jsonl"
                   },
                   {
                     "type": "file",
-                    "name": "teos_2025_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl",
-                    "gitStatus": "untracked"
+                    "name": "teos_2025_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl"
                   },
                   {
                     "type": "file",
-                    "name": "teos_2025_all.jsonl",
-                    "gitStatus": "untracked"
+                    "name": "teos_2025_all.jsonl"
                   }
                 ]
               },
@@ -2893,11 +2700,6 @@
                 "type": "directory",
                 "name": "xml",
                 "contents": [
-                  {
-                    "type": "file",
-                    "name": ".DS_Store",
-                    "gitStatus": "untracked"
-                  },
                   {
                     "type": "directory",
                     "name": "2019",
@@ -2916,7 +2718,20 @@
                       {
                         "type": "directory",
                         "name": "DIRECT_XML",
-                        "contents": []
+                        "contents": [
+                          {
+                            "type": "file",
+                            "name": "202010319349300716_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202031409349300023_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202041409349300949_public.xml"
+                          }
+                        ]
                       }
                     ]
                   },
@@ -2927,7 +2742,60 @@
                       {
                         "type": "directory",
                         "name": "DIRECT_XML",
-                        "contents": []
+                        "contents": [
+                          {
+                            "type": "file",
+                            "name": "202101109349200210_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202101669349301515_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202121419349300007_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202141099349300314_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202141969349300309_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202143449349200114_public.xml"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "directory",
+                    "name": "2022",
+                    "contents": [
+                      {
+                        "type": "directory",
+                        "name": "DIRECT_XML",
+                        "contents": [
+                          {
+                            "type": "file",
+                            "name": "202220179349300612_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202221959349300837_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202241659349300444_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202241999349300539_public.xml"
+                          }
+                        ]
                       }
                     ]
                   },
@@ -2938,7 +2806,36 @@
                       {
                         "type": "directory",
                         "name": "DIRECT_XML",
-                        "contents": []
+                        "contents": [
+                          {
+                            "type": "file",
+                            "name": "202301319349202585_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202310629349301216_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202311649349301781_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202313149349305341_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202331329349301338_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202332209349300108_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202343489349301319_public.xml"
+                          }
+                        ]
                       }
                     ]
                   },
@@ -2947,18 +2844,12 @@
                     "name": "2024",
                     "contents": [
                       {
-                        "type": "file",
-                        "name": ".DS_Store",
-                        "gitStatus": "untracked"
-                      },
-                      {
                         "type": "directory",
                         "name": "2024_TEOS_XML_02A",
                         "contents": [
                           {
                             "type": "file",
-                            "name": "202410309349200106_public.xml",
-                            "gitStatus": "untracked"
+                            "name": "202410309349200106_public.xml"
                           }
                         ]
                       },
@@ -2968,8 +2859,7 @@
                         "contents": [
                           {
                             "type": "file",
-                            "name": "202430719349301653_public.xml",
-                            "gitStatus": "untracked"
+                            "name": "202430719349301653_public.xml"
                           }
                         ]
                       },
@@ -2979,8 +2869,7 @@
                         "contents": [
                           {
                             "type": "file",
-                            "name": "202431319349303923_public.xml",
-                            "gitStatus": "untracked"
+                            "name": "202431319349303923_public.xml"
                           }
                         ]
                       },
@@ -2990,24 +2879,7 @@
                         "contents": [
                           {
                             "type": "file",
-                            "name": "202401939349301970_public.xml",
-                            "gitStatus": "untracked"
-                          }
-                        ]
-                      },
-                      {
-                        "type": "directory",
-                        "name": "2024_TEOS_XML_09A",
-                        "contents": [
-                          {
-                            "type": "file",
-                            "name": "202412469349300206_public.xml",
-                            "gitStatus": "untracked"
-                          },
-                          {
-                            "type": "file",
-                            "name": "202432499349300313_public.xml",
-                            "gitStatus": "untracked"
+                            "name": "202401939349301970_public.xml"
                           }
                         ]
                       },
@@ -3017,8 +2889,7 @@
                         "contents": [
                           {
                             "type": "file",
-                            "name": "202402739349300165_public.xml",
-                            "gitStatus": "untracked"
+                            "name": "202402739349300165_public.xml"
                           }
                         ]
                       },
@@ -3028,8 +2899,11 @@
                         "contents": [
                           {
                             "type": "file",
-                            "name": "202433199349200848_public.xml",
-                            "gitStatus": "untracked"
+                            "name": "202402999349301585_public.xml"
+                          },
+                          {
+                            "type": "file",
+                            "name": "202433199349200848_public.xml"
                           }
                         ]
                       },
@@ -3039,15 +2913,9 @@
                         "contents": [
                           {
                             "type": "file",
-                            "name": "202403449349301405_public.xml",
-                            "gitStatus": "untracked"
+                            "name": "202403449349301405_public.xml"
                           }
                         ]
-                      },
-                      {
-                        "type": "directory",
-                        "name": "DIRECT_XML",
-                        "contents": []
                       }
                     ]
                   },
@@ -3061,8 +2929,7 @@
                         "contents": [
                           {
                             "type": "file",
-                            "name": "202511329349306781_public.xml",
-                            "gitStatus": "untracked"
+                            "name": "202511329349306781_public.xml"
                           }
                         ]
                       },
@@ -3072,8 +2939,7 @@
                         "contents": [
                           {
                             "type": "file",
-                            "name": "202531959349302303_public.xml",
-                            "gitStatus": "untracked"
+                            "name": "202531959349302303_public.xml"
                           }
                         ]
                       },
@@ -3083,29 +2949,21 @@
                         "contents": [
                           {
                             "type": "file",
-                            "name": "202522329349301317_public.xml",
-                            "gitStatus": "untracked"
+                            "name": "202522329349301317_public.xml"
                           },
                           {
                             "type": "file",
-                            "name": "202542259349301204_public.xml",
-                            "gitStatus": "untracked"
+                            "name": "202542259349301204_public.xml"
                           }
                         ]
                       },
                       {
                         "type": "directory",
-                        "name": "2025_TEOS_XML_11A",
+                        "name": "2025_TEOS_XML_11B",
                         "contents": [
                           {
                             "type": "file",
-                            "name": "202502959349301350_public.xml",
-                            "gitStatus": "untracked"
-                          },
-                          {
-                            "type": "file",
-                            "name": "202502979349300110_public.xml",
-                            "gitStatus": "untracked"
+                            "name": "202533149349301758_public.xml"
                           }
                         ]
                       },
@@ -3115,8 +2973,7 @@
                         "contents": [
                           {
                             "type": "file",
-                            "name": "202533079349200768_public.xml",
-                            "gitStatus": "untracked"
+                            "name": "202533079349200768_public.xml"
                           }
                         ]
                       },
@@ -3126,15 +2983,195 @@
                         "contents": [
                           {
                             "type": "file",
-                            "name": "202523429349300307_public.xml",
-                            "gitStatus": "untracked"
+                            "name": "202523429349300307_public.xml"
                           }
                         ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "directory",
+                "name": "zips",
+                "contents": [
+                  {
+                    "type": "directory",
+                    "name": "2020",
+                    "contents": [
+                      {
+                        "type": "file",
+                        "name": "2020_TEOS_XML_CT1.zip"
                       },
                       {
-                        "type": "directory",
-                        "name": "DIRECT_XML",
-                        "contents": []
+                        "type": "file",
+                        "name": "download990xml_2020_1.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "download990xml_2020_2.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "download990xml_2020_3.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "download990xml_2020_4.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "download990xml_2020_5.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "download990xml_2020_6.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "download990xml_2020_7.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "download990xml_2020_8.zip"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "directory",
+                    "name": "2021",
+                    "contents": [
+                      {
+                        "type": "file",
+                        "name": "2021_TEOS_XML_01A.zip"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "directory",
+                    "name": "2022",
+                    "contents": [
+                      {
+                        "type": "file",
+                        "name": "2022_TEOS_XML_01A.zip"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "directory",
+                    "name": "2023",
+                    "contents": [
+                      {
+                        "type": "file",
+                        "name": "2023_TEOS_XML_01A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2023_TEOS_XML_02A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2023_TEOS_XML_03A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2023_TEOS_XML_04A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2023_TEOS_XML_05A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2023_TEOS_XML_06A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2023_TEOS_XML_07A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2023_TEOS_XML_08A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2023_TEOS_XML_09A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2023_TEOS_XML_10A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2023_TEOS_XML_11A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2023_TEOS_XML_12A.zip"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "directory",
+                    "name": "2024",
+                    "contents": [
+                      {
+                        "type": "file",
+                        "name": "2024_TEOS_XML_02A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2024_TEOS_XML_03A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2024_TEOS_XML_05A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2024_TEOS_XML_07A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2024_TEOS_XML_10A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2024_TEOS_XML_11A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2024_TEOS_XML_12A.zip"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "directory",
+                    "name": "2025",
+                    "contents": [
+                      {
+                        "type": "file",
+                        "name": "2025_TEOS_XML_05A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2025_TEOS_XML_07A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2025_TEOS_XML_08A.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2025_TEOS_XML_11B.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2025_TEOS_XML_11C.zip"
+                      },
+                      {
+                        "type": "file",
+                        "name": "2025_TEOS_XML_12A.zip"
                       }
                     ]
                   }
@@ -3145,44 +3182,9 @@
         ]
       },
       {
-        "type": "file",
-        "name": "database.types.ts",
-        "gitStatus": "modified"
-      },
-      {
-        "type": "directory",
-        "name": "docs",
-        "contents": [
-          {
-            "type": "file",
-            "name": "entity-page-layout.md"
-          },
-          {
-            "type": "file",
-            "name": "env.md"
-          },
-          {
-            "type": "file",
-            "name": "local-supabase.md"
-          },
-          {
-            "type": "file",
-            "name": "migration-map.md"
-          },
-          {
-            "type": "file",
-            "name": "nonprofit-onboarding-inventory.md"
-          }
-        ]
-      },
-      {
         "type": "directory",
         "name": "domain",
         "contents": [
-          {
-            "type": "file",
-            "name": "README.md"
-          },
           {
             "type": "directory",
             "name": "admin",
@@ -3197,18 +3199,15 @@
               },
               {
                 "type": "file",
-                "name": "nonprofit-onboarding-dto.ts",
-                "gitStatus": "modified"
+                "name": "nonprofit-onboarding-dto.ts"
               },
               {
                 "type": "file",
-                "name": "nonprofit-queue-dto.ts",
-                "gitStatus": "modified"
+                "name": "nonprofit-queue-dto.ts"
               },
               {
                 "type": "file",
-                "name": "nonprofits-admin-dto.ts",
-                "gitStatus": "modified"
+                "name": "nonprofits-admin-dto.ts"
               }
             ]
           },
@@ -3267,6 +3266,10 @@
               {
                 "type": "file",
                 "name": "entity-contacts-dto.ts"
+              },
+              {
+                "type": "file",
+                "name": "entity-dto.ts"
               },
               {
                 "type": "file",
@@ -3363,30 +3366,20 @@
                 "name": "users.ts"
               }
             ]
-          }
-        ]
-      },
-      {
-        "type": "file",
-        "name": "eslint.config.mjs"
-      },
-      {
-        "type": "directory",
-        "name": "gpt-keepers",
-        "contents": [
+          },
           {
             "type": "file",
-            "name": "GovernanceImprovements.txt"
+            "name": "README.md"
           }
         ]
       },
       {
         "type": "file",
-        "name": "middleware.ts"
+        "name": ".env.example"
       },
       {
         "type": "file",
-        "name": "next-env.d.ts"
+        "name": "AGENT.md"
       },
       {
         "type": "file",
@@ -3394,1082 +3387,16 @@
       },
       {
         "type": "file",
-        "name": "package-lock.json"
+        "name": "package.json"
       },
       {
         "type": "file",
-        "name": "package.json",
-        "gitStatus": "modified"
-      },
-      {
-        "type": "file",
-        "name": "postcss.config.js"
-      },
-      {
-        "type": "file",
-        "name": "project-structure.json",
-        "gitStatus": "modified"
-      },
-      {
-        "type": "directory",
-        "name": "public",
-        "contents": [
-          {
-            "type": "file",
-            "name": "favicon.ico"
-          },
-          {
-            "type": "file",
-            "name": "logo.webp"
-          }
-        ]
-      },
-      {
-        "type": "directory",
-        "name": "research",
-        "contents": [
-          {
-            "type": "file",
-            "name": "Canonical-entity-capability-model.json"
-          },
-          {
-            "type": "directory",
-            "name": "communications",
-            "contents": [
-              {
-                "type": "file",
-                "name": "one-pager.txt"
-              },
-              {
-                "type": "file",
-                "name": "superintendent-offering.txt"
-              }
-            ]
-          },
-          {
-            "type": "file",
-            "name": "irs_return_narratives.json"
-          },
-          {
-            "type": "file",
-            "name": "nonprofits.json",
-            "gitStatus": "modified"
-          },
-          {
-            "type": "directory",
-            "name": "rpcs",
-            "contents": [
-              {
-                "type": "file",
-                "name": "governance_functions_dev.json"
-              },
-              {
-                "type": "file",
-                "name": "governance_functions_test.json"
-              }
-            ]
-          },
-          {
-            "type": "file",
-            "name": "states.json"
-          },
-          {
-            "type": "file",
-            "name": "westonka990s.json"
-          }
-        ]
-      },
-      {
-        "type": "directory",
-        "name": "scratchfiles",
-        "contents": [
-          {
-            "type": "file",
-            "name": "autocomplete.js"
-          },
-          {
-            "type": "file",
-            "name": "autocomplete.ts"
-          },
-          {
-            "type": "file",
-            "name": "build-output.txt"
-          },
-          {
-            "type": "file",
-            "name": "file1.js"
-          },
-          {
-            "type": "file",
-            "name": "file1.tsx"
-          },
-          {
-            "type": "file",
-            "name": "file2.js"
-          },
-          {
-            "type": "file",
-            "name": "file2.tsx"
-          },
-          {
-            "type": "file",
-            "name": "gpt-chat-ref.txt"
-          },
-          {
-            "type": "file",
-            "name": "gpt_plans.txt"
-          },
-          {
-            "type": "file",
-            "name": "na.txt"
-          },
-          {
-            "type": "file",
-            "name": "rest-client.http"
-          },
-          {
-            "type": "file",
-            "name": "test.css"
-          },
-          {
-            "type": "file",
-            "name": "test.js"
-          },
-          {
-            "type": "file",
-            "name": "test.json"
-          },
-          {
-            "type": "file",
-            "name": "test.sql"
-          },
-          {
-            "type": "file",
-            "name": "test.ts"
-          },
-          {
-            "type": "file",
-            "name": "test1.json"
-          }
-        ]
-      },
-      {
-        "type": "directory",
-        "name": "scripts",
-        "contents": [
-          {
-            "type": "file",
-            "name": ".DS_Store"
-          },
-          {
-            "type": "file",
-            "name": "README.md",
-            "gitStatus": "modified"
-          },
-          {
-            "type": "file",
-            "name": "assert-test-env.ts"
-          },
-          {
-            "type": "file",
-            "name": "check-env.ts"
-          },
-          {
-            "type": "file",
-            "name": "clear-logos.ts"
-          },
-          {
-            "type": "directory",
-            "name": "geojson",
-            "contents": [
-              {
-                "type": "directory",
-                "name": "mn_mde_bdry_school_attendance_areas",
-                "contents": [
-                  {
-                    "type": "directory",
-                    "name": "SY2025_26",
-                    "contents": [
-                      {
-                        "type": "file",
-                        "name": "display.geojson"
-                      },
-                      {
-                        "type": "file",
-                        "name": "input.geojson"
-                      },
-                      {
-                        "type": "file",
-                        "name": "metadata.json",
-                        "gitStatus": "modified"
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "type": "directory",
-                "name": "mn_mde_bdry_school_district_boundaries",
-                "contents": [
-                  {
-                    "type": "directory",
-                    "name": "SY2025_26",
-                    "contents": [
-                      {
-                        "type": "file",
-                        "name": "display.geojson"
-                      },
-                      {
-                        "type": "file",
-                        "name": "input.geojson"
-                      },
-                      {
-                        "type": "file",
-                        "name": "metadata.json",
-                        "gitStatus": "modified"
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "type": "directory",
-                "name": "mn_mde_struc_school_program_locs",
-                "contents": [
-                  {
-                    "type": "directory",
-                    "name": "SY2025_26",
-                    "contents": [
-                      {
-                        "type": "file",
-                        "name": "display.geojson"
-                      },
-                      {
-                        "type": "file",
-                        "name": "input.geojson"
-                      },
-                      {
-                        "type": "file",
-                        "name": "metadata.json",
-                        "gitStatus": "modified"
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "type": "directory",
-                "name": "us_census_tiger_us_state",
-                "contents": [
-                  {
-                    "type": "directory",
-                    "name": "TIGER2023",
-                    "contents": [
-                      {
-                        "type": "file",
-                        "name": "display.geojson"
-                      },
-                      {
-                        "type": "file",
-                        "name": "input.geojson"
-                      },
-                      {
-                        "type": "file",
-                        "name": "metadata.json",
-                        "gitStatus": "modified"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "file",
-            "name": "import-mde-superintendents.ts"
-          },
-          {
-            "type": "file",
-            "name": "import-mn-attendance-areas.ts"
-          },
-          {
-            "type": "file",
-            "name": "import-mn-district-boundaries.ts"
-          },
-          {
-            "type": "file",
-            "name": "import-mn-districts.ts"
-          },
-          {
-            "type": "file",
-            "name": "import-mn-school-program-locs.ts"
-          },
-          {
-            "type": "file",
-            "name": "import-sd-mn.ts"
-          },
-          {
-            "type": "file",
-            "name": "import-us-states.ts"
-          },
-          {
-            "type": "directory",
-            "name": "irs",
-            "contents": [
-              {
-                "type": "file",
-                "name": "2022_TEOS_XML_01A.zip",
-                "gitStatus": "untracked"
-              },
-              {
-                "type": "file",
-                "name": "2025_TEOS_XML_05A.zip",
-                "gitStatus": "untracked"
-              },
-              {
-                "type": "file",
-                "name": "import-990-bulk.ts",
-                "gitStatus": "untracked"
-              },
-              {
-                "type": "file",
-                "name": "import-irs-organizations-bulk.ts",
-                "gitStatus": "untracked"
-              },
-              {
-                "type": "file",
-                "name": "import-irs-pdfs.ts",
-                "gitStatus": "modified"
-              },
-              {
-                "type": "directory",
-                "name": "lib",
-                "contents": [
-                  {
-                    "type": "file",
-                    "name": "ein.ts",
-                    "gitStatus": "untracked"
-                  }
-                ]
-              },
-              {
-                "type": "file",
-                "name": "parse-990-financials.ts",
-                "gitStatus": "untracked"
-              },
-              {
-                "type": "file",
-                "name": "parse-990-return.ts",
-                "gitStatus": "untracked"
-              },
-              {
-                "type": "directory",
-                "name": "pdfs",
-                "contents": [
-                  {
-                    "type": "file",
-                    "name": "Westonka Foundation 990 - 2021.pdf"
-                  },
-                  {
-                    "type": "file",
-                    "name": "Westonka Foundation 990 - 2022.pdf"
-                  },
-                  {
-                    "type": "file",
-                    "name": "Westonka Hockey Association 2021.pdf"
-                  },
-                  {
-                    "type": "file",
-                    "name": "Westonka Hockey Association 2022.pdf"
-                  },
-                  {
-                    "type": "file",
-                    "name": "Westonka Soccer Boosters 990 - 2020.pdf"
-                  },
-                  {
-                    "type": "file",
-                    "name": "Westonka Soccer Boosters 990 - 2021.pdf"
-                  },
-                  {
-                    "type": "file",
-                    "name": "WestonkaOronoSportCenter 990 2021.pdf"
-                  },
-                  {
-                    "type": "file",
-                    "name": "WestonkaOronoSportCenter 990 2022.pdf"
-                  },
-                  {
-                    "type": "file",
-                    "name": "WestonkaRecSociety 990 2021.pdf"
-                  },
-                  {
-                    "type": "file",
-                    "name": "WestonkaRecSociety 990 2022.pdf"
-                  },
-                  {
-                    "type": "file",
-                    "name": "WestonkaSchoolAgeKidsCore 990 2023.pdf"
-                  },
-                  {
-                    "type": "file",
-                    "name": "WestonkaSportsAssociation 990 2021.pdf"
-                  },
-                  {
-                    "type": "file",
-                    "name": "WestonkaSportsAssociation 990 2022.pdf"
-                  },
-                  {
-                    "type": "file",
-                    "name": "WestonkaYouthBasketball 990 2021.pdf"
-                  },
-                  {
-                    "type": "file",
-                    "name": "WestonkaYouthBasketball 990 2022.pdf"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "directory",
-            "name": "lib",
-            "contents": [
-              {
-                "type": "file",
-                "name": "load-env.ts"
-              },
-              {
-                "type": "file",
-                "name": "supabase-error.ts"
-              }
-            ]
-          },
-          {
-            "type": "file",
-            "name": "link-mn-districts-to-state.ts"
-          },
-          {
-            "type": "file",
-            "name": "link-schools-to-districts.ts"
-          },
-          {
-            "type": "file",
-            "name": "migrate-dev-to-test.sh"
-          },
-          {
-            "type": "file",
-            "name": "nuke-test.sql"
-          },
-          {
-            "type": "directory",
-            "name": "perf",
-            "contents": [
-              {
-                "type": "file",
-                "name": "explain-map-children.sql"
-              }
-            ]
-          },
-          {
-            "type": "directory",
-            "name": "rls",
-            "contents": [
-              {
-                "type": "file",
-                "name": "01_reset_rls.sql"
-              },
-              {
-                "type": "file",
-                "name": "03_rebuild_grants.sql"
-              }
-            ]
-          },
-          {
-            "type": "directory",
-            "name": "seed",
-            "contents": [
-              {
-                "type": "file",
-                "name": "seed-local.ts"
-              },
-              {
-                "type": "file",
-                "name": "verify-local.ts"
-              }
-            ]
-          },
-          {
-            "type": "file",
-            "name": "seed-test.ts"
-          },
-          {
-            "type": "file",
-            "name": "structure-diff.ts"
-          },
-          {
-            "type": "directory",
-            "name": "supabase",
-            "contents": [
-              {
-                "type": "file",
-                "name": "gen-types-local.ts"
-              },
-              {
-                "type": "file",
-                "name": "local-env.ts"
-              }
-            ]
-          },
-          {
-            "type": "file",
-            "name": "test.ts"
-          },
-          {
-            "type": "file",
-            "name": "verify-test.sql"
-          }
-        ]
-      },
-      {
-        "type": "directory",
-        "name": "supabase",
-        "contents": [
-          {
-            "type": "directory",
-            "name": ".branches",
-            "contents": [
-              {
-                "type": "file",
-                "name": "_current_branch"
-              }
-            ]
-          },
-          {
-            "type": "directory",
-            "name": ".temp",
-            "contents": [
-              {
-                "type": "file",
-                "name": "cli-latest"
-              },
-              {
-                "type": "file",
-                "name": "gotrue-version"
-              },
-              {
-                "type": "file",
-                "name": "pooler-url"
-              },
-              {
-                "type": "file",
-                "name": "postgres-version"
-              },
-              {
-                "type": "file",
-                "name": "project-ref"
-              },
-              {
-                "type": "file",
-                "name": "rest-version"
-              },
-              {
-                "type": "file",
-                "name": "storage-migration"
-              },
-              {
-                "type": "file",
-                "name": "storage-version"
-              }
-            ]
-          },
-          {
-            "type": "directory",
-            "name": "_db_backups",
-            "contents": [
-              {
-                "type": "file",
-                "name": "test_pre_migrations.sql"
-              }
-            ]
-          },
-          {
-            "type": "directory",
-            "name": "_old_migrations_backup",
-            "contents": []
-          },
-          {
-            "type": "file",
-            "name": "config.toml"
-          },
-          {
-            "type": "directory",
-            "name": "migrations",
-            "contents": [
-              {
-                "type": "file",
-                "name": "00000000000000_baseline.sql",
-                "gitStatus": "modified"
-              },
-              {
-                "type": "directory",
-                "name": "20260110061802_supabase",
-                "contents": [
-                  {
-                    "type": "directory",
-                    "name": "migrations",
-                    "contents": [
-                      {
-                        "type": "file",
-                        "name": "20260110_reconcile_remote.sql.sql"
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "type": "directory",
-                "name": "20260110152635_supabase",
-                "contents": [
-                  {
-                    "type": "directory",
-                    "name": "migrations",
-                    "contents": [
-                      {
-                        "type": "file",
-                        "name": "20260110_reconcile_remote.sql.sql"
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "type": "file",
-                "name": "20260128202316_mde_reference_lists.sql"
-              },
-              {
-                "type": "file",
-                "name": "20260129000000_create_avatars_bucket.sql"
-              },
-              {
-                "type": "file",
-                "name": "20260130230651_ein_normalized.sql",
-                "gitStatus": "untracked"
-              },
-              {
-                "type": "file",
-                "name": "20260131153933_add_teos_columns_to_irs_returns.sql",
-                "gitStatus": "untracked"
-              },
-              {
-                "type": "file",
-                "name": "20260131154651_add_latest_return_id.sql",
-                "gitStatus": "untracked"
-              },
-              {
-                "type": "file",
-                "name": "20260131160048_trg_irs_returns_refresh_latest_return_id.sql",
-                "gitStatus": "untracked"
-              },
-              {
-                "type": "file",
-                "name": "20260201142045_add_return_source_priority.sql",
-                "gitStatus": "untracked"
-              },
-              {
-                "type": "file",
-                "name": "20260201144232_returns_unique_authoritative.sql",
-                "gitStatus": "untracked"
-              },
-              {
-                "type": "file",
-                "name": "20260201153000_fix_returns_unique_authoritative.sql",
-                "gitStatus": "untracked"
-              },
-              {
-                "type": "file",
-                "name": "20260202035039_ein_normalized.sql",
-                "gitStatus": "untracked"
-              },
-              {
-                "type": "file",
-                "name": "20260202124054_irs_enum_update.sql",
-                "gitStatus": "untracked"
-              },
-              {
-                "type": "directory",
-                "name": "_archive",
-                "contents": [
-                  {
-                    "type": "file",
-                    "name": "20250101000000_core_entities.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20250831045206_remote_schema.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20250905041934_remote_schema.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20250915025610_remote_schema.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20250923035715_remote_schema.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20251220000000_add_entity_types_table.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20251220001000_clear_legacy_district_metadata.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20251220002000_drop_district_metadata.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20251220004000_branding_entity_ref_reset.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260102000000_seed_brand_asset_slots_non_district.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260111051815_governance_meeting_enforcement.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260112043440_governance_meeting_finalization.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260116165753_link_schools_to_districts.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260116213033_add_schools_to_geometry_type.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260119051615_remove_districts_table.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260119120000_drop_legacy_districts.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260119123000_add_entity_attributes_source_records_status.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260119123500_add_entity_id_to_donations_and_subscriptions.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260120054804_mde_reference_lists.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260120061023_fix_link_schools_to_districts_perf.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260120155102_mde_metadata_tables_and_indexes.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260120155130_link_attendance_areas_rpcs.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260120155344_mn_state_school_view.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260120205326_drop_attendance_area_metadata.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260120205339_drop_attendance_area_linking_rpcs.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260121234913_map_children_geojson_rpc_v2.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260122010000_geometry_rpc_compat.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260122013000_create_entity_geometries_geojson_view.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260122154314_load_branding_tables.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260122191734_db_cleaning.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260122193530_governance_rpc.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260122210548_document_versions.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260122220545_meeting_attendance.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260122232639_new_goverance_fields.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260122234032_new_goverance_fields.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260123001746_nonprofit_table.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260123024732_remove_view.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260124044745_fixing_legacy_rpc.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260124051533_add_geom_to_geometry_table.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260124054507_fix_map_children_geojson_param_rename.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260127121500_add_entity_onboarding.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260127122000_extend_entity_status_active.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260127123000_create_avatars_bucket.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260201000000_branding_core.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260201235959_upsert_entity_geometry_from_geojson_rpc.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260202000000_branding_palette_role_uniqueness.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260203120000_fix_auth_profiles_trigger.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260204100000_split_colors_out_of_palette.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260205120000_map_children_geojson_rpc.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260205123000_update_entity_geometries_constraint.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260205123500_drop_map_children_geojson.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260210120000_update_entity_geometries_constraint_and_rpc.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260210123000_add_state_school_entity_types_and_entities_fk.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260215090000_irs_schema.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260217090000_add_irs_return_name.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260218090000_superintendent_scope_nonprofits.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260218120000_superintendent_scope_nonprofits_rls.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260218130000_create_entity_contacts.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260218131000_superintendent_scope_ready.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260218132000_grant_irs_schema_access.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260218133000_irs_entity_links_unique_entity.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260218134000_irs_organizations_rls.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260218135000_documents_tax_year.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260218140000_entity_person_claims.sql"
-                  },
-                  {
-                    "type": "file",
-                    "name": "20260218150000_scope_nonprofits_autocreate_entity.sql"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "file",
-            "name": "seed.sql",
-            "gitStatus": "modified"
-          }
-        ]
-      },
-      {
-        "type": "file",
-        "name": "tailwind.config.ts"
-      },
-      {
-        "type": "file",
-        "name": "teos_2021_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl",
-        "gitStatus": "untracked"
-      },
-      {
-        "type": "file",
-        "name": "teos_2022_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl",
-        "gitStatus": "untracked"
-      },
-      {
-        "type": "file",
-        "name": "teos_2023_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl",
-        "gitStatus": "untracked"
-      },
-      {
-        "type": "file",
-        "name": "teos_2024_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl",
-        "gitStatus": "untracked"
-      },
-      {
-        "type": "file",
-        "name": "teos_2025_7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e.jsonl",
-        "gitStatus": "untracked"
+        "name": "README.md"
       },
       {
         "type": "file",
         "name": "tsconfig.json"
-      },
-      {
-        "type": "file",
-        "name": "tsconfig.next.json"
-      },
-      {
-        "type": "directory",
-        "name": "types",
-        "contents": [
-          {
-            "type": "file",
-            "name": "mapbox-togeojson.d.ts"
-          },
-          {
-            "type": "file",
-            "name": "next-auth.d.ts"
-          }
-        ]
-      },
-      {
-        "type": "directory",
-        "name": "utils",
-        "contents": [
-          {
-            "type": "file",
-            "name": "admin-tools.ts"
-          },
-          {
-            "type": "file",
-            "name": "build.ts"
-          },
-          {
-            "type": "file",
-            "name": "crypto.ts"
-          },
-          {
-            "type": "directory",
-            "name": "supabase",
-            "contents": [
-              {
-                "type": "file",
-                "name": "client.ts"
-              },
-              {
-                "type": "file",
-                "name": "middleware.ts"
-              },
-              {
-                "type": "file",
-                "name": "route.ts"
-              },
-              {
-                "type": "file",
-                "name": "server.ts"
-              },
-              {
-                "type": "file",
-                "name": "service-worker.ts"
-              }
-            ]
-          }
-        ]
       }
     ]
-  },
-  {
-    "type": "report",
-    "directories": 318,
-    "files": 623
   }
 ]

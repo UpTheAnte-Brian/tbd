@@ -18,6 +18,7 @@ import LoadingSpinner from "@/app/components/loading-spinner";
 import { Nonprofit } from "@/app/lib/types/nonprofits";
 import NonprofitCreateDrawer from "@/app/components/nonprofits/NonprofitCreateDrawer";
 import { toast, Toaster } from "react-hot-toast";
+import { entityPath } from "@/app/lib/routes";
 
 type FullGridApi<T> = GridApi<T> & {
   getModel(): IClientSideRowModel;
@@ -102,7 +103,7 @@ export default function NonprofitsPage() {
 
           return (
             <Link
-              href={`/nonprofits/${entityId}`}
+              href={entityPath(entityId)}
               style={{ color: "#4dabf7", textDecoration: "none" }}
             >
               {params.value}

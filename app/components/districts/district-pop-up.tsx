@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { EntityFeature } from "@/app/lib/types/map";
 import React, { useEffect, useRef } from "react";
+import { entityPath } from "@/app/lib/routes";
 
 const DistrictPopUp = React.memo(
   ({ district }: { district: EntityFeature }) => {
@@ -18,7 +19,7 @@ const DistrictPopUp = React.memo(
 
     return (
       <div className="flex flex-col gap-3 rounded-xl border border-brand-secondary-1 bg-brand-secondary-1 p-4">
-        <Link href={`/districts/${district.id}`}>
+        <Link href={entityPath(String(district.id))}>
           <div className="text-center text-lg font-semibold text-brand-primary-0 underline decoration-brand-primary-0 hover:text-brand-primary-2">
             {props.name ?? props.slug ?? "District"}
           </div>
@@ -31,7 +32,7 @@ const DistrictPopUp = React.memo(
         </Link>
       </div>
     );
-  }
+  },
 );
 
 export default DistrictPopUp;

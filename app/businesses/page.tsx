@@ -14,6 +14,7 @@ import { Business } from "@/app/lib/types/types";
 import { ColDef } from "ag-grid-community";
 import Link from "next/link";
 import type { ICellRendererParams } from "ag-grid-community";
+import { entityPath } from "@/app/lib/routes";
 
 type FullGridApi<T> = GridApi<T> & {
   getModel(): IClientSideRowModel;
@@ -98,7 +99,7 @@ export default function BusinessesPage() {
           if (!entityId) return params.value;
           return (
             <Link
-              href={`/businesses/${entityId}`}
+              href={entityPath(entityId)}
               style={{ color: "#4dabf7" }}
             >
               {params.value}
