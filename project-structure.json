@@ -501,17 +501,6 @@
                 "contents": [
                   {
                     "type": "directory",
-                    "name": "[entityId]",
-                    "contents": [
-                      {
-                        "type": "directory",
-                        "name": "contacts",
-                        "contents": []
-                      }
-                    ]
-                  },
-                  {
-                    "type": "directory",
                     "name": "[id]",
                     "contents": [
                       {
@@ -1463,6 +1452,16 @@
                 "contents": [
                   {
                     "type": "directory",
+                    "name": "directory",
+                    "contents": [
+                      {
+                        "type": "file",
+                        "name": "EntityDirectoryGrid.tsx"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "directory",
                     "name": "hooks",
                     "contents": [
                       {
@@ -2073,6 +2072,10 @@
                     "name": "page.tsx"
                   }
                 ]
+              },
+              {
+                "type": "file",
+                "name": "page.tsx"
               }
             ]
           },
@@ -2274,6 +2277,16 @@
               },
               {
                 "type": "directory",
+                "name": "http",
+                "contents": [
+                  {
+                    "type": "file",
+                    "name": "base-url.ts"
+                  }
+                ]
+              },
+              {
+                "type": "directory",
                 "name": "keeper-archive",
                 "contents": [
                   {
@@ -2407,6 +2420,10 @@
                 "contents": [
                   {
                     "type": "file",
+                    "name": "entity-directory.ts"
+                  },
+                  {
+                    "type": "file",
                     "name": "governance-approvals.ts"
                   },
                   {
@@ -2428,6 +2445,16 @@
                   {
                     "type": "file",
                     "name": "types.ts"
+                  }
+                ]
+              },
+              {
+                "type": "directory",
+                "name": "utils",
+                "contents": [
+                  {
+                    "type": "file",
+                    "name": "districts.ts"
                   }
                 ]
               },
@@ -3576,6 +3603,10 @@
               {
                 "type": "file",
                 "name": "entity-contacts-dto.ts"
+              },
+              {
+                "type": "file",
+                "name": "entity-directory-dto.ts"
               },
               {
                 "type": "file",

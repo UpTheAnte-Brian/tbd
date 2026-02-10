@@ -1,5 +1,6 @@
 import { getReceiptBySessionId } from "@/domain/receipts/receipt-dto";
 import { Receipt } from "@/app/lib/types/types";
+import { stripPublicSchoolDistrictSuffix } from "@/app/lib/utils/districts";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -34,7 +35,9 @@ export async function GET(req: Request) {
             result.receipt_url = receipt.receipt_url;
             result.subscription_id = receipt.subscription_id;
             result.invoice_id = receipt.invoice_id;
-            result.district_name = receipt.district_name;
+            result.district_name = stripPublicSchoolDistrictSuffix(
+                receipt.district_name ?? null,
+            ) ?? receipt.district_name;
             result.user_id = receipt.user_id;
             result.type = receipt.type;
         }

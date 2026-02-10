@@ -18,6 +18,7 @@ export type AdminScopeRow = {
 
 export type OnboardingQueueRow = {
   district_entity_id: string | null;
+  district_name: string | null;
   label: string | null;
   ein: string | null;
   entity_id: string | null;
@@ -67,6 +68,23 @@ export type AdminNonprofitReview = {
     total_liabilities_end: number | null;
     net_assets_end: number | null;
   } | null;
+  people: {
+    id: string;
+    name: string;
+    role: string;
+    title: string | null;
+    average_hours_per_week: number | null;
+    reportable_compensation: number | null;
+    other_compensation: number | null;
+    is_current: boolean | null;
+  }[];
+  narratives: {
+    id: string;
+    section: string;
+    label: string | null;
+    raw_text: string;
+    created_at: string;
+  }[];
   narratives_count: number;
   people_count: number | null;
   people_parse_quality: "good" | "mixed" | "poor" | "unknown";

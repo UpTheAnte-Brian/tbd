@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import type { OnboardingQueueRow } from "@/app/admin/nonprofits/types";
+import { useRouter } from "next/navigation";
+import type {
+  OnboardingQueueRow,
+  ScopeTier,
+} from "@/app/admin/nonprofits/types";
 import type { OrgType } from "@/app/lib/types/nonprofits";
+import { stripPublicSchoolDistrictSuffix } from "@/app/lib/utils/districts";
 
 const ORG_TYPE_LABELS: Record<OrgType, string> = {
   district_foundation: "District Foundation",
@@ -16,25 +20,39 @@ const ORG_TYPE_OPTIONS: OrgType[] = [
   "up_the_ante",
   "external_charity",
 ];
+const TIERS: ScopeTier[] = [
+  "registry_only",
+  "disclosure_grade",
+  "institutional",
+];
 
 export default function AdminNonprofitsClient() {
+  const router = useRouter();
   const [rows, setRows] = useState<OnboardingQueueRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activatingEin, setActivatingEin] = useState<string | null>(null);
   const [orgTypeEdits, setOrgTypeEdits] = useState<Record<string, OrgType>>(
     {},
   );
   const [savingOrgType, setSavingOrgType] = useState<Set<string>>(new Set());
+  const [savingStatus, setSavingStatus] = useState<Set<string>>(new Set());
+  const [tierEdits, setTierEdits] = useState<Record<string, ScopeTier>>({});
+  const [savingTier, setSavingTier] = useState<Set<string>>(new Set());
+  const [showArchived, setShowArchived] = useState(false);
+  const [showActive, setShowActive] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchQueue = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/admin/nonprofits", {
-        cache: "no-store",
-      });
+      const response = await fetch(
+        `/api/admin/nonprofits${showArchived ? "?showArchived=1" : ""}`,
+        {
+          cache: "no-store",
+        },
+      );
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
         throw new Error(body?.error ?? "Failed to load onboarding queue");
@@ -42,14 +60,19 @@ export default function AdminNonprofitsClient() {
       const payload = (await response.json()) as OnboardingQueueRow[];
       setRows(payload ?? []);
       const nextOrgTypes: Record<string, OrgType> = {};
+      const nextTiers: Record<string, ScopeTier> = {};
       (payload ?? []).forEach((row) => {
         if (!row.district_entity_id || !row.ein) return;
         const key = `${row.district_entity_id}:${row.ein}`;
         if (row.org_type) {
           nextOrgTypes[key] = row.org_type;
         }
+        if (row.tier) {
+          nextTiers[key] = row.tier;
+        }
       });
       setOrgTypeEdits(nextOrgTypes);
+      setTierEdits(nextTiers);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to load onboarding queue",
@@ -61,7 +84,7 @@ export default function AdminNonprofitsClient() {
 
   useEffect(() => {
     fetchQueue();
-  }, []);
+  }, [showArchived]);
 
   const updateOrgType = async (row: OnboardingQueueRow, orgType: OrgType) => {
     if (!row.ein || !row.district_entity_id) return;
@@ -86,7 +109,25 @@ export default function AdminNonprofitsClient() {
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        throw new Error(body?.error ?? "Failed to update org type");
+        if (
+          orgType === "district_foundation" &&
+          (body?.error === "DISTRICT_FOUNDATION_CONFLICT" ||
+            body?.code === "23505" ||
+            String(body?.constraint ?? "").includes(
+              "ssn_one_district_foundation_per_district",
+            ))
+        ) {
+          const districtName =
+            stripPublicSchoolDistrictSuffix(row.district_name) ??
+            row.district_name ??
+            "this district";
+          throw new Error(
+            `Another nonprofit is listed as the District Foundation. You must make that an external charity before changing this nonprofit to the district foundation for ${districtName}.`,
+          );
+        }
+        throw new Error(
+          body?.message ?? body?.error ?? "Failed to update org type",
+        );
       }
 
       setRows((prev) =>
@@ -111,30 +152,107 @@ export default function AdminNonprofitsClient() {
     }
   };
 
-  const handleActivate = async (row: OnboardingQueueRow) => {
+  const updateScopeStatus = async (
+    row: OnboardingQueueRow,
+    status: "candidate" | "active" | "archived",
+  ) => {
     if (!row.ein || !row.district_entity_id) return;
-    setActivatingEin(row.ein);
+    const key = `${row.district_entity_id}:${row.ein}`;
+    const previous = row.status ?? "candidate";
+    setSavingStatus((prev) => new Set(prev).add(key));
     setError(null);
+
     try {
-      const response = await fetch(
-        `/api/districts/${encodeURIComponent(row.district_entity_id)}/scope-nonprofits/activate`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ eins: [row.ein] }),
-        },
-      );
+      const response = await fetch("/api/admin/nonprofits/scope", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          district_entity_id: row.district_entity_id,
+          ein: row.ein,
+          status,
+        }),
+      });
+
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        throw new Error(body?.error ?? "Failed to activate nonprofit");
+        throw new Error(body?.error ?? "Failed to update status");
       }
-      await fetchQueue();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to activate nonprofit",
+
+      setRows((prev) =>
+        prev
+          .map((item) =>
+            item.district_entity_id === row.district_entity_id &&
+                item.ein === row.ein
+              ? { ...item, status }
+              : item,
+          )
+          .filter((item) =>
+            showArchived ? true : item.status !== "archived",
+          ),
       );
+    } catch (err) {
+      setRows((prev) =>
+        prev.map((item) =>
+          item.district_entity_id === row.district_entity_id &&
+              item.ein === row.ein
+            ? { ...item, status: previous }
+            : item,
+        ),
+      );
+      setError(err instanceof Error ? err.message : "Failed to update status");
     } finally {
-      setActivatingEin(null);
+      setSavingStatus((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }
+  };
+
+  const updateScopeTier = async (
+    row: OnboardingQueueRow,
+    tier: ScopeTier,
+  ) => {
+    if (!row.ein || !row.district_entity_id) return;
+    const key = `${row.district_entity_id}:${row.ein}`;
+    const previous = tierEdits[key] ?? row.tier ?? "registry_only";
+    setTierEdits((prev) => ({ ...prev, [key]: tier }));
+    setSavingTier((prev) => new Set(prev).add(key));
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin/nonprofits/scope", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          district_entity_id: row.district_entity_id,
+          ein: row.ein,
+          tier,
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body?.message ?? body?.error ?? "Failed to update tier");
+      }
+
+      setRows((prev) =>
+        prev.map((item) =>
+          item.district_entity_id === row.district_entity_id &&
+              item.ein === row.ein
+            ? { ...item, tier }
+            : item,
+        ),
+      );
+    } catch (err) {
+      setTierEdits((prev) => ({ ...prev, [key]: previous }));
+      setError(err instanceof Error ? err.message : "Failed to update tier");
+    } finally {
+      setSavingTier((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
     }
   };
 
@@ -160,30 +278,78 @@ export default function AdminNonprofitsClient() {
           <h2 className="text-sm font-semibold text-text-on-light">
             Queue ({rows.length})
           </h2>
-          <span className="text-xs text-brand-secondary-0">
-            {loading ? "Loading…" : "In scope"}
-          </span>
+          <div className="flex flex-1 items-center justify-end gap-3 text-xs text-brand-secondary-0">
+            <div className="min-w-[220px]">
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search name, EIN, district…"
+                className="w-full rounded-md border border-white/40 bg-white/10 px-3 py-1 text-xs text-text-on-light placeholder:text-text-on-light/60 focus:border-brand-primary focus:outline-none"
+              />
+            </div>
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={showActive}
+                onChange={(event) => setShowActive(event.target.checked)}
+                className="h-3 w-3 rounded border-border-subtle"
+              />
+              Show active
+            </label>
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={showArchived}
+                onChange={(event) => setShowArchived(event.target.checked)}
+                className="h-3 w-3 rounded border-border-subtle"
+              />
+              Show archived
+            </label>
+            <span>{loading ? "Loading…" : "In scope"}</span>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-surface-inset text-xs uppercase tracking-wide text-brand-secondary-0">
               <tr>
                 <th className="px-4 py-3">Label</th>
+                <th className="px-4 py-3">District</th>
                 <th className="px-4 py-3">EIN</th>
-                <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Type</th>
+                <th className="px-4 py-3">Tier</th>
                 <th className="px-4 py-3">Signals</th>
-                <th className="px-4 py-3">Next step</th>
+                <th className="px-4 py-3 text-right">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
-              {rows.map((row, index) => {
+              {rows
+                .filter((row) => {
+                  if (row.status === "archived" && !showArchived) return false;
+                  if (row.status === "active" && !showActive) return false;
+                  return true;
+                })
+                .filter((row) => {
+                  if (!searchQuery.trim()) return true;
+                  const haystack = [
+                    row.label,
+                    row.ein,
+                    row.district_name,
+                    row.org_type,
+                    row.status,
+                    row.tier,
+                  ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLowerCase();
+                  return haystack.includes(searchQuery.trim().toLowerCase());
+                })
+                .map((row, index) => {
                 const ein = row.ein ?? "";
                 const canLink = Boolean(ein);
                 const detailHref = canLink
                   ? `/admin/nonprofits/${encodeURIComponent(ein)}`
                   : "#";
-                const isActivating = activatingEin === row.ein;
                 const orgTypeKey =
                   row.district_entity_id && row.ein
                     ? `${row.district_entity_id}:${row.ein}`
@@ -196,27 +362,41 @@ export default function AdminNonprofitsClient() {
                 const isOrgTypeSaving = orgTypeKey
                   ? savingOrgType.has(orgTypeKey)
                   : false;
+                const tierValue = orgTypeKey
+                  ? tierEdits[orgTypeKey] ??
+                    row.tier ??
+                    "registry_only"
+                  : row.tier ?? "registry_only";
+                const isTierSaving = orgTypeKey
+                  ? savingTier.has(orgTypeKey)
+                  : false;
 
-                const nextAction = !row.has_irs_org
-                  ? "Investigate EIN"
-                  : !row.has_returns
-                    ? "Import returns"
-                    : !row.has_entity
-                      ? "Activate nonprofit"
-                      : "Open profile";
+                const statusKey = orgTypeKey ?? "";
+                const isStatusSaving = statusKey
+                  ? savingStatus.has(statusKey)
+                  : false;
+                const needsReturns =
+                  tierValue === "disclosure_grade" && !row.has_returns;
                 return (
                   <tr
                     key={`${row.district_entity_id ?? "district"}-${row.ein ?? row.label ?? "row"}-${index}`}
-                    className="hover:bg-surface-inset/50"
+                    className={`hover:bg-surface-inset/50 ${
+                      canLink ? "cursor-pointer" : ""
+                    }`}
+                    onClick={() => {
+                      if (canLink) router.push(detailHref);
+                    }}
                   >
                     <td className="px-4 py-3 font-medium text-text-on-light">
                       {row.label ?? row.ein ?? "Untitled"}
                     </td>
                     <td className="px-4 py-3 text-xs text-text-on-light">
-                      {row.ein ?? "--"}
+                      {stripPublicSchoolDistrictSuffix(row.district_name) ??
+                        row.district_name ??
+                        "--"}
                     </td>
                     <td className="px-4 py-3 text-xs text-text-on-light">
-                      {row.status ?? "--"}
+                      {row.ein ?? "--"}
                     </td>
                     <td className="px-4 py-3 text-xs text-text-on-light">
                       <div className="flex flex-col gap-2">
@@ -226,6 +406,9 @@ export default function AdminNonprofitsClient() {
                             const next = event.target.value as OrgType;
                             void updateOrgType(row, next);
                           }}
+                          onClick={(event) => event.stopPropagation()}
+                          onPointerDown={(event) => event.stopPropagation()}
+                          onKeyDown={(event) => event.stopPropagation()}
                           disabled={!orgTypeKey || isOrgTypeSaving}
                           className="w-full rounded-md border border-border-subtle bg-surface-card px-2 py-1 text-xs text-text-on-light"
                         >
@@ -235,20 +418,34 @@ export default function AdminNonprofitsClient() {
                             </option>
                           ))}
                         </select>
-                        {row.org_type !== "district_foundation" &&
-                        orgTypeKey ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateOrgType(row, "district_foundation")
-                            }
-                            disabled={isOrgTypeSaving}
-                            className="rounded-md border border-border-subtle px-2 py-1 text-[11px] font-semibold text-text-on-light transition hover:border-brand-primary hover:text-brand-primary disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            Set as District Foundation
-                          </button>
-                        ) : null}
                         {isOrgTypeSaving ? (
+                          <span className="text-[11px] text-brand-secondary-0">
+                            Saving…
+                          </span>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-text-on-light">
+                      <div className="flex flex-col gap-2">
+                        <select
+                          value={tierValue}
+                          onChange={(event) => {
+                            const next = event.target.value as ScopeTier;
+                            void updateScopeTier(row, next);
+                          }}
+                          onClick={(event) => event.stopPropagation()}
+                          onPointerDown={(event) => event.stopPropagation()}
+                          onKeyDown={(event) => event.stopPropagation()}
+                          disabled={!orgTypeKey || isTierSaving}
+                          className="w-full rounded-md border border-border-subtle bg-surface-card px-2 py-1 text-xs text-text-on-light"
+                        >
+                          {TIERS.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                        {isTierSaving ? (
                           <span className="text-[11px] text-brand-secondary-0">
                             Saving…
                           </span>
@@ -263,46 +460,81 @@ export default function AdminNonprofitsClient() {
                         <span className="rounded-full bg-surface-inset px-2 py-1">
                           IRS org: {row.has_irs_org ? "Yes" : "No"}
                         </span>
-                        <span className="rounded-full bg-surface-inset px-2 py-1">
+                        <span
+                          className={`rounded-full px-2 py-1 ${
+                            needsReturns
+                              ? "border border-rose-200 bg-rose-50 text-rose-700"
+                              : "bg-surface-inset"
+                          }`}
+                        >
                           Returns: {row.has_returns ? "Yes" : "No"}
                         </span>
+                        {needsReturns ? (
+                          <span className="text-[11px] font-semibold text-rose-600">
+                            Needs returns
+                          </span>
+                        ) : null}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {!row.has_irs_org ||
-                        !row.has_returns ||
-                        row.has_entity ? (
-                          <Link
-                            href={detailHref}
-                            className={`rounded-md bg-brand-primary-0 px-3 py-1 text-xs font-semibold text-brand-primary-1 transition hover:bg-brand-primary-2 ${
-                              canLink ? "" : "pointer-events-none opacity-60"
-                            }`}
-                          >
-                            {nextAction}
-                          </Link>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleActivate(row)}
-                            disabled={isActivating}
-                            className="rounded-md bg-brand-primary-0 px-3 py-1 text-xs font-semibold text-brand-primary-1 transition hover:bg-brand-primary-2 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {isActivating ? "Activating…" : nextAction}
-                          </button>
-                        )}
+                    <td className="px-4 py-3 text-right text-xs text-text-on-light">
+                      <div className="flex flex-col items-end gap-1">
+                        <select
+                          value={row.status ?? "candidate"}
+                          onChange={(event) => {
+                            const next = event.target.value as
+                              | "candidate"
+                              | "active"
+                              | "archived";
+                            void updateScopeStatus(row, next);
+                          }}
+                          onClick={(event) => event.stopPropagation()}
+                          onPointerDown={(event) => event.stopPropagation()}
+                          onKeyDown={(event) => event.stopPropagation()}
+                          disabled={!orgTypeKey || isStatusSaving}
+                          className="w-full min-w-[130px] rounded-md border border-border-subtle bg-surface-card px-2 py-1 text-xs text-text-on-light"
+                        >
+                          <option value="candidate">candidate</option>
+                          <option value="active">active</option>
+                          <option value="archived">archived</option>
+                        </select>
+                        {isStatusSaving ? (
+                          <span className="text-[11px] text-brand-secondary-0">
+                            Saving…
+                          </span>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
                 );
               })}
-              {!loading && rows.length === 0 ? (
+              {!loading &&
+              rows
+                .filter((row) => {
+                  if (row.status === "archived" && !showArchived) return false;
+                  if (row.status === "active" && !showActive) return false;
+                  return true;
+                })
+                .filter((row) => {
+                  if (!searchQuery.trim()) return true;
+                  const haystack = [
+                    row.label,
+                    row.ein,
+                    row.district_name,
+                    row.org_type,
+                    row.status,
+                    row.tier,
+                  ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLowerCase();
+                  return haystack.includes(searchQuery.trim().toLowerCase());
+                }).length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-4 py-8 text-center text-sm text-brand-secondary-0"
                   >
-                    No scoped nonprofits in the queue.
+                    No scoped nonprofits match your search.
                   </td>
                 </tr>
               ) : null}

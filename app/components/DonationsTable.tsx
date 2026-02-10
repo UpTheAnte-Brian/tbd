@@ -4,6 +4,7 @@ import "@/app/lib/agGridSetup";
 import { AgGridReact } from "ag-grid-react";
 import { useEffect, useMemo, useState } from "react";
 import type { Receipt } from "@/app/lib/types/types";
+import { stripPublicSchoolDistrictSuffix } from "@/app/lib/utils/districts";
 import type {
   ColDef,
   ValueFormatterParams,
@@ -23,7 +24,13 @@ export default function DonationsTable() {
   const columnDefs: ColDef<Receipt>[] = useMemo<ColDef<Receipt>[]>(
     () => [
       { field: "id", headerName: "ID", flex: 1 },
-      { field: "district_name", headerName: "District", flex: 1 },
+      {
+        field: "district_name",
+        headerName: "District",
+        flex: 1,
+        valueFormatter: (p: ValueFormatterParams<Receipt, string>) =>
+          stripPublicSchoolDistrictSuffix(p.value ?? null) ?? p.value ?? "",
+      },
       { field: "email", headerName: "Donor Email", flex: 1 },
       {
         field: "amount",

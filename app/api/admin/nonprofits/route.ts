@@ -6,13 +6,17 @@ import { getOnboardingQueue } from "@/domain/admin/nonprofit-queue-dto";
 import type { CreateNonprofitRequest } from "@/app/lib/types/nonprofit-onboarding";
 import { areAdminToolsDisabled } from "@/utils/admin-tools";
 
-export async function GET() {
+export async function GET(req: Request) {
   return safeRoute(async () => {
     if (areAdminToolsDisabled()) {
       return jsonError("Admin routes are disabled.", 403);
     }
 
-    const queue = await getOnboardingQueue();
+    const { searchParams } = new URL(req.url);
+    const includeArchived =
+      searchParams.get("showArchived") === "1" ||
+      searchParams.get("showArchived") === "true";
+    const queue = await getOnboardingQueue({ includeArchived });
     return NextResponse.json(queue);
   });
 }

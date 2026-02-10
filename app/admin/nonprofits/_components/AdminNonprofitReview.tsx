@@ -5,18 +5,11 @@ import Link from "next/link";
 import type {
   AdminNonprofitReview as AdminNonprofitReviewDTO,
   AdminScopeRow,
-  ScopeStatus,
-  ScopeTier,
 } from "@/app/admin/nonprofits/types";
 import { useRouter } from "next/navigation";
 import { formatEinDashed } from "@/domain/irs/ein";
-
-const TIERS: ScopeTier[] = [
-  "registry_only",
-  "disclosure_grade",
-  "institutional",
-];
-const STATUSES: ScopeStatus[] = ["candidate", "active", "archived"];
+import PeopleRolesCard from "@/app/admin/nonprofits/[id]/_components/PeopleRolesCard";
+import NarrativesCard from "@/app/admin/nonprofits/[id]/_components/NarrativesCard";
 
 const moneyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -40,16 +33,8 @@ export default function AdminNonprofitReview({ ein }: Props) {
   const [data, setData] = useState<AdminNonprofitReviewDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tier, setTier] = useState<ScopeTier>("registry_only");
-  const [status, setStatus] = useState<ScopeStatus>("candidate");
-  const [savingScope, setSavingScope] = useState(false);
   const [creatingEntity, setCreatingEntity] = useState(false);
   const router = useRouter();
-
-  const syncScopeState = (scope: AdminScopeRow | null) => {
-    setTier(scope?.tier ?? "registry_only");
-    setStatus(scope?.status ?? "candidate");
-  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -64,7 +49,6 @@ export default function AdminNonprofitReview({ ein }: Props) {
       }
       const payload = (await response.json()) as AdminNonprofitReviewDTO;
       setData(payload);
-      syncScopeState(payload.scope ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load review");
     } finally {
@@ -75,38 +59,6 @@ export default function AdminNonprofitReview({ ein }: Props) {
   useEffect(() => {
     void load();
   }, [load]);
-
-  const handleScopeSave = async () => {
-    if (!data) return;
-    setSavingScope(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/admin/nonprofits/scope", {
-        method: data.scope ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          district_entity_id: data.scope?.district_entity_id ?? null,
-          ein: data.ein,
-          tier,
-          status,
-          label: data.organization?.legal_name ?? null,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to save scope settings");
-      }
-
-      const scope = (await response.json()) as AdminScopeRow;
-      setData((prev) => (prev ? { ...prev, scope } : prev));
-      syncScopeState(scope);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save scope");
-    } finally {
-      setSavingScope(false);
-    }
-  };
 
   const handleCreateEntity = async () => {
     if (!data) return;
@@ -246,7 +198,7 @@ export default function AdminNonprofitReview({ ein }: Props) {
               href="/admin/nonprofits"
               className="rounded-md border border-gray-200 px-3 py-1 text-xs font-semibold text-text-on-light transition hover:border-brand-primary hover:text-brand-primary"
             >
-              Back to search
+              Back to queue
             </Link>
           </div>
         </div>
@@ -362,74 +314,17 @@ export default function AdminNonprofitReview({ ein }: Props) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <h2 className="text-sm font-semibold text-text-on-light">
-            Scope Controls
-          </h2>
-          <p className="mt-1 text-xs text-brand-secondary-2">
-            Select the tier and status for superintendent review.
-          </p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="text-xs uppercase tracking-wide text-brand-secondary-2">
-                Tier
-              </label>
-              <select
-                value={tier}
-                onChange={(event) => setTier(event.target.value as ScopeTier)}
-                className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
-              >
-                {TIERS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs uppercase tracking-wide text-brand-secondary-2">
-                Status
-              </label>
-              <select
-                value={status}
-                onChange={(event) =>
-                  setStatus(event.target.value as ScopeStatus)
-                }
-                className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
-              >
-                {STATUSES.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={handleScopeSave}
-              disabled={savingScope}
-              className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {savingScope
-                ? "Saving..."
-                : data.scope
-                  ? "Update scope"
-                  : "Add to scope"}
-            </button>
-            {data.scope ? (
-              <span className="text-xs text-brand-secondary-2">
-                Current tier: {data.scope.tier} ({data.scope.status})
-              </span>
-            ) : (
-              <span className="text-xs text-brand-secondary-2">
-                Not currently in scope
-              </span>
-            )}
-          </div>
-        </div>
+        <PeopleRolesCard
+          people={data.people}
+          latestReturn={data.latest_return}
+        />
+        <NarrativesCard
+          narratives={data.narratives}
+          latestReturn={data.latest_return}
+        />
+      </div>
 
+      <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-text-on-light">
             Canonical Entity

@@ -3,6 +3,8 @@ import { safeRoute } from "@/app/lib/api/handler";
 import { jsonError } from "@/app/lib/api/errors";
 import {
   addScopeNonprofit,
+  DISTRICT_FOUNDATION_CONSTRAINT,
+  DistrictFoundationConflictError,
   getScopeNonprofitById,
   updateScopeNonprofit,
 } from "@/domain/admin/nonprofits-admin-dto";
@@ -23,11 +25,7 @@ const ORG_TYPES: OrgType[] = [
 ];
 
 const DISTRICT_FOUNDATION_ERROR =
-  "This district already has a District Foundation. Change the existing one first.";
-
-function isDistrictFoundationError(err: unknown): boolean {
-  return err instanceof Error && err.message.includes("District Foundation");
-}
+  "Another nonprofit is listed as the District Foundation.";
 
 function asTier(value: unknown): ScopeTier | undefined {
   return TIERS.includes(value as ScopeTier) ? (value as ScopeTier) : undefined;
@@ -101,8 +99,16 @@ export async function POST(req: Request) {
 
       return NextResponse.json(scope);
     } catch (err) {
-      if (isDistrictFoundationError(err)) {
-        return jsonError(DISTRICT_FOUNDATION_ERROR, 409);
+      if (err instanceof DistrictFoundationConflictError) {
+        return NextResponse.json(
+          {
+            error: "DISTRICT_FOUNDATION_CONFLICT",
+            message: DISTRICT_FOUNDATION_ERROR,
+            constraint: DISTRICT_FOUNDATION_CONSTRAINT,
+            code: err.code,
+          },
+          { status: 409 },
+        );
       }
       throw err;
     }
@@ -154,8 +160,16 @@ export async function PATCH(req: Request) {
 
       return NextResponse.json(scope);
     } catch (err) {
-      if (isDistrictFoundationError(err)) {
-        return jsonError(DISTRICT_FOUNDATION_ERROR, 409);
+      if (err instanceof DistrictFoundationConflictError) {
+        return NextResponse.json(
+          {
+            error: "DISTRICT_FOUNDATION_CONFLICT",
+            message: DISTRICT_FOUNDATION_ERROR,
+            constraint: DISTRICT_FOUNDATION_CONSTRAINT,
+            code: err.code,
+          },
+          { status: 409 },
+        );
       }
       throw err;
     }

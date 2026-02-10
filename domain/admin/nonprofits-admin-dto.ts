@@ -81,8 +81,18 @@ const SCOPE_TIERS: ScopeTier[] = [
 ];
 
 const SCOPE_STATUSES: ScopeStatus[] = ["candidate", "active", "archived"];
-const DISTRICT_FOUNDATION_CONSTRAINT =
+export const DISTRICT_FOUNDATION_CONSTRAINT =
   "ssn_one_district_foundation_per_district";
+
+export class DistrictFoundationConflictError extends Error {
+  readonly code = "23505";
+  readonly constraint = DISTRICT_FOUNDATION_CONSTRAINT;
+
+  constructor() {
+    super("Another nonprofit is listed as the District Foundation.");
+    this.name = "DistrictFoundationConflictError";
+  }
+}
 
 function isDistrictFoundationConstraint(error: PostgrestErrorLike | null) {
   if (!error || error.code !== "23505") return false;
@@ -461,8 +471,25 @@ export async function getNonprofitReview(
 
   let latestFinancials: IrsFinancialSelect | null = null;
   let narrativesCount = 0;
+  let narratives: Array<{
+    id: string;
+    section: string;
+    label: string | null;
+    raw_text: string;
+    created_at: string;
+  }> = [];
   let peopleCount: number | null = null;
   let peopleParseQuality: PeopleParseQuality = "unknown";
+  let people: Array<{
+    id: string;
+    name: string;
+    role: string;
+    title: string | null;
+    average_hours_per_week: number | null;
+    reportable_compensation: number | null;
+    other_compensation: number | null;
+    is_current: boolean | null;
+  }> = [];
 
   if (latestReturn?.id) {
     const { data: financials, error: financialsError } = await irs
@@ -479,18 +506,45 @@ export async function getNonprofitReview(
 
     latestFinancials = financials ?? null;
 
-    const { data: narratives, error: narrativesError } = await irs
+    const { data: narrativesRows, error: narrativesError } = await irs
       .from("return_narratives")
-      .select("id, return_id")
+      .select("id, return_id, section, label, raw_text, created_at")
       .eq("return_id", latestReturn.id);
 
     if (narrativesError) {
       throw new Error(narrativesError.message);
     }
 
-    narrativesCount = narratives?.length ?? 0;
+    const narrativeRows = narrativesRows ?? [];
+    narrativesCount = narrativeRows.length;
+    const narrativeSectionOrder: Record<string, number> = {
+      part_iii: 0,
+      schedule_o: 1,
+      schedule_d: 2,
+      schedule_a: 3,
+      mission: 4,
+      program_accomplishments: 5,
+      other: 6,
+    };
+    narratives = narrativeRows
+      .map((row) => ({
+        id: row.id,
+        section: String(row.section),
+        label: row.label ?? null,
+        raw_text: row.raw_text,
+        created_at: row.created_at,
+      }))
+      .sort((a, b) => {
+        const sectionA = narrativeSectionOrder[a.section] ?? 99;
+        const sectionB = narrativeSectionOrder[b.section] ?? 99;
+        if (sectionA !== sectionB) return sectionA - sectionB;
+        if (a.created_at !== b.created_at) {
+          return a.created_at.localeCompare(b.created_at);
+        }
+        return a.id.localeCompare(b.id);
+      });
 
-    const { data: people, error: peopleError } = await irs
+    const { data: peopleRows, error: peopleError } = await irs
       .from("return_people")
       .select(
         "id, return_id, role, name, title, average_hours_per_week, reportable_compensation, other_compensation, is_current",
@@ -501,9 +555,35 @@ export async function getNonprofitReview(
       throw new Error(peopleError.message);
     }
 
-    const peopleRows = people ?? [];
-    peopleCount = peopleRows.length;
-    peopleParseQuality = assessPeopleParseQuality(peopleRows);
+    const rawPeopleRows = peopleRows ?? [];
+    peopleCount = rawPeopleRows.length;
+    peopleParseQuality = assessPeopleParseQuality(rawPeopleRows);
+    const rolePriority: Record<string, number> = {
+      officer: 0,
+      director: 1,
+      trustee: 2,
+      key_employee: 3,
+      highest_compensated: 4,
+      independent_contractor: 5,
+      other: 6,
+    };
+    people = rawPeopleRows
+      .map((row) => ({
+        id: row.id,
+        name: row.name,
+        role: String(row.role),
+        title: row.title ?? null,
+        average_hours_per_week: row.average_hours_per_week ?? null,
+        reportable_compensation: row.reportable_compensation ?? null,
+        other_compensation: row.other_compensation ?? null,
+        is_current: row.is_current ?? null,
+      }))
+      .sort((a, b) => {
+        const roleA = rolePriority[a.role] ?? 99;
+        const roleB = rolePriority[b.role] ?? 99;
+        if (roleA !== roleB) return roleA - roleB;
+        return a.name.localeCompare(b.name);
+      });
   }
 
   const { data: linkRow, error: linkError } = await irs
@@ -575,6 +655,8 @@ export async function getNonprofitReview(
         net_assets_end: toNumber(latestFinancials.net_assets_end),
       }
       : null,
+    people,
+    narratives,
     narratives_count: narrativesCount,
     people_count: peopleCount,
     people_parse_quality: peopleParseQuality,
@@ -620,9 +702,7 @@ export async function addScopeNonprofit(params: {
 
   if (error) {
     if (isDistrictFoundationConstraint(error)) {
-      throw new Error(
-        "This district already has a District Foundation. Change the existing one first.",
-      );
+      throw new DistrictFoundationConflictError();
     }
     throw new Error(error.message);
   }
@@ -746,9 +826,7 @@ export async function updateScopeNonprofit(params: {
 
   if (error) {
     if (isDistrictFoundationConstraint(error)) {
-      throw new Error(
-        "This district already has a District Foundation. Change the existing one first.",
-      );
+      throw new DistrictFoundationConflictError();
     }
     throw new Error(error.message);
   }

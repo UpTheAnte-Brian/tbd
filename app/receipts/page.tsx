@@ -2,6 +2,7 @@
 
 import DonationsTable from "@/app/components/DonationsTable";
 import { Receipt } from "@/app/lib/types/types";
+import { stripPublicSchoolDistrictSuffix } from "@/app/lib/utils/districts";
 import { useEffect, useState } from "react";
 
 export default function ReceiptsPage() {
@@ -55,7 +56,10 @@ export default function ReceiptsPage() {
                   <strong>Amount:</strong> ${(r.amount / 100).toFixed(2)}
                 </p>
                 <p>
-                  <strong>District:</strong> {r.district_name ?? "N/A"}
+                  <strong>District:</strong>{" "}
+                  {stripPublicSchoolDistrictSuffix(r.district_name ?? null) ??
+                    r.district_name ??
+                    "N/A"}
                 </p>
                 <p>
                   <strong>Date:</strong> {new Date(r.date).toLocaleDateString()}
