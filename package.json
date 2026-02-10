@@ -34,6 +34,8 @@
     "importDistrictBoundaries:test": "dotenv -e .env.test.local -- tsx scripts/import-mn-district-boundaries.ts",
     "importIrsPdfs:dev": "dotenv -e .env.local -- tsx scripts/irs/import-irs-pdfs.ts",
     "importIrsPdfs:test": "dotenv -e .env.test.local -- tsx scripts/irs/import-irs-pdfs.ts",
+    "importIrs990N:dev": "dotenv -e .env.local -- tsx scripts/irs/import-irs-990n.ts",
+    "importIrs990N:test": "dotenv -e .env.test.local -- tsx scripts/irs/import-irs-990n.ts",
     "irs:import:test": "dotenv -e .env.test.local -- tsx scripts/irs/irs-import-master.ts",
     "irs:import:dev": "dotenv -e .env.local -- tsx scripts/irs/irs-import-master.ts",
     "seed:branding:dev": "dotenv -e .env.local -- tsx scripts/seed/seed-branding.ts",

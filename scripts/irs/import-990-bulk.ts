@@ -276,6 +276,7 @@ type IndexRow = {
     return_type: string | null; // 990, 990EZ, 990PF, etc.
     object_id: string; // long numeric
     shard: string | null; // e.g. 2025_TEOS_XML_08A
+    filed_on: string | null; // YYYY-MM-DD (from index, if present)
 };
 
 type ParsedReturn = {
@@ -284,6 +285,7 @@ type ParsedReturn = {
     tax_year: number | null;
     tax_period_begin_dt: string | null; // ISO date
     tax_period_end_dt: string | null; // ISO date
+    filed_on: string | null; // ISO date
     return_type: string | null;
     organization_name: string | null;
     source: {
@@ -295,6 +297,7 @@ type ParsedReturn = {
         index_tax_year?: string | null; // YYYY (index)
         index_taxpayer_name?: string | null;
         index_return_type?: string | null;
+        index_filed_on?: string | null;
     };
     xml: {
         path: string;
@@ -374,6 +377,34 @@ function parseCommaList(input: string | null | undefined): string[] {
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
+}
+
+function parseIndexDate(value: string | null | undefined): string | null {
+    if (!value) return null;
+    const raw = String(value).trim();
+    if (!raw) return null;
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+    if (/^\d{8}$/.test(raw)) {
+        const y = raw.slice(0, 4);
+        const m = raw.slice(4, 6);
+        const d = raw.slice(6, 8);
+        return `${y}-${m}-${d}`;
+    }
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) {
+        const [m, d, y] = raw.split("/");
+        return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    }
+    if (/^\d{4}\/\d{2}\/\d{2}$/.test(raw)) {
+        const [y, m, d] = raw.split("/");
+        return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    }
+
+    // ISO timestamp like 2024-05-10T00:00:00Z
+    const isoDate = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (isoDate) return isoDate[1];
+
+    return null;
 }
 
 function parseYearsFromArgs(args: Record<string, string | boolean>): number[] {
@@ -1317,6 +1348,7 @@ function inferIndexRow(params: {
         iTaxYear: number;
         iTaxpayerName: number;
         iUrl: number;
+        iFiledOn: number;
     };
 }): IndexRow | null {
     const { cols, colIndex } = params;
@@ -1373,6 +1405,9 @@ function inferIndexRow(params: {
             : null,
         object_id: objectId,
         shard: shard || null,
+        filed_on: colIndex.iFiledOn !== -1
+            ? (parseIndexDate(cols[colIndex.iFiledOn]) || null)
+            : null,
     };
 }
 
@@ -1407,6 +1442,7 @@ async function parseXmlToReturn(
         null;
     let taxPeriodEnd: string | null = (fallback as any).tax_period_end_dt ??
         null;
+    let filedOn: string | null = (fallback as any).filed_on ?? null;
 
     try {
         const { XMLParser } = require("fast-xml-parser");
@@ -1455,6 +1491,8 @@ async function parseXmlToReturn(
             rh?.TaxPeriodBeginDtTxt || null;
         const taxEndRaw = rh?.TaxPeriodEndDt || rh?.TaxPeriodEndDate ||
             rh?.TaxPeriodEndDtTxt || null;
+        const returnTsRaw = rh?.ReturnTs || rh?.ReturnTsTxt ||
+            rh?.ReturnTimestamp || null;
 
         if (taxYrRaw != null) {
             const n = Number(String(taxYrRaw).trim());
@@ -1469,6 +1507,11 @@ async function parseXmlToReturn(
             // Often already YYYY-MM-DD
             const s = taxEndRaw.trim();
             taxPeriodEnd = s;
+        }
+
+        if (returnTsRaw != null) {
+            const parsed = parseIndexDate(String(returnTsRaw));
+            if (parsed) filedOn = parsed;
         }
 
         // Return type can often be inferred from ReturnHeader/ReturnTypeCd or return version
@@ -1528,6 +1571,14 @@ async function parseXmlToReturn(
             taxPeriodEnd = String(taxEndMatch[1]).trim() || taxPeriodEnd;
         }
 
+        const returnTsMatch = xml.match(
+            /<\s*ReturnTs\s*>\s*([^<]+)\s*<\s*\/\s*ReturnTs\s*>/i,
+        );
+        if (returnTsMatch) {
+            const parsed = parseIndexDate(returnTsMatch[1]);
+            if (parsed) filedOn = parsed;
+        }
+
         if (!returnType) {
             if (/<\s*IRS990\b/i.test(xml)) returnType = "990";
             if (/<\s*IRS990EZ\b/i.test(xml)) returnType = "990EZ";
@@ -1548,6 +1599,7 @@ async function parseXmlToReturn(
         tax_year: taxYear,
         tax_period_begin_dt: taxPeriodBegin,
         tax_period_end_dt: taxPeriodEnd,
+        filed_on: filedOn,
         return_type: returnType,
         organization_name: orgName || fallback.organization_name || null,
         source: fallback.source || {},
@@ -1658,7 +1710,7 @@ async function upsertReturns(supabaseAdmin: any, rows: ParsedReturn[]) {
     // - tax_year (int)
     // - tax_period_start (date)
     // - tax_period_end (date)
-    // - filed_on (date)          (not available from TEOS index; left null)
+    // - filed_on (date)          (from TEOS index or XML ReturnTs when available)
     // - source_system (text)     (set to "teos")
     // - return_name (text)       (we use parsed organization name)
     // Plus optional TEOS/XML provenance columns if present:
@@ -1680,7 +1732,7 @@ async function upsertReturns(supabaseAdmin: any, rows: ParsedReturn[]) {
             tax_year: r.tax_year,
             tax_period_start: r.tax_period_begin_dt,
             tax_period_end: r.tax_period_end_dt,
-            filed_on: null,
+            filed_on: r.filed_on ?? null,
 
             // Optional / provenance
             source_system: "teos",
@@ -1892,6 +1944,20 @@ async function processYear(params: {
                 "taxpayer_name",
                 "taxpayername",
             );
+            const iFiledOn = findCol(
+                header,
+                "filed_on",
+                "filed_date",
+                "filed_dt",
+                "filing_date",
+                "date_filed",
+                "date_received",
+                "received_date",
+                "received_dt",
+                "submitted_date",
+                "submission_date",
+                "return_received",
+            );
             const iUrl = findCol(
                 header,
                 "url",
@@ -1945,6 +2011,7 @@ async function processYear(params: {
                 iFilingType,
                 iTaxYear,
                 iTaxpayerName,
+                iFiledOn,
                 iUrl,
             };
             continue;
@@ -2296,6 +2363,7 @@ async function processYear(params: {
             tax_year: r.tax_year ? Number(r.tax_year) : null,
             tax_period_begin_dt: null,
             tax_period_end_dt: yyyyMmToIsoEndDate(r.tax_period),
+            filed_on: r.filed_on ?? null,
             return_type: r.return_type || null,
             organization_name: null,
             source: {
@@ -2307,6 +2375,7 @@ async function processYear(params: {
                 index_tax_year: r.tax_year,
                 index_taxpayer_name: r.taxpayer_name,
                 index_return_type: r.return_type,
+                index_filed_on: r.filed_on ?? null,
             },
         });
 

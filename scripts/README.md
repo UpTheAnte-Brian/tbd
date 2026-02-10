@@ -125,6 +125,16 @@ Example runs:
 - `npm run importIrsPdfs:test`
 - Single file: `npm run importIrsPdfs:dev -- --file="WestonkaRecSociety 990 2021.pdf"`
 
+#### `irs/import-irs-990n.ts`
+Imports the IRS 990-N (e-Postcard) bulk file and upserts:
+- `irs.organizations` (minimal fields for FK)
+- `irs.returns` (`return_type='990N'` + `return_meta` JSON)
+
+Example runs:
+- `pnpm tsx scripts/irs/import-irs-990n.ts --download --district <DISTRICT_UUID>`
+- `pnpm tsx scripts/irs/import-irs-990n.ts --zip /path/to/data-download-epostcard.zip --district <DISTRICT_UUID>`
+- `pnpm tsx scripts/irs/import-irs-990n.ts --env test --download --district <DISTRICT_UUID>`
+
 #### IRS TEOS storage
 `IRS_TEOS_XML_ROOT` (or `IRS_XML_ROOT`) controls where TEOS ingestion artifacts are written.
 Default root is `./data/irs-teos` (relative to repo root) when the env var is not set.

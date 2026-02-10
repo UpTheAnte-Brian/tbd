@@ -15,8 +15,9 @@
  *
  * Optional:
  *   --skipOrgs   Skip step 1
- *   --skip990    Skip step 2
- *   --skipParse  Skip step 3
+ *   --skip990n   Skip step 2 (990-N)
+ *   --skip990    Skip step 3 (990 XML bulk)
+ *   --skipParse  Skip step 4 (parse 990 returns)
  *   --dryRun     Print commands only
  *   --maxObjects <n>  Limits processed returns per index-year for debugging (default in master is 0 = no limit)
  */
@@ -31,6 +32,7 @@ type Args = {
     download?: boolean;
     upsert?: boolean;
     skipOrgs?: boolean;
+    skip990n?: boolean;
     skip990?: boolean;
     skipParse?: boolean;
     dryRun?: boolean;
@@ -49,6 +51,7 @@ function parseArgs(argv: string[]): Args {
             key === "download" ||
             key === "upsert" ||
             key === "skipOrgs" ||
+            key === "skip990n" ||
             key === "skip990" ||
             key === "skipParse" ||
             key === "dryRun"
@@ -127,8 +130,24 @@ async function main() {
         console.log("\n↷ Skipping org import (step 1) due to --skipOrgs");
     }
 
+    if (!args.skip990n) {
+        // Step 2: 990-N bulk import
+        const cmdArgs = [
+            "tsx",
+            "scripts/irs/import-irs-990n.ts",
+            "--district",
+            district,
+        ];
+
+        if (download) cmdArgs.push("--download");
+
+        run("pnpm", cmdArgs, { dryRun: args.dryRun });
+    } else {
+        console.log("\n↷ Skipping 990-N import (step 2) due to --skip990n");
+    }
+
     if (!args.skip990) {
-        // Step 2: Bulk 990 download + upsert (year range)
+        // Step 3: Bulk 990 download + upsert (year range)
         const cmdArgs = [
             "tsx",
             "scripts/irs/import-990-bulk.ts",
@@ -146,11 +165,11 @@ async function main() {
 
         run("pnpm", cmdArgs, { dryRun: args.dryRun });
     } else {
-        console.log("\n↷ Skipping 990 bulk import (step 2) due to --skip990");
+        console.log("\n↷ Skipping 990 bulk import (step 3) due to --skip990");
     }
 
     if (!args.skipParse) {
-        // Step 3: Parse returns into normalized tables (people/narratives/financials)
+        // Step 4: Parse returns into normalized tables (people/narratives/financials)
         run(
             "pnpm",
             ["tsx", "scripts/irs/parse-990-return.ts", "--district", district],

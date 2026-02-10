@@ -17,6 +17,7 @@ import type {
 import type { PeopleParseQuality } from "@/app/components/districts/superintendent/types";
 
 type IrsOrganizationRow = Database["irs"]["Tables"]["organizations"]["Row"];
+type IrsReturnRow = Database["irs"]["Tables"]["returns"]["Row"];
 type IrsFinancialRow = Database["irs"]["Tables"]["return_financials"]["Row"];
 type IrsPersonRow = Database["irs"]["Tables"]["return_people"]["Row"];
 type SuperintendentScopeRow =
@@ -469,6 +470,20 @@ export async function getNonprofitReview(
     throw new Error(returnError.message);
   }
 
+  let latestReturnDetails: Pick<
+    IrsReturnRow,
+    | "id"
+    | "tax_year"
+    | "return_type"
+    | "filed_on"
+    | "tax_period_start"
+    | "tax_period_end"
+    | "gross_receipts_cap"
+    | "is_terminated"
+    | "principal_officer_name"
+    | "return_meta"
+  > | null = null;
+
   let latestFinancials: IrsFinancialSelect | null = null;
   let narrativesCount = 0;
   let narratives: Array<{
@@ -492,6 +507,20 @@ export async function getNonprofitReview(
   }> = [];
 
   if (latestReturn?.id) {
+    const { data: returnDetails, error: returnDetailsError } = await irs
+      .from("returns")
+      .select(
+        "id, tax_year, return_type, filed_on, tax_period_start, tax_period_end, gross_receipts_cap, is_terminated, principal_officer_name, return_meta",
+      )
+      .eq("id", latestReturn.id)
+      .maybeSingle();
+
+    if (returnDetailsError) {
+      throw new Error(returnDetailsError.message);
+    }
+
+    latestReturnDetails = returnDetails ?? null;
+
     const { data: financials, error: financialsError } = await irs
       .from("return_financials")
       .select(
@@ -624,9 +653,19 @@ export async function getNonprofitReview(
   const mappedLatestReturn = latestReturn?.id && latestReturn.tax_year !== null
     ? {
       id: latestReturn.id,
-      tax_year: latestReturn.tax_year,
-      return_type: latestReturn.return_type ?? null,
-      filed_on: latestReturn.filed_on ?? null,
+      tax_year: latestReturnDetails?.tax_year ?? latestReturn.tax_year,
+      return_type: latestReturnDetails?.return_type ??
+        latestReturn.return_type ?? null,
+      filed_on: latestReturnDetails?.filed_on ?? latestReturn.filed_on ?? null,
+      tax_period_start: latestReturnDetails?.tax_period_start ?? null,
+      tax_period_end: latestReturnDetails?.tax_period_end ?? null,
+      gross_receipts_cap: toNumber(
+        latestReturnDetails?.gross_receipts_cap ?? null,
+      ),
+      is_terminated: latestReturnDetails?.is_terminated ?? null,
+      principal_officer_name:
+        latestReturnDetails?.principal_officer_name ?? null,
+      return_meta: latestReturnDetails?.return_meta ?? null,
     }
     : null;
 

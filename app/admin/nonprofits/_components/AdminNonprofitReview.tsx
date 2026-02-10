@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { formatEinDashed } from "@/domain/irs/ein";
 import PeopleRolesCard from "@/app/admin/nonprofits/[id]/_components/PeopleRolesCard";
 import NarrativesCard from "@/app/admin/nonprofits/[id]/_components/NarrativesCard";
+import type { Json } from "@/database.types";
 
 const moneyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -18,11 +19,62 @@ const moneyFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 1,
 });
 
+const capFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 0,
+});
+
 function formatMoney(value: number | null | undefined): string {
   if (value === null || value === undefined || !Number.isFinite(value)) {
     return "--";
   }
   return moneyFormatter.format(value);
+}
+
+function formatMoneyCap(value: number | null | undefined): string | null {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return null;
+  }
+  return capFormatter.format(value);
+}
+
+type Address = {
+  line1?: string | null;
+  line2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip?: string | null;
+  country?: string | null;
+};
+
+function formatAddressLines(address?: Address | null): string[] {
+  if (!address) return [];
+  const lines: string[] = [];
+  const line1 = address.line1?.trim();
+  const line2 = address.line2?.trim();
+  if (line1) lines.push(line1);
+  if (line2) lines.push(line2);
+
+  const cityStateZip = [
+    address.city?.trim(),
+    address.state?.trim(),
+    address.zip?.trim(),
+  ]
+    .filter(Boolean)
+    .join(", ");
+  if (cityStateZip) lines.push(cityStateZip);
+
+  const country = address.country?.trim();
+  if (country && country.toUpperCase() !== "US") {
+    lines.push(country);
+  }
+
+  return lines;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 type Props = {
@@ -174,6 +226,29 @@ export default function AdminNonprofitReview({ ein }: Props) {
     ? `/admin/nonprofits/${encodeURIComponent(linkedEntityId)}/onboarding?${onboardingQs.toString()}`
     : null;
 
+  const latestReturn = data.latest_return;
+  const is990N = latestReturn?.return_type === "990N";
+  const metaJson = (latestReturn?.return_meta ?? null) as Json | null;
+  const metaRecord = isRecord(metaJson) ? metaJson : null;
+  const mailing = isRecord(metaRecord?.mailing_address)
+    ? (metaRecord?.mailing_address as Address)
+    : null;
+  const principal = isRecord(metaRecord?.principal_officer)
+    ? (metaRecord?.principal_officer as {
+      name?: string | null;
+      address_line1?: string | null;
+      address_line2?: string | null;
+      city?: string | null;
+      state?: string | null;
+      zip?: string | null;
+      country?: string | null;
+    })
+    : null;
+  const websiteUrl = typeof metaRecord?.website_url === "string"
+    ? metaRecord.website_url
+    : null;
+  const grossReceiptsCap = formatMoneyCap(latestReturn?.gross_receipts_cap);
+
   return (
     <div className="space-y-6">
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -215,10 +290,10 @@ export default function AdminNonprofitReview({ ein }: Props) {
                 Latest tax year
               </p>
               <p className="mt-1 text-lg font-semibold text-text-on-light">
-                {data.latest_return?.tax_year ?? "--"}
+                {latestReturn?.tax_year ?? "--"}
               </p>
               <p className="text-xs text-brand-secondary-2">
-                {data.latest_return?.return_type ?? "Return type unknown"}
+                {latestReturn?.return_type ?? "Return type unknown"}
               </p>
             </div>
             <div>
@@ -226,42 +301,133 @@ export default function AdminNonprofitReview({ ein }: Props) {
                 Filed on
               </p>
               <p className="mt-1 text-lg font-semibold text-text-on-light">
-                {data.latest_return?.filed_on ?? "--"}
+                {latestReturn?.filed_on ?? "--"}
               </p>
             </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-brand-secondary-2">
-                Total revenue
-              </p>
-              <p className="mt-1 text-lg font-semibold text-text-on-light">
-                {formatMoney(data.latest_financials?.total_revenue)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-brand-secondary-2">
-                Net assets
-              </p>
-              <p className="mt-1 text-lg font-semibold text-text-on-light">
-                {formatMoney(data.latest_financials?.net_assets_end)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-brand-secondary-2">
-                Total expenses
-              </p>
-              <p className="mt-1 text-lg font-semibold text-text-on-light">
-                {formatMoney(data.latest_financials?.total_expenses)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-brand-secondary-2">
-                Total liabilities
-              </p>
-              <p className="mt-1 text-lg font-semibold text-text-on-light">
-                {formatMoney(data.latest_financials?.total_liabilities_end)}
-              </p>
-            </div>
+            {is990N ? (
+              <div className="rounded-lg border border-dashed border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 md:col-span-2">
+                990-N filings do not include financial statements.
+              </div>
+            ) : (
+              <>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-brand-secondary-2">
+                    Total revenue
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-text-on-light">
+                    {formatMoney(data.latest_financials?.total_revenue)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-brand-secondary-2">
+                    Net assets
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-text-on-light">
+                    {formatMoney(data.latest_financials?.net_assets_end)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-brand-secondary-2">
+                    Total expenses
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-text-on-light">
+                    {formatMoney(data.latest_financials?.total_expenses)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-brand-secondary-2">
+                    Total liabilities
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-text-on-light">
+                    {formatMoney(data.latest_financials?.total_liabilities_end)}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
+          {is990N && (
+            <section className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-5">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-brand-secondary-2">
+                    990-N (e-Postcard) Details
+                  </div>
+                  <div className="mt-1 text-lg font-semibold text-text-on-light">
+                    Tax Year {latestReturn?.tax_year ?? "--"}
+                  </div>
+                  <div className="mt-1 text-sm text-brand-secondary-2">
+                    Tax period: {latestReturn?.tax_period_start ?? "—"} →{" "}
+                    {latestReturn?.tax_period_end ?? "—"}
+                  </div>
+                </div>
+                <div className="space-y-2 text-sm">
+                  {grossReceiptsCap && (
+                    <div>
+                      <span className="text-brand-secondary-2">
+                        Gross receipts cap:
+                      </span>{" "}
+                      <span className="font-semibold text-text-on-light">
+                        {grossReceiptsCap}
+                      </span>
+                    </div>
+                  )}
+                  {latestReturn?.is_terminated === true && (
+                    <div className="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
+                      Terminated
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <div className="rounded-lg border border-gray-200 bg-white p-4">
+                  <div className="text-xs font-semibold text-brand-secondary-2">
+                    Principal officer
+                  </div>
+                  <div className="mt-1 text-sm font-medium text-text-on-light">
+                    {principal?.name ??
+                      latestReturn?.principal_officer_name ?? "--"}
+                  </div>
+                  <div className="mt-2 space-y-1 text-sm text-brand-secondary-2">
+                    {formatAddressLines({
+                      line1: principal?.address_line1,
+                      line2: principal?.address_line2,
+                      city: principal?.city,
+                      state: principal?.state,
+                      zip: principal?.zip,
+                      country: principal?.country,
+                    }).map((line) => (
+                      <div key={line}>{line}</div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-gray-200 bg-white p-4">
+                  <div className="text-xs font-semibold text-brand-secondary-2">
+                    Mailing address
+                  </div>
+                  <div className="mt-2 space-y-1 text-sm text-brand-secondary-2">
+                    {formatAddressLines(mailing).map((line) => (
+                      <div key={line}>{line}</div>
+                    ))}
+                  </div>
+                  {websiteUrl ? (
+                    <div className="mt-3 text-sm">
+                      <span className="text-brand-secondary-2">Website:</span>{" "}
+                      <a
+                        className="underline underline-offset-2"
+                        href={websiteUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {websiteUrl}
+                      </a>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </section>
+          )}
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">

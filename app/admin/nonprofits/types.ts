@@ -1,3 +1,4 @@
+import type { Json } from "@/database.types";
 import type { OrgType } from "@/app/lib/types/nonprofits";
 
 export type ScopeTier = "registry_only" | "disclosure_grade" | "institutional";
@@ -60,6 +61,12 @@ export type AdminNonprofitReview = {
     tax_year: number;
     return_type: string | null;
     filed_on: string | null;
+    tax_period_start: string | null;
+    tax_period_end: string | null;
+    gross_receipts_cap: number | null;
+    is_terminated: boolean | null;
+    principal_officer_name: string | null;
+    return_meta: Json | null;
   } | null;
   latest_financials: {
     total_revenue: number | null;

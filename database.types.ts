@@ -1403,6 +1403,7 @@ export type Database = {
           is_amended: boolean | null
           is_terminated: boolean | null
           principal_officer_name: string | null
+          return_meta: Json | null
           return_name: string | null
           return_type: Database["irs"]["Enums"]["irs_return_type"]
           source_priority: string
@@ -1432,6 +1433,7 @@ export type Database = {
           is_amended?: boolean | null
           is_terminated?: boolean | null
           principal_officer_name?: string | null
+          return_meta?: Json | null
           return_name?: string | null
           return_type?: Database["irs"]["Enums"]["irs_return_type"]
           source_priority?: string
@@ -1461,6 +1463,7 @@ export type Database = {
           is_amended?: boolean | null
           is_terminated?: boolean | null
           principal_officer_name?: string | null
+          return_meta?: Json | null
           return_name?: string | null
           return_type?: Database["irs"]["Enums"]["irs_return_type"]
           source_priority?: string
