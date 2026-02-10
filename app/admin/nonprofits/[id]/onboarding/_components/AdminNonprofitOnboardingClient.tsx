@@ -417,10 +417,13 @@ export default function AdminNonprofitOnboardingClient({
 
   const irsLegalName = data.irs_organization?.legal_name ?? "--";
   const irsWebsite = data.irs_organization?.website ?? "--";
+  const irsCity = data.irs_organization?.city ?? "--";
+  const irsState = data.irs_organization?.state ?? "--";
   const irsCanonicalEin = data.irs_link?.ein ?? data.linkedEin ?? "--";
   const irsLinkStatus = data.irs_link ? "Linked" : "Not linked";
   const irsLinkTimestamp = formatDateTime(data.irs_link?.created_at ?? null);
   const irsOrgName = data.irs_organization?.legal_name ?? "--";
+  const isRegistryOnly = Boolean(data.irs_link) && !data.irs_organization;
   const entityName = data.entity.name ?? "--";
   const nonprofitWebsite = data.nonprofit?.website_url ?? "--";
   const canOverrideName = Boolean(data.irs_organization?.legal_name);
@@ -434,6 +437,7 @@ export default function AdminNonprofitOnboardingClient({
   const hasReturns = Boolean(latestReturn?.id || latestFinancials?.return_id);
   const hasPeople = (data.irs_people ?? []).length > 0;
   const needsAttention = [
+    isRegistryOnly ? "IRS registry-only link (needs docs)." : null,
     !hasReturns ? "No IRS returns found yet." : null,
     !hasPeople ? "No officer/director list available." : null,
     isStaleTaxYear && latestTaxYear
@@ -683,6 +687,14 @@ export default function AdminNonprofitOnboardingClient({
                       Canonical EIN: {formatEinDashed(irsCanonicalEin) ?? irsCanonicalEin}
                     </span>
                     <span>IRS legal name: {irsOrgName}</span>
+                    <span>
+                      IRS city/state: {irsCity}, {irsState}
+                    </span>
+                    {isRegistryOnly ? (
+                      <span>
+                        Registry-only record (needs docs). Using entity name: {entityName}
+                      </span>
+                    ) : null}
                     <span>
                       Link status: {irsLinkStatus}
                       {data.irs_link ? ` · ${irsLinkTimestamp}` : ""}

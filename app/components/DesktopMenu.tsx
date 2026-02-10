@@ -52,7 +52,7 @@ export default function DesktopMenu({
     },
   };
   const menuObj: Menu = JSON.parse(menu);
-  const hasSubMenu = menuObj?.subMenu?.length && menuObj?.subMenu?.length > 0;
+  const hasSubMenu = Boolean(menuObj?.subMenu?.length);
   const columns = buildColumns(menuObj, user);
 
   return (

@@ -42,7 +42,7 @@ export default function EntityHeader({
             href={entityPath(entityId, "superintendent")}
             className="rounded bg-brand-primary-0 px-3 py-1 text-xs font-semibold text-brand-secondary-2 transition hover:bg-brand-primary-2"
           >
-            District Dashboard
+            Superintendent Dashboard
           </Link>
         ) : null}
       </div>

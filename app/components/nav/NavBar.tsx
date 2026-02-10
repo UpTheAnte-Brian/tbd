@@ -25,13 +25,27 @@ export default function NavBarComponent() {
   const { user, logout, refreshUser } = useUser();
   const isLoggedIn = !!user;
 
-  const filteredMenus = menus.filter((menu: Menu) => {
-    return (
-      !menu.authRequired ||
-      (isLoggedIn &&
-        (!menu.roles || menu.roles.includes(user?.global_role || "")))
-    );
-  });
+  const filteredMenus = menus
+    .filter((menu: Menu) => {
+      return (
+        !menu.authRequired ||
+        (isLoggedIn &&
+          (!menu.roles || menu.roles.includes(user?.global_role || "")))
+      );
+    })
+    .map((menu) => ({
+      ...menu,
+      subMenu: (menu.subMenu || []).filter((item) => {
+        if (item.authRequired && !isLoggedIn) return false;
+        if (
+          item.roles &&
+          !item.roles.includes(user?.global_role || "")
+        ) {
+          return false;
+        }
+        return true;
+      }),
+    }));
   // .map((menu: Menu) => {
   //   if (menu.name === "Account" && user?.username) {
   //     return { ...menu, name: user.username };

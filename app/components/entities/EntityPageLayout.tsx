@@ -1,7 +1,10 @@
 "use client";
 
 import { ReactNode } from "react";
-import type { EntityTabId } from "@/app/components/entities/hooks/useEntityTabParam";
+import type {
+  EntityTabContext,
+  EntityTabKey,
+} from "@/app/components/entities/entityTabs";
 import type { EntityType } from "@/domain/entities/types";
 import EntitySidebar from "@/app/components/entities/shared/EntitySidebar";
 
@@ -9,11 +12,12 @@ type Props = {
   entityId: string;
   entityName: string;
   entityType: EntityType | null;
-  activeTab: EntityTabId;
-  onTabChange: (tab: EntityTabId) => void;
+  activeTab: EntityTabKey;
+  onTabChange: (tab: EntityTabKey) => void;
   mobileHeader?: ReactNode;
   tabs?: ReactNode;
-  allowedTabs?: EntityTabId[];
+  allowedTabs?: EntityTabKey[];
+  tabContext: EntityTabContext;
   children: ReactNode;
 };
 
@@ -26,6 +30,7 @@ export default function EntityPageLayout({
   mobileHeader,
   tabs,
   allowedTabs,
+  tabContext,
   children,
 }: Props) {
   return (
@@ -43,6 +48,7 @@ export default function EntityPageLayout({
         activeTab={activeTab}
         onTabChange={onTabChange}
         allowedTabs={allowedTabs}
+        tabContext={tabContext}
       />
       <div className="flex-1 min-w-0 md:pl-4">
         <div className="w-full space-y-6 md:space-y-0">{children}</div>

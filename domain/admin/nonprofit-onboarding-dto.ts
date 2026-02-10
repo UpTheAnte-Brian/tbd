@@ -455,23 +455,15 @@ export async function createNonprofitShell(
 
     if (insertPayload.ein) {
       const irs = createIrsAdminClient();
-      const { data: org, error: orgError } = await irs
-        .from("organizations")
-        .select("ein")
-        .eq("ein", insertPayload.ein)
-        .maybeSingle();
-
-      if (!orgError && org?.ein) {
-        await irs.from("entity_links").upsert(
-          {
-            ein: insertPayload.ein,
-            entity_id: entityId,
-            match_type: "manual",
-            confidence: 100,
-          },
-          { onConflict: "ein" },
-        );
-      }
+      await irs.from("entity_links").upsert(
+        {
+          ein: insertPayload.ein,
+          entity_id: entityId,
+          match_type: "manual",
+          confidence: 100,
+        },
+        { onConflict: "ein" },
+      );
     }
 
     return {
@@ -589,7 +581,7 @@ export async function getNonprofitOnboardingData(
 
       const { data: org, error: orgError } = await irs
         .from("organizations")
-        .select("ein, legal_name, website")
+        .select("ein, legal_name, website, city, state")
         .eq("ein", link.ein)
         .maybeSingle();
       if (orgError && !isNotFoundError(orgError)) {
@@ -601,6 +593,8 @@ export async function getNonprofitOnboardingData(
           ein: org.ein,
           legal_name: org.legal_name ?? null,
           website: org.website ?? null,
+          city: org.city ?? null,
+          state: org.state ?? null,
         };
       }
 

@@ -19,6 +19,8 @@ export type NonprofitRow = {
     has_narrative: boolean;
     people_count: number | null;
     people_parse_quality: PeopleParseQuality;
+    has_irs_org?: boolean | null;
+    has_returns?: boolean | null;
 };
 
 export type IrsOrganization = {

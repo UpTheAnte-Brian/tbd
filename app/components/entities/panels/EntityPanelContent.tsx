@@ -9,14 +9,14 @@ import EntityMapTab from "@/app/components/entities/tabs/map/EntityMapTab";
 import EntityGovernanceTab from "@/app/components/entities/tabs/governance/EntityGovernanceTab";
 import EntityUsersTab from "@/app/components/entities/tabs/users/EntityUsersTab";
 import EntitySuperintendentTab from "@/app/components/entities/tabs/superintendent/EntitySuperintendentTab";
-import { type EntityTabId } from "@/app/components/entities/hooks/useEntityTabParam";
+import type { EntityTabKey } from "@/app/components/entities/entityTabs";
 import type { EntityType } from "@/domain/entities/types";
 
 type Props = {
   entityId: string;
   entityType: EntityType | null;
   entityName?: string;
-  activeTab: EntityTabId;
+  activeTab: EntityTabKey;
 };
 
 export default function EntityPanelContent({

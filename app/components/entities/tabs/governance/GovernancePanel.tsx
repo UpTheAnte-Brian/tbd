@@ -16,9 +16,11 @@ import {
   type Vote,
 } from "@/domain/governance/governance";
 import type { BoardPacketSnapshot } from "@/domain/governance/governance-approvals";
+import type { EntityType } from "@/domain/entities/types";
 
 interface GovernancePanelProps {
-  nonprofitId: string;
+  entityId: string;
+  entityType: EntityType;
 }
 
 interface ProfileSearchResult {
@@ -78,7 +80,10 @@ const getMemberActivity = (member: BoardMember, today: string) => {
   return { isActive, computedStatus, termStart, termEnd };
 };
 
-export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
+export default function GovernancePanel({
+  entityId,
+  entityType,
+}: GovernancePanelProps) {
   const { user } = useUser();
   const [snapshot, setSnapshot] = useState<GovernanceSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
@@ -155,9 +160,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
   const isEntityAdmin =
     user?.global_role === "admin" ||
-    hasEntityRole(user?.entity_users ?? [], "nonprofit", nonprofitId, [
-      "admin",
-    ]);
+    hasEntityRole(user?.entity_users ?? [], entityType, entityId, ["admin"]);
 
   const isChair = (snapshot?.members ?? []).some(
     (member) =>
@@ -167,7 +170,8 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   );
 
   const canFinalize = isEntityAdmin || isChair;
-  const canManagePackets = canFinalize;
+  const showBoardPackets = entityType === "nonprofit";
+  const canManagePackets = showBoardPackets && canFinalize;
   const canAddMember = Boolean(selectedUserId && termStart);
   const trimmedMeetingTitle = meetingDraft.title.trim();
   const trimmedMeetingType = meetingDraft.meeting_type.trim();
@@ -247,7 +251,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   async function loadSnapshot() {
     try {
       setLoading(true);
-      const res = await fetch(`/api/entities/${nonprofitId}/governance`);
+      const res = await fetch(`/api/entities/${entityId}/governance`);
       if (!res.ok) throw new Error("Failed to load governance");
       const json: GovernanceSnapshot = await res.json();
       setSnapshot(json);
@@ -280,7 +284,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
 
   useEffect(() => {
     loadSnapshot();
-  }, [nonprofitId]);
+  }, [entityId]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -344,7 +348,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   async function loadQuorum(meetingId: string) {
     try {
       const res = await fetch(
-        `/api/entities/${nonprofitId}/governance/meetings/${meetingId}/quorum`
+        `/api/entities/${entityId}/governance/meetings/${meetingId}/quorum`
       );
       if (!res.ok) throw new Error("Failed to load quorum");
       const json = (await res.json()) as { quorumMet: boolean };
@@ -376,7 +380,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     try {
       setMemberLoading(true);
       const res = await fetch(
-        `/api/entities/${nonprofitId}/governance/boards/${boardId}/members`,
+        `/api/entities/${entityId}/governance/boards/${boardId}/members`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -408,7 +412,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   async function updateMember(memberId: string, updates: Partial<BoardMember>) {
     try {
       const res = await fetch(
-        `/api/entities/${nonprofitId}/governance/board-members/${memberId}`,
+        `/api/entities/${entityId}/governance/board-members/${memberId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -436,7 +440,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       return;
     try {
       const res = await fetch(
-        `/api/entities/${nonprofitId}/governance/board-members/${memberId}`,
+        `/api/entities/${entityId}/governance/board-members/${memberId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -463,7 +467,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     try {
       setMeetingLoading(true);
       const res = await fetch(
-        `/api/entities/${nonprofitId}/governance/boards/${boardId}/meetings`,
+        `/api/entities/${entityId}/governance/boards/${boardId}/meetings`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -498,7 +502,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     const draft = motionDrafts[meetingId] ?? {};
     try {
       const res = await fetch(
-        `/api/entities/${nonprofitId}/governance/meetings/${meetingId}/motions`,
+        `/api/entities/${entityId}/governance/meetings/${meetingId}/motions`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -523,7 +527,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   ) {
     try {
       const res = await fetch(
-        `/api/entities/${nonprofitId}/governance/meetings/${meetingId}/attendance`,
+        `/api/entities/${entityId}/governance/meetings/${meetingId}/attendance`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -553,13 +557,13 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       const timestamp = new Date().toISOString();
       const signatureHash = await buildSignatureHash(
         "finalize_motion",
-        nonprofitId,
+        entityId,
         motionId,
         user.id,
         timestamp
       );
       const res = await fetch(
-        `/api/entities/${nonprofitId}/governance/motions/${motionId}/finalize`,
+        `/api/entities/${entityId}/governance/motions/${motionId}/finalize`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -587,7 +591,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     }
     try {
       const res = await fetch(
-        `/api/entities/${nonprofitId}/governance/motions/${motionId}/votes`,
+        `/api/entities/${entityId}/governance/motions/${motionId}/votes`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -613,7 +617,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     const current = minutesByMeeting[meetingId];
     try {
       const res = await fetch(
-        `/api/entities/${nonprofitId}/governance/meetings/${meetingId}/minutes`,
+        `/api/entities/${entityId}/governance/meetings/${meetingId}/minutes`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -647,14 +651,14 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       const timestamp = new Date().toISOString();
       const signatureHash = await buildSignatureHash(
         "approve_minutes",
-        nonprofitId,
+        entityId,
         meetingId,
         minutesId,
         user.id,
         timestamp
       );
       const res = await fetch(
-        `/api/entities/${nonprofitId}/governance/meetings/${meetingId}/minutes/approve`,
+        `/api/entities/${entityId}/governance/meetings/${meetingId}/minutes/approve`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -679,7 +683,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     try {
       setBoardPacketCreating((prev) => ({ ...prev, [meetingId]: true }));
       const res = await fetch(
-        `/api/entities/${nonprofitId}/governance/meetings/${meetingId}/board-packet/create`,
+        `/api/entities/${entityId}/governance/meetings/${meetingId}/board-packet/create`,
         { method: "POST" }
       );
       if (!res.ok) throw new Error("Failed to create board packet");
@@ -699,7 +703,7 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
     try {
       setBoardPacketSaving((prev) => ({ ...prev, [meetingId]: true }));
       const res = await fetch(
-        `/api/entities/${nonprofitId}/governance/meetings/${meetingId}/board-packet/update-content`,
+        `/api/entities/${entityId}/governance/meetings/${meetingId}/board-packet/update-content`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -728,14 +732,14 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
       const timestamp = new Date().toISOString();
       const signatureHash = await buildSignatureHash(
         "approve_board_packet",
-        nonprofitId,
+        entityId,
         meetingId,
         versionId,
         user.id,
         timestamp
       );
       const res = await fetch(
-        `/api/entities/${nonprofitId}/governance/meetings/${meetingId}/board-packet/approve`,
+        `/api/entities/${entityId}/governance/meetings/${meetingId}/board-packet/approve`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -759,21 +763,24 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
   }
 
   if (loading) return <LoadingSpinner />;
+  const boardLabel = entityType === "district" ? "School Board" : "Board";
+  const entityLabel = entityType === "district" ? "district" : "nonprofit";
   if (!snapshot || !boardId) {
     if (!user?.id) {
       return (
         <p className="text-gray-400">
-          Sign in to view this nonprofit&apos;s board and governance details.
+          Sign in to view this {entityLabel}&apos;s{" "}
+          {boardLabel.toLowerCase()} details.
         </p>
       );
     }
-    return <p className="text-gray-400">No board found for this nonprofit.</p>;
+    return <p className="text-gray-400">No board found for this {entityLabel}.</p>;
   }
 
   return (
     <div className="space-y-8 text-gray-100">
       <div>
-        <h2 className="text-xl font-semibold">Board Roster</h2>
+        <h2 className="text-xl font-semibold">{boardLabel} Roster</h2>
         <p className="text-sm text-gray-400">
           Governance is separate from operational roles. Only board members
           below can vote on motions and approve minutes.
@@ -1378,93 +1385,97 @@ export default function GovernancePanel({ nonprofitId }: GovernancePanelProps) {
                 </button>
               </div>
 
-              <div className="space-y-2">
-                <h4 className="font-semibold">Board Packet</h4>
-                {!boardPacketVersionId && (
-                  <>
-                    {canManagePackets ? (
-                      <button
-                        onClick={() => createBoardPacket(meeting.id)}
-                        disabled={packetCreating}
-                        className="px-3 py-2 bg-blue-600 rounded hover:bg-blue-500 disabled:bg-gray-700"
-                      >
-                        {packetCreating ? "Creating..." : "Create Board Packet"}
-                      </button>
-                    ) : (
-                      <p className="text-sm text-gray-400">
-                        No board packet yet.
-                      </p>
-                    )}
-                  </>
-                )}
-                {boardPacketVersionId && (
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <span
-                        className={`px-2 py-0.5 rounded border capitalize ${boardPacketBadgeClass}`}
-                      >
-                        {boardPacketStatusLabel}
-                      </span>
-                      {boardPacketApproved && (
-                        <span className="text-green-300">
-                          Approved by {getMemberLabel(boardPacketApprovedBy)}
-                          {boardPacketApprovedAt
-                            ? ` at ${formatApprovedAt(boardPacketApprovedAt)}`
-                            : ""}
+              {showBoardPackets ? (
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Board Packet</h4>
+                  {!boardPacketVersionId && (
+                    <>
+                      {canManagePackets ? (
+                        <button
+                          onClick={() => createBoardPacket(meeting.id)}
+                          disabled={packetCreating}
+                          className="px-3 py-2 bg-blue-600 rounded hover:bg-blue-500 disabled:bg-gray-700"
+                        >
+                          {packetCreating
+                            ? "Creating..."
+                            : "Create Board Packet"}
+                        </button>
+                      ) : (
+                        <p className="text-sm text-gray-400">
+                          No board packet yet.
+                        </p>
+                      )}
+                    </>
+                  )}
+                  {boardPacketVersionId && (
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap items-center gap-2 text-xs">
+                        <span
+                          className={`px-2 py-0.5 rounded border capitalize ${boardPacketBadgeClass}`}
+                        >
+                          {boardPacketStatusLabel}
                         </span>
+                        {boardPacketApproved && (
+                          <span className="text-green-300">
+                            Approved by {getMemberLabel(boardPacketApprovedBy)}
+                            {boardPacketApprovedAt
+                              ? ` at ${formatApprovedAt(boardPacketApprovedAt)}`
+                              : ""}
+                          </span>
+                        )}
+                      </div>
+                      {boardPacketIsDraft && canManagePackets ? (
+                        <>
+                          <textarea
+                            value={boardPacketContent}
+                            onChange={(e) =>
+                              setBoardPacketDrafts((prev) => ({
+                                ...prev,
+                                [meeting.id]: e.target.value,
+                              }))
+                            }
+                            className="w-full p-2 rounded bg-gray-950 border border-gray-700 text-gray-100 placeholder:text-gray-400"
+                            placeholder="Board packet content..."
+                            rows={6}
+                          />
+                          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                            <button
+                              onClick={() =>
+                                saveBoardPacketContent(
+                                  meeting.id,
+                                  boardPacketVersionId
+                                )
+                              }
+                              disabled={packetSaving}
+                              className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-500 disabled:bg-gray-700"
+                            >
+                              {packetSaving ? "Saving..." : "Save Draft"}
+                            </button>
+                            <button
+                              onClick={() =>
+                                approveBoardPacket(
+                                  meeting.id,
+                                  boardPacketVersionId
+                                )
+                              }
+                              disabled={packetApproving}
+                              className="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500 disabled:bg-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
+                            >
+                              {packetApproving
+                                ? "Approving..."
+                                : "Approve Packet"}
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="rounded border border-gray-700 bg-gray-950/60 p-3 text-sm text-gray-200 whitespace-pre-wrap">
+                          {boardPacket?.contentMd ?? "No board packet content."}
+                        </div>
                       )}
                     </div>
-                    {boardPacketIsDraft && canManagePackets ? (
-                      <>
-                        <textarea
-                          value={boardPacketContent}
-                          onChange={(e) =>
-                            setBoardPacketDrafts((prev) => ({
-                              ...prev,
-                              [meeting.id]: e.target.value,
-                            }))
-                          }
-                          className="w-full p-2 rounded bg-gray-950 border border-gray-700 text-gray-100 placeholder:text-gray-400"
-                          placeholder="Board packet content..."
-                          rows={6}
-                        />
-                        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                          <button
-                            onClick={() =>
-                              saveBoardPacketContent(
-                                meeting.id,
-                                boardPacketVersionId
-                              )
-                            }
-                            disabled={packetSaving}
-                            className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-500 disabled:bg-gray-700"
-                          >
-                            {packetSaving ? "Saving..." : "Save Draft"}
-                          </button>
-                          <button
-                            onClick={() =>
-                              approveBoardPacket(
-                                meeting.id,
-                                boardPacketVersionId
-                              )
-                            }
-                            disabled={packetApproving}
-                            className="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500 disabled:bg-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
-                          >
-                            {packetApproving
-                              ? "Approving..."
-                              : "Approve Packet"}
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="rounded border border-gray-700 bg-gray-950/60 p-3 text-sm text-gray-200 whitespace-pre-wrap">
-                        {boardPacket?.contentMd ?? "No board packet content."}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              ) : null}
 
               <div className="space-y-2">
                 <h4 className="font-semibold">Minutes</h4>

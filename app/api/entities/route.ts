@@ -1,43 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createApiClient } from "@/utils/supabase/route";
+import type { EntityType } from "@/domain/entities/types";
+import { listEntityDirectoryRows } from "@/domain/entities/entity-directory-dto";
 
-// GET /api/entities?type=...&slug=...&active=true|false
+// GET /api/entities?type=district|business|nonprofit
 export async function GET(req: NextRequest) {
-  const supabase = await createApiClient();
   const { searchParams } = new URL(req.url);
   const typeParam = searchParams.get("type");
-  const slugParam = searchParams.get("slug");
-  const activeParam = searchParams.get("active");
 
-  let query = supabase
-    .from("entities")
-    .select("id, entity_type, slug, name, active");
+  const types = typeParam
+    ? typeParam
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean)
+    : [];
 
-  if (typeParam) {
-    const types = typeParam
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean);
-    if (types.length === 1) {
-      query = query.eq("entity_type", types[0]);
-    } else if (types.length > 1) {
-      query = query.in("entity_type", types);
-    }
-  }
+  const allowedTypes: EntityType[] = ["district", "business", "nonprofit"];
+  const filteredTypes = types.filter((value): value is EntityType =>
+    allowedTypes.includes(value as EntityType),
+  );
 
-  if (slugParam) {
-    query = query.eq("slug", slugParam);
-  }
-
-  if (activeParam === "true" || activeParam === "false") {
-    query = query.eq("active", activeParam === "true");
-  }
-
-  const { data, error } = await query.order("name", { ascending: true });
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ entities: data ?? [] });
+  const rows = await listEntityDirectoryRows(
+    filteredTypes.length ? filteredTypes : undefined,
+  );
+  return NextResponse.json(rows);
 }

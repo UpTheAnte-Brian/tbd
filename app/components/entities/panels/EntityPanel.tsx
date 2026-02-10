@@ -7,11 +7,11 @@ import EntityPanelContent from "@/app/components/entities/panels/EntityPanelCont
 import EntityPageLayout from "@/app/components/entities/EntityPageLayout";
 import { EntityLogo } from "@/app/components/branding/EntityLogo";
 import EntityHeader from "@/app/components/entities/shared/EntityHeader";
-import {
-  getEntityTabKeys,
-  useEntityTabParam,
-} from "@/app/components/entities/hooks/useEntityTabParam";
+import { useEntityTabParam } from "@/app/components/entities/hooks/useEntityTabParam";
+import type { EntityTabContext } from "@/app/components/entities/entityTabs";
 import type { EntityType } from "@/domain/entities/types";
+import { useUser } from "@/app/hooks/useUser";
+import type { GovernanceSnapshot } from "@/domain/governance/governance";
 
 type EntityDetails = {
   id: string;
@@ -29,9 +29,11 @@ type Props = {
 };
 
 export default function EntityPanel({ entityId, entityType }: Props) {
+  const { user } = useUser();
   const [entity, setEntity] = useState<EntityDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [governanceHasBoard, setGovernanceHasBoard] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,20 +78,51 @@ export default function EntityPanel({ entityId, entityType }: Props) {
     return null;
   }, [entityType, entity?.entity_type]);
 
-  const showIrsTab = useMemo(
-    () => Boolean(entity?.has_irs_link),
-    [entity?.has_irs_link],
-  );
+  useEffect(() => {
+    let cancelled = false;
+    const isAdmin = user?.global_role === "admin";
+    if (isAdmin) {
+      setGovernanceHasBoard(true);
+      return;
+    }
+    if (resolvedType !== "district" || !user?.id) {
+      setGovernanceHasBoard(false);
+      return;
+    }
+    const loadGovernanceSummary = async () => {
+      try {
+        const res = await fetch(`/api/entities/${entityId}/governance`, {
+          cache: "no-store",
+        });
+        if (!res.ok) return;
+        const snapshot = (await res.json()) as GovernanceSnapshot;
+        if (!cancelled) {
+          setGovernanceHasBoard(Boolean(snapshot?.board?.id));
+        }
+      } catch {
+        if (!cancelled) {
+          setGovernanceHasBoard(false);
+        }
+      }
+    };
+    loadGovernanceSummary();
+    return () => {
+      cancelled = true;
+    };
+  }, [entityId, resolvedType, user?.global_role, user?.id]);
 
-  const allowedTabs = useMemo(
-    () =>
-      getEntityTabKeys({
-        includeIrs: showIrsTab,
-        includeSuperintendent: resolvedType === "district",
-      }),
-    [resolvedType, showIrsTab],
+  const tabContext = useMemo<EntityTabContext>(
+    () => ({
+      entityType: resolvedType,
+      hasIrsLink: entity?.has_irs_link ?? null,
+      canViewDistrictGovernance:
+        resolvedType !== "district" ? true : governanceHasBoard,
+    }),
+    [entity?.has_irs_link, governanceHasBoard, resolvedType],
   );
-  const { activeTab, setActiveTab } = useEntityTabParam(allowedTabs);
+  const { activeTab, setActiveTab, visibleTabs } = useEntityTabParam(
+    tabContext,
+  );
 
   if (loading) {
     return (
@@ -128,8 +161,8 @@ export default function EntityPanel({ entityId, entityType }: Props) {
       activeTab={activeTab}
       onTabChange={setActiveTab}
       tabsVariant="select"
-      allowedTabs={allowedTabs}
-      entityType={resolvedType}
+      allowedTabs={visibleTabs}
+      tabContext={tabContext}
     />
   );
 
@@ -143,7 +176,8 @@ export default function EntityPanel({ entityId, entityType }: Props) {
         onTabChange={setActiveTab}
         mobileHeader={mobileHeader}
         tabs={mobileTabs}
-        allowedTabs={allowedTabs}
+        allowedTabs={visibleTabs}
+        tabContext={tabContext}
       >
         <div className="space-y-6">
           <EntityHeader

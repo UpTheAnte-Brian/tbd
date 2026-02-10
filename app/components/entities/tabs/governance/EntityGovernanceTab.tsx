@@ -9,13 +9,13 @@ type Props = {
 };
 
 export default function EntityGovernanceTab({ entityId, entityType }: Props) {
-  if (entityType !== "nonprofit") {
+  if (entityType !== "nonprofit" && entityType !== "district") {
     return (
       <div className="rounded border border-dashed border-brand-secondary-1 p-4 text-sm text-brand-secondary-0">
-        Governance is only available for nonprofits.
+        Governance is only available for nonprofits and districts.
       </div>
     );
   }
 
-  return <GovernancePanel nonprofitId={entityId} />;
+  return <GovernancePanel entityId={entityId} entityType={entityType} />;
 }

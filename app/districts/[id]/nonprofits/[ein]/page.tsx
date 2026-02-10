@@ -1,4 +1,6 @@
-import DistrictNonprofitDetailClient from "./_components/DistrictNonprofitDetailClient";
+import { redirect } from "next/navigation";
+import { entityPath } from "@/app/lib/routes";
+import { resolveEntityIdForRoute } from "@/app/lib/routing/resolve-entity";
 
 interface DistrictNonprofitPageProps {
   params: Promise<{ id: string; ein: string }>;
@@ -7,11 +9,9 @@ interface DistrictNonprofitPageProps {
 export default async function DistrictNonprofitPage({
   params,
 }: DistrictNonprofitPageProps) {
-  const { id, ein } = await params;
-
-  return (
-    <main className="min-h-screen bg-brand-secondary-1 p-4 text-brand-secondary-0">
-      <DistrictNonprofitDetailClient districtEntityId={id} ein={ein} />
-    </main>
-  );
+  const { id } = await params;
+  const entityId = await resolveEntityIdForRoute(id, {
+    entityType: "district",
+  });
+  redirect(entityPath(entityId, "superintendent"));
 }

@@ -44,6 +44,8 @@ export type IrsOrganizationSnapshot = {
   ein: string;
   legal_name: string | null;
   website: string | null;
+  city: string | null;
+  state: string | null;
 };
 
 export type IrsLatestReturnSnapshot = Pick<

@@ -3,18 +3,19 @@
 import { EntityLogo } from "@/app/components/branding/EntityLogo";
 import {
   getEntityTabLabel,
-  getEntityTabKeys,
-  type EntityTabId,
-} from "@/app/components/entities/hooks/useEntityTabParam";
-import type { EntityType } from "@/domain/entities/types";
+  getVisibleEntityTabKeys,
+  type EntityTabContext,
+  type EntityTabKey,
+} from "@/app/components/entities/entityTabs";
 
 type Props = {
   entityId: string;
   entityName: string;
-  entityType: EntityType | null;
-  activeTab: EntityTabId;
-  onTabChange: (tab: EntityTabId) => void;
-  allowedTabs?: EntityTabId[];
+  entityType: EntityTabContext["entityType"];
+  activeTab: EntityTabKey;
+  onTabChange: (tab: EntityTabKey) => void;
+  allowedTabs?: EntityTabKey[];
+  tabContext: EntityTabContext;
 };
 
 export default function EntitySidebar({
@@ -24,16 +25,16 @@ export default function EntitySidebar({
   activeTab,
   onTabChange,
   allowedTabs,
+  tabContext,
 }: Props) {
-  const tabs = allowedTabs?.length
-    ? allowedTabs.map((key) => ({
-        key,
-        label: getEntityTabLabel(key, entityType),
-      }))
-    : getEntityTabKeys().map((key) => ({
-        key,
-        label: getEntityTabLabel(key, entityType),
-      }));
+  const resolvedTabs =
+    allowedTabs && allowedTabs.length > 0
+      ? allowedTabs
+      : getVisibleEntityTabKeys(tabContext);
+  const tabs = resolvedTabs.map((key) => ({
+    key,
+    label: getEntityTabLabel(key, tabContext),
+  }));
   return (
     <aside className="hidden md:block w-72 shrink-0">
       <div className="sticky top-4 rounded border border-brand-secondary-1 bg-brand-secondary-0 p-4 text-brand-secondary-2">

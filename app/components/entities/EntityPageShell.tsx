@@ -1,6 +1,7 @@
 import EntityPanel from "@/app/components/entities/panels/EntityPanel";
 import EntityThemeProvider from "@/app/providers/EntityThemeProvider";
 
+// @deprecated Use app/entities/[id]/layout.tsx + EntityPanel instead.
 type EntityPageShellProps = {
   entityId: string;
   tab?: string | null;

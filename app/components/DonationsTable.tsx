@@ -2,7 +2,6 @@
 
 import "@/app/lib/agGridSetup";
 import { AgGridReact } from "ag-grid-react";
-import { themeQuartz } from "ag-grid-community";
 import { useEffect, useMemo, useState } from "react";
 import type { Receipt } from "@/app/lib/types/types";
 import type {
@@ -10,6 +9,11 @@ import type {
   ValueFormatterParams,
   ICellRendererParams,
 } from "ag-grid-community";
+
+const GRID_OPTIONS = {
+  // Use legacy CSS theme to avoid Theming API conflicts.
+  theme: "legacy" as const,
+};
 
 export default function DonationsTable() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
@@ -90,11 +94,11 @@ export default function DonationsTable() {
   if (error) return <p>{error}</p>;
 
   return (
-    <div className="h-80 w-full bg-brand-secondary-1 text-brand-primary-1">
+    <div className="ag-theme-quartz h-80 w-full bg-brand-secondary-1 text-brand-primary-1">
       <AgGridReact<Receipt>
         columnDefs={columnDefs}
         rowData={receipts}
-        theme={themeQuartz}
+        gridOptions={GRID_OPTIONS}
         defaultColDef={defaultColDef}
       />
     </div>

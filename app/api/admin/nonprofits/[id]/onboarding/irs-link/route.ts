@@ -58,14 +58,13 @@ export async function POST(
     }
 
     if (!orgRow) {
-      console.error("IRS org lookup failed", {
+      console.warn("IRS org lookup missing; creating registry-only link", {
         rawEin,
         einNormalized,
       });
-      return jsonError("IRS organization not found for EIN", 404);
     }
 
-    const canonicalEin = orgRow.ein;
+    const canonicalEin = orgRow?.ein ?? einNormalized;
 
     const { error: linkErr } = await irs.from("entity_links").upsert(
       {

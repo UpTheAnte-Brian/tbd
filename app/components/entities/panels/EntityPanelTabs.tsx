@@ -2,18 +2,18 @@
 
 import {
   getEntityTabLabel,
-  getEntityTabKeys,
-  type EntityTabId,
-} from "@/app/components/entities/hooks/useEntityTabParam";
-import type { EntityType } from "@/domain/entities/types";
+  getVisibleEntityTabKeys,
+  type EntityTabContext,
+  type EntityTabKey,
+} from "@/app/components/entities/entityTabs";
 
 type Props = {
-  activeTab: EntityTabId;
-  onTabChange: (tab: EntityTabId) => void;
+  activeTab: EntityTabKey;
+  onTabChange: (tab: EntityTabKey) => void;
   tabsClassName?: string;
   tabsVariant?: "buttons" | "select";
-  allowedTabs?: EntityTabId[];
-  entityType?: EntityType | null;
+  allowedTabs?: EntityTabKey[];
+  tabContext: EntityTabContext;
 };
 
 export default function EntityPanelTabs({
@@ -22,24 +22,23 @@ export default function EntityPanelTabs({
   tabsClassName,
   tabsVariant = "buttons",
   allowedTabs,
-  entityType,
+  tabContext,
 }: Props) {
-  const tabs = allowedTabs?.length
-    ? allowedTabs.map((key) => ({
-        key,
-        label: getEntityTabLabel(key, entityType),
-      }))
-    : getEntityTabKeys().map((key) => ({
-        key,
-        label: getEntityTabLabel(key, entityType),
-      }));
+  const resolvedTabs =
+    allowedTabs && allowedTabs.length > 0
+      ? allowedTabs
+      : getVisibleEntityTabKeys(tabContext);
+  const tabs = resolvedTabs.map((key) => ({
+    key,
+    label: getEntityTabLabel(key, tabContext),
+  }));
   if (tabsVariant === "select") {
     return (
       <div className={tabsClassName ?? ""}>
         <select
           className="mt-1 w-full rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-sm text-brand-secondary-0"
           value={activeTab}
-          onChange={(event) => onTabChange(event.target.value as EntityTabId)}
+          onChange={(event) => onTabChange(event.target.value as EntityTabKey)}
         >
           {tabs.map((tab) => (
             <option key={tab.key} value={tab.key}>

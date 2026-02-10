@@ -263,6 +263,8 @@ function buildNonprofitRow(params: {
         has_narrative: latestNarratives.length > 0,
         people_count: peopleCount,
         people_parse_quality: peopleQuality,
+        has_irs_org: scopeRow.has_irs_org ?? null,
+        has_returns: scopeRow.has_returns ?? null,
     };
 }
 
@@ -498,6 +500,8 @@ async function getSuperintendentDashboardByScopeEin(
                 has_narrative: false,
                 people_count: null,
                 people_parse_quality: "unknown",
+                has_irs_org: false,
+                has_returns: false,
             };
         }
 
@@ -557,6 +561,8 @@ async function getSuperintendentDashboardByScopeEin(
             has_narrative: narratives.length > 0,
             people_count: people.length || null,
             people_parse_quality: assessPeopleParseQuality(people),
+            has_irs_org: Boolean(organization),
+            has_returns: Boolean(latestReturn || latestFinancials),
         };
     });
 

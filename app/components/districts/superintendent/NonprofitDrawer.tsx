@@ -94,6 +94,10 @@ export default function NonprofitDrawer({
         .filter(Boolean)
         .join(", ");
 
+    const isRegistryOnly =
+        row.has_irs_org === false ||
+        (Boolean(row.ein) && !detail.organization);
+
     const narratives = detail.narratives;
     const partIII = narratives.filter((narrative) => narrative.section === "part_iii");
     const otherNarratives = narratives.filter(
@@ -123,6 +127,11 @@ export default function NonprofitDrawer({
                         <p className="text-sm text-text-on-light">
                             {location || "--"}
                         </p>
+                        {isRegistryOnly ? (
+                            <p className="mt-1 text-xs text-amber-200">
+                                Registry-only link (needs docs).
+                            </p>
+                        ) : null}
                     </div>
                     <button
                         type="button"
@@ -198,9 +207,11 @@ export default function NonprofitDrawer({
                                     Filing Summary
                                 </div>
                                 <div className="mt-2 text-sm text-text-on-light">
-                                    {latestReturn
-                                        ? `Form ${latestReturn.return_type ?? "unknown"} filed in ${latestReturn.tax_year}`
-                                        : "No IRS returns linked yet."}
+                                    {isRegistryOnly
+                                        ? "Registry-only link (no IRS organization record yet)."
+                                        : latestReturn
+                                          ? `Form ${latestReturn.return_type ?? "unknown"} filed in ${latestReturn.tax_year}`
+                                          : "No IRS returns linked yet."}
                                 </div>
                             </div>
                         </div>
