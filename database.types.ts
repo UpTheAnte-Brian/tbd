@@ -1944,6 +1944,115 @@ export type Database = {
           },
         ]
       }
+      entity_address_geocodes: {
+        Row: {
+          accuracy: string | null
+          confidence: number
+          created_at: string
+          entity_address_id: string
+          geocoded_at: string
+          id: string
+          lat: number
+          lng: number
+          place_id: string | null
+          provider: string
+          raw_response: Json | null
+        }
+        Insert: {
+          accuracy?: string | null
+          confidence?: number
+          created_at?: string
+          entity_address_id: string
+          geocoded_at?: string
+          id?: string
+          lat: number
+          lng: number
+          place_id?: string | null
+          provider: string
+          raw_response?: Json | null
+        }
+        Update: {
+          accuracy?: string | null
+          confidence?: number
+          created_at?: string
+          entity_address_id?: string
+          geocoded_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          place_id?: string | null
+          provider?: string
+          raw_response?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_address_geocodes_entity_address_id_fkey"
+            columns: ["entity_address_id"]
+            isOneToOne: false
+            referencedRelation: "entity_addresses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_addresses: {
+        Row: {
+          address1: string | null
+          address2: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          entity_id: string
+          id: string
+          is_primary: boolean
+          label: string
+          postal: string | null
+          source_ref: string | null
+          source_system: string | null
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          address1?: string | null
+          address2?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          entity_id: string
+          id?: string
+          is_primary?: boolean
+          label?: string
+          postal?: string | null
+          source_ref?: string | null
+          source_system?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address1?: string | null
+          address2?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          entity_id?: string
+          id?: string
+          is_primary?: boolean
+          label?: string
+          postal?: string | null
+          source_ref?: string | null
+          source_system?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_addresses_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entity_attributes: {
         Row: {
           attrs: Json
@@ -2818,6 +2927,27 @@ export type Database = {
           },
         ]
       }
+      v_entity_best_geocode: {
+        Row: {
+          accuracy: string | null
+          confidence: number | null
+          entity_id: string | null
+          geocoded_at: string | null
+          lat: number | null
+          lng: number | null
+          place_id: string | null
+          provider: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_addresses_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       _geom_from_geojson_4326: { Args: { p_geojson: Json }; Returns: unknown }
@@ -2854,6 +2984,10 @@ export type Database = {
         Returns: boolean
       }
       is_global_admin: { Args: { p_user_id: string }; Returns: boolean }
+      link_nonprofits_to_districts: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
       link_schools_to_districts: {
         Args: { p_limit: number; p_offset: number }
         Returns: Json

@@ -96,6 +96,18 @@ What it should produce:
 - district link has `is_primary=true` (one per school)
 - state link has `is_primary=false` (optional but expected for MN rollout)
 
+#### `geocode-nonprofit-addresses.ts`
+Geocodes primary nonprofit addresses and writes:
+- `public.entity_address_geocodes`
+- `public.entity_geometries` (`geometry_type='nonprofit_locations'`)
+
+Requires:
+- `GOOGLE_GEOCODING_API_KEY` or `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
+
+Example runs:
+- `npm run geocodeNonprofits -- --limit=100 --offset=0 --once`
+- `npm run geocodeNonprofits -- --limit=100 --offset=0 --requestSleepMs=100`
+
 ### Utilities
 
 #### `check-env.ts`

@@ -24,11 +24,11 @@ function formatDate(value: string | null) {
 
 function ContactCard({ contact }: { contact: EntityContactSummary }) {
   return (
-    <div className="rounded-md border border-brand-secondary-1 bg-brand-secondary-1/40 p-4">
-      <div className="text-sm font-semibold text-brand-secondary-2">
+    <div className="rounded-md border border-brand-secondary-1 bg-brand-secondary-1/40 p-4 text-brand-primary-1">
+      <div className="text-sm font-semibold text-brand-primary-1">
         {contact.name ?? "Unnamed contact"}
       </div>
-      <div className="mt-1 text-xs uppercase tracking-wide opacity-60">
+      <div className="mt-1 inline-flex items-center rounded bg-brand-secondary-0 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-brand-primary-1">
         {contact.contact_role}
       </div>
       <div className="mt-3 space-y-1 text-sm">

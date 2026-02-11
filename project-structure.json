@@ -89,6 +89,20 @@
                     "contents": [
                       {
                         "type": "directory",
+                        "name": "_components",
+                        "contents": [
+                          {
+                            "type": "file",
+                            "name": "NarrativesCard.tsx"
+                          },
+                          {
+                            "type": "file",
+                            "name": "PeopleRolesCard.tsx"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "directory",
                         "name": "onboarding",
                         "contents": [
                           {

@@ -10,6 +10,7 @@ import LoadingSpinner from "@/app/components/loading-spinner";
 import LayerSources from "@/app/components/map/LayerSources";
 import { DEFAULT_BRAND_COLORS } from "@/app/lib/branding/resolveBranding";
 import {
+  fetchChildGeometriesByRelationship,
   fetchMapGeometryDetail,
   type EntityGeometryRow,
   type EntityGeometriesByType,
@@ -44,7 +45,7 @@ type ChildrenResponse = {
 
 type OverlayFeatureCollection = FeatureCollection<Geometry, GeoJsonProperties>;
 
-type SchoolPoint = {
+type MapPoint = {
   id: string;
   position: google.maps.LatLngLiteral;
   properties: GeoJsonProperties;
@@ -69,6 +70,7 @@ const STATES_CACHE_KEY = "states:us";
 const GEOMETRY_FETCH_DELAY_MS = 150;
 const ATTENDANCE_GEOMETRY_TYPE = "district_attendance_areas";
 const SCHOOL_GEOMETRY_TYPE = "school_program_locations";
+const NONPROFIT_GEOMETRY_TYPE = "nonprofit_locations";
 
 const detailCacheKey = (entityId: string, geometryType: string) =>
   `${entityId}:${geometryType}`;
@@ -102,6 +104,40 @@ const normalizeNameList = (value: unknown): string[] => {
     return value.flatMap((item) => normalizeNameList(item));
   }
   return [];
+};
+
+const buildPointList = (
+  featureCollection: OverlayFeatureCollection | null,
+  fallbackPrefix: string,
+): MapPoint[] => {
+  if (!featureCollection) return [];
+
+  const points: MapPoint[] = [];
+
+  featureCollection.features.forEach((feature, index) => {
+    if (!feature.geometry || feature.geometry.type !== "Point") return;
+
+    const coords = feature.geometry.coordinates;
+    if (!Array.isArray(coords) || coords.length < 2) return;
+
+    const lng = Number(coords[0]);
+    const lat = Number(coords[1]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+    const id = String(
+      feature.id ??
+        feature.properties?.entity_id ??
+        `${fallbackPrefix}:${index}`,
+    );
+
+    points.push({
+      id,
+      position: { lat, lng },
+      properties: { ...(feature.properties ?? {}) },
+    });
+  });
+
+  return points;
 };
 
 type SchoolInfo = {
@@ -146,6 +182,25 @@ const buildSchoolInfo = (props: GeoJsonProperties): SchoolInfo => {
   return { title, lines };
 };
 
+const buildNonprofitInfo = (props: GeoJsonProperties): SchoolInfo => {
+  const record = (props ?? {}) as Record<string, unknown>;
+  const rawTitle =
+    coerceDisplayValue(record.name) ??
+    coerceDisplayValue(record.entity_name) ??
+    coerceDisplayValue(record.entity_slug) ??
+    "Nonprofit";
+  const title = rawTitle === "Nonprofit" ? rawTitle : `Nonprofit: ${rawTitle}`;
+  const slugValue =
+    coerceDisplayValue(record.slug) ?? coerceDisplayValue(record.entity_slug);
+  const entityId = coerceDisplayValue(record.entity_id);
+  const lines = [
+    slugValue ? `Slug: ${slugValue}` : null,
+    entityId ? `Entity ID: ${entityId}` : null,
+  ].filter((line): line is string => Boolean(line));
+
+  return { title, lines };
+};
+
 export default function EntityMapExplorer({
   initialStates,
   homeStatus,
@@ -176,12 +231,26 @@ export default function EntityMapExplorer({
   const [schoolsScanned, setSchoolsScanned] = useState<number | null>(null);
   const [hoveredSchoolId, setHoveredSchoolId] = useState<string | null>(null);
   const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null);
+  const [nonprofitsVisible, setNonprofitsVisible] = useState(false);
+  const [nonprofitFeatureCollection, setNonprofitFeatureCollection] =
+    useState<OverlayFeatureCollection | null>(null);
+  const [loadingNonprofits, setLoadingNonprofits] = useState(false);
+  const [nonprofitsScanned, setNonprofitsScanned] = useState<number | null>(
+    null,
+  );
+  const [hoveredNonprofitId, setHoveredNonprofitId] = useState<string | null>(
+    null,
+  );
+  const [selectedNonprofitId, setSelectedNonprofitId] = useState<string | null>(
+    null,
+  );
   const [fitBoundsToken, setFitBoundsToken] = useState<number | null>(null);
 
   const cacheRef = useRef(new Map<string, EntityFeatureCollection>());
   const detailGeometryCacheRef = useRef(new Map<string, DetailCacheEntry>());
   const detailGeometryAbortRef = useRef<AbortController | null>(null);
   const detailGeometryDebounceRef = useRef<number | null>(null);
+  const nonprofitAbortRef = useRef<AbortController | null>(null);
   const geometriesByType = useMemo(
     () => detailGeometriesByType,
     [detailGeometriesByType],
@@ -262,9 +331,13 @@ export default function EntityMapExplorer({
       setDetailGeometriesByType({});
       setAttendanceFeatureCollection(null);
       setSchoolFeatureCollection(null);
+      setNonprofitFeatureCollection(null);
       setLoadingAttendanceAreas(false);
       setLoadingSchools(false);
+      setLoadingNonprofits(false);
       setSchoolsScanned(null);
+      setNonprofitsScanned(null);
+      setNonprofitsVisible(false);
       setEmptyMessage(cached.features.length ? null : "Coming soon.");
       return;
     }
@@ -289,9 +362,13 @@ export default function EntityMapExplorer({
       setDetailGeometriesByType({});
       setAttendanceFeatureCollection(null);
       setSchoolFeatureCollection(null);
+      setNonprofitFeatureCollection(null);
       setLoadingAttendanceAreas(false);
       setLoadingSchools(false);
+      setLoadingNonprofits(false);
       setSchoolsScanned(null);
+      setNonprofitsScanned(null);
+      setNonprofitsVisible(false);
       setEmptyMessage(
         data.featureCollection.features.length ? null : "Coming soon.",
       );
@@ -317,11 +394,17 @@ export default function EntityMapExplorer({
     setDetailGeometriesByType({});
     setAttendanceFeatureCollection(null);
     setSchoolFeatureCollection(null);
+    setNonprofitFeatureCollection(null);
     setLoadingAttendanceAreas(false);
     setLoadingSchools(false);
+    setLoadingNonprofits(false);
     setSchoolsScanned(null);
+    setNonprofitsScanned(null);
+    setNonprofitsVisible(false);
     setHoveredSchoolId(null);
     setSelectedSchoolId(null);
+    setHoveredNonprofitId(null);
+    setSelectedNonprofitId(null);
     setFitBoundsToken((token) => (token ?? 0) + 1);
   };
 
@@ -330,11 +413,17 @@ export default function EntityMapExplorer({
       setDetailGeometriesByType({});
       setAttendanceFeatureCollection(null);
       setSchoolFeatureCollection(null);
+      setNonprofitFeatureCollection(null);
       setSchoolsScanned(null);
+      setNonprofitsScanned(null);
       setLoadingAttendanceAreas(false);
       setLoadingSchools(false);
+      setLoadingNonprofits(false);
       setHoveredSchoolId(null);
       setSelectedSchoolId(null);
+      setHoveredNonprofitId(null);
+      setSelectedNonprofitId(null);
+      setNonprofitsVisible(false);
       if (detailGeometryAbortRef.current) {
         detailGeometryAbortRef.current.abort();
         detailGeometryAbortRef.current = null;
@@ -343,12 +432,19 @@ export default function EntityMapExplorer({
         window.clearTimeout(detailGeometryDebounceRef.current);
         detailGeometryDebounceRef.current = null;
       }
+      if (nonprofitAbortRef.current) {
+        nonprofitAbortRef.current.abort();
+        nonprofitAbortRef.current = null;
+      }
       return;
     }
 
     setSchoolsVisible(true);
+    setNonprofitsVisible(false);
     setHoveredSchoolId(null);
     setSelectedSchoolId(null);
+    setHoveredNonprofitId(null);
+    setSelectedNonprofitId(null);
   }, [selectedDistrictEntityId]);
 
   useEffect(() => {
@@ -456,6 +552,134 @@ export default function EntityMapExplorer({
     };
   }, [selectedDistrictEntityId]);
 
+  useEffect(() => {
+    if (!selectedDistrictEntityId || !nonprofitsVisible) {
+      setNonprofitFeatureCollection(null);
+      setNonprofitsScanned(null);
+      setLoadingNonprofits(false);
+      setHoveredNonprofitId(null);
+      setSelectedNonprofitId(null);
+      if (nonprofitAbortRef.current) {
+        nonprofitAbortRef.current.abort();
+        nonprofitAbortRef.current = null;
+      }
+      return;
+    }
+
+    const entityId = selectedDistrictEntityId;
+    const cacheKey = detailCacheKey(entityId, NONPROFIT_GEOMETRY_TYPE);
+    const cached = detailGeometryCacheRef.current.get(cacheKey);
+    if (cached) {
+      setNonprofitFeatureCollection(cached.featureCollection);
+      setNonprofitsScanned(cached.returnedCount ?? null);
+      if (cached.geometryRows.length) {
+        setDetailGeometriesByType((prev) =>
+          mergeGeometries(prev, {
+            [NONPROFIT_GEOMETRY_TYPE]: cached.geometryRows,
+          }),
+        );
+      }
+      setLoadingNonprofits(false);
+      return;
+    }
+
+    if (nonprofitAbortRef.current) {
+      nonprofitAbortRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    nonprofitAbortRef.current = controller;
+    setLoadingNonprofits(true);
+
+    const loadNonprofits = async () => {
+      const childUrl = `/api/map/entities/${entityId}/children?relationship=contains&entity_type=nonprofit&geometry_type=${NONPROFIT_GEOMETRY_TYPE}`;
+
+      const childPromise = fetch(childUrl, {
+        cache: "no-store",
+        signal: controller.signal,
+      }).then(async (res) => {
+        if (!res.ok) {
+          throw new Error("Failed to load nonprofit map layer");
+        }
+        return (await res.json()) as ChildrenResponse;
+      });
+
+      const geometryPromise = fetchChildGeometriesByRelationship(
+        entityId,
+        {
+          relationshipType: "contains",
+          childEntityType: "nonprofit",
+          childGeometryType: NONPROFIT_GEOMETRY_TYPE,
+          primaryOnly: true,
+        },
+        { signal: controller.signal },
+      );
+
+      const [childResult, geometryResult] = await Promise.allSettled([
+        childPromise,
+        geometryPromise,
+      ]);
+
+      if (controller.signal.aborted) return;
+
+      let featureCollection: OverlayFeatureCollection | null = null;
+      let returnedCount: number | null = null;
+      let geometryRows: EntityGeometryRow[] = [];
+
+      if (childResult.status === "fulfilled") {
+        featureCollection = childResult.value.featureCollection;
+        returnedCount =
+          typeof childResult.value.returned_count === "number"
+            ? childResult.value.returned_count
+            : featureCollection.features.length;
+      } else {
+        console.error(childResult.reason);
+      }
+
+      if (geometryResult.status === "fulfilled") {
+        geometryRows = geometryResult.value[NONPROFIT_GEOMETRY_TYPE] ?? [];
+      } else {
+        console.error(geometryResult.reason);
+      }
+
+      if (featureCollection) {
+        setNonprofitFeatureCollection(featureCollection);
+        setNonprofitsScanned(returnedCount);
+      } else {
+        setNonprofitFeatureCollection(null);
+        setNonprofitsScanned(null);
+      }
+
+      if (geometryRows.length) {
+        setDetailGeometriesByType((prev) =>
+          mergeGeometries(prev, {
+            [NONPROFIT_GEOMETRY_TYPE]: geometryRows,
+          }),
+        );
+      }
+
+      if (featureCollection) {
+        detailGeometryCacheRef.current.set(cacheKey, {
+          geometryType: NONPROFIT_GEOMETRY_TYPE,
+          featureCollection,
+          geometryRows,
+          returnedCount: returnedCount ?? 0,
+        });
+      }
+
+      setLoadingNonprofits(false);
+    };
+
+    void loadNonprofits();
+
+    return () => {
+      controller.abort();
+      if (nonprofitAbortRef.current === controller) {
+        nonprofitAbortRef.current = null;
+      }
+    };
+  }, [nonprofitsVisible, selectedDistrictEntityId]);
+
   const tooltipBuilder = useMemo(() => {
     return (props: EntityMapProperties) => ({
       title: props.name ?? props.slug ?? "Entity",
@@ -494,6 +718,14 @@ export default function EntityMapExplorer({
   const attendanceVisible =
     activeLayer === "districts" && Boolean(selectedDistrictEntityId);
   const schoolsLayerVisible = attendanceVisible && schoolsVisible;
+  const nonprofitsLayerVisible = attendanceVisible && nonprofitsVisible;
+  const pointLayerVisibility = useMemo<Record<string, boolean>>(
+    () => ({
+      [SCHOOL_GEOMETRY_TYPE]: schoolsLayerVisible,
+      [NONPROFIT_GEOMETRY_TYPE]: nonprofitsLayerVisible,
+    }),
+    [nonprofitsLayerVisible, schoolsLayerVisible],
+  );
   const resolveLayerRows = useMemo(
     () => (layer: (typeof GEOMETRY_LAYERS)[number]) => {
       const geometryTypes = [
@@ -514,11 +746,19 @@ export default function EntityMapExplorer({
     }
   }, [schoolsLayerVisible]);
 
+  useEffect(() => {
+    if (!nonprofitsLayerVisible) {
+      setHoveredNonprofitId(null);
+      setSelectedNonprofitId(null);
+    }
+  }, [nonprofitsLayerVisible]);
+
   const visibleLayers = useMemo(() => {
     if (!attendanceVisible) return [];
     return GEOMETRY_LAYERS.filter((layer) => {
-      if (layer.renderMode === "point" && !schoolsLayerVisible) {
-        return false;
+      if (layer.renderMode === "point") {
+        const visible = pointLayerVisibility[layer.geometryType];
+        if (visible === false) return false;
       }
       const rows = resolveLayerRows(layer);
       const hasGeojson = rows.some(
@@ -526,7 +766,7 @@ export default function EntityMapExplorer({
       );
       return hasGeojson;
     });
-  }, [attendanceVisible, resolveLayerRows, schoolsLayerVisible]);
+  }, [attendanceVisible, pointLayerVisibility, resolveLayerRows]);
 
   const overlayFeatureCollection =
     useMemo<OverlayFeatureCollection | null>(() => {
@@ -559,43 +799,31 @@ export default function EntityMapExplorer({
     };
   }, [layerConfigByType]);
 
-  const schoolPoints = useMemo<SchoolPoint[]>(() => {
+  const schoolPoints = useMemo<MapPoint[]>(() => {
     if (!schoolsLayerVisible) return [];
-    if (!schoolFeatureCollection) return [];
-
-    const points: SchoolPoint[] = [];
-
-    schoolFeatureCollection.features.forEach((feature, index) => {
-      if (!feature.geometry || feature.geometry.type !== "Point") return;
-
-      const coords = feature.geometry.coordinates;
-      if (!Array.isArray(coords) || coords.length < 2) return;
-
-      const lng = Number(coords[0]);
-      const lat = Number(coords[1]);
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-
-      const id = String(
-        feature.id ?? feature.properties?.entity_id ?? `school:${index}`,
-      );
-
-      points.push({
-        id,
-        position: { lat, lng },
-        properties: { ...(feature.properties ?? {}) },
-      });
-    });
-
-    return points;
+    return buildPointList(schoolFeatureCollection, "school");
   }, [schoolFeatureCollection, schoolsLayerVisible]);
 
+  const nonprofitPoints = useMemo<MapPoint[]>(() => {
+    if (!nonprofitsLayerVisible) return [];
+    return buildPointList(nonprofitFeatureCollection, "nonprofit");
+  }, [nonprofitFeatureCollection, nonprofitsLayerVisible]);
+
   const schoolPointsById = useMemo(() => {
-    const map = new Map<string, SchoolPoint>();
+    const map = new Map<string, MapPoint>();
     for (const point of schoolPoints) {
       map.set(point.id, point);
     }
     return map;
   }, [schoolPoints]);
+
+  const nonprofitPointsById = useMemo(() => {
+    const map = new Map<string, MapPoint>();
+    for (const point of nonprofitPoints) {
+      map.set(point.id, point);
+    }
+    return map;
+  }, [nonprofitPoints]);
 
   const activeSchoolId = selectedSchoolId ?? hoveredSchoolId;
   const activeSchool = activeSchoolId
@@ -606,6 +834,16 @@ export default function EntityMapExplorer({
     [activeSchool],
   );
 
+  const activeNonprofitId = selectedNonprofitId ?? hoveredNonprofitId;
+  const activeNonprofit = activeNonprofitId
+    ? (nonprofitPointsById.get(activeNonprofitId) ?? null)
+    : null;
+  const activeNonprofitInfo = useMemo(
+    () =>
+      activeNonprofit ? buildNonprofitInfo(activeNonprofit.properties) : null,
+    [activeNonprofit],
+  );
+
   const brandAccent = useMemo(() => {
     if (typeof window === "undefined") {
       return DEFAULT_BRAND_COLORS.accent1;
@@ -614,6 +852,16 @@ export default function EntityMapExplorer({
       .getPropertyValue("--brand-accent-1")
       .trim();
     return value || DEFAULT_BRAND_COLORS.accent1;
+  }, [selectedDistrictEntityId]);
+
+  const brandAccentAlt = useMemo(() => {
+    if (typeof window === "undefined") {
+      return DEFAULT_BRAND_COLORS.accent2;
+    }
+    const value = getComputedStyle(document.documentElement)
+      .getPropertyValue("--brand-accent-2")
+      .trim();
+    return value || DEFAULT_BRAND_COLORS.accent2;
   }, [selectedDistrictEntityId]);
 
   const schoolLayerConfig = layerConfigByType.get(SCHOOL_GEOMETRY_TYPE);
@@ -630,13 +878,35 @@ export default function EntityMapExplorer({
     }),
     [brandAccent, schoolLayerConfig],
   );
+
+  const nonprofitLayerConfig = layerConfigByType.get(NONPROFIT_GEOMETRY_TYPE);
+  const nonprofitBaseRadius = nonprofitLayerConfig?.pointRadiusMeters ?? 70;
+  const nonprofitCircleOptions = useMemo(
+    () => ({
+      fillColor: brandAccentAlt,
+      fillOpacity: nonprofitLayerConfig?.pointFillOpacity ?? 0.9,
+      strokeColor: brandAccentAlt,
+      strokeOpacity: nonprofitLayerConfig?.pointStrokeOpacity ?? 0.9,
+      strokeWeight: nonprofitLayerConfig?.pointStrokeWeight ?? 1,
+      clickable: true,
+      zIndex: nonprofitLayerConfig?.zIndex,
+    }),
+    [brandAccentAlt, nonprofitLayerConfig],
+  );
   const loadingGeometries = loadingAttendanceAreas;
   const layerLoadingByType = useMemo(
     () => ({
       district_attendance_areas: loadingGeometries,
       school_program_locations: loadingSchools && schoolsLayerVisible,
+      nonprofit_locations: loadingNonprofits && nonprofitsLayerVisible,
     }),
-    [loadingGeometries, loadingSchools, schoolsLayerVisible],
+    [
+      loadingGeometries,
+      loadingNonprofits,
+      loadingSchools,
+      nonprofitsLayerVisible,
+      schoolsLayerVisible,
+    ],
   );
 
   const districtControls = useMemo(() => {
@@ -689,6 +959,24 @@ export default function EntityMapExplorer({
                   School Program Locations: {schoolsScanned}
                 </div>
               ) : null}
+              <label className="mt-3 flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={nonprofitsVisible}
+                  onChange={(event) => {
+                    const nextValue = event.target.checked;
+                    setNonprofitsVisible(nextValue);
+                    console.log("Nonprofits layer toggled:", nextValue);
+                  }}
+                />
+                <span>Nonprofits</span>
+              </label>
+              {nonprofitsScanned !== null ? (
+                <div className="mt-1 text-xs text-brand-secondary-2">
+                  Nonprofit Locations: {nonprofitsScanned}
+                </div>
+              ) : null}
               <LayerSources
                 visibleLayers={visibleLayers}
                 geometriesByType={geometriesByType}
@@ -705,6 +993,8 @@ export default function EntityMapExplorer({
     geometriesByType,
     layerLoadingByType,
     loadingChildLayer,
+    nonprofitsScanned,
+    nonprofitsVisible,
     selectedDistrictEntityId,
     selectedState,
     schoolsScanned,
@@ -712,33 +1002,38 @@ export default function EntityMapExplorer({
     visibleLayers,
   ]);
 
+  const showSchools = schoolsLayerVisible && schoolPoints.length > 0;
+  const showNonprofits = nonprofitsLayerVisible && nonprofitPoints.length > 0;
+
   const mapChildren =
-    schoolsLayerVisible && schoolPoints.length ? (
+    showSchools || showNonprofits ? (
       <>
-        {schoolPoints.map((point) => {
-          const isActive = point.id === activeSchoolId;
-          return (
-            <CircleF
-              key={point.id}
-              center={point.position}
-              radius={isActive ? schoolBaseRadius * 1.4 : schoolBaseRadius}
-              options={schoolCircleOptions}
-              onMouseOver={() => {
-                if (!selectedSchoolId) {
-                  setHoveredSchoolId(point.id);
-                }
-              }}
-              onMouseOut={() => {
-                if (!selectedSchoolId) {
-                  setHoveredSchoolId(null);
-                }
-              }}
-              onClick={() => {
-                setSelectedSchoolId(point.id);
-              }}
-            />
-          );
-        })}
+        {showSchools
+          ? schoolPoints.map((point) => {
+              const isActive = point.id === activeSchoolId;
+              return (
+                <CircleF
+                  key={point.id}
+                  center={point.position}
+                  radius={isActive ? schoolBaseRadius * 1.4 : schoolBaseRadius}
+                  options={schoolCircleOptions}
+                  onMouseOver={() => {
+                    if (!selectedSchoolId) {
+                      setHoveredSchoolId(point.id);
+                    }
+                  }}
+                  onMouseOut={() => {
+                    if (!selectedSchoolId) {
+                      setHoveredSchoolId(null);
+                    }
+                  }}
+                  onClick={() => {
+                    setSelectedSchoolId(point.id);
+                  }}
+                />
+              );
+            })
+          : null}
         {activeSchool && activeSchoolInfo ? (
           <InfoWindowF
             position={activeSchool.position}
@@ -752,6 +1047,54 @@ export default function EntityMapExplorer({
               {activeSchoolInfo.lines.length ? (
                 <div className="mt-1 space-y-0.5 text-xs text-brand-secondary-0">
                   {activeSchoolInfo.lines.map((line) => (
+                    <div key={line}>{line}</div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </InfoWindowF>
+        ) : null}
+        {showNonprofits
+          ? nonprofitPoints.map((point) => {
+              const isActive = point.id === activeNonprofitId;
+              return (
+                <CircleF
+                  key={point.id}
+                  center={point.position}
+                  radius={
+                    isActive ? nonprofitBaseRadius * 1.4 : nonprofitBaseRadius
+                  }
+                  options={nonprofitCircleOptions}
+                  onMouseOver={() => {
+                    if (!selectedNonprofitId) {
+                      setHoveredNonprofitId(point.id);
+                    }
+                  }}
+                  onMouseOut={() => {
+                    if (!selectedNonprofitId) {
+                      setHoveredNonprofitId(null);
+                    }
+                  }}
+                  onClick={() => {
+                    setSelectedNonprofitId(point.id);
+                  }}
+                />
+              );
+            })
+          : null}
+        {activeNonprofit && activeNonprofitInfo ? (
+          <InfoWindowF
+            position={activeNonprofit.position}
+            onCloseClick={() => {
+              setSelectedNonprofitId(null);
+              setHoveredNonprofitId(null);
+            }}
+          >
+            <div className="text-sm text-brand-secondary-1">
+              <div className="font-semibold">{activeNonprofitInfo.title}</div>
+              {activeNonprofitInfo.lines.length ? (
+                <div className="mt-1 space-y-0.5 text-xs text-brand-secondary-0">
+                  {activeNonprofitInfo.lines.map((line) => (
                     <div key={line}>{line}</div>
                   ))}
                 </div>

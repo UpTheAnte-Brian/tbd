@@ -50,6 +50,8 @@
     "importMdeSuperintendents:test": "tsx scripts/import-mde-superintendents.ts --env=test",
     "linkSchoolsToDistricts": "dotenv -e .env.local -- tsx scripts/link-schools-to-districts.ts",
     "linkSchoolsToDistricts:test": "dotenv -e .env.test.local -- tsx scripts/link-schools-to-districts.ts",
+    "geocodeNonprofits": "dotenv -e .env.local -- tsx scripts/geocode-nonprofit-addresses.ts",
+    "geocodeNonprofits:test": "dotenv -e .env.test.local -- tsx scripts/geocode-nonprofit-addresses.ts",
     "linkMnDistrictsToState:test": "dotenv -e .env.test.local -- tsx scripts/link-mn-districts-to-state.ts",
     "linkMnDistrictsToState:local": "dotenv -e .env.local -- tsx scripts/link-mn-districts-to-state.ts"
   },

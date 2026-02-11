@@ -687,6 +687,150 @@ async function upsertReturns(params: {
   return { upserted: payload.length };
 }
 
+type EntityAddressRow = {
+  id: string;
+  entity_id: string;
+  source_system: string | null;
+};
+
+async function upsertEntityAddressesFrom990n(params: {
+  supabaseAdmin: any;
+  rows: ParsedRow[];
+}) {
+  const { supabaseAdmin, rows } = params;
+  if (!rows.length) {
+    return { inserted: 0, updated: 0, skipped: 0 };
+  }
+
+  const bestByEin = new Map<string, ParsedRow>();
+  for (const row of rows) {
+    if (!row?.ein) continue;
+    if (!row.mailing_address?.line1) continue;
+    const existing = bestByEin.get(row.ein);
+    if (!existing || row.tax_year > existing.tax_year) {
+      bestByEin.set(row.ein, row);
+    }
+  }
+
+  if (!bestByEin.size) {
+    return { inserted: 0, updated: 0, skipped: rows.length };
+  }
+
+  const eins = Array.from(bestByEin.keys());
+
+  const { data: scopeRows, error: scopeError } = await supabaseAdmin
+    .schema("public")
+    .from("superintendent_scope_nonprofits")
+    .select("ein, entity_id")
+    .in("ein", eins)
+    .not("entity_id", "is", null);
+
+  if (scopeError) throw scopeError;
+
+  const { data: linkRows, error: linkError } = await supabaseAdmin
+    .schema("irs")
+    .from("entity_links")
+    .select("ein, entity_id")
+    .in("ein", eins);
+
+  if (linkError) throw linkError;
+
+  const entityIdByEin = new Map<string, string>();
+  for (const row of (scopeRows ?? []) as Array<{
+    ein: string;
+    entity_id: string | null;
+  }>) {
+    if (row.ein && row.entity_id && !entityIdByEin.has(row.ein)) {
+      entityIdByEin.set(row.ein, row.entity_id);
+    }
+  }
+  for (const row of (linkRows ?? []) as Array<{
+    ein: string;
+    entity_id: string;
+  }>) {
+    if (row.ein && row.entity_id) {
+      entityIdByEin.set(row.ein, row.entity_id);
+    }
+  }
+
+  const entityIds = Array.from(new Set(entityIdByEin.values()));
+  if (!entityIds.length) {
+    return { inserted: 0, updated: 0, skipped: bestByEin.size };
+  }
+
+  const { data: existingRows, error: existingError } = await supabaseAdmin
+    .schema("public")
+    .from("entity_addresses")
+    .select("id, entity_id, source_system")
+    .in("entity_id", entityIds)
+    .eq("is_primary", true);
+
+  if (existingError) throw existingError;
+
+  const existingByEntityId = new Map<string, EntityAddressRow>();
+  for (const row of (existingRows ?? []) as EntityAddressRow[]) {
+    if (!existingByEntityId.has(row.entity_id)) {
+      existingByEntityId.set(row.entity_id, row);
+    }
+  }
+
+  const toInsert: Array<Record<string, any>> = [];
+  const toUpdate: Array<Record<string, any>> = [];
+  let skipped = 0;
+
+  for (const [ein, row] of bestByEin.entries()) {
+    const entityId = entityIdByEin.get(ein);
+    if (!entityId) {
+      skipped++;
+      continue;
+    }
+
+    const payload = {
+      entity_id: entityId,
+      label: "mailing",
+      address1: row.mailing_address.line1,
+      address2: row.mailing_address.line2,
+      city: row.mailing_address.city,
+      state: row.mailing_address.state,
+      postal: row.mailing_address.zip,
+      country: row.mailing_address.country ?? "US",
+      source_system: "irs_990n",
+      source_ref: `990N:${row.tax_year}`,
+      is_primary: true,
+    };
+
+    const existing = existingByEntityId.get(entityId);
+    if (!existing) {
+      toInsert.push(payload);
+      continue;
+    }
+
+    if ((existing.source_system ?? "").toLowerCase() === "irs_990n") {
+      toUpdate.push({ id: existing.id, ...payload });
+    } else {
+      skipped++;
+    }
+  }
+
+  if (toInsert.length) {
+    const { error } = await supabaseAdmin
+      .schema("public")
+      .from("entity_addresses")
+      .insert(toInsert);
+    if (error) throw error;
+  }
+
+  if (toUpdate.length) {
+    const { error } = await supabaseAdmin
+      .schema("public")
+      .from("entity_addresses")
+      .upsert(toUpdate, { onConflict: "id" });
+    if (error) throw error;
+  }
+
+  return { inserted: toInsert.length, updated: toUpdate.length, skipped };
+}
+
 async function loadScopedEinSet(params: {
   supabaseAdmin: any;
   districtEntityId: string;
@@ -749,6 +893,8 @@ async function parseAndIngest(params: {
   let skippedCount = 0;
   let upsertedOrgs = 0;
   let upsertedReturns = 0;
+  let insertedAddresses = 0;
+  let updatedAddresses = 0;
   let debugPrinted = 0;
 
   let batch: ParsedRow[] = [];
@@ -791,14 +937,22 @@ async function parseAndIngest(params: {
         rows: batch,
       });
       const returnResult = await upsertReturns({ supabaseAdmin, rows: batch });
+      const addressResult = await upsertEntityAddressesFrom990n({
+        supabaseAdmin,
+        rows: batch,
+      });
       upsertedOrgs += orgResult.upserted + orgResult.insertedFallback;
       upsertedReturns += returnResult.upserted;
+      insertedAddresses += addressResult.inserted;
+      updatedAddresses += addressResult.updated;
       batch = [];
 
       const elapsedSec = Math.max(1, Math.round((Date.now() - started) / 1000));
       const rate = Math.round(lineCount / elapsedSec);
       process.stdout.write(
-        `\rParsed ${lineCount.toLocaleString()} lines, mapped ${mappedCount.toLocaleString()}, skipped ${skippedCount.toLocaleString()}, upserted orgs ${upsertedOrgs.toLocaleString()}, returns ${upsertedReturns.toLocaleString()} (${rate.toLocaleString()} lines/sec)   `,
+        `\rParsed ${lineCount.toLocaleString()} lines, mapped ${mappedCount.toLocaleString()}, skipped ${skippedCount.toLocaleString()}, upserted orgs ${upsertedOrgs.toLocaleString()}, returns ${upsertedReturns.toLocaleString()}, addresses ${(
+          insertedAddresses + updatedAddresses
+        ).toLocaleString()} (${rate.toLocaleString()} lines/sec)   `,
       );
     }
 
@@ -808,14 +962,22 @@ async function parseAndIngest(params: {
   if (batch.length) {
     const orgResult = await upsertOrganizations({ supabaseAdmin, rows: batch });
     const returnResult = await upsertReturns({ supabaseAdmin, rows: batch });
+    const addressResult = await upsertEntityAddressesFrom990n({
+      supabaseAdmin,
+      rows: batch,
+    });
     upsertedOrgs += orgResult.upserted + orgResult.insertedFallback;
     upsertedReturns += returnResult.upserted;
+    insertedAddresses += addressResult.inserted;
+    updatedAddresses += addressResult.updated;
   }
 
   const elapsedSec = Math.max(1, Math.round((Date.now() - started) / 1000));
   process.stdout.write("\n");
   console.log(
-    `Done. lines=${lineCount.toLocaleString()} mapped=${mappedCount.toLocaleString()} skipped=${skippedCount.toLocaleString()} orgs=${upsertedOrgs.toLocaleString()} returns=${upsertedReturns.toLocaleString()} elapsed=${elapsedSec}s`,
+    `Done. lines=${lineCount.toLocaleString()} mapped=${mappedCount.toLocaleString()} skipped=${skippedCount.toLocaleString()} orgs=${upsertedOrgs.toLocaleString()} returns=${upsertedReturns.toLocaleString()} addresses=${
+      insertedAddresses + updatedAddresses
+    } (inserted=${insertedAddresses}, updated=${updatedAddresses}) elapsed=${elapsedSec}s`,
   );
 }
 

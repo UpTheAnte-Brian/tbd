@@ -285,7 +285,7 @@ export default function AdminNonprofitsClient() {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search name, EIN, district…"
-                className="w-full rounded-md border border-white/40 bg-white/10 px-3 py-1 text-xs text-text-on-light placeholder:text-text-on-light/60 focus:border-brand-primary focus:outline-none"
+                className="w-full rounded-md border border-brand-secondary-0 bg-white/90 px-3 py-1 text-xs text-brand-secondary-1 placeholder:text-brand-secondary-2 shadow-sm focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1/30"
               />
             </div>
             <label className="flex cursor-pointer items-center gap-2">
