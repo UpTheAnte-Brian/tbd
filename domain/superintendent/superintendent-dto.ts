@@ -240,8 +240,10 @@ function buildNonprofitRow(params: {
         scopeRow.entity_id ??
         scopeRow.scope_id ??
         (ein ? `ein:${ein}` : "ein:unknown");
+    const rowKey = String(resolvedEntityId);
 
     return {
+        row_key: rowKey,
         // `superintendent_scope_nonprofits_ready` may expose different identifiers depending on
         // whether the row is EIN-first or already activated. Prefer an explicit entity_id if present,
         // then fall back to scope_id, and finally an EIN-based synthetic id.
@@ -342,7 +344,7 @@ async function getSuperintendentDashboardByScopeEin(
 
     const { data: scopeRaw, error: scopeError } = await supabase
         .from("superintendent_scope_nonprofits")
-        .select("ein, label, tier, status, org_type, entity_id")
+        .select("id, ein, label, tier, status, org_type, entity_id")
         .eq("district_entity_id", districtEntityId)
         .in("status", ["candidate", "active"]);
 
@@ -484,6 +486,7 @@ async function getSuperintendentDashboardByScopeEin(
                 financials_by_year: [],
             };
             return {
+                row_key: entityId ?? scopeRow.id,
                 entity_id: "ein:unknown",
                 entity_name: scopeRow.label ?? "Unknown nonprofit",
                 ein: null,
@@ -535,6 +538,7 @@ async function getSuperintendentDashboardByScopeEin(
         };
 
         return {
+            row_key: entityId ?? scopeRow.id,
             entity_id: entityId,
             entity_name: scopeRow.label ??
                 organization?.legal_name ??

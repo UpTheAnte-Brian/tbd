@@ -3,6 +3,7 @@ import type { OrgType } from "@/app/lib/types/nonprofits";
 export type PeopleParseQuality = "good" | "mixed" | "poor" | "unknown";
 
 export type NonprofitRow = {
+    row_key: string;
     entity_id: string;
     entity_name: string;
     ein: string | null;

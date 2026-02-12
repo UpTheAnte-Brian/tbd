@@ -28,7 +28,7 @@ export default function EntityHeader({
           {entityName}
         </h1>
         {entityType && (
-          <span className="rounded bg-brand-secondary-1 px-2 py-0.5 text-xs text-brand-secondary-0">
+          <span className="rounded bg-brand-secondary-0 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-brand-primary-1">
             {entityType}
           </span>
         )}

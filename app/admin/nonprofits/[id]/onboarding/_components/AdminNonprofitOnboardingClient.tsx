@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ONBOARDING_SECTION_LABELS,
   ONBOARDING_SECTIONS,
@@ -45,6 +46,7 @@ export default function AdminNonprofitOnboardingClient({
   const [resolvedScopeId, setResolvedScopeId] = useState<string | null>(
     scopeId ?? null,
   );
+  const router = useRouter();
 
   const [identityForm, setIdentityForm] =
     useState<UpdateOnboardingIdentityRequest>({});
@@ -330,10 +332,13 @@ export default function AdminNonprofitOnboardingClient({
   };
 
   const handleActivate = async () => {
-    await runAction(
+    const ok = await runAction(
       "activate",
       `/api/admin/nonprofits/${entityId}/onboarding/activate`,
     );
+    if (ok) {
+      router.push(`/entities/${entityId}`);
+    }
   };
 
   const handleDocumentUpload = async () => {

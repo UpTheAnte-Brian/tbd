@@ -179,7 +179,7 @@ export default function NonprofitTable({
 
                                 return (
                                     <tr
-                                        key={row.entity_id}
+                                        key={row.row_key}
                                         className={`cursor-pointer transition-colors hover:bg-brand-secondary-1/10 ${
                                             isSelected
                                                 ? "bg-brand-secondary-1/10"

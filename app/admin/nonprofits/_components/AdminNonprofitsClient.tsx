@@ -31,9 +31,7 @@ export default function AdminNonprofitsClient() {
   const [rows, setRows] = useState<OnboardingQueueRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [orgTypeEdits, setOrgTypeEdits] = useState<Record<string, OrgType>>(
-    {},
-  );
+  const [orgTypeEdits, setOrgTypeEdits] = useState<Record<string, OrgType>>({});
   const [savingOrgType, setSavingOrgType] = useState<Set<string>>(new Set());
   const [savingStatus, setSavingStatus] = useState<Set<string>>(new Set());
   const [tierEdits, setTierEdits] = useState<Record<string, ScopeTier>>({});
@@ -89,9 +87,7 @@ export default function AdminNonprofitsClient() {
   const updateOrgType = async (row: OnboardingQueueRow, orgType: OrgType) => {
     if (!row.ein || !row.district_entity_id) return;
     const key = `${row.district_entity_id}:${row.ein}`;
-    const previous = orgTypeEdits[key] ??
-      row.org_type ??
-      "external_charity";
+    const previous = orgTypeEdits[key] ?? row.org_type ?? "external_charity";
     setOrgTypeEdits((prev) => ({ ...prev, [key]: orgType }));
     setSavingOrgType((prev) => new Set(prev).add(key));
     setError(null);
@@ -133,7 +129,7 @@ export default function AdminNonprofitsClient() {
       setRows((prev) =>
         prev.map((item) =>
           item.district_entity_id === row.district_entity_id &&
-              item.ein === row.ein
+          item.ein === row.ein
             ? { ...item, org_type: orgType }
             : item,
         ),
@@ -182,19 +178,17 @@ export default function AdminNonprofitsClient() {
         prev
           .map((item) =>
             item.district_entity_id === row.district_entity_id &&
-                item.ein === row.ein
+            item.ein === row.ein
               ? { ...item, status }
               : item,
           )
-          .filter((item) =>
-            showArchived ? true : item.status !== "archived",
-          ),
+          .filter((item) => (showArchived ? true : item.status !== "archived")),
       );
     } catch (err) {
       setRows((prev) =>
         prev.map((item) =>
           item.district_entity_id === row.district_entity_id &&
-              item.ein === row.ein
+          item.ein === row.ein
             ? { ...item, status: previous }
             : item,
         ),
@@ -209,10 +203,7 @@ export default function AdminNonprofitsClient() {
     }
   };
 
-  const updateScopeTier = async (
-    row: OnboardingQueueRow,
-    tier: ScopeTier,
-  ) => {
+  const updateScopeTier = async (row: OnboardingQueueRow, tier: ScopeTier) => {
     if (!row.ein || !row.district_entity_id) return;
     const key = `${row.district_entity_id}:${row.ein}`;
     const previous = tierEdits[key] ?? row.tier ?? "registry_only";
@@ -233,13 +224,15 @@ export default function AdminNonprofitsClient() {
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        throw new Error(body?.message ?? body?.error ?? "Failed to update tier");
+        throw new Error(
+          body?.message ?? body?.error ?? "Failed to update tier",
+        );
       }
 
       setRows((prev) =>
         prev.map((item) =>
           item.district_entity_id === row.district_entity_id &&
-              item.ein === row.ein
+          item.ein === row.ein
             ? { ...item, tier }
             : item,
         ),
@@ -285,7 +278,7 @@ export default function AdminNonprofitsClient() {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search name, EIN, district…"
-                className="w-full rounded-md border border-brand-secondary-0 bg-white/90 px-3 py-1 text-xs text-brand-secondary-1 placeholder:text-brand-secondary-2 shadow-sm focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1/30"
+                className="w-full rounded-md border border-brand-secondary-0 bg-white/90 px-3 py-1 text-xs text-brand-primary-1 placeholder:text-brand-primary-1 placeholder:opacity-100 shadow-sm focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1/30"
               />
             </div>
             <label className="flex cursor-pointer items-center gap-2">
@@ -345,168 +338,166 @@ export default function AdminNonprofitsClient() {
                   return haystack.includes(searchQuery.trim().toLowerCase());
                 })
                 .map((row, index) => {
-                const ein = row.ein ?? "";
-                const canLink = Boolean(ein);
-                const detailHref = canLink
-                  ? `/admin/nonprofits/${encodeURIComponent(ein)}`
-                  : "#";
-                const orgTypeKey =
-                  row.district_entity_id && row.ein
-                    ? `${row.district_entity_id}:${row.ein}`
-                    : null;
-                const orgTypeValue = orgTypeKey
-                  ? orgTypeEdits[orgTypeKey] ??
-                    row.org_type ??
-                    "external_charity"
-                  : row.org_type ?? "external_charity";
-                const isOrgTypeSaving = orgTypeKey
-                  ? savingOrgType.has(orgTypeKey)
-                  : false;
-                const tierValue = orgTypeKey
-                  ? tierEdits[orgTypeKey] ??
-                    row.tier ??
-                    "registry_only"
-                  : row.tier ?? "registry_only";
-                const isTierSaving = orgTypeKey
-                  ? savingTier.has(orgTypeKey)
-                  : false;
+                  const ein = row.ein ?? "";
+                  const canLink = Boolean(ein);
+                  const detailHref = canLink
+                    ? `/admin/nonprofits/${encodeURIComponent(ein)}`
+                    : "#";
+                  const orgTypeKey =
+                    row.district_entity_id && row.ein
+                      ? `${row.district_entity_id}:${row.ein}`
+                      : null;
+                  const orgTypeValue = orgTypeKey
+                    ? (orgTypeEdits[orgTypeKey] ??
+                      row.org_type ??
+                      "external_charity")
+                    : (row.org_type ?? "external_charity");
+                  const isOrgTypeSaving = orgTypeKey
+                    ? savingOrgType.has(orgTypeKey)
+                    : false;
+                  const tierValue = orgTypeKey
+                    ? (tierEdits[orgTypeKey] ?? row.tier ?? "registry_only")
+                    : (row.tier ?? "registry_only");
+                  const isTierSaving = orgTypeKey
+                    ? savingTier.has(orgTypeKey)
+                    : false;
 
-                const statusKey = orgTypeKey ?? "";
-                const isStatusSaving = statusKey
-                  ? savingStatus.has(statusKey)
-                  : false;
-                const needsReturns =
-                  tierValue === "disclosure_grade" && !row.has_returns;
-                return (
-                  <tr
-                    key={`${row.district_entity_id ?? "district"}-${row.ein ?? row.label ?? "row"}-${index}`}
-                    className={`hover:bg-surface-inset/50 ${
-                      canLink ? "cursor-pointer" : ""
-                    }`}
-                    onClick={() => {
-                      if (canLink) router.push(detailHref);
-                    }}
-                  >
-                    <td className="px-4 py-3 font-medium text-text-on-light">
-                      {row.label ?? row.ein ?? "Untitled"}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-text-on-light">
-                      {stripPublicSchoolDistrictSuffix(row.district_name) ??
-                        row.district_name ??
-                        "--"}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-text-on-light">
-                      {row.ein ?? "--"}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-text-on-light">
-                      <div className="flex flex-col gap-2">
-                        <select
-                          value={orgTypeValue}
-                          onChange={(event) => {
-                            const next = event.target.value as OrgType;
-                            void updateOrgType(row, next);
-                          }}
-                          onClick={(event) => event.stopPropagation()}
-                          onPointerDown={(event) => event.stopPropagation()}
-                          onKeyDown={(event) => event.stopPropagation()}
-                          disabled={!orgTypeKey || isOrgTypeSaving}
-                          className="w-full rounded-md border border-border-subtle bg-surface-card px-2 py-1 text-xs text-text-on-light"
-                        >
-                          {ORG_TYPE_OPTIONS.map((option) => (
-                            <option key={option} value={option}>
-                              {ORG_TYPE_LABELS[option]}
-                            </option>
-                          ))}
-                        </select>
-                        {isOrgTypeSaving ? (
-                          <span className="text-[11px] text-brand-secondary-0">
-                            Saving…
+                  const statusKey = orgTypeKey ?? "";
+                  const isStatusSaving = statusKey
+                    ? savingStatus.has(statusKey)
+                    : false;
+                  const needsReturns =
+                    tierValue === "disclosure_grade" && !row.has_returns;
+                  return (
+                    <tr
+                      key={`${row.district_entity_id ?? "district"}-${row.ein ?? row.label ?? "row"}-${index}`}
+                      className={`hover:bg-surface-inset/50 ${
+                        canLink ? "cursor-pointer" : ""
+                      }`}
+                      onClick={() => {
+                        if (canLink) router.push(detailHref);
+                      }}
+                    >
+                      <td className="px-4 py-3 font-medium text-text-on-light">
+                        {row.label ?? row.ein ?? "Untitled"}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-text-on-light">
+                        {stripPublicSchoolDistrictSuffix(row.district_name) ??
+                          row.district_name ??
+                          "--"}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-text-on-light">
+                        {row.ein ?? "--"}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-text-on-light">
+                        <div className="flex flex-col gap-2">
+                          <select
+                            value={orgTypeValue}
+                            onChange={(event) => {
+                              const next = event.target.value as OrgType;
+                              void updateOrgType(row, next);
+                            }}
+                            onClick={(event) => event.stopPropagation()}
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onKeyDown={(event) => event.stopPropagation()}
+                            disabled={!orgTypeKey || isOrgTypeSaving}
+                            className="w-full rounded-md border border-border-subtle bg-surface-card px-2 py-1 text-xs text-text-on-light"
+                          >
+                            {ORG_TYPE_OPTIONS.map((option) => (
+                              <option key={option} value={option}>
+                                {ORG_TYPE_LABELS[option]}
+                              </option>
+                            ))}
+                          </select>
+                          {isOrgTypeSaving ? (
+                            <span className="text-[11px] text-brand-secondary-0">
+                              Saving…
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-text-on-light">
+                        <div className="flex flex-col gap-2">
+                          <select
+                            value={tierValue}
+                            onChange={(event) => {
+                              const next = event.target.value as ScopeTier;
+                              void updateScopeTier(row, next);
+                            }}
+                            onClick={(event) => event.stopPropagation()}
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onKeyDown={(event) => event.stopPropagation()}
+                            disabled={!orgTypeKey || isTierSaving}
+                            className="w-full rounded-md border border-border-subtle bg-surface-card px-2 py-1 text-xs text-text-on-light"
+                          >
+                            {TIERS.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                          {isTierSaving ? (
+                            <span className="text-[11px] text-brand-secondary-0">
+                              Saving…
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-text-on-light">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-surface-inset px-2 py-1">
+                            Entity: {row.has_entity ? "Yes" : "No"}
                           </span>
-                        ) : null}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-text-on-light">
-                      <div className="flex flex-col gap-2">
-                        <select
-                          value={tierValue}
-                          onChange={(event) => {
-                            const next = event.target.value as ScopeTier;
-                            void updateScopeTier(row, next);
-                          }}
-                          onClick={(event) => event.stopPropagation()}
-                          onPointerDown={(event) => event.stopPropagation()}
-                          onKeyDown={(event) => event.stopPropagation()}
-                          disabled={!orgTypeKey || isTierSaving}
-                          className="w-full rounded-md border border-border-subtle bg-surface-card px-2 py-1 text-xs text-text-on-light"
-                        >
-                          {TIERS.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                        {isTierSaving ? (
-                          <span className="text-[11px] text-brand-secondary-0">
-                            Saving…
+                          <span className="rounded-full bg-surface-inset px-2 py-1">
+                            IRS org: {row.has_irs_org ? "Yes" : "No"}
                           </span>
-                        ) : null}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-text-on-light">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-surface-inset px-2 py-1">
-                          Entity: {row.has_entity ? "Yes" : "No"}
-                        </span>
-                        <span className="rounded-full bg-surface-inset px-2 py-1">
-                          IRS org: {row.has_irs_org ? "Yes" : "No"}
-                        </span>
-                        <span
-                          className={`rounded-full px-2 py-1 ${
-                            needsReturns
-                              ? "border border-rose-200 bg-rose-50 text-rose-700"
-                              : "bg-surface-inset"
-                          }`}
-                        >
-                          Returns: {row.has_returns ? "Yes" : "No"}
-                        </span>
-                        {needsReturns ? (
-                          <span className="text-[11px] font-semibold text-rose-600">
-                            Needs returns
+                          <span
+                            className={`rounded-full px-2 py-1 ${
+                              needsReturns
+                                ? "border border-rose-200 bg-rose-50 text-rose-700"
+                                : "bg-surface-inset"
+                            }`}
+                          >
+                            Returns: {row.has_returns ? "Yes" : "No"}
                           </span>
-                        ) : null}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-right text-xs text-text-on-light">
-                      <div className="flex flex-col items-end gap-1">
-                        <select
-                          value={row.status ?? "candidate"}
-                          onChange={(event) => {
-                            const next = event.target.value as
-                              | "candidate"
-                              | "active"
-                              | "archived";
-                            void updateScopeStatus(row, next);
-                          }}
-                          onClick={(event) => event.stopPropagation()}
-                          onPointerDown={(event) => event.stopPropagation()}
-                          onKeyDown={(event) => event.stopPropagation()}
-                          disabled={!orgTypeKey || isStatusSaving}
-                          className="w-full min-w-[130px] rounded-md border border-border-subtle bg-surface-card px-2 py-1 text-xs text-text-on-light"
-                        >
-                          <option value="candidate">candidate</option>
-                          <option value="active">active</option>
-                          <option value="archived">archived</option>
-                        </select>
-                        {isStatusSaving ? (
-                          <span className="text-[11px] text-brand-secondary-0">
-                            Saving…
-                          </span>
-                        ) : null}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                          {needsReturns ? (
+                            <span className="text-[11px] font-semibold text-rose-600">
+                              Needs returns
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right text-xs text-text-on-light">
+                        <div className="flex flex-col items-end gap-1">
+                          <select
+                            value={row.status ?? "candidate"}
+                            onChange={(event) => {
+                              const next = event.target.value as
+                                | "candidate"
+                                | "active"
+                                | "archived";
+                              void updateScopeStatus(row, next);
+                            }}
+                            onClick={(event) => event.stopPropagation()}
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onKeyDown={(event) => event.stopPropagation()}
+                            disabled={!orgTypeKey || isStatusSaving}
+                            className="w-full min-w-[130px] rounded-md border border-border-subtle bg-surface-card px-2 py-1 text-xs text-text-on-light"
+                          >
+                            <option value="candidate">candidate</option>
+                            <option value="active">active</option>
+                            <option value="archived">archived</option>
+                          </select>
+                          {isStatusSaving ? (
+                            <span className="text-[11px] text-brand-secondary-0">
+                              Saving…
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               {!loading &&
               rows
                 .filter((row) => {

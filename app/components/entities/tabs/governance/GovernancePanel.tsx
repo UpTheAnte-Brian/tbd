@@ -774,7 +774,11 @@ export default function GovernancePanel({
         </p>
       );
     }
-    return <p className="text-gray-400">No board found for this {entityLabel}.</p>;
+    return (
+      <div className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-sm text-brand-secondary-0">
+        No board found for this {entityLabel}.
+      </div>
+    );
   }
 
   return (

@@ -2822,6 +2822,24 @@ export type Database = {
       }
     }
     Views: {
+      entity_donation_totals: {
+        Row: {
+          donation_count: number | null
+          entity_id: string | null
+          first_donation_at: string | null
+          last_donation_at: string | null
+          total_amount: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       superintendent_scope_nonprofits_ready: {
         Row: {
           district_entity_id: string | null

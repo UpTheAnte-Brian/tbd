@@ -191,7 +191,7 @@ export default function EntityUsersTab({ entityId }: Props) {
                 setHighlightIndex(-1);
               }
             }}
-            className="w-full rounded border border-brand-secondary-1 bg-brand-secondary-2 p-2 text-brand-secondary-0"
+            className="w-full rounded border border-brand-secondary-1 bg-brand-secondary-2 p-2 text-brand-secondary-0 placeholder:text-brand-primary-1"
             placeholder="Search users by name..."
           />
 

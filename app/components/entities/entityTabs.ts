@@ -14,6 +14,13 @@ export type EntityTabContext = {
   entityType: EntityType | null;
   hasIrsLink?: boolean | null;
   canViewDistrictGovernance?: boolean;
+  isPlatformAdmin?: boolean;
+  canManageUsersForEntity?: boolean;
+  featureFlags: {
+    governanceTabsEnabled: boolean;
+    mapTabEnabled: boolean;
+    usersTabEnabled?: boolean;
+  };
 };
 
 export type EntityTabDefinition = {
@@ -31,14 +38,14 @@ const ENTITY_TABS: EntityTabDefinition[] = [
     isVisible: () => true,
   },
   {
-    key: "contacts",
-    label: "Contacts",
+    key: "superintendent",
+    label: "Superintendent",
     order: 20,
-    isVisible: () => true,
+    isVisible: (context) => context.entityType === "district",
   },
   {
-    key: "users",
-    label: "Users",
+    key: "contacts",
+    label: "Contacts",
     order: 30,
     isVisible: () => true,
   },
@@ -49,10 +56,22 @@ const ENTITY_TABS: EntityTabDefinition[] = [
     isVisible: () => true,
   },
   {
+    key: "users",
+    label: "Users",
+    order: 50,
+    isVisible: (context) => Boolean(context.canManageUsersForEntity),
+  },
+  {
     key: "governance",
     label: "Governance",
-    order: 50,
+    order: 60,
     isVisible: (context) => {
+      if (!context.isPlatformAdmin) {
+        return false;
+      }
+      if (!context.featureFlags.governanceTabsEnabled) {
+        return false;
+      }
       if (
         context.entityType === "district" &&
         context.canViewDistrictGovernance === false
@@ -65,20 +84,15 @@ const ENTITY_TABS: EntityTabDefinition[] = [
   {
     key: "irs",
     label: "IRS",
-    order: 60,
+    order: 70,
     isVisible: (context) => Boolean(context.hasIrsLink),
   },
   {
     key: "map",
     label: "Map",
-    order: 70,
-    isVisible: () => true,
-  },
-  {
-    key: "superintendent",
-    label: "Superintendent",
     order: 80,
-    isVisible: (context) => context.entityType === "district",
+    isVisible: (context) =>
+      Boolean(context.isPlatformAdmin) && context.featureFlags.mapTabEnabled,
   },
 ];
 

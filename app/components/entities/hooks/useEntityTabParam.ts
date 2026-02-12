@@ -42,6 +42,11 @@ export function useEntityTabParam(context: EntityTabContext) {
       context.entityType,
       context.hasIrsLink,
       context.canViewDistrictGovernance,
+      context.isPlatformAdmin,
+      context.canManageUsersForEntity,
+      context.featureFlags.governanceTabsEnabled,
+      context.featureFlags.mapTabEnabled,
+      context.featureFlags.usersTabEnabled,
     ],
   );
 

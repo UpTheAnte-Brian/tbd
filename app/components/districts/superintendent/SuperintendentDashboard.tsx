@@ -74,6 +74,7 @@ export default function SuperintendentDashboard({
   const [sortKey, setSortKey] = useState<SortKey>("revenue");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
+  const hasScopeRows = rows.length > 0;
   console.log("Rendering SuperintendentDashboard with rows:", rows);
   const filteredRows = useMemo(() => {
     const trimmed = search.trim().toLowerCase();
@@ -244,14 +245,10 @@ export default function SuperintendentDashboard({
             Quarterly transparency review
           </div>
           <h1 className="text-2xl font-semibold text-text-on-light">
-            Superintendent Dashboard (v1)
+            Superintendent Dashboard
           </h1>
           <p className="text-sm text-text-on-light">
-            Transparency review across district-related nonprofits (sample:
-            "Westonka" entities)
-          </p>
-          <p className="text-xs text-text-on-light">
-            Last updated {new Date().toLocaleDateString()}
+            Transparency review across district-related nonprofits.
           </p>
         </header>
 
@@ -264,6 +261,8 @@ export default function SuperintendentDashboard({
         <SectionCard
           title="Snapshot"
           subtitle="Quick signals to guide quarterly and annual review."
+          collapsible
+          defaultOpen={hasScopeRows}
         >
           <KpiRow items={kpis} />
         </SectionCard>
@@ -271,6 +270,8 @@ export default function SuperintendentDashboard({
         <SectionCard
           title="Nonprofits in scope"
           subtitle="Search, sort, and drill into the latest IRS filings."
+          collapsible
+          defaultOpen
         >
           <NonprofitTable
             rows={filteredRows}
@@ -286,6 +287,10 @@ export default function SuperintendentDashboard({
             onExportCsv={filteredRows.length ? handleExport : undefined}
           />
         </SectionCard>
+
+        <p className="text-xs text-text-on-light">
+          Last updated {new Date().toLocaleDateString()}
+        </p>
       </div>
 
       <NonprofitDrawer

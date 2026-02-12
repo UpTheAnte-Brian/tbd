@@ -33,10 +33,11 @@ import https from "node:https";
 import { spawnSync } from "node:child_process";
 import readline from "node:readline";
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { normalizeEinInput } from "./lib/ein";
 import { loadEnvFiles } from "../lib/load-env";
 import { logSupabaseError } from "../lib/supabase-error";
+import type { Database } from "../../database.types";
 
 const DEFAULT_BATCH_SIZE = 1000;
 const DOWNLOAD_URL =
@@ -91,6 +92,16 @@ type HeaderMap = {
   normalized: string[];
   index: Record<string, number>;
 };
+
+type SupabaseAdmin = SupabaseClient<Database>;
+
+type ReturnRow = {
+  id: string;
+  ein: string;
+  tax_year: number;
+};
+
+type ReturnPersonInsert = Database["irs"]["Tables"]["return_people"]["Insert"];
 
 function parseArgs(argv: string[]): Args {
   const args: Args = {};
@@ -599,7 +610,7 @@ function unzipToDir(zipPath: string, outDir: string) {
 }
 
 async function upsertOrganizations(params: {
-  supabaseAdmin: any;
+  supabaseAdmin: SupabaseAdmin;
   rows: ParsedRow[];
 }) {
   const { supabaseAdmin, rows } = params;
@@ -646,11 +657,11 @@ async function upsertOrganizations(params: {
 }
 
 async function upsertReturns(params: {
-  supabaseAdmin: any;
+  supabaseAdmin: SupabaseAdmin;
   rows: ParsedRow[];
 }) {
   const { supabaseAdmin, rows } = params;
-  if (!rows.length) return { upserted: 0 };
+  if (!rows.length) return { upserted: 0, rows: [] };
 
   const payload = rows.map((r) => ({
     ein: r.ein,
@@ -677,14 +688,15 @@ async function upsertReturns(params: {
     },
   }));
 
-  const { error } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .schema("irs")
     .from("returns")
-    .upsert(payload, { onConflict: "ein,return_type,tax_year" });
+    .upsert(payload, { onConflict: "ein,return_type,tax_year" })
+    .select("id, ein, tax_year");
 
   if (error) throw error;
 
-  return { upserted: payload.length };
+  return { upserted: payload.length, rows: (data ?? []) as ReturnRow[] };
 }
 
 type EntityAddressRow = {
@@ -694,7 +706,7 @@ type EntityAddressRow = {
 };
 
 async function upsertEntityAddressesFrom990n(params: {
-  supabaseAdmin: any;
+  supabaseAdmin: SupabaseAdmin;
   rows: ParsedRow[];
 }) {
   const { supabaseAdmin, rows } = params;
@@ -832,7 +844,7 @@ async function upsertEntityAddressesFrom990n(params: {
 }
 
 async function loadScopedEinSet(params: {
-  supabaseAdmin: any;
+  supabaseAdmin: SupabaseAdmin;
   districtEntityId: string;
   statuses: string[];
 }): Promise<Set<string>> {
@@ -871,8 +883,134 @@ async function loadScopedEinSet(params: {
   return set;
 }
 
+function buildReturnKey(ein: string, taxYear: number): string {
+  const normalized = normalizeEinInput(ein);
+  return `${normalized ?? String(ein).trim()}:${taxYear}`;
+}
+
+function normalizePersonKey(input: string): string {
+  return String(input || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+async function insertReturnPeopleBestEffort(params: {
+  supabaseAdmin: SupabaseAdmin;
+  rows: ReturnPersonInsert[];
+}) {
+  const { supabaseAdmin, rows } = params;
+  if (!rows.length) return { inserted: 0 };
+
+  const bulk = await supabaseAdmin
+    .schema("irs")
+    .from("return_people")
+    .insert(rows);
+
+  if (!bulk.error) return { inserted: rows.length };
+
+  const bulkMsg = String(bulk.error.message || "").toLowerCase();
+  if (!bulkMsg.includes("duplicate key")) {
+    throw bulk.error;
+  }
+
+  let inserted = 0;
+  for (const row of rows) {
+    const res = await supabaseAdmin
+      .schema("irs")
+      .from("return_people")
+      .insert(row);
+    if (!res.error) {
+      inserted++;
+      continue;
+    }
+    const msg = String(res.error.message || "").toLowerCase();
+    if (msg.includes("duplicate key")) continue;
+    throw res.error;
+  }
+
+  return { inserted };
+}
+
+async function upsertReturnPeopleFrom990n(params: {
+  supabaseAdmin: SupabaseAdmin;
+  returnRows: ReturnRow[];
+  parsedRows: ParsedRow[];
+}) {
+  const { supabaseAdmin, returnRows, parsedRows } = params;
+  if (!returnRows.length) return { inserted: 0, skipped: 0 };
+
+  const parsedByKey = new Map<string, ParsedRow>();
+  for (const row of parsedRows) {
+    if (!row?.ein) continue;
+    parsedByKey.set(buildReturnKey(row.ein, row.tax_year), row);
+  }
+
+  const payload: ReturnPersonInsert[] = [];
+  let skipped = 0;
+
+  for (const row of returnRows) {
+    const parsed = parsedByKey.get(buildReturnKey(row.ein, row.tax_year));
+    if (!parsed) {
+      skipped++;
+      continue;
+    }
+    const officerName = parsed.principal_officer?.name?.trim();
+    if (!officerName) {
+      skipped++;
+      continue;
+    }
+
+    payload.push({
+      return_id: row.id,
+      role: "officer",
+      name: officerName,
+      title: "Principal Officer",
+      source_map: {
+        source: "irs_990n",
+        role_label: "principal_officer",
+        principal_officer: {
+          name: parsed.principal_officer.name ?? null,
+          address_line1: parsed.principal_officer.address_line1 ?? null,
+          address_line2: parsed.principal_officer.address_line2 ?? null,
+          city: parsed.principal_officer.city ?? null,
+          state: parsed.principal_officer.state ?? null,
+          zip: parsed.principal_officer.zip ?? null,
+          country: parsed.principal_officer.country ?? null,
+        },
+      },
+    });
+  }
+
+  if (!payload.length) return { inserted: 0, skipped };
+
+  const deduped: ReturnPersonInsert[] = [];
+  const seen = new Set<string>();
+  for (const row of payload) {
+    const key = [
+      row.return_id,
+      row.role,
+      normalizePersonKey(row.name),
+      normalizePersonKey(row.title ?? ""),
+    ].join("|");
+    if (seen.has(key)) {
+      skipped++;
+      continue;
+    }
+    seen.add(key);
+    deduped.push(row);
+  }
+
+  const result = await insertReturnPeopleBestEffort({
+    supabaseAdmin,
+    rows: deduped,
+  });
+
+  return { inserted: result.inserted, skipped };
+}
+
 async function parseAndIngest(params: {
-  supabaseAdmin: any;
+  supabaseAdmin: SupabaseAdmin;
   filePath: string;
   batchSize: number;
   debug?: boolean;
@@ -895,6 +1033,7 @@ async function parseAndIngest(params: {
   let upsertedReturns = 0;
   let insertedAddresses = 0;
   let updatedAddresses = 0;
+  let upsertedPeople = 0;
   let debugPrinted = 0;
 
   let batch: ParsedRow[] = [];
@@ -937,12 +1076,18 @@ async function parseAndIngest(params: {
         rows: batch,
       });
       const returnResult = await upsertReturns({ supabaseAdmin, rows: batch });
+      const peopleResult = await upsertReturnPeopleFrom990n({
+        supabaseAdmin,
+        returnRows: returnResult.rows,
+        parsedRows: batch,
+      });
       const addressResult = await upsertEntityAddressesFrom990n({
         supabaseAdmin,
         rows: batch,
       });
       upsertedOrgs += orgResult.upserted + orgResult.insertedFallback;
       upsertedReturns += returnResult.upserted;
+      upsertedPeople += peopleResult.inserted;
       insertedAddresses += addressResult.inserted;
       updatedAddresses += addressResult.updated;
       batch = [];
@@ -950,7 +1095,7 @@ async function parseAndIngest(params: {
       const elapsedSec = Math.max(1, Math.round((Date.now() - started) / 1000));
       const rate = Math.round(lineCount / elapsedSec);
       process.stdout.write(
-        `\rParsed ${lineCount.toLocaleString()} lines, mapped ${mappedCount.toLocaleString()}, skipped ${skippedCount.toLocaleString()}, upserted orgs ${upsertedOrgs.toLocaleString()}, returns ${upsertedReturns.toLocaleString()}, addresses ${(
+        `\rParsed ${lineCount.toLocaleString()} lines, mapped ${mappedCount.toLocaleString()}, skipped ${skippedCount.toLocaleString()}, upserted orgs ${upsertedOrgs.toLocaleString()}, returns ${upsertedReturns.toLocaleString()}, people ${upsertedPeople.toLocaleString()}, addresses ${(
           insertedAddresses + updatedAddresses
         ).toLocaleString()} (${rate.toLocaleString()} lines/sec)   `,
       );
@@ -962,12 +1107,18 @@ async function parseAndIngest(params: {
   if (batch.length) {
     const orgResult = await upsertOrganizations({ supabaseAdmin, rows: batch });
     const returnResult = await upsertReturns({ supabaseAdmin, rows: batch });
+    const peopleResult = await upsertReturnPeopleFrom990n({
+      supabaseAdmin,
+      returnRows: returnResult.rows,
+      parsedRows: batch,
+    });
     const addressResult = await upsertEntityAddressesFrom990n({
       supabaseAdmin,
       rows: batch,
     });
     upsertedOrgs += orgResult.upserted + orgResult.insertedFallback;
     upsertedReturns += returnResult.upserted;
+    upsertedPeople += peopleResult.inserted;
     insertedAddresses += addressResult.inserted;
     updatedAddresses += addressResult.updated;
   }
@@ -975,7 +1126,7 @@ async function parseAndIngest(params: {
   const elapsedSec = Math.max(1, Math.round((Date.now() - started) / 1000));
   process.stdout.write("\n");
   console.log(
-    `Done. lines=${lineCount.toLocaleString()} mapped=${mappedCount.toLocaleString()} skipped=${skippedCount.toLocaleString()} orgs=${upsertedOrgs.toLocaleString()} returns=${upsertedReturns.toLocaleString()} addresses=${
+    `Done. lines=${lineCount.toLocaleString()} mapped=${mappedCount.toLocaleString()} skipped=${skippedCount.toLocaleString()} orgs=${upsertedOrgs.toLocaleString()} returns=${upsertedReturns.toLocaleString()} people=${upsertedPeople.toLocaleString()} addresses=${
       insertedAddresses + updatedAddresses
     } (inserted=${insertedAddresses}, updated=${updatedAddresses}) elapsed=${elapsedSec}s`,
   );
@@ -1033,9 +1184,13 @@ async function main() {
 
   const supabaseUrl = mustGetEnv("NEXT_PUBLIC_SUPABASE_URL");
   const serviceKey = mustGetEnv("SUPABASE_SERVICE_ROLE_KEY");
-  const supabaseAdmin = createClient(supabaseUrl, serviceKey, {
-    auth: { persistSession: false },
-  });
+  const supabaseAdmin: SupabaseAdmin = createClient<Database>(
+    supabaseUrl,
+    serviceKey,
+    {
+      auth: { persistSession: false },
+    },
+  );
 
   const districtEntityId = args.district ? String(args.district) : null;
   const statuses = parseCommaList(args.statuses ?? "candidate,active");

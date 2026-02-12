@@ -11,6 +11,7 @@ import { useEntityTabParam } from "@/app/components/entities/hooks/useEntityTabP
 import type { EntityTabContext } from "@/app/components/entities/entityTabs";
 import type { EntityType } from "@/domain/entities/types";
 import { useUser } from "@/app/hooks/useUser";
+import { getFeatureFlags } from "@/app/lib/featureFlags";
 import type { GovernanceSnapshot } from "@/domain/governance/governance";
 
 type EntityDetails = {
@@ -34,6 +35,15 @@ export default function EntityPanel({ entityId, entityType }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [governanceHasBoard, setGovernanceHasBoard] = useState(false);
+  const isPlatformAdmin = user?.global_role === "admin";
+  const featureFlags = useMemo(() => getFeatureFlags(), []);
+  const entityUserRole = useMemo(
+    () =>
+      user?.entity_users?.find((eu) => eu.entity_id === entityId)?.role ?? null,
+    [entityId, user?.entity_users],
+  );
+  const canManageUsersForEntity =
+    isPlatformAdmin || entityUserRole === "admin" || entityUserRole === "editor";
 
   useEffect(() => {
     let cancelled = false;
@@ -80,8 +90,7 @@ export default function EntityPanel({ entityId, entityType }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    const isAdmin = user?.global_role === "admin";
-    if (isAdmin) {
+    if (isPlatformAdmin) {
       setGovernanceHasBoard(true);
       return;
     }
@@ -109,7 +118,7 @@ export default function EntityPanel({ entityId, entityType }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [entityId, resolvedType, user?.global_role, user?.id]);
+  }, [entityId, isPlatformAdmin, resolvedType, user?.id]);
 
   const tabContext = useMemo<EntityTabContext>(
     () => ({
@@ -117,8 +126,18 @@ export default function EntityPanel({ entityId, entityType }: Props) {
       hasIrsLink: entity?.has_irs_link ?? null,
       canViewDistrictGovernance:
         resolvedType !== "district" ? true : governanceHasBoard,
+      isPlatformAdmin,
+      canManageUsersForEntity,
+      featureFlags,
     }),
-    [entity?.has_irs_link, governanceHasBoard, resolvedType],
+    [
+      entity?.has_irs_link,
+      governanceHasBoard,
+      isPlatformAdmin,
+      resolvedType,
+      canManageUsersForEntity,
+      featureFlags,
+    ],
   );
   const { activeTab, setActiveTab, visibleTabs } = useEntityTabParam(
     tabContext,

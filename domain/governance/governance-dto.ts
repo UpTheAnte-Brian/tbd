@@ -14,6 +14,7 @@ import {
 import type { ProfilePreview } from "@/domain/entities/types";
 import type { BoardPacketSnapshot } from "@/domain/governance/governance-approvals";
 import { createApiClient } from "@/utils/supabase/route";
+import { supabaseAdmin } from "@/utils/supabase/service-worker";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface GovernanceClientOptions {
@@ -21,9 +22,11 @@ export interface GovernanceClientOptions {
 }
 
 async function getGovernanceClient(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _options?: GovernanceClientOptions,
+    options?: GovernanceClientOptions,
 ): Promise<SupabaseClient> {
+    if (options?.elevated) {
+        return supabaseAdmin;
+    }
     return createApiClient();
 }
 
