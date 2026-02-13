@@ -76,6 +76,10 @@ export default function SuperintendentDashboard({
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const hasScopeRows = rows.length > 0;
   console.log("Rendering SuperintendentDashboard with rows:", rows);
+  console.log(
+    "Duplicate entity_ids:",
+    rows.map((r) => r.entity_id).filter((id, i, arr) => arr.indexOf(id) !== i),
+  );
   const filteredRows = useMemo(() => {
     const trimmed = search.trim().toLowerCase();
     const filtered = trimmed

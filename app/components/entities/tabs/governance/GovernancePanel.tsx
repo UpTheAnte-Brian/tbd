@@ -768,44 +768,48 @@ export default function GovernancePanel({
   if (!snapshot || !boardId) {
     if (!user?.id) {
       return (
-        <p className="text-gray-400">
+        <p className="text-brand-primary-1 opacity-70">
           Sign in to view this {entityLabel}&apos;s{" "}
           {boardLabel.toLowerCase()} details.
         </p>
       );
     }
     return (
-      <div className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-sm text-brand-secondary-0">
+      <div className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-sm text-brand-secondary-1">
         No board found for this {entityLabel}.
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 text-gray-100">
+    <div className="space-y-8 text-brand-primary-1">
       <div>
         <h2 className="text-xl font-semibold">{boardLabel} Roster</h2>
-        <p className="text-sm text-gray-400">
+        <p className="mt-2 inline-flex rounded border border-brand-secondary-2 bg-brand-primary-1 px-3 py-2 text-sm text-brand-secondary-1">
           Governance is separate from operational roles. Only board members
           below can vote on motions and approve minutes.
         </p>
-        <label className="mt-3 flex items-center gap-2 text-sm text-gray-300">
+        <label className="mt-3 flex items-center gap-2 text-sm text-brand-primary-1">
           <input
             type="checkbox"
             checked={showEnded}
             onChange={(e) => setShowEnded(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-700 bg-gray-950 text-blue-500"
+            className="h-4 w-4 rounded border-brand-secondary-1 bg-brand-primary-1 text-brand-primary-0"
           />
           Show ended
         </label>
 
         <div className="mt-4 space-y-3">
           {(snapshot.members ?? []).length === 0 && (
-            <p className="text-gray-400">No board members yet.</p>
+            <p className="text-brand-primary-1 opacity-70">
+              No board members yet.
+            </p>
           )}
           {(snapshot.members ?? []).length > 0 &&
             rosterMembers.length === 0 && (
-              <p className="text-gray-400">No active board members.</p>
+              <p className="text-brand-primary-1 opacity-70">
+                No active board members.
+              </p>
             )}
 
           {rosterMembers.map((member) => {
@@ -815,16 +819,16 @@ export default function GovernancePanel({
             return (
               <div
                 key={member.id}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-gray-700 rounded p-3 bg-gray-900/60"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-brand-secondary-1 rounded p-3 bg-brand-primary-1 text-brand-secondary-1"
               >
                 <div>
                   <p className="font-semibold">
                     {member.profile?.full_name ?? member.user_id}
                   </p>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-brand-secondary-0 opacity-70">
                     {member.role.replace("_", " ")} · {activity.computedStatus}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-brand-secondary-0 opacity-60">
                     Term: {termStartLabel} → {termEndLabel}
                   </p>
                 </div>
@@ -837,7 +841,7 @@ export default function GovernancePanel({
                         role: e.target.value as BoardMember["role"],
                       })
                     }
-                    className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
+                    className="bg-brand-primary-1 border border-brand-secondary-1 rounded px-2 py-1 text-brand-secondary-1"
                   >
                     {ROLE_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -853,7 +857,7 @@ export default function GovernancePanel({
                         status: e.target.value as BoardMember["status"],
                       })
                     }
-                    className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
+                    className="bg-brand-primary-1 border border-brand-secondary-1 rounded px-2 py-1 text-brand-secondary-1"
                   >
                     {STATUS_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -864,7 +868,7 @@ export default function GovernancePanel({
 
                   <button
                     onClick={() => endMemberTerm(member.id)}
-                    className="text-red-400 hover:text-red-300 text-sm"
+                    className="text-brand-primary-0 hover:text-brand-primary-2 text-sm"
                   >
                     End term
                   </button>
@@ -874,21 +878,23 @@ export default function GovernancePanel({
           })}
         </div>
 
-        <div className="mt-6 p-4 border border-gray-700 rounded space-y-3 bg-gray-900/60">
+        <div className="mt-6 p-4 border border-brand-secondary-1 rounded space-y-3 bg-brand-primary-1 text-brand-secondary-1">
           <h3 className="font-semibold text-lg">Add Board Member</h3>
           <input
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             placeholder="Search users by name"
-            className="w-full p-2 rounded bg-gray-950 border border-gray-700 text-gray-100 placeholder:text-gray-400"
+            className="w-full p-2 rounded bg-brand-primary-1 border border-brand-secondary-1 text-brand-secondary-1 placeholder:text-brand-secondary-0"
           />
           {searchResults.length > 0 && (
-            <div className="border border-gray-700 rounded divide-y divide-gray-800 bg-gray-950">
+            <div className="border border-brand-secondary-1 rounded divide-y divide-brand-secondary-1 bg-brand-primary-1">
               {searchResults.map((r) => (
                 <button
                   key={r.id}
-                  className={`w-full text-left px-3 py-2 text-gray-100 ${
-                    selectedUserId === r.id ? "bg-gray-800" : "bg-gray-950"
+                  className={`w-full text-left px-3 py-2 text-brand-secondary-1 ${
+                    selectedUserId === r.id
+                      ? "bg-brand-secondary-2"
+                      : "bg-brand-primary-1"
                   }`}
                   onClick={() => {
                     setSelectedUserId(r.id);
@@ -908,7 +914,7 @@ export default function GovernancePanel({
               onChange={(e) =>
                 setSelectedRole(e.target.value as BoardMember["role"])
               }
-              className="bg-gray-950 border border-gray-700 rounded px-2 py-2 text-gray-100"
+              className="bg-brand-primary-1 border border-brand-secondary-1 rounded px-2 py-2 text-brand-secondary-1"
             >
               {ROLE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -922,7 +928,7 @@ export default function GovernancePanel({
               onChange={(e) =>
                 setSelectedStatus(e.target.value as BoardMember["status"])
               }
-              className="bg-gray-950 border border-gray-700 rounded px-2 py-2 text-gray-100"
+              className="bg-brand-primary-1 border border-brand-secondary-1 rounded px-2 py-2 text-brand-secondary-1"
             >
               {STATUS_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -934,23 +940,25 @@ export default function GovernancePanel({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
-              <label className="text-sm text-gray-300">Term start</label>
+              <label className="text-sm text-brand-secondary-0">
+                Term start
+              </label>
               <input
                 type="date"
                 value={termStart}
                 onChange={(e) => setTermStart(e.target.value)}
-                className="bg-gray-950 border border-gray-700 rounded px-2 py-2 text-gray-100"
+                className="bg-brand-primary-1 border border-brand-secondary-1 rounded px-2 py-2 text-brand-secondary-1"
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-sm text-gray-300">
+              <label className="text-sm text-brand-secondary-0">
                 Term end (optional)
               </label>
               <input
                 type="date"
                 value={termEnd}
                 onChange={(e) => setTermEnd(e.target.value)}
-                className="bg-gray-950 border border-gray-700 rounded px-2 py-2 text-gray-100"
+                className="bg-brand-primary-1 border border-brand-secondary-1 rounded px-2 py-2 text-brand-secondary-1"
               />
             </div>
           </div>
@@ -958,7 +966,7 @@ export default function GovernancePanel({
           <button
             onClick={addMember}
             disabled={memberLoading || !canAddMember}
-            className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500 disabled:bg-gray-700 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-brand-primary-0 text-brand-primary-1 rounded hover:bg-brand-primary-2 disabled:bg-brand-secondary-1 disabled:text-brand-secondary-0 disabled:cursor-not-allowed"
           >
             {memberLoading ? <LoadingSpinner /> : "Add Member"}
           </button>
@@ -967,7 +975,7 @@ export default function GovernancePanel({
 
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Meetings, Motions & Votes</h2>
-        <div className="p-4 border border-gray-700 rounded space-y-3 bg-gray-900/60">
+        <div className="p-4 border border-brand-secondary-1 rounded space-y-3 bg-brand-primary-1 text-brand-secondary-1">
           <h3 className="font-semibold">Schedule Meeting</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <input
@@ -976,7 +984,7 @@ export default function GovernancePanel({
                 setMeetingDraft((prev) => ({ ...prev, title: e.target.value }))
               }
               placeholder="Meeting title"
-              className="p-2 rounded bg-gray-950 border border-gray-700 text-gray-100 placeholder:text-gray-400"
+              className="p-2 rounded bg-brand-primary-1 border border-brand-secondary-1 text-brand-secondary-1 placeholder:text-brand-secondary-0 placeholder:opacity-70"
             />
             <select
               value={meetingDraft.meeting_type}
@@ -986,7 +994,7 @@ export default function GovernancePanel({
                   meeting_type: e.target.value,
                 }))
               }
-              className="p-2 rounded bg-gray-950 border border-gray-700 text-gray-100"
+              className="p-2 rounded bg-brand-primary-1 border border-brand-secondary-1 text-brand-secondary-1"
             >
               <option value="">Meeting type</option>
               {MEETING_TYPE_OPTIONS.map((option) => (
@@ -1004,7 +1012,7 @@ export default function GovernancePanel({
                   scheduled_start: e.target.value,
                 }))
               }
-              className="p-2 rounded bg-gray-950 border border-gray-700 text-gray-100"
+              className="p-2 rounded bg-brand-primary-1 border border-brand-secondary-1 text-brand-secondary-1"
             />
             <input
               type="datetime-local"
@@ -1015,20 +1023,22 @@ export default function GovernancePanel({
                   scheduled_end: e.target.value,
                 }))
               }
-              className="p-2 rounded bg-gray-950 border border-gray-700 text-gray-100"
+              className="p-2 rounded bg-brand-primary-1 border border-brand-secondary-1 text-brand-secondary-1"
             />
           </div>
           <button
             onClick={createMeeting}
             disabled={meetingLoading || !canCreateMeeting}
-            className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500 disabled:bg-gray-700 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-brand-primary-0 text-brand-primary-1 rounded hover:bg-brand-primary-2 disabled:bg-brand-secondary-1 disabled:text-brand-secondary-0 disabled:cursor-not-allowed"
           >
             {meetingLoading ? <LoadingSpinner /> : "Create Meeting"}
           </button>
         </div>
 
         {(snapshot.meetings ?? []).length === 0 && (
-          <p className="text-gray-400">No meetings scheduled.</p>
+          <p className="text-brand-primary-1 opacity-70">
+            No meetings scheduled.
+          </p>
         )}
 
         {(snapshot.meetings ?? []).map((meeting: BoardMeeting) => {
@@ -1074,7 +1084,7 @@ export default function GovernancePanel({
           return (
             <div
               key={meeting.id}
-              className="border border-gray-700 rounded p-4 space-y-4 bg-gray-900/60"
+              className="border border-brand-secondary-1 rounded p-4 space-y-4 bg-brand-primary-1 text-brand-secondary-1"
             >
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <div>
@@ -1085,7 +1095,7 @@ export default function GovernancePanel({
                       ? new Date(meeting.scheduled_start).toLocaleString()
                       : "Unscheduled"}
                   </p>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-brand-secondary-0 opacity-70">
                     Status: {meeting.status ?? "draft"}
                   </p>
                 </div>
@@ -1099,7 +1109,7 @@ export default function GovernancePanel({
               <div className="space-y-2">
                 <h4 className="font-semibold">Attendance</h4>
                 {activeMembers.length === 0 && (
-                  <p className="text-sm text-gray-400">No active members.</p>
+                  <p className="text-sm text-brand-secondary-0 opacity-70">No active members.</p>
                 )}
                 {activeMembers.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1110,7 +1120,7 @@ export default function GovernancePanel({
                       return (
                         <label
                           key={member.id}
-                          className="flex items-center gap-2 text-sm text-gray-200"
+                          className="flex items-center gap-2 text-sm text-brand-secondary-1"
                         >
                           {canFinalize ? (
                             <input
@@ -1128,14 +1138,16 @@ export default function GovernancePanel({
                           ) : (
                             <span
                               className={`inline-block h-2 w-2 rounded-full ${
-                                isPresent ? "bg-green-500" : "bg-gray-600"
+                                isPresent
+                                  ? "bg-brand-primary-0"
+                                  : "bg-brand-secondary-1"
                               }`}
                             />
                           )}
                           <span>
                             {member.profile?.full_name ?? member.user_id}
                           </span>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-brand-secondary-0 opacity-70">
                             {isPresent ? "Present" : "Absent"}
                           </span>
                         </label>
@@ -1148,7 +1160,7 @@ export default function GovernancePanel({
               <div className="space-y-3">
                 <h4 className="font-semibold">Motions</h4>
                 {meetingMotions.length === 0 && (
-                  <p className="text-sm text-gray-400">No motions yet.</p>
+                  <p className="text-sm text-brand-secondary-0 opacity-70">No motions yet.</p>
                 )}
 
                 {meetingMotions.map((motion) => {
@@ -1171,7 +1183,7 @@ export default function GovernancePanel({
                   return (
                     <div
                       key={motion.id}
-                      className="border border-gray-700 rounded p-3 space-y-2 bg-gray-950/60"
+                      className="border border-brand-secondary-1 rounded p-3 space-y-2 bg-brand-primary-1"
                     >
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                         <div>
@@ -1193,7 +1205,7 @@ export default function GovernancePanel({
                             </div>
                           )}
                           {motion.description && (
-                            <p className="text-sm text-gray-300">
+                            <p className="text-sm text-brand-secondary-0">
                               {motion.description}
                             </p>
                           )}
@@ -1204,7 +1216,7 @@ export default function GovernancePanel({
                               finalizeMotion(motion.id, meeting.id)
                             }
                             disabled={disableFinalize}
-                            className="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500 disabled:bg-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
+                            className="px-3 py-1 bg-brand-primary-0 text-brand-primary-1 rounded text-sm hover:bg-brand-primary-2 disabled:bg-brand-secondary-1 disabled:text-brand-secondary-0 disabled:cursor-not-allowed"
                           >
                             Finalize motion
                           </button>
@@ -1212,7 +1224,7 @@ export default function GovernancePanel({
                       </div>
 
                       <div className="space-y-2">
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-brand-secondary-0 opacity-70">
                           Votes ({votes.length}):{" "}
                           {votes
                             .map(
@@ -1226,7 +1238,7 @@ export default function GovernancePanel({
                             )
                             .join(", ")}
                         </p>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-brand-secondary-0 opacity-70">
                           Approvals ({approvals.length})
                         </p>
 
@@ -1243,7 +1255,7 @@ export default function GovernancePanel({
                               }))
                             }
                             disabled={isFinalized}
-                            className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100 disabled:opacity-50"
+                            className="bg-brand-primary-1 border border-brand-secondary-1 rounded px-2 py-1 text-brand-secondary-1 disabled:opacity-50"
                           >
                             <option value="">Select voter</option>
                             {activeMembers.map((m) => (
@@ -1269,7 +1281,7 @@ export default function GovernancePanel({
                               }))
                             }
                             disabled={isFinalized}
-                            className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100 disabled:opacity-50"
+                            className="bg-brand-primary-1 border border-brand-secondary-1 rounded px-2 py-1 text-brand-secondary-1 disabled:opacity-50"
                           >
                             <option value="yes">Yes</option>
                             <option value="no">No</option>
@@ -1279,7 +1291,7 @@ export default function GovernancePanel({
                           <button
                             onClick={() => submitVote(motion.id)}
                             disabled={isFinalized}
-                            className="px-3 py-1 bg-blue-600 rounded text-sm hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
+                            className="px-3 py-1 bg-brand-primary-0 text-brand-primary-1 rounded text-sm hover:bg-brand-primary-2 disabled:bg-brand-secondary-1 disabled:text-brand-secondary-0 disabled:cursor-not-allowed"
                           >
                             Record Vote
                           </button>
@@ -1304,7 +1316,7 @@ export default function GovernancePanel({
                     }))
                   }
                   placeholder="Motion title"
-                  className="w-full p-2 rounded bg-gray-950 border border-gray-700 text-gray-100 placeholder:text-gray-400"
+                  className="w-full p-2 rounded bg-brand-primary-1 border border-brand-secondary-1 text-brand-secondary-1 placeholder:text-brand-secondary-0 placeholder:opacity-70"
                 />
                 <textarea
                   value={motionDrafts[meeting.id]?.description ?? ""}
@@ -1318,7 +1330,7 @@ export default function GovernancePanel({
                     }))
                   }
                   placeholder="Description"
-                  className="w-full p-2 rounded bg-gray-950 border border-gray-700 text-gray-100 placeholder:text-gray-400"
+                  className="w-full p-2 rounded bg-brand-primary-1 border border-brand-secondary-1 text-brand-secondary-1 placeholder:text-brand-secondary-0 placeholder:opacity-70"
                 />
                 <div className="flex flex-col sm:flex-row gap-2">
                   <select
@@ -1332,7 +1344,7 @@ export default function GovernancePanel({
                         },
                       }))
                     }
-                    className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
+                    className="bg-brand-primary-1 border border-brand-secondary-1 rounded px-2 py-1 text-brand-secondary-1"
                   >
                     {MOTION_TYPE_OPTIONS.map((type) => (
                       <option key={type} value={type}>
@@ -1351,7 +1363,7 @@ export default function GovernancePanel({
                         },
                       }))
                     }
-                    className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
+                    className="bg-brand-primary-1 border border-brand-secondary-1 rounded px-2 py-1 text-brand-secondary-1"
                   >
                     <option value="">Moved by</option>
                     {activeMembers.map((m) => (
@@ -1371,7 +1383,7 @@ export default function GovernancePanel({
                         },
                       }))
                     }
-                    className="bg-gray-950 border border-gray-700 rounded px-2 py-1 text-gray-100"
+                    className="bg-brand-primary-1 border border-brand-secondary-1 rounded px-2 py-1 text-brand-secondary-1"
                   >
                     <option value="">Seconded by</option>
                     {activeMembers.map((m) => (
@@ -1383,7 +1395,7 @@ export default function GovernancePanel({
                 </div>
                 <button
                   onClick={() => createMotion(meeting.id)}
-                  className="px-3 py-2 bg-blue-600 rounded hover:bg-blue-500"
+                  className="px-3 py-2 bg-brand-primary-0 text-brand-primary-1 rounded hover:bg-brand-primary-2"
                 >
                   Add Motion
                 </button>
@@ -1398,14 +1410,14 @@ export default function GovernancePanel({
                         <button
                           onClick={() => createBoardPacket(meeting.id)}
                           disabled={packetCreating}
-                          className="px-3 py-2 bg-blue-600 rounded hover:bg-blue-500 disabled:bg-gray-700"
+                          className="px-3 py-2 bg-brand-primary-0 text-brand-primary-1 rounded hover:bg-brand-primary-2 disabled:bg-brand-secondary-1 disabled:text-brand-secondary-0"
                         >
                           {packetCreating
                             ? "Creating..."
                             : "Create Board Packet"}
                         </button>
                       ) : (
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-brand-secondary-0 opacity-70">
                           No board packet yet.
                         </p>
                       )}
@@ -1438,7 +1450,7 @@ export default function GovernancePanel({
                                 [meeting.id]: e.target.value,
                               }))
                             }
-                            className="w-full p-2 rounded bg-gray-950 border border-gray-700 text-gray-100 placeholder:text-gray-400"
+                            className="w-full p-2 rounded bg-brand-primary-1 border border-brand-secondary-1 text-brand-secondary-1 placeholder:text-brand-secondary-0 placeholder:opacity-70"
                             placeholder="Board packet content..."
                             rows={6}
                           />
@@ -1451,7 +1463,7 @@ export default function GovernancePanel({
                                 )
                               }
                               disabled={packetSaving}
-                              className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-500 disabled:bg-gray-700"
+                              className="px-3 py-1 bg-brand-primary-0 text-brand-primary-1 rounded hover:bg-brand-primary-2 disabled:bg-brand-secondary-1 disabled:text-brand-secondary-0"
                             >
                               {packetSaving ? "Saving..." : "Save Draft"}
                             </button>
@@ -1463,7 +1475,7 @@ export default function GovernancePanel({
                                 )
                               }
                               disabled={packetApproving}
-                              className="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500 disabled:bg-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
+                              className="px-3 py-1 bg-brand-primary-0 text-brand-primary-1 rounded text-sm hover:bg-brand-primary-2 disabled:bg-brand-secondary-1 disabled:text-brand-secondary-0 disabled:cursor-not-allowed"
                             >
                               {packetApproving
                                 ? "Approving..."
@@ -1472,7 +1484,7 @@ export default function GovernancePanel({
                           </div>
                         </>
                       ) : (
-                        <div className="rounded border border-gray-700 bg-gray-950/60 p-3 text-sm text-gray-200 whitespace-pre-wrap">
+                        <div className="rounded border border-brand-secondary-1 bg-brand-primary-1 p-3 text-sm text-brand-secondary-1 whitespace-pre-wrap">
                           {boardPacket?.contentMd ?? "No board packet content."}
                         </div>
                       )}
@@ -1504,14 +1516,14 @@ export default function GovernancePanel({
                       [meeting.id]: e.target.value,
                     }))
                   }
-                  className="w-full p-2 rounded bg-gray-950 border border-gray-700 text-gray-100 placeholder:text-gray-400"
+                  className="w-full p-2 rounded bg-brand-primary-1 border border-brand-secondary-1 text-brand-secondary-1 placeholder:text-brand-secondary-0 placeholder:opacity-70"
                   placeholder="Meeting minutes..."
                   rows={4}
                 />
                 <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
                   <button
                     onClick={() => saveMinutes(meeting.id)}
-                    className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-500"
+                    className="px-3 py-1 bg-brand-primary-0 text-brand-primary-1 rounded hover:bg-brand-primary-2"
                   >
                     Save Minutes
                   </button>
@@ -1519,18 +1531,18 @@ export default function GovernancePanel({
                     <button
                       onClick={() => approveMinutes(meeting.id, minutes.id)}
                       disabled={quorumMet !== true}
-                      className="px-3 py-1 bg-purple-600 rounded text-sm hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
+                      className="px-3 py-1 bg-brand-primary-0 text-brand-primary-1 rounded text-sm hover:bg-brand-primary-2 disabled:bg-brand-secondary-1 disabled:text-brand-secondary-0 disabled:cursor-not-allowed"
                     >
                       Approve Minutes
                     </button>
                   )}
                   {canFinalize && minutesApproved && (
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-brand-secondary-0 opacity-70">
                       Minutes already approved.
                     </span>
                   )}
                   {canFinalize && !minutes?.id && (
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-brand-secondary-0 opacity-70">
                       Save minutes before approving.
                     </span>
                   )}

@@ -3,7 +3,6 @@ import type {
     SortDirection,
     SortKey,
 } from "@/app/components/districts/superintendent/types";
-import type { OrgType } from "@/app/lib/types/nonprofits";
 import { formatEinDashed } from "@/domain/irs/ein";
 
 const moneyFormatter = new Intl.NumberFormat("en-US", {
@@ -21,17 +20,6 @@ function formatMoney(value: number | null): string {
 function formatText(value: string | null | undefined): string {
     if (!value) return "--";
     return value;
-}
-
-const ORG_TYPE_LABELS: Record<OrgType, string> = {
-    district_foundation: "District Foundation",
-    up_the_ante: "Up the Ante",
-    external_charity: "External Charity",
-};
-
-function formatOrgType(value: OrgType | null | undefined): string {
-    if (!value) return "--";
-    return ORG_TYPE_LABELS[value] ?? value;
 }
 
 type NonprofitTableProps = {
@@ -128,9 +116,6 @@ export default function NonprofitTable({
                                 Nonprofit Name
                             </th>
                             <th className="px-3 py-2 text-left font-medium">
-                                Type
-                            </th>
-                            <th className="px-3 py-2 text-left font-medium">
                                 EIN
                             </th>
                             <th className="px-3 py-2 text-left font-medium">
@@ -151,16 +136,13 @@ export default function NonprofitTable({
                             <th className="px-3 py-2 text-left font-medium">
                                 People Parse
                             </th>
-                            <th className="px-3 py-2 text-left font-medium">
-                                City / State
-                            </th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border-subtle">
                         {rows.length === 0 ? (
                             <tr>
                                 <td
-                                    colSpan={10}
+                                    colSpan={8}
                                     className="px-3 py-6 text-center text-sm text-text-on-light"
                                 >
                                     No nonprofits match this filter.
@@ -170,12 +152,6 @@ export default function NonprofitTable({
                             rows.map((row) => {
                                 const isSelected =
                                     selectedEntityId === row.entity_id;
-                                const location = [
-                                    row.city,
-                                    row.state,
-                                ]
-                                    .filter(Boolean)
-                                    .join(", ");
 
                                 return (
                                     <tr
@@ -208,9 +184,6 @@ export default function NonprofitTable({
                                                     </span>
                                                 ) : null}
                                             </div>
-                                        </td>
-                                        <td className="px-3 py-2 text-text-on-light">
-                                            {formatOrgType(row.org_type)}
                                         </td>
                                         <td className="px-3 py-2 text-text-on-light">
                                             {formatText(formatEinDashed(row.ein))}
@@ -250,9 +223,6 @@ export default function NonprofitTable({
                                             >
                                                 {row.people_parse_quality}
                                             </span>
-                                        </td>
-                                        <td className="px-3 py-2 text-text-on-light">
-                                            {location || "--"}
                                         </td>
                                     </tr>
                                 );

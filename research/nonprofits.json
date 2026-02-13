@@ -3,6 +3,7 @@
   "districts": {
     "westonka": {
       "name": "Westonka",
+      "id": "7c46ab8d-84d9-5f5e-b1e6-2cf2c8027e4e",
       "items": [
         {
           "ein": "320573784",
@@ -12,7 +13,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -23,7 +26,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -34,7 +39,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": "990-N filer (under $50k receipts)"
         },
         {
@@ -45,7 +52,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -56,7 +65,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -67,7 +78,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, COPYOFRETURNS",
-          "forms_available": ["990"],
+          "forms_available": [
+            "990"
+          ],
           "notes": "Full Form 990 reviewed (2021, 2022 PDFs available)"
         },
         {
@@ -78,7 +91,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, REVOCATION",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -89,7 +104,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -100,7 +117,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, REVOCATION",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -111,7 +130,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD, REVOCATION",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": "Scholarship-focused"
         },
         {
@@ -122,7 +143,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, EPOSTCARD",
-          "forms_available": ["990"],
+          "forms_available": [
+            "990"
+          ],
           "notes": ""
         },
         {
@@ -133,7 +156,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, COPYOFRETURNS",
-          "forms_available": ["990"],
+          "forms_available": [
+            "990"
+          ],
           "notes": ""
         },
         {
@@ -144,7 +169,9 @@
           "country": "US",
           "dba": "",
           "types": "EPOSTCARD, REVOCATION",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -155,7 +182,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS",
-          "forms_available": ["990"],
+          "forms_available": [
+            "990"
+          ],
           "notes": ""
         },
         {
@@ -166,7 +195,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, REVOCATION, COPYOFRETURNS",
-          "forms_available": ["990"],
+          "forms_available": [
+            "990"
+          ],
           "notes": "District education foundation; endowment & scholarships"
         },
         {
@@ -177,7 +208,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD, REVOCATION",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -188,7 +221,9 @@
           "country": "US",
           "dba": " ",
           "types": "DETERMINATIONLETTERS, EPOSTCARD, REVOCATION",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": "Likely union-affiliated"
         },
         {
@@ -199,7 +234,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -210,7 +247,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, REVOCATION",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -221,7 +260,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -232,7 +273,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -243,7 +286,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -254,7 +299,9 @@
           "country": "US",
           "dba": null,
           "types": "DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990"],
+          "forms_available": [
+            "990"
+          ],
           "notes": ""
         },
         {
@@ -276,14 +323,184 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, REVOCATION",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411679420",
+          "name": "Westonka Recreational Association",
+          "city": "Mound",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411355767",
+          "name": "Westonka School Age Day Care Inc.",
+          "city": "Mound",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "260907101",
+          "name": "Westonka Ski Boosters",
+          "city": "Mound",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "EPOSTCARD, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "814151578",
+          "name": "Westonka Speech Booster Club",
+          "city": "Mound",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411965117",
+          "name": "Westonka Sports Association",
+          "city": "Mound",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411447817",
+          "name": "Westonka Tennis Association Inc",
+          "city": "Mound",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "REVOCATION",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "472911196",
+          "name": "Westonka Walleye Program",
+          "city": "Mound",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "883881231",
+          "name": "Westonka Youth Baseball League Inc.",
+          "city": "Mound",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "043707991",
+          "name": "Westonka Youth Basketball Association",
+          "city": "Mound",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "711026691",
+          "name": "Westonka Youth Softball Association",
+          "city": "Mound",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "262339044",
+          "name": "Westonka Archery Boosters",
+          "city": "Minnetrista",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411377878",
+          "name": "Westonka-Orono Sports Center Association Inc.",
+          "city": "Mound",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "261757769",
+          "name": "ORONOYOUTHLACROSSEASSOCIATION",
+          "city": "Longlake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "DETERMINATIONLETTERS, EPOSTCARD, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         }
       ],
-      "count": 26
+      "count": 38
     },
     "waconia": {
       "name": "Waconia",
+      "id": "655ba31f-34be-50c7-a957-d1b29c71b1e7",
       "items": [
         {
           "ein": "410991682",
@@ -304,7 +521,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -315,7 +534,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -326,7 +547,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, REVOCATION",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -348,7 +571,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -359,7 +584,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -381,7 +608,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -392,7 +621,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, COPYOFRETURNS",
-          "forms_available": ["990"],
+          "forms_available": [
+            "990"
+          ],
           "notes": ""
         },
         {
@@ -403,7 +634,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -414,7 +647,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, EPOSTCARD, COPYOFRETURNS",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -436,7 +671,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, REVOCATION, COPYOFRETURNS",
-          "forms_available": ["990"],
+          "forms_available": [
+            "990"
+          ],
           "notes": ""
         },
         {
@@ -447,7 +684,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -458,7 +697,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, COPYOFRETURNS",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -480,7 +721,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -491,7 +734,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, COPYOFRETURNS",
-          "forms_available": ["990"],
+          "forms_available": [
+            "990"
+          ],
           "notes": ""
         },
         {
@@ -502,7 +747,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -524,7 +771,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD, REVOCATION",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -535,7 +784,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -546,7 +797,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -557,7 +810,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -568,7 +823,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -579,7 +836,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, REVOCATION",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -590,7 +849,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -601,7 +862,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -623,7 +886,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -634,7 +899,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -645,7 +912,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, COPYOFRETURNS",
-          "forms_available": ["990"],
+          "forms_available": [
+            "990"
+          ],
           "notes": ""
         },
         {
@@ -667,7 +936,9 @@
           "country": "US",
           "dba": null,
           "types": "DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -678,7 +949,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD, REVOCATION",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -689,7 +962,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -700,7 +975,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -711,7 +988,9 @@
           "country": "US",
           "dba": null,
           "types": "EPOSTCARD",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -744,7 +1023,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, COPYOFRETURNS",
-          "forms_available": ["990"],
+          "forms_available": [
+            "990"
+          ],
           "notes": ""
         },
         {
@@ -766,7 +1047,9 @@
           "country": "US",
           "dba": null,
           "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, COPYOFRETURNS",
-          "forms_available": ["990-N"],
+          "forms_available": [
+            "990-N"
+          ],
           "notes": ""
         },
         {
@@ -782,7 +1065,1277 @@
         }
       ],
       "count": 45
+    },
+    "orono": {
+      "name": "Orono",
+      "id": "730a595f-1f20-518c-8acd-26de427c0c94",
+      "items": [
+        {
+          "ein": "411680734",
+          "name": "ORONO AREA SPORTS FACILITY INC",
+          "city": "Mayzata",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "REVOCATION",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "411883702",
+          "name": "Orono Baseball Association",
+          "city": "Maple Plain",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "474114318",
+          "name": "Orono Basketball Association",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "472822370",
+          "name": "Orono Boys Basketball Boosters",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "453252401",
+          "name": "Orono Boys Swim and Dive Team",
+          "city": "Orono",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "471337112",
+          "name": "ORONO CLASS OF 1959",
+          "city": "Plymouth",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "REVOCATION",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "237125548",
+          "name": "ORONO EDUCATION ASSOCIATION",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411777333",
+          "name": "Orono Elementary Pto",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "410990511",
+          "name": "ORONO ENSEMBLE THEATRE GUILD",
+          "city": "Maple Plain",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "REVOCATION",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "264605633",
+          "name": "ORONO FOOTBALL BOOSTERS",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "DETERMINATIONLETTERS, EPOSTCARD, COPYOFRETURNS, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411974305",
+          "name": "Orono Foundation for Education",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "992655476",
+          "name": "Orono Garden Club",
+          "city": "Minneapolis",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "823425318",
+          "name": "Orono Girls Basketball Boosters",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "453047290",
+          "name": "Orono Girls Swim & Dive Team",
+          "city": "Plymouth",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, COPYOFRETURNS",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "205437204",
+          "name": "ORONO HEALTHY YOUTH",
+          "city": "Maple Plain",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "EPOSTCARD, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "834363814",
+          "name": "Orono High School Baseball Boosters",
+          "city": "Maple Plain",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, COPYOFRETURNS",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "862366511",
+          "name": "ORONO HIGH SCHOOL BOYS LACROSSE BOOSTER CLUB",
+          "city": "Orono",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "DETERMINATIONLETTERS, REVOCATION",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "880985240",
+          "name": "Orono High School Boys Varsity Hockey Boosters",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "991234284",
+          "name": "Orono High School Golf Booster Club",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "471762466",
+          "name": "ORONO HIGH SCHOOL VOLLEYBALL BOOSTERS ASSOCIATION",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "REVOCATION",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "237424401",
+          "name": "Orono Hockey Boosters Inc.",
+          "city": "Maple Plain",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "462120124",
+          "name": "Orono Hs Girls Lacrosse Boosters",
+          "city": "Orono",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, COPYOFRETURNS, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411845694",
+          "name": "Orono Ice Arena Inc.",
+          "city": "Orono",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "842478810",
+          "name": "Orono Mens Soccer Boosters Inc.",
+          "city": "Orono",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "200391645",
+          "name": "Orono Middle School Parents Association",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "842742605",
+          "name": "Orono Mountain Bike Team",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "472446675",
+          "name": "Orono Nordic Ski Club",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "825343281",
+          "name": "Orono Parks Legacy",
+          "city": "Crystal Bay",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "331979202",
+          "name": "Orono Robotics Team Booster Club",
+          "city": "Wayzata",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "261430139",
+          "name": "Orono Rotary Foundation",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "473672842",
+          "name": "ORONO SCHOOLS ISD 278 HAR 1050004778",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "DETERMINATIONLETTERS, EPOSTCARD, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "471611513",
+          "name": "Orono Softball Association",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, COPYOFRETURNS, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "831872526",
+          "name": "Orono Softball Boosters",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "204489001",
+          "name": "Orono Spartan Parents Association",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411720906",
+          "name": "ORONO TENNIS ASSOCIATION (C-O SYLVIA STROUP)",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "REVOCATION",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "333586307",
+          "name": "Orono Track and Field Booster Club",
+          "city": "Plymouth",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "562554970",
+          "name": "Orono Varsity Hockey Boosters Club Inc.",
+          "city": "Mound",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, COPYOFRETURNS",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411800102",
+          "name": "Orono Westonka Soccer Club Inc.",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "882037454",
+          "name": "Orono Womens Soccer Boosters Inc.",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, COPYOFRETURNS",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411385627",
+          "name": "Orono Woodlands Inc.",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, EPOSTCARD, COPYOFRETURNS",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "050522898",
+          "name": "Orono Wrestling Club",
+          "city": "Independence",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "813185870",
+          "name": "Orono Youth Football Association Inc.",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "873488300",
+          "name": "Orono Youth Lacrosse",
+          "city": "Independence",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "261757769",
+          "name": "ORONOYOUTHLACROSSEASSOCIATION",
+          "city": "Longlake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "DETERMINATIONLETTERS, EPOSTCARD, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "203011132",
+          "name": "ROTARY CLUB OF ORONO MINNESOTA",
+          "city": "Long Lake",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "410460905",
+          "name": "The Orono Cemetery Association",
+          "city": "Elk River",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, REVOCATION",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "411377878",
+          "name": "Westonka-Orono Sports Center Association Inc.",
+          "city": "Mound",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        }
+      ],
+      "count": 47
+    },
+    "delano": {
+      "name": "Delano",
+      "id": "7a2293ee-de61-506c-b1ba-269ea883bccb",
+      "items": [
+        {
+          "ein": "883909975",
+          "name": "Delano Ambassador Scholarship Program",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "815050533",
+          "name": "Delano Area Council for Arts and Culture",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, COPYOFRETURNS",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "465646666",
+          "name": "Delano Area Scholarship Association",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411634784",
+          "name": "Delano Area Sports Arena Inc.",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411397047",
+          "name": "Delano Area Youth Hockey Association Inc.",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411866468",
+          "name": "Delano Athletic Booster Club Inc.",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "900764876",
+          "name": "Delano Athletic Club",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "831423748",
+          "name": "Delano Basketball Association",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "300247555",
+          "name": "Delano Commons Senior Housing",
+          "city": "Saint Paul",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "883120039",
+          "name": "Delano Dramatic Company",
+          "city": "Wayzata",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "270080206",
+          "name": "Delano Education Foundation",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "271410756",
+          "name": "DELANO FIRE DEPARTMENT RELIEF ASSOCIATION",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "DETERMINATIONLETTERS, COPYOFRETURNS, REVOCATION",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411519726",
+          "name": "DELANO FIRE RELIEF ASSOCIATION",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "REVOCATION",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "411953489",
+          "name": "Delano Franklin Township Area Historical Society",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "412008268",
+          "name": "Delano Friends of the Library",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "934638630",
+          "name": "DELANO GROWERS ASSOCIATION",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411988713",
+          "name": "Delano Helping Hands",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, EPOSTCARD, COPYOFRETURNS",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411451269",
+          "name": "DELANO JAYCEE WOMEN",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "REVOCATION",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "263797182",
+          "name": "DELANO JUNIOR OLYMPIC VOLLEYBALL",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "EPOSTCARD, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "873036752",
+          "name": "Delano Light the Night",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411287226",
+          "name": "Delano Loretto Area United Way",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "270332096",
+          "name": "Delano Rage",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, EPOSTCARD, COPYOFRETURNS",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "472550466",
+          "name": "Delano Soccer Club of Minnesota",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD, COPYOFRETURNS",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "416044901",
+          "name": "DELANO SPORTSMENS CLUB INC",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "REVOCATION",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "463161294",
+          "name": "DELANO SWIM SUPPORT",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "EPOSTCARD, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "237125999",
+          "name": "DELANO TEACHERS ASSOCIATION",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "208703970",
+          "name": "Delano Youth Baseball-Softball",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "883971118",
+          "name": "Friends of the Delano Senior Center",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "455151095",
+          "name": "VOTE YES FOR DELANO PUBLIC SCHOOLS",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        }
+      ],
+      "count": 29
+    },
+    "watertown-mayer": {
+      "name": "Watertown-Mayer",
+      "id": "df2f7a8a-391a-541b-8de9-fde3fa62ddbe",
+      "items": [
+        {
+          "ein": "208430009",
+          "name": "EDUCATION MINNESOTA WATERTOWN-MAYER",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "464198631",
+          "name": "EDUCATION MINNESOTA WATERTOWN-MAYER ESP",
+          "city": "Montrose",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "DETERMINATIONLETTERS, EPOSTCARD, COPYOFRETURNS, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411294388",
+          "name": "FIREMENS RELIEF ASSNS OF MINN WATERTOWN ASSOCIATION",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "EPOSTCARD, COPYOFRETURNS",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "410853280",
+          "name": "Trinity Evangelical Lutheran Cemetery of Watertown Minn",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "721607822",
+          "name": "WATERTOWN AREA FINE ARTS COUNCIL",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "EPOSTCARD, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411913288",
+          "name": "Watertown Area Historical Society",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "300271255",
+          "name": "WATERTOWN AREA YOUTH MINISTRIES INC",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "REVOCATION",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "410870966",
+          "name": "Watertown Cemetery Assoc",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, EPOSTCARD, COPYOFRETURNS",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411478661",
+          "name": "WATERTOWN CHAMBER OF COMMERCE",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411921827",
+          "name": "WATERTOWN FIRE DEPARTMENT AUXILIARY",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "EPOSTCARD, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "237434765",
+          "name": "WATERTOWN HOCKEY ASSOCIATION",
+          "city": "Delano",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "REVOCATION",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "204527213",
+          "name": "WATERTOWN LITTLE LEAGUE",
+          "city": "Mayer",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "384034334",
+          "name": "Watertown Mayer Education Foundation Inc.",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "933679642",
+          "name": "Watertown Mayer Royal Council",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "934952621",
+          "name": "Watertown Mayer Softball Boosters",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "831457415",
+          "name": "Watertown Mayer Youth Basketball Auxiliary Inc.",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "823757509",
+          "name": "WATERTOWN ROYALTY AMBASSADORS",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "DETERMINATIONLETTERS, EPOSTCARD, REVOCATION",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "411454226",
+          "name": "WATERTOWN SOCCER ASSOCIATION",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "REVOCATION",
+          "forms_available": [],
+          "notes": ""
+        },
+        {
+          "ein": "332125734",
+          "name": "Watertown-Mayer Band Booster Club",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "462035614",
+          "name": "Watertown-Mayer Early Childhood Advisory Council",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "270038242",
+          "name": "Watertown-Mayer Parent Teacher Organization",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, EPOSTCARD",
+          "forms_available": [
+            "990-N"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "134225629",
+          "name": "Watertown-Mayer Royal Boosters",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, COPYOFRETURNS",
+          "forms_available": [
+            "990"
+          ],
+          "notes": ""
+        },
+        {
+          "ein": "844930913",
+          "name": "Watertown-Mayer Trap Booster Club",
+          "city": "Watertown",
+          "state": "MN",
+          "country": "US",
+          "dba": null,
+          "types": "CHARITIES, DETERMINATIONLETTERS, REVOCATION",
+          "forms_available": [],
+          "notes": ""
+        }
+      ],
+      "count": 23
     }
   },
-  "count": 71
+  "count": 182
 }

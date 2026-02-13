@@ -15,7 +15,7 @@ export async function getOnboardingQueue(
   let query = supabaseAdmin
     .from("v_district_scope_nonprofits")
     .select(
-      "district_entity_id, ein, scope_label, tier, status, org_type, has_entity, entity_id, irs_legal_name, has_irs_org, has_returns",
+      "district_entity_id, ein, scope_label, tier, status, org_type, has_entity, entity_id, irs_legal_name, has_irs_org, has_returns, latest_return_type",
     );
 
   if (!opts?.includeArchived) {
@@ -73,6 +73,7 @@ export async function getOnboardingQueue(
       has_entity: Boolean(row.has_entity),
       has_irs_org: Boolean(row.has_irs_org),
       has_returns: Boolean(row.has_returns),
+      latest_return_type: row.latest_return_type ?? null,
     }))
     .sort((a, b) => {
       const districtA = a.district_name ?? "";

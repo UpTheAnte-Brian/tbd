@@ -191,6 +191,110 @@ Annual Advisory: $12,000 – $36,000
 
 ⸻
 
+6A. Formalized Service Offerings
+
+Ante Up Nation delivers services through clearly defined engagement tiers designed to be repeatable, scalable, and outcome-driven.
+
+Service Offering 1 — District Nonprofit Landscape Assessment (Core Engagement)
+
+Purpose:
+Establish a complete, verified, district-level view of affiliated nonprofit entities, financial position, and governance posture.
+
+Scope Includes:
+• Identification and normalization of all affiliated EINs  
+• Multi-year IRS filing ingestion (990 / 990EZ / 990N)  
+• Financial aggregation and trend analysis  
+• Governance status categorization  
+• Compliance gap identification  
+• Asset concentration analysis  
+• Executive-ready report and presentation  
+
+Deliverables:
+• District Nonprofit Landscape Report (PDF)  
+• Board-ready slide deck  
+• Secure access to structured governance data portal  
+• Pre-configured entity role invitations for nonprofit leaders  
+
+Outcome:
+Creation of a durable governance data foundation for the district.
+
+⸻
+
+Service Offering 2 — Governance Modernization Strategy Engagement
+
+Purpose:
+Design a structured modernization roadmap tailored to district context.
+
+Scope May Include:
+• Governance standardization framework  
+• Consolidation or merger feasibility analysis  
+• Sunset pathways for dormant entities  
+• Bylaw modernization guidance  
+• Reporting cadence design  
+• Role-based governance visibility structure  
+• Strategic fundraising alignment recommendations  
+
+Deliverables:
+• Modernization Strategy Memorandum  
+• Implementation sequencing roadmap  
+• Board presentation session  
+
+Outcome:
+Clear modernization pathway with defined execution priorities.
+
+⸻
+
+Service Offering 3 — Implementation & Governance Infrastructure Support
+
+Purpose:
+Support execution of modernization initiatives.
+
+Scope May Include:
+• Governance documentation restructuring  
+• Board workflow standardization  
+• Reporting infrastructure setup  
+• Entity-level access configuration  
+• Ongoing advisory support  
+
+Structure:
+Project-based or annual advisory retainer.
+
+Outcome:
+Operationalized governance improvements and sustained district visibility.
+
+⸻
+
+Service Offering 4 — Ongoing Governance Advisory (Optional Retainer)
+
+Purpose:
+Provide continuity, oversight, and modernization refinement over time.
+
+Includes:
+• Annual nonprofit landscape refresh  
+• Filing status monitoring  
+• Governance change review  
+• Strategic advisory sessions  
+• Priority access to platform enhancements  
+
+Outcome:
+Sustained modernization and reduced governance drift.
+
+⸻
+
+Delivery Philosophy
+
+Each service offering is designed to:
+
+• Produce durable institutional value  
+• Standardize governance clarity  
+• Improve transparency  
+• Strengthen stewardship of community-raised capital  
+• Deliver materially more value than engagement cost  
+
+⸻
+
+⸻
+
 7. Competitive Advantage
 
 There is no standardized district-level nonprofit modernization framework.
@@ -644,6 +748,33 @@ Value Philosophy
 Ante Up Nation is structured to deliver measurable governance clarity and financial visibility that materially exceeds the engagement investment.
 
 Our goal in each engagement is to produce a lasting modernization foundation — creating substantially more value than the cost of the assessment itself.
+
+⸻
+
+Slide 12 — Questions the District Will Be Able to Answer
+
+Governance & People
+• Who is the current treasurer (and what is their term / contact path)?  
+• Who leads the fundraising committee for each nonprofit?  
+• Where is the latest board roster, and when was it last updated?  
+
+Financial Performance & Stewardship
+• Which nonprofits generate the most investment income per dollar — and why?  
+• Which entities are constrained by endowment or donor restrictions?  
+• What activities would expand if restrictions were loosened or restructured?  
+
+Operations & Transparency
+• What programs exist within each nonprofit, and what do they cost to run?  
+• What are the revenue sources by program (fundraising, grants, fees, donations)?  
+• Where are gaps between program needs and available funding?  
+
+Benchmarking & Learning
+• How do our nonprofits compare to neighboring districts (assets, filings, governance posture)?  
+• Which governance and fundraising strategies appear to be “award-winning” or high-performing elsewhere?  
+• What best practices should we evaluate or adopt next?  
+
+Vision: Program-Level Clarity
+As the system models nonprofits one layer deeper (programs with revenues and costs), districts can connect patrons and sponsors to specific needs — improving budgeting, increasing public awareness, and enabling targeted support for the programs the community values most.
 
 ⸻
 

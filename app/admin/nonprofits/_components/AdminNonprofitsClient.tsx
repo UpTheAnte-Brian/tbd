@@ -39,6 +39,7 @@ export default function AdminNonprofitsClient() {
   const [showArchived, setShowArchived] = useState(false);
   const [showActive, setShowActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [districtFilter, setDistrictFilter] = useState("all");
 
   const fetchQueue = async () => {
     setLoading(true);
@@ -249,6 +250,50 @@ export default function AdminNonprofitsClient() {
     }
   };
 
+  const districtOptions = Array.from(
+    rows.reduce((map, row) => {
+      if (!row.district_entity_id) return map;
+      const label =
+        stripPublicSchoolDistrictSuffix(row.district_name) ??
+        row.district_name ??
+        "Unknown district";
+      if (!map.has(row.district_entity_id)) {
+        map.set(row.district_entity_id, label);
+      }
+      return map;
+    }, new Map<string, string>()),
+  )
+    .map(([id, label]) => ({ id, label }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  const filteredRows = rows
+    .filter((row) => {
+      if (row.status === "archived" && !showArchived) return false;
+      if (row.status === "active" && !showActive) return false;
+      if (
+        districtFilter !== "all" &&
+        row.district_entity_id !== districtFilter
+      ) {
+        return false;
+      }
+      return true;
+    })
+    .filter((row) => {
+      if (!searchQuery.trim()) return true;
+      const haystack = [
+        row.label,
+        row.ein,
+        row.district_name,
+        row.org_type,
+        row.status,
+        row.tier,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(searchQuery.trim().toLowerCase());
+    });
+
   return (
     <section className="space-y-4">
       <header className="space-y-1">
@@ -269,16 +314,31 @@ export default function AdminNonprofitsClient() {
       <div className="rounded-xl border border-border-subtle bg-surface-card shadow-sm">
         <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
           <h2 className="text-sm font-semibold text-text-on-light">
-            Queue ({rows.length})
+            Queue ({filteredRows.length})
           </h2>
           <div className="flex flex-1 items-center justify-end gap-3 text-xs text-brand-secondary-0">
+            <div className="min-w-[220px]">
+              <select
+                value={districtFilter}
+                onChange={(event) => setDistrictFilter(event.target.value)}
+                aria-label="Filter by district"
+                className="w-full rounded-md border border-border-subtle bg-white px-3 py-1 text-xs text-text-on-light shadow-sm focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1/30"
+              >
+                <option value="all">All districts</option>
+                {districtOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="min-w-[220px]">
               <input
                 type="search"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search name, EIN, district…"
-                className="w-full rounded-md border border-brand-secondary-0 bg-white/90 px-3 py-1 text-xs text-brand-primary-1 placeholder:text-brand-primary-1 placeholder:opacity-100 shadow-sm focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1/30"
+                className="w-full rounded-md border-2 border-brand-primary-1/70 bg-white px-3 py-1 text-xs text-brand-primary-1 placeholder:text-brand-primary-1 placeholder:opacity-100 shadow-sm focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1/30"
               />
             </div>
             <label className="flex cursor-pointer items-center gap-2">
@@ -316,28 +376,7 @@ export default function AdminNonprofitsClient() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
-              {rows
-                .filter((row) => {
-                  if (row.status === "archived" && !showArchived) return false;
-                  if (row.status === "active" && !showActive) return false;
-                  return true;
-                })
-                .filter((row) => {
-                  if (!searchQuery.trim()) return true;
-                  const haystack = [
-                    row.label,
-                    row.ein,
-                    row.district_name,
-                    row.org_type,
-                    row.status,
-                    row.tier,
-                  ]
-                    .filter(Boolean)
-                    .join(" ")
-                    .toLowerCase();
-                  return haystack.includes(searchQuery.trim().toLowerCase());
-                })
-                .map((row, index) => {
+              {filteredRows.map((row, index) => {
                   const ein = row.ein ?? "";
                   const canLink = Boolean(ein);
                   const detailHref = canLink
@@ -368,6 +407,10 @@ export default function AdminNonprofitsClient() {
                     : false;
                   const needsReturns =
                     tierValue === "disclosure_grade" && !row.has_returns;
+                  const returnTypeLabel =
+                    row.latest_return_type && row.latest_return_type.trim()
+                      ? row.latest_return_type
+                      : null;
                   return (
                     <tr
                       key={`${row.district_entity_id ?? "district"}-${row.ein ?? row.label ?? "row"}-${index}`}
@@ -459,6 +502,9 @@ export default function AdminNonprofitsClient() {
                             }`}
                           >
                             Returns: {row.has_returns ? "Yes" : "No"}
+                            {row.has_returns && returnTypeLabel
+                              ? ` (${returnTypeLabel})`
+                              : ""}
                           </span>
                           {needsReturns ? (
                             <span className="text-[11px] font-semibold text-rose-600">
@@ -498,28 +544,7 @@ export default function AdminNonprofitsClient() {
                     </tr>
                   );
                 })}
-              {!loading &&
-              rows
-                .filter((row) => {
-                  if (row.status === "archived" && !showArchived) return false;
-                  if (row.status === "active" && !showActive) return false;
-                  return true;
-                })
-                .filter((row) => {
-                  if (!searchQuery.trim()) return true;
-                  const haystack = [
-                    row.label,
-                    row.ein,
-                    row.district_name,
-                    row.org_type,
-                    row.status,
-                    row.tier,
-                  ]
-                    .filter(Boolean)
-                    .join(" ")
-                    .toLowerCase();
-                  return haystack.includes(searchQuery.trim().toLowerCase());
-                }).length === 0 ? (
+              {!loading && filteredRows.length === 0 ? (
                 <tr>
                   <td
                     colSpan={7}

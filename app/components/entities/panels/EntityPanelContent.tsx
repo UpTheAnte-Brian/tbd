@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import EntityOverviewTab from "@/app/components/entities/tabs/overview/EntityOverviewTab";
 import EntityContactsTab from "@/app/components/entities/tabs/contacts/EntityContactsTab";
+import EntityPeopleTab from "@/app/components/entities/tabs/people/EntityPeopleTab";
 import EntityBrandingTab from "@/app/components/entities/tabs/branding/EntityBrandingTab";
 import EntityIrsTab from "@/app/components/entities/tabs/irs/EntityIrsTab";
 import EntityMapTab from "@/app/components/entities/tabs/map/EntityMapTab";
@@ -39,6 +40,13 @@ export default function EntityPanelContent({
         return <EntityOverviewTab entityId={entityId} />;
       case "contacts":
         return <EntityContactsTab entityId={entityId} />;
+      case "people":
+        return (
+          <EntityPeopleTab
+            entityId={entityId}
+            entityType={entityType}
+          />
+        );
       case "branding":
         return (
           <EntityBrandingTab

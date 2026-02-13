@@ -3,6 +3,7 @@ import type { EntityType } from "@/domain/entities/types";
 export type EntityTabKey =
   | "overview"
   | "contacts"
+  | "people"
   | "users"
   | "branding"
   | "governance"
@@ -47,7 +48,13 @@ const ENTITY_TABS: EntityTabDefinition[] = [
     key: "contacts",
     label: "Contacts",
     order: 30,
-    isVisible: () => true,
+    isVisible: (context) => context.entityType !== "nonprofit",
+  },
+  {
+    key: "people",
+    label: "People",
+    order: 35,
+    isVisible: (context) => Boolean(context.canManageUsersForEntity),
   },
   {
     key: "branding",
@@ -59,7 +66,9 @@ const ENTITY_TABS: EntityTabDefinition[] = [
     key: "users",
     label: "Users",
     order: 50,
-    isVisible: (context) => Boolean(context.canManageUsersForEntity),
+    isVisible: (context) =>
+      Boolean(context.canManageUsersForEntity) &&
+      context.entityType !== "nonprofit",
   },
   {
     key: "governance",

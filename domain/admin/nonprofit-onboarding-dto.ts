@@ -16,6 +16,7 @@ import type {
   UpsertOverrideRequest,
 } from "@/app/lib/types/nonprofit-onboarding";
 import type { Database } from "@/database.types";
+import { materializeEntityPeople } from "@/domain/entities/entity-people-dto";
 
 type PostgrestMaybeSingleError = {
   code?: string;
@@ -1014,6 +1015,21 @@ export async function activateEntity(entityId: string) {
 
   if (statusError) {
     throw new Error(statusError.message);
+  }
+
+  const irs = createIrsAdminClient();
+  const { data: link, error: linkError } = await irs
+    .from("entity_links")
+    .select("ein")
+    .eq("entity_id", entityId)
+    .maybeSingle();
+
+  if (linkError && !isNotFoundError(linkError as PostgrestMaybeSingleError)) {
+    throw new Error(linkError.message);
+  }
+
+  if (link?.ein) {
+    await materializeEntityPeople({ entityId, ein: link.ein });
   }
 
   await upsertOnboardingProgress(entityId, "activation", "complete");

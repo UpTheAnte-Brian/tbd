@@ -142,7 +142,7 @@ export default function NonprofitDrawer({
                     </button>
                 </div>
 
-                <div className="flex flex-wrap gap-2 border-b border-border-subtle px-6 py-3">
+                <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle px-6 py-3">
                     {(Object.keys(tabLabels) as DrawerTab[]).map((tab) => (
                         <button
                             key={tab}
@@ -157,6 +157,13 @@ export default function NonprofitDrawer({
                             {tabLabels[tab]}
                         </button>
                     ))}
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="ml-auto rounded-full border border-border-subtle bg-brand-primary-1 px-3 py-1 text-sm font-medium text-text-on-light"
+                    >
+                        Close
+                    </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-6 py-4">

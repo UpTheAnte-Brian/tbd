@@ -236,8 +236,7 @@ function buildNonprofitRow(params: {
     const peopleQuality = latestReturn
         ? assessPeopleParseQuality(latestPeople)
         : "unknown";
-    const resolvedEntityId =
-        scopeRow.entity_id ??
+    const resolvedEntityId = scopeRow.entity_id ??
         scopeRow.scope_id ??
         (ein ? `ein:${ein}` : "ein:unknown");
     const rowKey = String(resolvedEntityId);
@@ -346,7 +345,7 @@ async function getSuperintendentDashboardByScopeEin(
         .from("superintendent_scope_nonprofits")
         .select("id, ein, label, tier, status, org_type, entity_id")
         .eq("district_entity_id", districtEntityId)
-        .in("status", ["candidate", "active"]);
+        .neq("status", "archived");
 
     if (scopeError) {
         throw new Error(scopeError.message);
@@ -589,6 +588,8 @@ export async function getSuperintendentDashboardDTO(
             "scope_id, district_entity_id, entity_id, ein, label, org_type, tier, status, has_irs_org, has_returns, latest_tax_year, total_revenue, total_net_assets, tax_period_end, filed_on",
         );
 
+    scopeQuery = scopeQuery.neq("status", "archived");
+
     if (districtEntityId) {
         scopeQuery = scopeQuery.eq("district_entity_id", districtEntityId);
     }
@@ -715,7 +716,7 @@ export async function getSuperintendentDashboardDTO(
     }
 
     const detailsByEntityId: Record<string, NonprofitDetail> = {};
-    const nonprofits: NonprofitRow[] = scopedRows.map((scopeRow) => {
+    let nonprofits: NonprofitRow[] = scopedRows.map((scopeRow) => {
         const ein = normalizeEin(scopeRow.ein);
         const organization = ein ? organizationsByEin.get(ein) ?? null : null;
         const returnsForEin = ein ? returnsByEin.get(ein) ?? [] : [];
@@ -770,6 +771,26 @@ export async function getSuperintendentDashboardDTO(
     if (districtEntityId && nonprofits.length === 0) {
         return await getSuperintendentDashboardByScopeEin(districtEntityId);
     }
+
+    // Defensive de-dupe: API should never return duplicate entity rows.
+    // This can happen if upstream joins multiply rows (e.g., returns x people x narratives).
+    const seenEntityIds = new Set<string>();
+    const dedupedNonprofits = [] as typeof nonprofits;
+
+    for (const row of nonprofits) {
+        const id = (row as any)?.entity_id;
+        if (typeof id !== "string" || !id) {
+            // Keep malformed rows (shouldn't happen), but don't let them break the page.
+            dedupedNonprofits.push(row);
+            continue;
+        }
+        if (seenEntityIds.has(id)) continue;
+        seenEntityIds.add(id);
+        dedupedNonprofits.push(row);
+    }
+
+    // Replace with de-duped list
+    nonprofits = dedupedNonprofits;
 
     return { nonprofits, detailsByEntityId };
 }

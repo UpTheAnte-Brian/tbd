@@ -583,18 +583,21 @@ export type Database = {
           created_at: string
           entity_id: string | null
           id: string
+          is_primary: boolean
           name: string | null
         }
         Insert: {
           created_at?: string
           entity_id?: string | null
           id?: string
+          is_primary?: boolean
           name?: string | null
         }
         Update: {
           created_at?: string
           entity_id?: string | null
           id?: string
+          is_primary?: boolean
           name?: string | null
         }
         Relationships: []
@@ -894,6 +897,7 @@ export type Database = {
         Returns: Json
       }
       current_user_id: { Args: never; Returns: string }
+      ensure_primary_board: { Args: { p_entity_id: string }; Returns: string }
       finalize_meeting: {
         Args: { p_meeting_id: string; p_signature_hash?: string }
         Returns: {
@@ -2293,6 +2297,91 @@ export type Database = {
           },
         ]
       }
+      entity_person_roles: {
+        Row: {
+          created_at: string
+          display_name: string
+          email: string | null
+          entity_id: string
+          id: string
+          invite_status: string
+          invited_at: string | null
+          is_officer: boolean | null
+          joined_at: string | null
+          linked_user_id: string | null
+          other_compensation: number | null
+          phone: string | null
+          reportable_compensation: number | null
+          role_title: string | null
+          source_ref: string
+          source_system: string
+          tax_year: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          email?: string | null
+          entity_id: string
+          id?: string
+          invite_status?: string
+          invited_at?: string | null
+          is_officer?: boolean | null
+          joined_at?: string | null
+          linked_user_id?: string | null
+          other_compensation?: number | null
+          phone?: string | null
+          reportable_compensation?: number | null
+          role_title?: string | null
+          source_ref: string
+          source_system: string
+          tax_year?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          email?: string | null
+          entity_id?: string
+          id?: string
+          invite_status?: string
+          invited_at?: string | null
+          is_officer?: boolean | null
+          joined_at?: string | null
+          linked_user_id?: string | null
+          other_compensation?: number | null
+          phone?: string | null
+          reportable_compensation?: number | null
+          role_title?: string | null
+          source_ref?: string
+          source_system?: string
+          tax_year?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_person_roles_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_person_roles_linked_user_id_fkey"
+            columns: ["linked_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_person_roles_linked_user_id_fkey"
+            columns: ["linked_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles_with_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entity_relationships: {
         Row: {
           child_entity_id: string
@@ -2420,11 +2509,86 @@ export type Database = {
         }
         Relationships: []
       }
+      entity_user_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          desired_role: Database["public"]["Enums"]["entity_user_role"]
+          email: string
+          entity_id: string
+          entity_person_role_id: string | null
+          expires_at: string
+          id: string
+          invited_at: string
+          invited_by: string
+          status: string
+          token_hash: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          desired_role: Database["public"]["Enums"]["entity_user_role"]
+          email: string
+          entity_id: string
+          entity_person_role_id?: string | null
+          expires_at: string
+          id?: string
+          invited_at?: string
+          invited_by: string
+          status?: string
+          token_hash: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          desired_role?: Database["public"]["Enums"]["entity_user_role"]
+          email?: string
+          entity_id?: string
+          entity_person_role_id?: string | null
+          expires_at?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string
+          status?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_user_invites_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_user_invites_entity_person_role_id_fkey"
+            columns: ["entity_person_role_id"]
+            isOneToOne: false
+            referencedRelation: "entity_person_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_user_invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_user_invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles_with_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entity_users: {
         Row: {
           created_at: string
           entity_id: string
           id: string
+          is_primary_admin: boolean
           role: Database["public"]["Enums"]["entity_user_role"]
           status: string
           user_id: string
@@ -2433,6 +2597,7 @@ export type Database = {
           created_at?: string
           entity_id: string
           id?: string
+          is_primary_admin?: boolean
           role: Database["public"]["Enums"]["entity_user_role"]
           status?: string
           user_id: string
@@ -2441,6 +2606,7 @@ export type Database = {
           created_at?: string
           entity_id?: string
           id?: string
+          is_primary_admin?: boolean
           role?: Database["public"]["Enums"]["entity_user_role"]
           status?: string
           user_id?: string

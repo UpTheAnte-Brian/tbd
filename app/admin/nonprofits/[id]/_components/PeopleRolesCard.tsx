@@ -5,6 +5,7 @@ import type { AdminNonprofitReview } from "@/app/admin/nonprofits/types";
 type Props = {
   people: AdminNonprofitReview["people"];
   latestReturn: AdminNonprofitReview["latest_return"];
+  entityId?: string | null;
 };
 
 const moneyFormatter = new Intl.NumberFormat("en-US", {
@@ -26,12 +27,26 @@ function formatRole(value: string): string {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export default function PeopleRolesCard({ people, latestReturn }: Props) {
+export default function PeopleRolesCard({
+  people,
+  latestReturn,
+  entityId,
+}: Props) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h2 className="text-sm font-semibold text-text-on-light">
-        People & Roles
-      </h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold text-text-on-light">
+          People & Roles
+        </h2>
+        {entityId ? (
+          <a
+            href={`/entities/${entityId}?tab=people`}
+            className="rounded border border-gray-200 px-3 py-1 text-xs text-brand-secondary-2 hover:border-gray-300"
+          >
+            Manage People
+          </a>
+        ) : null}
+      </div>
       {!latestReturn ? (
         <p className="mt-3 text-sm text-brand-secondary-2">
           No return available.

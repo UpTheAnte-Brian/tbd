@@ -20,9 +20,12 @@
  *   --skipParse  Skip step 4 (parse 990 returns)
  *   --dryRun     Print commands only
  *   --maxObjects <n>  Limits processed returns per index-year for debugging (default in master is 0 = no limit)
+ *   --logFile <path>  Write all output to a log file (defaults to data/irs-logs/irs-import-master-<timestamp>.log)
  */
 
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 
 type Args = {
     district?: string;
@@ -37,6 +40,7 @@ type Args = {
     skipParse?: boolean;
     dryRun?: boolean;
     maxObjects?: string;
+    logFile?: string;
 };
 
 function parseArgs(argv: string[]): Args {
@@ -71,26 +75,84 @@ function parseArgs(argv: string[]): Args {
         else if (key === "from") args.from = value;
         else if (key === "to") args.to = value;
         else if (key === "maxObjects") args.maxObjects = value;
+        else if (key === "logFile") args.logFile = value;
         else throw new Error(`Unknown arg: --${key}`);
     }
     return args;
 }
 
-function run(cmd: string, cmdArgs: string[], opts: { dryRun?: boolean } = {}) {
+type Logger = {
+    filePath: string;
+    write: (msg: string | Buffer) => void;
+    writeErr: (msg: string | Buffer) => void;
+    log: (msg: string) => void;
+    logErr: (msg: string) => void;
+    close: () => void;
+};
+
+function defaultLogPath() {
+    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    return path.join(
+        process.cwd(),
+        "data",
+        "irs-logs",
+        `irs-import-master-${ts}.log`,
+    );
+}
+
+function createLogger(filePath: string): Logger {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    const stream = fs.createWriteStream(filePath, { flags: "a" });
+
+    const write = (msg: string | Buffer) => {
+        process.stdout.write(msg);
+        stream.write(msg);
+    };
+
+    const writeErr = (msg: string | Buffer) => {
+        process.stderr.write(msg);
+        stream.write(msg);
+    };
+
+    return {
+        filePath,
+        write,
+        writeErr,
+        log: (msg: string) => write(`${msg}\n`),
+        logErr: (msg: string) => writeErr(`${msg}\n`),
+        close: () => stream.end(),
+    };
+}
+
+function run(
+    cmd: string,
+    cmdArgs: string[],
+    logger: Logger,
+    opts: { dryRun?: boolean } = {},
+): Promise<void> {
     const printable = [cmd, ...cmdArgs].join(" ");
-    console.log(`\n▶ ${printable}`);
-    if (opts.dryRun) return;
+    logger.log(`\n▶ ${printable}`);
+    if (opts.dryRun) return Promise.resolve();
 
-    const res = spawnSync(cmd, cmdArgs, {
-        stdio: "inherit",
-        env: process.env,
+    return new Promise((resolve, reject) => {
+        const child = spawn(cmd, cmdArgs, { env: process.env });
+
+        child.stdout?.on("data", (chunk) => logger.write(chunk));
+        child.stderr?.on("data", (chunk) => logger.writeErr(chunk));
+
+        child.on("error", (err) => reject(err));
+        child.on("close", (code) => {
+            if (code && code !== 0) {
+                reject(
+                    new Error(
+                        `Command failed (${code ?? "unknown"}): ${printable}`,
+                    ),
+                );
+            } else {
+                resolve();
+            }
+        });
     });
-
-    if (res.status !== 0) {
-        throw new Error(
-            `Command failed (${res.status ?? "unknown"}): ${printable}`,
-        );
-    }
 }
 
 function requireArg<T extends string>(name: string, value: T | undefined): T {
@@ -100,6 +162,8 @@ function requireArg<T extends string>(name: string, value: T | undefined): T {
 
 async function main() {
     const args = parseArgs(process.argv.slice(2));
+    const logger = createLogger(args.logFile ?? defaultLogPath());
+    logger.log(`Log file: ${logger.filePath}`);
 
     const district = requireArg("district", args.district);
     const from = args.from ?? "2019";
@@ -108,78 +172,84 @@ async function main() {
     const upsert = Boolean(args.upsert);
     const maxObjects = args.maxObjects ?? "0";
 
-    if (!args.skipOrgs) {
-        const eobmfFile = requireArg("eobmfFile", args.eobmfFile);
+    try {
+        if (!args.skipOrgs) {
+            const eobmfFile = requireArg("eobmfFile", args.eobmfFile);
 
-        // Step 1: EO BMF org import (MN extract)
-        run(
-            "pnpm",
-            [
+            // Step 1: EO BMF org import (MN extract)
+            await run(
+                "pnpm",
+                [
+                    "tsx",
+                    "scripts/irs/import-irs-organizations-bulk.ts",
+                    "--source",
+                    "eobmf",
+                    "--file",
+                    eobmfFile,
+                    "--district",
+                    district,
+                ],
+                logger,
+                { dryRun: args.dryRun },
+            );
+        } else {
+            logger.log("\n↷ Skipping org import (step 1) due to --skipOrgs");
+        }
+
+        if (!args.skip990n) {
+            // Step 2: 990-N bulk import
+            const cmdArgs = [
                 "tsx",
-                "scripts/irs/import-irs-organizations-bulk.ts",
-                "--source",
-                "eobmf",
-                "--file",
-                eobmfFile,
+                "scripts/irs/import-irs-990n.ts",
                 "--district",
                 district,
-            ],
-            { dryRun: args.dryRun },
-        );
-    } else {
-        console.log("\n↷ Skipping org import (step 1) due to --skipOrgs");
+            ];
+
+            if (download) cmdArgs.push("--download");
+
+            await run("pnpm", cmdArgs, logger, { dryRun: args.dryRun });
+        } else {
+            logger.log("\n↷ Skipping 990-N import (step 2) due to --skip990n");
+        }
+
+        if (!args.skip990) {
+            // Step 3: Bulk 990 download + upsert (year range)
+            const cmdArgs = [
+                "tsx",
+                "scripts/irs/import-990-bulk.ts",
+                "--from",
+                from,
+                "--to",
+                to,
+                "--district",
+                district,
+            ];
+
+            if (download) cmdArgs.push("--download");
+            if (upsert) cmdArgs.push("--upsert");
+            cmdArgs.push("--maxObjects", maxObjects);
+
+            await run("pnpm", cmdArgs, logger, { dryRun: args.dryRun });
+        } else {
+            logger.log("\n↷ Skipping 990 bulk import (step 3) due to --skip990");
+        }
+
+        if (!args.skipParse) {
+            // Step 4: Parse returns into normalized tables (people/narratives/financials)
+            await run(
+                "pnpm",
+                ["tsx", "scripts/irs/parse-990-return.ts", "--district", district],
+                logger,
+                { dryRun: args.dryRun },
+            );
+        } else {
+            logger.log("\n↷ Skipping return parsing (step 3) due to --skipParse");
+        }
+
+        logger.log("\n✅ IRS import pipeline complete.");
+    } finally {
+        logger.close();
     }
-
-    if (!args.skip990n) {
-        // Step 2: 990-N bulk import
-        const cmdArgs = [
-            "tsx",
-            "scripts/irs/import-irs-990n.ts",
-            "--district",
-            district,
-        ];
-
-        if (download) cmdArgs.push("--download");
-
-        run("pnpm", cmdArgs, { dryRun: args.dryRun });
-    } else {
-        console.log("\n↷ Skipping 990-N import (step 2) due to --skip990n");
-    }
-
-    if (!args.skip990) {
-        // Step 3: Bulk 990 download + upsert (year range)
-        const cmdArgs = [
-            "tsx",
-            "scripts/irs/import-990-bulk.ts",
-            "--from",
-            from,
-            "--to",
-            to,
-            "--district",
-            district,
-        ];
-
-        if (download) cmdArgs.push("--download");
-        if (upsert) cmdArgs.push("--upsert");
-        cmdArgs.push("--maxObjects", maxObjects);
-
-        run("pnpm", cmdArgs, { dryRun: args.dryRun });
-    } else {
-        console.log("\n↷ Skipping 990 bulk import (step 3) due to --skip990");
-    }
-
-    if (!args.skipParse) {
-        // Step 4: Parse returns into normalized tables (people/narratives/financials)
-        run(
-            "pnpm",
-            ["tsx", "scripts/irs/parse-990-return.ts", "--district", district],
-            { dryRun: args.dryRun },
-        );
-    } else {
-        console.log("\n↷ Skipping return parsing (step 3) due to --skipParse");
-    }
-
-    console.log("\n✅ IRS import pipeline complete.");
 }
 
 main();

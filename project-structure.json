@@ -684,6 +684,22 @@
                       },
                       {
                         "type": "directory",
+                        "name": "people",
+                        "contents": [
+                          {
+                            "type": "directory",
+                            "name": "invite",
+                            "contents": [
+                              {
+                                "type": "file",
+                                "name": "route.ts"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "type": "directory",
                         "name": "users",
                         "contents": [
                           {
@@ -701,6 +717,22 @@
                   {
                     "type": "file",
                     "name": "route.ts"
+                  }
+                ]
+              },
+              {
+                "type": "directory",
+                "name": "entity-invites",
+                "contents": [
+                  {
+                    "type": "directory",
+                    "name": "accept",
+                    "contents": [
+                      {
+                        "type": "file",
+                        "name": "route.ts"
+                      }
+                    ]
                   }
                 ]
               },
@@ -2482,6 +2514,10 @@
               },
               {
                 "type": "file",
+                "name": "featureFlags.ts"
+              },
+              {
+                "type": "file",
                 "name": "getBoundsFromGeoJSON.ts"
               },
               {
@@ -3661,6 +3697,10 @@
               {
                 "type": "file",
                 "name": "entity-dto.ts"
+              },
+              {
+                "type": "file",
+                "name": "entity-people-dto.ts"
               },
               {
                 "type": "file",

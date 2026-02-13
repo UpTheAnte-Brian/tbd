@@ -29,6 +29,7 @@ export type OnboardingQueueRow = {
   has_entity: boolean;
   has_irs_org: boolean;
   has_returns: boolean;
+  latest_return_type: string | null;
 };
 
 export type AdminIrsOrganization = {

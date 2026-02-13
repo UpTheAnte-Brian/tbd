@@ -36,8 +36,8 @@ export default function EntitySidebar({
     label: getEntityTabLabel(key, tabContext),
   }));
   return (
-    <aside className="hidden md:block w-72 shrink-0">
-      <div className="sticky top-4 rounded border border-brand-secondary-1 bg-brand-secondary-0 p-4 text-brand-secondary-2">
+    <aside className="hidden md:block w-72 shrink-0 md:sticky md:top-4 md:self-start">
+      <div className="rounded border border-brand-secondary-1 bg-brand-secondary-0 p-4 text-brand-secondary-2">
         {entityType ? (
           <EntityLogo
             entityId={entityId}
