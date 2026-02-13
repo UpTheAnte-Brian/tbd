@@ -112,22 +112,24 @@ export const DEFAULT_BRAND_TYPOGRAPHY: BrandTypographyTokens = {
   logo: "Inter",
 };
 
-const asColor = (value: unknown): string | null =>
-  typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
-
 const fillPalette = (
+  role: PaletteRole,
   colors: unknown,
   fallback: [string, string, string],
 ): [string, string, string] => {
-  const normalized = normalizePaletteColors(colors);
-  if (normalized.length === 0) {
-    return fallback;
+  const overrideMap = buildOverrideMap(colors);
+  const resolved: [string, string, string] = [...fallback];
+
+  for (let i = 0; i < 3; i += 1) {
+    const override = overrideMap.get(i);
+    if (override) resolved[i] = override;
   }
-  const resolved = [
-    asColor(normalized[0]) ?? fallback[0],
-    asColor(normalized[1]) ?? fallback[1],
-    asColor(normalized[2]) ?? fallback[2],
-  ] as [string, string, string];
+
+  // Keep primary-2 synchronized with primary-0 when only slot 0 is overridden.
+  if (role === "primary" && overrideMap.has(0) && !overrideMap.has(2)) {
+    resolved[2] = resolved[0];
+  }
+
   return resolved;
 };
 
@@ -184,39 +186,6 @@ const paletteTimestamp = (palette: BrandingPalette): number => {
   return 0;
 };
 
-function normalizePaletteColors(colors: unknown): string[] {
-  if (!Array.isArray(colors)) return [];
-
-  const hasSlot = colors.some((color) => {
-    if (!color || typeof color !== "object") return false;
-    const slot = (color as { slot?: unknown }).slot;
-    return typeof slot === "number" && Number.isFinite(slot);
-  });
-
-  const ordered = hasSlot
-    ? [...colors].sort((a, b) => {
-        const slotA =
-          typeof (a as { slot?: unknown })?.slot === "number"
-            ? ((a as { slot?: number }).slot as number)
-            : Number.MAX_SAFE_INTEGER;
-        const slotB =
-          typeof (b as { slot?: unknown })?.slot === "number"
-            ? ((b as { slot?: number }).slot as number)
-            : Number.MAX_SAFE_INTEGER;
-        return slotA - slotB;
-      })
-    : colors;
-
-  return ordered
-    .map((color) => {
-      if (typeof color === "string") return normalizeHex(color);
-      if (!color || typeof color !== "object") return null;
-      const hex = (color as { hex?: unknown }).hex;
-      return typeof hex === "string" ? normalizeHex(hex) : null;
-    })
-    .filter((color): color is string => Boolean(color));
-}
-
 const buildOverrideMap = (colors: unknown): Map<number, string> => {
   const overrides = new Map<number, string>();
   if (!Array.isArray(colors)) return overrides;
@@ -249,22 +218,19 @@ const buildOverrideMap = (colors: unknown): Map<number, string> => {
 
 const fillPaletteColors = (
   role: PaletteRole,
-  rawColors: string[],
+  overrideMap: Map<number, string>,
   defaults: [string, string, string],
 ): [string, string, string] => {
   const colors: [string, string, string] = [...defaults];
 
   for (let i = 0; i < 3; i += 1) {
-    if (rawColors[i]) colors[i] = rawColors[i];
+    const override = overrideMap.get(i);
+    if (override) colors[i] = override;
   }
 
-  if (role === "primary") {
-    if (!rawColors[1]) {
-      colors[1] = defaults[1];
-    }
-    if (rawColors.length > 0 && rawColors.length < 3) {
-      colors[2] = colors[0];
-    }
+  // Keep primary-2 synchronized with primary-0 when only slot 0 is overridden.
+  if (role === "primary" && overrideMap.has(0) && !overrideMap.has(2)) {
+    colors[2] = colors[0];
   }
 
   return colors;
@@ -296,9 +262,8 @@ export const toPaletteMap = (
   for (const role of PALETTE_ROLES) {
     const defaults = DEFAULT_BRAND_PALETTES[role];
     const palette = paletteMap.get(role);
-    const normalized = normalizePaletteColors(palette?.colors);
-    const colors = fillPaletteColors(role, normalized, defaults);
     const overrideMap = buildOverrideMap(palette?.colors);
+    const colors = fillPaletteColors(role, overrideMap, defaults);
     const slots: PaletteSlotVM[] = colors.map((hex, index) => {
       const overrideHex = overrideMap.get(index) ?? null;
       return {
@@ -310,7 +275,7 @@ export const toPaletteMap = (
       };
     });
     const isPlaceholder = !palette;
-    const isIncomplete = Boolean(palette && normalized.length < 3);
+    const isIncomplete = Boolean(palette && overrideMap.size < 3);
     const label = DEFAULT_BRAND_PALETTE_LABELS[role];
     const name = palette?.name ?? buildPaletteName(entityName, label);
 
@@ -336,7 +301,7 @@ export const resolveBrandingTokens = (
 ): ResolvedBranding => {
   const primaryPalette =
     palettes.find((p) => p.role === "primary") || null;
-  const primaryColors = fillPalette(primaryPalette?.colors, [
+  const primaryColors = fillPalette("primary", primaryPalette?.colors, [
     DEFAULT_BRAND_COLORS.primary0,
     DEFAULT_BRAND_COLORS.primary1,
     DEFAULT_BRAND_COLORS.primary2,
@@ -344,7 +309,7 @@ export const resolveBrandingTokens = (
 
   const secondaryPalette = palettes.find((p) => p.role === "secondary") || null;
   const secondaryColors = secondaryPalette
-    ? fillPalette(secondaryPalette.colors, [
+    ? fillPalette("secondary", secondaryPalette.colors, [
         DEFAULT_BRAND_COLORS.secondary0,
         DEFAULT_BRAND_COLORS.secondary1,
         DEFAULT_BRAND_COLORS.secondary2,
@@ -357,7 +322,7 @@ export const resolveBrandingTokens = (
 
   const accentPalette = palettes.find((p) => p.role === "accent") || null;
   const accentColors = accentPalette
-    ? fillPalette(accentPalette.colors, [
+    ? fillPalette("accent", accentPalette.colors, [
         DEFAULT_BRAND_COLORS.accent0,
         DEFAULT_BRAND_COLORS.accent1,
         DEFAULT_BRAND_COLORS.accent2,

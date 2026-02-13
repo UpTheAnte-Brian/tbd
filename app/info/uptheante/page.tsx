@@ -25,13 +25,13 @@ export default function UpTheAntePage() {
             </div>
 
             <div
-              className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 info-fade-up"
+              className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 text-brand-primary-1 info-fade-up"
               style={{ animationDelay: "120ms" }}
             >
-              <h2 className="font-brand-heading text-2xl font-semibold">
+              <h2 className="font-brand-heading text-2xl font-semibold text-brand-primary-0">
                 Donation clarity
               </h2>
-              <ul className="mt-4 space-y-3 text-base text-brand-secondary-0">
+              <ul className="mt-4 space-y-3 text-base text-brand-primary-1">
                 <li>Donations are made to Up the Ante.</li>
                 <li>Funds are distributed to local nonprofits and schools.</li>
                 <li>Financials and impact reporting will be published.</li>
@@ -47,22 +47,22 @@ export default function UpTheAntePage() {
               What Up the Ante does
             </h2>
             <div className="mt-6 grid gap-6 md:grid-cols-2">
-              <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6">
-                <h3 className="font-brand-heading text-xl font-semibold">
+              <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 text-brand-primary-1">
+                <h3 className="font-brand-heading text-xl font-semibold text-brand-primary-0">
                   Stewardship and trust
                 </h3>
-                <ul className="mt-3 space-y-3 text-base text-brand-secondary-0">
+                <ul className="mt-3 space-y-3 text-base text-brand-primary-1">
                   <li>Receives donor funds.</li>
                   <li>Manages donor-restricted allocations.</li>
                   <li>Distributes funds to verified local causes.</li>
                   <li>Publishes public-facing reports.</li>
                 </ul>
               </div>
-              <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6">
-                <h3 className="font-brand-heading text-xl font-semibold">
+              <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 text-brand-primary-1">
+                <h3 className="font-brand-heading text-xl font-semibold text-brand-primary-0">
                   A simple giving experience
                 </h3>
-                <ul className="mt-3 space-y-3 text-base text-brand-secondary-0">
+                <ul className="mt-3 space-y-3 text-base text-brand-primary-1">
                   <li>Partners with retailers for round-up campaigns.</li>
                   <li>Supports districts and nonprofits with clear reporting.</li>
                   <li>Keeps fundraising consistent, not seasonal.</li>
@@ -76,11 +76,11 @@ export default function UpTheAntePage() {
             className="mt-14 info-fade-up"
             style={{ animationDelay: "260ms" }}
           >
-            <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6">
-              <h2 className="font-brand-heading text-2xl font-semibold">
+            <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 text-brand-primary-1">
+              <h2 className="font-brand-heading text-2xl font-semibold text-brand-primary-0">
                 Service agreement transparency
               </h2>
-              <p className="mt-3 text-base text-brand-secondary-0">
+              <p className="mt-3 text-base text-brand-primary-1">
                 Technology and operational support are provided by Ante Up
                 Nation under a service agreement.
               </p>
@@ -111,15 +111,15 @@ export default function UpTheAntePage() {
               ].map((step, index) => (
                 <li
                   key={step.title}
-                  className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-4"
+                  className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-4 text-brand-primary-1"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-accent-0 text-base font-semibold text-brand-secondary-2">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-accent-0 text-base font-semibold text-brand-primary-1">
                       {index + 1}
                     </span>
                     <p className="text-base font-semibold">{step.title}</p>
                   </div>
-                  <p className="mt-3 text-sm text-brand-secondary-0">
+                  <p className="mt-3 text-sm text-brand-primary-1">
                     {step.detail}
                   </p>
                 </li>
@@ -131,17 +131,17 @@ export default function UpTheAntePage() {
             className="mt-14 info-fade-up"
             style={{ animationDelay: "380ms" }}
           >
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 text-brand-primary-1">
               <div>
-                <h2 className="font-brand-heading text-2xl font-semibold">
+                <h2 className="font-brand-heading text-2xl font-semibold text-brand-primary-0">
                   Want the full structure view?
                 </h2>
-                <p className="mt-2 text-base text-brand-secondary-0">
+                <p className="mt-2 text-base text-brand-primary-1">
                   See how the nonprofit and the LLC work together.
                 </p>
               </div>
               <Link
-                className="rounded-full border border-brand-secondary-1 bg-brand-accent-0 px-4 py-2 text-base font-semibold text-brand-secondary-2 transition hover:bg-brand-accent-1"
+                className="rounded-full border border-brand-secondary-1 bg-brand-accent-0 px-4 py-2 text-base font-semibold text-brand-primary-1 transition hover:bg-brand-accent-1"
                 href="/info"
               >
                 How it works

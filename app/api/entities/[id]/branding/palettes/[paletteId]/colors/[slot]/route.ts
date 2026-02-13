@@ -58,7 +58,7 @@ export async function PATCH(
   const role = roleParam as ColorRole;
 
   const slot = Number.parseInt(slotParam, 10);
-  if (!Number.isInteger(slot) || slot < 0) {
+  if (!Number.isInteger(slot) || slot < 0 || slot > 2) {
     return NextResponse.json({ error: "Invalid slot" }, { status: 400 });
   }
 

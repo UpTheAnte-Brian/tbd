@@ -24,13 +24,13 @@ export default function InformationPage() {
             </div>
 
             <div
-              className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 info-fade-up"
+              className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 text-brand-primary-1 info-fade-up"
               style={{ animationDelay: "120ms" }}
             >
-              <h2 className="font-brand-heading text-xl font-semibold">
+              <h2 className="font-brand-heading text-xl font-semibold text-brand-primary-0">
                 The shared mission
               </h2>
-              <ul className="mt-4 space-y-3 text-sm text-brand-secondary-0">
+              <ul className="mt-4 space-y-3 text-sm text-brand-primary-1">
                 <li>
                   Communities benefit when fundraising is consistent,
                   transparent, and local.
@@ -56,28 +56,28 @@ export default function InformationPage() {
               </h2>
             </div>
             <div className="mt-6 grid gap-6 md:grid-cols-2">
-              <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6">
-                <p className="text-xs uppercase tracking-[0.28em] text-brand-secondary-0">
+              <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 text-brand-primary-1">
+                <p className="text-xs uppercase tracking-[0.28em] text-brand-primary-1">
                   Nonprofit
                 </p>
-                <h3 className="mt-2 font-brand-heading text-xl font-semibold">
+                <h3 className="mt-2 font-brand-heading text-xl font-semibold text-brand-primary-0">
                   Up the Ante
                 </h3>
-                <ul className="mt-4 space-y-3 text-sm text-brand-secondary-0">
+                <ul className="mt-4 space-y-3 text-sm text-brand-primary-1">
                   <li>Receives charitable donations.</li>
                   <li>Manages donor-restricted funds.</li>
                   <li>Distributes funds to local causes.</li>
                   <li>Publishes public-facing impact reports.</li>
                 </ul>
               </div>
-              <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6">
-                <p className="text-xs uppercase tracking-[0.28em] text-brand-secondary-0">
+              <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 text-brand-primary-1">
+                <p className="text-xs uppercase tracking-[0.28em] text-brand-primary-1">
                   For-profit operator
                 </p>
-                <h3 className="mt-2 font-brand-heading text-xl font-semibold">
+                <h3 className="mt-2 font-brand-heading text-xl font-semibold text-brand-primary-0">
                   Ante Up Nation (LLC)
                 </h3>
-                <ul className="mt-4 space-y-3 text-sm text-brand-secondary-0">
+                <ul className="mt-4 space-y-3 text-sm text-brand-primary-1">
                   <li>Builds and maintains the software platform.</li>
                   <li>Onboards districts, nonprofits, and retailers.</li>
                   <li>
@@ -126,15 +126,15 @@ export default function InformationPage() {
               ].map((step, index) => (
                 <li
                   key={step.title}
-                  className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-4"
+                  className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-4 text-brand-primary-1"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-accent-0 text-sm font-semibold text-brand-secondary-2">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-accent-0 text-sm font-semibold text-brand-primary-1">
                       {index + 1}
                     </span>
                     <p className="text-sm font-semibold">{step.title}</p>
                   </div>
-                  <p className="mt-3 text-xs text-brand-secondary-0">
+                  <p className="mt-3 text-xs text-brand-primary-1">
                     {step.detail}
                   </p>
                 </li>
@@ -170,17 +170,17 @@ export default function InformationPage() {
             className="mt-14 info-fade-up"
             style={{ animationDelay: "380ms" }}
           >
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 text-brand-primary-1">
               <div>
-                <h2 className="font-brand-heading text-xl font-semibold">
+                <h2 className="font-brand-heading text-xl font-semibold text-brand-primary-0">
                   Looking for donor clarity?
                 </h2>
-                <p className="mt-2 text-sm text-brand-secondary-0">
+                <p className="mt-2 text-sm text-brand-primary-1">
                   Read the Up the Ante stewardship page before a transaction.
                 </p>
               </div>
               <Link
-                className="rounded-full border border-brand-secondary-1 bg-brand-accent-0 px-4 py-2 text-sm font-semibold text-brand-secondary-2 transition hover:bg-brand-accent-1"
+                className="rounded-full border border-brand-secondary-1 bg-brand-accent-0 px-4 py-2 text-sm font-semibold text-brand-primary-1 transition hover:bg-brand-accent-1"
                 href="/info/uptheante"
               >
                 Up the Ante stewardship

@@ -25,13 +25,13 @@ export default function FundamentalsPage() {
             </div>
 
             <div
-              className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 info-fade-up"
+              className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 text-brand-primary-1 info-fade-up"
               style={{ animationDelay: "120ms" }}
             >
-              <h2 className="font-brand-heading text-2xl font-semibold">
+              <h2 className="font-brand-heading text-2xl font-semibold text-brand-primary-0">
                 Why it performs
               </h2>
-              <ul className="mt-4 space-y-3 text-base text-brand-secondary-0">
+              <ul className="mt-4 space-y-3 text-base text-brand-primary-1">
                 <li>Low friction for customers.</li>
                 <li>High frequency from everyday purchases.</li>
                 <li>Predictable, trackable totals.</li>
@@ -48,11 +48,11 @@ export default function FundamentalsPage() {
               Proof that the model scales
             </h2>
             <div className="mt-6 grid gap-6 md:grid-cols-2">
-              <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6">
-                <h3 className="font-brand-heading text-xl font-semibold">
+              <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 text-brand-primary-1">
+                <h3 className="font-brand-heading text-xl font-semibold text-brand-primary-0">
                   Point-of-sale giving can be massive
                 </h3>
-                <p className="mt-3 text-base text-brand-secondary-0">
+                <p className="mt-3 text-base text-brand-primary-1">
                   In 2024, Taco Bell’s Round Up program was highlighted as a top
                   point-of-sale fundraiser, reporting more than{" "}
                   <span className="font-semibold text-brand-primary-0">
@@ -66,7 +66,7 @@ export default function FundamentalsPage() {
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3 text-sm">
                   <a
-                    className="rounded-full border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-1 text-brand-secondary-0 transition hover:bg-brand-secondary-1"
+                    className="rounded-full border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-1 text-brand-secondary-1 transition hover:bg-brand-secondary-1"
                     href="https://www.tacobellfoundation.org/events/tbf-awards-record-breaking-28-million-in-grants/"
                     target="_blank"
                     rel="noreferrer"
@@ -74,7 +74,7 @@ export default function FundamentalsPage() {
                     Taco Bell Foundation
                   </a>
                   <a
-                    className="rounded-full border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-1 text-brand-secondary-0 transition hover:bg-brand-secondary-1"
+                    className="rounded-full border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-1 text-brand-secondary-1 transition hover:bg-brand-secondary-1"
                     href="https://www.prnewswire.com/news-releases/taco-bell-foundation-unlocks-new-level-of-impact-with-28-million-in-community-grants--its-largest-giving-year-yet-302519898.html"
                     target="_blank"
                     rel="noreferrer"
@@ -84,11 +84,11 @@ export default function FundamentalsPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6">
-                <h3 className="font-brand-heading text-xl font-semibold">
+              <div className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 text-brand-primary-1">
+                <h3 className="font-brand-heading text-xl font-semibold text-brand-primary-0">
                   It’s easy to explain to donors
                 </h3>
-                <ul className="mt-3 space-y-3 text-base text-brand-secondary-0">
+                <ul className="mt-3 space-y-3 text-base text-brand-primary-1">
                   <li>You round up your total at checkout.</li>
                   <li>
                     The nonprofit receives the funds and holds them responsibly.
@@ -127,12 +127,12 @@ export default function FundamentalsPage() {
               ].map((item) => (
                 <div
                   key={item.title}
-                  className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6"
+                  className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 text-brand-primary-1"
                 >
-                  <h3 className="font-brand-heading text-xl font-semibold">
+                  <h3 className="font-brand-heading text-xl font-semibold text-brand-primary-0">
                     {item.title}
                   </h3>
-                  <p className="mt-3 text-base text-brand-secondary-0">
+                  <p className="mt-3 text-base text-brand-primary-1">
                     {item.detail}
                   </p>
                 </div>
@@ -167,15 +167,15 @@ export default function FundamentalsPage() {
               ].map((step, index) => (
                 <li
                   key={step.title}
-                  className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-4"
+                  className="rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-4 text-brand-primary-1"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-accent-0 text-base font-semibold text-brand-secondary-2">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-accent-0 text-base font-semibold text-brand-primary-1">
                       {index + 1}
                     </span>
                     <p className="text-base font-semibold">{step.title}</p>
                   </div>
-                  <p className="mt-3 text-sm text-brand-secondary-0">
+                  <p className="mt-3 text-sm text-brand-primary-1">
                     {step.detail}
                   </p>
                 </li>
@@ -187,25 +187,25 @@ export default function FundamentalsPage() {
             className="mt-14 info-fade-up"
             style={{ animationDelay: "380ms" }}
           >
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 text-brand-primary-1">
               <div>
-                <h2 className="font-brand-heading text-2xl font-semibold">
+                <h2 className="font-brand-heading text-2xl font-semibold text-brand-primary-0">
                   Want the structure + stewardship context?
                 </h2>
-                <p className="mt-2 text-base text-brand-secondary-0">
+                <p className="mt-2 text-base text-brand-primary-1">
                   See how the nonprofit and the operator work together, and how
                   funds stay transparent.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Link
-                  className="rounded-full border border-brand-secondary-1 bg-brand-secondary-2 px-4 py-2 text-base font-semibold text-brand-secondary-0 transition hover:bg-brand-secondary-1"
+                  className="rounded-full border border-brand-secondary-1 bg-brand-secondary-2 px-4 py-2 text-base font-semibold text-brand-secondary-1 transition hover:bg-brand-secondary-1"
                   href="/info/uptheante"
                 >
                   Stewardship
                 </Link>
                 <Link
-                  className="rounded-full border border-brand-secondary-1 bg-brand-accent-0 px-4 py-2 text-base font-semibold text-brand-secondary-2 transition hover:bg-brand-accent-1"
+                  className="rounded-full border border-brand-secondary-1 bg-brand-accent-0 px-4 py-2 text-base font-semibold text-brand-primary-1 transition hover:bg-brand-accent-1"
                   href="/info/growth"
                 >
                   How it works

@@ -5,6 +5,7 @@ import KpiRow from "@/app/components/districts/superintendent/KpiRow";
 import NonprofitDrawer from "@/app/components/districts/superintendent/NonprofitDrawer";
 import NonprofitTable from "@/app/components/districts/superintendent/NonprofitTable";
 import SectionCard from "@/app/components/districts/superintendent/SectionCard";
+import SuperintendentSlides from "@/app/components/districts/superintendent/Slides";
 import type {
   NonprofitDetail,
   NonprofitRow,
@@ -269,6 +270,14 @@ export default function SuperintendentDashboard({
           defaultOpen={hasScopeRows}
         >
           <KpiRow items={kpis} />
+        </SectionCard>
+
+        <SectionCard
+          title="Board-ready deck"
+          subtitle="Presentation mode for superintendent meeting."
+          collapsible
+        >
+          <SuperintendentSlides className="mt-2" />
         </SectionCard>
 
         <SectionCard
