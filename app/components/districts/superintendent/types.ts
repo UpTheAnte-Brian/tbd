@@ -17,6 +17,7 @@ export type NonprofitRow = {
     total_liabilities_end: number | null;
     net_assets_end: number | null;
     return_id: string | null;
+    pub78: boolean;
     has_narrative: boolean;
     people_count: number | null;
     people_parse_quality: PeopleParseQuality;

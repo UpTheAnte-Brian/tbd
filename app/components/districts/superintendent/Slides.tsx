@@ -159,6 +159,10 @@ export function SuperintendentSlides(props: {
   initialIndex?: number;
 }) {
   const { className, initialIndex = 0 } = props;
+  const cardFrameRef = React.useRef<HTMLDivElement | null>(null);
+  const measureSlideRefs = React.useRef<Array<HTMLDivElement | null>>([]);
+  const [measureWidth, setMeasureWidth] = React.useState<number>(0);
+  const [uniformCardHeight, setUniformCardHeight] = React.useState<number>(0);
   const [idx, setIdx] = React.useState(() =>
     clamp(initialIndex, 0, SLIDES.length - 1),
   );
@@ -185,11 +189,55 @@ export function SuperintendentSlides(props: {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [goNext, goPrev]);
 
+  const recalcUniformHeight = React.useCallback(() => {
+    const heights = measureSlideRefs.current
+      .map((node) => node?.getBoundingClientRect().height ?? 0)
+      .filter((value) => Number.isFinite(value) && value > 0);
+
+    if (heights.length === 0) return;
+
+    const tallest = Math.ceil(Math.max(...heights));
+    if (tallest > 0) {
+      setUniformCardHeight(tallest);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const node = cardFrameRef.current;
+    if (!node) return;
+
+    const updateWidth = () => {
+      const next = Math.ceil(node.getBoundingClientRect().width);
+      if (next > 0) setMeasureWidth(next);
+    };
+
+    updateWidth();
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, []);
+
+  React.useEffect(() => {
+    if (measureWidth <= 0) return;
+    const raf = window.requestAnimationFrame(recalcUniformHeight);
+    return () => window.cancelAnimationFrame(raf);
+  }, [measureWidth, recalcUniformHeight]);
+
+  React.useEffect(() => {
+    if (!("fonts" in document)) return;
+    const fontFaceSet = (document as Document & { fonts?: FontFaceSet }).fonts;
+    if (!fontFaceSet?.ready) return;
+    fontFaceSet.ready.then(() => {
+      window.requestAnimationFrame(recalcUniformHeight);
+    });
+  }, [recalcUniformHeight]);
+
   return (
     <div className={className}>
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
-          <div className="text-sm text-brand-secondary-0">
+          <div className="text-base font-medium text-brand-secondary-0">
             Slide {idx + 1} / {SLIDES.length}
           </div>
           <div className="flex items-center gap-2">
@@ -197,7 +245,7 @@ export function SuperintendentSlides(props: {
               type="button"
               onClick={goPrev}
               disabled={idx === 0}
-              className="rounded-md border border-brand-secondary-1 bg-brand-secondary-1 px-3 py-1.5 text-sm text-brand-primary-1 disabled:opacity-40"
+              className="rounded-md border border-brand-secondary-1 bg-brand-secondary-1 px-4 py-2 text-base text-brand-primary-1 disabled:opacity-40"
             >
               ← Prev
             </button>
@@ -205,26 +253,32 @@ export function SuperintendentSlides(props: {
               type="button"
               onClick={goNext}
               disabled={idx === SLIDES.length - 1}
-              className="rounded-md border border-brand-accent-1 bg-brand-primary-0 px-3 py-1.5 text-sm font-semibold text-brand-primary-1 disabled:opacity-40"
+              className="rounded-md border border-brand-accent-1 bg-brand-primary-0 px-4 py-2 text-base font-semibold text-brand-primary-1 disabled:opacity-40"
             >
               Next →
             </button>
           </div>
         </div>
 
-        <div className="rounded-xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 shadow-sm min-h-[150px] text-brand-primary-1">
+        <div
+          ref={cardFrameRef}
+          className="rounded-xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 shadow-sm text-brand-primary-1 md:p-8"
+          style={{
+            minHeight: uniformCardHeight > 0 ? `${uniformCardHeight}px` : "320px",
+          }}
+        >
           <div className="h-1 w-14 rounded-full bg-brand-primary-0" />
-          <h3 className="mt-3 text-xl font-semibold leading-snug text-brand-primary-0">
+          <h3 className="mt-3 text-3xl font-semibold leading-tight text-brand-primary-0 md:text-[2.1rem]">
             {slide.title}
           </h3>
           {slide.subtitle ? (
-            <div className="mt-1 whitespace-pre-line text-sm text-brand-primary-1">
+            <div className="mt-2 whitespace-pre-line text-lg text-brand-primary-1 md:text-xl">
               {slide.subtitle}
             </div>
           ) : null}
 
           {slide.body?.length ? (
-            <div className="mt-4 space-y-2 text-sm leading-relaxed text-brand-primary-1">
+            <div className="mt-5 space-y-3 text-lg leading-relaxed text-brand-primary-1">
               {slide.body.map((p) => (
                 <p key={p}>{p}</p>
               ))}
@@ -232,7 +286,7 @@ export function SuperintendentSlides(props: {
           ) : null}
 
           {slide.bullets?.length ? (
-            <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-relaxed text-brand-primary-1 marker:text-brand-primary-0">
+            <ul className="mt-5 list-disc space-y-3 pl-6 text-lg leading-relaxed text-brand-primary-1 marker:text-brand-primary-0">
               {slide.bullets.map((b) => (
                 <li key={b}>{b}</li>
               ))}
@@ -247,7 +301,7 @@ export function SuperintendentSlides(props: {
               type="button"
               onClick={() => setIdx(i)}
               className={
-                "rounded-md border border-brand-secondary-1 px-2 py-1 text-xs text-brand-primary-1 " +
+                "rounded-md border border-brand-secondary-1 px-2.5 py-1.5 text-sm text-brand-primary-1 " +
                 (i === idx
                   ? "bg-brand-primary-0 font-semibold"
                   : "text-brand-secondary-0 hover:text-brand-secondary-1")
@@ -259,6 +313,49 @@ export function SuperintendentSlides(props: {
           ))}
         </div>
       </div>
+
+      {/* Offscreen measurement surface so every slide card uses the tallest slide height at current width. */}
+      {measureWidth > 0 ? (
+        <div
+          aria-hidden
+          className="pointer-events-none fixed -left-[20000px] top-0 opacity-0"
+          style={{ width: `${measureWidth}px` }}
+        >
+          {SLIDES.map((candidate, index) => (
+            <div
+              key={`measure-${candidate.title}-${index}`}
+              ref={(node) => {
+                measureSlideRefs.current[index] = node;
+              }}
+              className="mb-4 rounded-xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 text-brand-primary-1 md:p-8"
+            >
+              <div className="h-1 w-14 rounded-full bg-brand-primary-0" />
+              <h3 className="mt-3 text-3xl font-semibold leading-tight text-brand-primary-0 md:text-[2.1rem]">
+                {candidate.title}
+              </h3>
+              {candidate.subtitle ? (
+                <div className="mt-2 whitespace-pre-line text-lg text-brand-primary-1 md:text-xl">
+                  {candidate.subtitle}
+                </div>
+              ) : null}
+              {candidate.body?.length ? (
+                <div className="mt-5 space-y-3 text-lg leading-relaxed text-brand-primary-1">
+                  {candidate.body.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                </div>
+              ) : null}
+              {candidate.bullets?.length ? (
+                <ul className="mt-5 list-disc space-y-3 pl-6 text-lg leading-relaxed text-brand-primary-1 marker:text-brand-primary-0">
+                  {candidate.bullets.map((bullet) => (
+                    <li key={bullet}>{bullet}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

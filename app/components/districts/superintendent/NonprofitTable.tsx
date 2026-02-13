@@ -131,7 +131,7 @@ export default function NonprofitTable({
                                 Net Assets
                             </th>
                             <th className="px-3 py-2 text-left font-medium">
-                                Narrative?
+                                Pub78
                             </th>
                             <th className="px-3 py-2 text-left font-medium">
                                 People Parse
@@ -203,14 +203,18 @@ export default function NonprofitTable({
                                         <td className="px-3 py-2">
                                             <span
                                                 className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                                                    row.has_narrative
-                                                        ? "bg-emerald-100 text-emerald-800"
+                                                    row.pub78
+                                                        ? row.has_returns
+                                                            ? "bg-emerald-100 text-emerald-800"
+                                                            : "bg-amber-100 text-amber-800"
                                                         : "bg-slate-100 text-slate-600"
                                                 }`}
                                             >
-                                                {row.has_narrative
-                                                    ? "Yes"
-                                                    : "No"}
+                                                {row.pub78
+                                                    ? row.has_returns
+                                                        ? "Pub78"
+                                                        : "New / No Returns Yet"
+                                                    : "Not listed"}
                                             </span>
                                         </td>
                                         <td className="px-3 py-2">

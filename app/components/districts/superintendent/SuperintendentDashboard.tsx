@@ -6,6 +6,7 @@ import NonprofitDrawer from "@/app/components/districts/superintendent/Nonprofit
 import NonprofitTable from "@/app/components/districts/superintendent/NonprofitTable";
 import SectionCard from "@/app/components/districts/superintendent/SectionCard";
 import SuperintendentSlides from "@/app/components/districts/superintendent/Slides";
+import VhenDiagram from "@/app/components/districts/superintendent/VhenDiagram";
 import type {
   NonprofitDetail,
   NonprofitRow,
@@ -75,7 +76,6 @@ export default function SuperintendentDashboard({
   const [sortKey, setSortKey] = useState<SortKey>("revenue");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
-  const hasScopeRows = rows.length > 0;
   console.log("Rendering SuperintendentDashboard with rows:", rows);
   console.log(
     "Duplicate entity_ids:",
@@ -133,15 +133,15 @@ export default function SuperintendentDashboard({
     const totalRevenue = scopeSummary?.total_revenue ?? null;
     const totalNetAssets = scopeSummary?.total_net_assets ?? null;
     const narrativesCount = rows.filter((row) => row.has_narrative).length;
-    const peopleIssuesCount = rows.filter((row) =>
-      ["mixed", "poor"].includes(row.people_parse_quality),
-    ).length;
+    // const peopleIssuesCount = rows.filter((row) =>
+    //   ["mixed", "poor"].includes(row.people_parse_quality),
+    // ).length;
     const activatedCount = rows.filter(
       (row) => !row.entity_id.startsWith("ein:"),
     ).length;
-    const einOnlyCount = rows.filter((row) =>
-      row.entity_id.startsWith("ein:"),
-    ).length;
+    // const einOnlyCount = rows.filter((row) =>
+    //   row.entity_id.startsWith("ein:"),
+    // ).length;
 
     return [
       {
@@ -172,15 +172,15 @@ export default function SuperintendentDashboard({
         label: "Activated",
         value: activatedCount.toString(),
       },
-      {
-        label: "EIN-only",
-        value: einOnlyCount.toString(),
-      },
-      {
-        label: "People parse flagged",
-        value: peopleIssuesCount.toString(),
-        tone: peopleIssuesCount > 0 ? "warn" : "good",
-      },
+      // {
+      //   label: "EIN-only",
+      //   value: einOnlyCount.toString(),
+      // },
+      // {
+      //   label: "People parse flagged",
+      //   value: peopleIssuesCount.toString(),
+      //   tone: peopleIssuesCount > 0 ? "warn" : "good",
+      // },
     ];
   }, [rows, scopeSummary, scopeLoading]);
 
@@ -199,7 +199,7 @@ export default function SuperintendentDashboard({
       "Total Revenue",
       "Total Expenses",
       "Net Assets",
-      "Narrative",
+      "Pub78",
       "People Parse",
       "City",
       "State",
@@ -221,7 +221,11 @@ export default function SuperintendentDashboard({
         row.total_revenue?.toString() ?? "",
         row.total_expenses?.toString() ?? "",
         row.net_assets_end?.toString() ?? "",
-        row.has_narrative ? "Yes" : "No",
+        row.pub78
+          ? row.has_returns
+            ? "Pub78"
+            : "New / No Returns Yet"
+          : "Not listed",
         row.people_parse_quality,
         row.city ?? "",
         row.state ?? "",
@@ -264,27 +268,42 @@ export default function SuperintendentDashboard({
         ) : null}
 
         <SectionCard
-          title="Snapshot"
-          subtitle="Quick signals to guide quarterly and annual review."
+          title="Ecosystem"
+          subtitle="District, nonprofit, and business relationships."
           collapsible
-          defaultOpen={hasScopeRows}
+          defaultOpen={false}
         >
-          <KpiRow items={kpis} />
+          <VhenDiagram
+            className="max-w-3xl"
+            title="Ecosystem"
+            accentVar="--brand-primary-0"
+            strokeVar="--brand-accent-1"
+          />
         </SectionCard>
 
         <SectionCard
           title="Board-ready deck"
           subtitle="Presentation mode for superintendent meeting."
           collapsible
+          defaultOpen={false}
         >
           <SuperintendentSlides className="mt-2" />
+        </SectionCard>
+
+        <SectionCard
+          title="Snapshot"
+          subtitle="Quick signals to guide quarterly and annual review."
+          collapsible
+          defaultOpen={false}
+        >
+          <KpiRow items={kpis} />
         </SectionCard>
 
         <SectionCard
           title="Nonprofits in scope"
           subtitle="Search, sort, and drill into the latest IRS filings."
           collapsible
-          defaultOpen
+          defaultOpen={false}
         >
           <NonprofitTable
             rows={filteredRows}

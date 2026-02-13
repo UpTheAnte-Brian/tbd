@@ -772,10 +772,22 @@ function parsePartVIIAPeopleFromLoaded(loaded: LoadedXml): ParsedPerson[] {
 
     if (usedParser && doc) {
         const groupPaths = [
+            // Form 990 (full) – Part VII-A
             "Return.ReturnData.IRS990.Form990PartVIISectionAGrp",
             "Return.ReturnData.IRS990.IRS990PartVIISectionAGrp",
             "Return.ReturnData.IRS990.PartVIISectionAGrp",
-            "Return.ReturnData.IRS990EZ.Form990PartVIISectionAGrp",
+
+            // Form 990-EZ – Part IV (Officers/Directors/Trustees/Key Employees)
+            // Different schema vintages use slightly different group tag names.
+            "Return.ReturnData.IRS990EZ.OfficerDirectorTrusteeKeyEmplGrp",
+            "Return.ReturnData.IRS990EZ.OffcrDrTrstKyEmplGrp",
+            "Return.ReturnData.IRS990EZ.OfficerDirectorTrusteeGrp",
+            "Return.ReturnData.IRS990EZ.OffcrDrTrstGrp",
+            "Return.ReturnData.IRS990EZ.Form990EZPartIVGrp",
+
+            // Some XMLs tuck the EZ groups under IRS990EZ rather than a named part group
+            "Return.ReturnData.IRS990EZ.OfficerDirectorTrusteeKeyEmployeeGrp",
+            "Return.ReturnData.IRS990EZ.OfficerDirectorTrusteeKeyEmplGroup",
         ];
 
         let groups: any[] = [];
@@ -787,38 +799,105 @@ function parsePartVIIAPeopleFromLoaded(loaded: LoadedXml): ParsedPerson[] {
             }
         }
 
+        // Helper: best-effort pick of a text field from multiple candidate keys.
+        const pickText = (obj: any, keys: string[]) => {
+            for (const k of keys) {
+                const v = safeTrimText(obj?.[k]);
+                if (v) return v;
+            }
+            return "";
+        };
+
+        const pickNumber = (obj: any, keys: string[]) => {
+            for (const k of keys) {
+                const n = asNumberOrNull(obj?.[k]);
+                if (n != null) return n;
+            }
+            return null;
+        };
+
+        const pickBool = (obj: any, keys: string[]) => {
+            for (const k of keys) {
+                const b = coerceBoolOrNull(obj?.[k]);
+                if (b != null) return b;
+            }
+            return null;
+        };
+
         for (const g of groups) {
-            const name = safeTrimText(
-                g?.PersonNm ?? g?.PersonName ?? g?.PersonNameTxt,
-            );
+            // 990 and 990-EZ use similar PersonNm/TitleTxt, but some EZ vintages use different key names.
+            const name = pickText(g, [
+                "PersonNm",
+                "PersonName",
+                "PersonNameTxt",
+                "NamePerson",
+                "NamePersonTxt",
+                "OfficerNm",
+                "OfficerName",
+                "OfficerNameTxt",
+            ]);
             if (!name) continue;
-            const title = safeTrimText(g?.TitleTxt ?? g?.Title);
+
+            const title = pickText(g, [
+                "TitleTxt",
+                "Title",
+                "TitleDesc",
+                "TitleDescTxt",
+                "TitleOrPositionTxt",
+                "PositionTitleTxt",
+            ]);
 
             // If enums differ, we still try a conservative set.
             const roleGuess = (() => {
                 const t = (title || "").toLowerCase();
-                if (t.includes("director") || t.includes("trustee")) {
+                if (
+                    t.includes("chair") || t.includes("chairman") ||
+                    t.includes("board") || t.includes("director") ||
+                    t.includes("trustee")
+                ) {
                     return "director";
                 }
                 if (
                     t.includes("officer") || t.includes("president") ||
-                    t.includes("treasurer") || t.includes("secretary")
+                    t.includes("treasurer") || t.includes("secretary") ||
+                    t.includes("vice")
                 ) return "officer";
                 return "unknown";
             })();
 
-            const avg = asNumberOrNull(
-                g?.AverageHoursPerWeekRt ?? g?.AverageHoursPerWeek,
-            );
-            const reportable = asNumberOrNull(
-                g?.ReportableCompFromOrgAmt ?? g?.ReportableCompFromOrg,
-            );
-            const other = asNumberOrNull(
-                g?.OtherCompensationAmt ?? g?.OtherCompensation,
-            );
-            const isCurrent = coerceBoolOrNull(
-                g?.PersonCurrentInd ?? g?.IsCurrentInd ?? g?.IsCurrent,
-            );
+            // Form 990: AverageHoursPerWeekRt
+            // Form 990-EZ Part IV: AverageHrsPerWkDevotedToPosRt (common) plus a few schema variants.
+            const avg = pickNumber(g, [
+                "AverageHoursPerWeekRt",
+                "AverageHoursPerWeek",
+                "AvgHrsPerWkDevotedToPosRt",
+                "AverageHrsPerWkDevotedToPosRt",
+                "AverageHoursPerWeekDevotedToPosRt",
+            ]);
+
+            // Compensation fields – vary by form and schema.
+            const reportable = pickNumber(g, [
+                "ReportableCompFromOrgAmt",
+                "ReportableCompFromOrg",
+                "ReportableCompensationAmt",
+                "CompensationAmt",
+                "RptblCompFromOrgAmt",
+                "RptblCompFromOrg",
+            ]);
+
+            const other = pickNumber(g, [
+                "OtherCompensationAmt",
+                "OtherCompensation",
+                "EstimatedAmountOfOtherCompensationAmt",
+                "EstAmtOtherCompensationAmt",
+            ]);
+
+            // Some filings include a current-indicator; most do not.
+            const isCurrent = pickBool(g, [
+                "PersonCurrentInd",
+                "IsCurrentInd",
+                "IsCurrent",
+            ]);
 
             people.push({
                 role: roleGuess,
@@ -830,15 +909,18 @@ function parsePartVIIAPeopleFromLoaded(loaded: LoadedXml): ParsedPerson[] {
                 is_current: isCurrent,
                 source_map: {
                     parser: "fast-xml-parser",
+                    picked_group: groupPaths.find((p) =>
+                        getArrayByPath(doc, p).length
+                    ) || null,
                 },
             });
         }
     } else {
-        // Regex fallback: very best-effort for PersonNm/TitleTxt
+        // Regex fallback: very best-effort for PersonNm/TitleTxt, now expanded to 990-EZ officer keys
         const personRe =
-            /<\s*(PersonNm|PersonName|PersonNameTxt)\s*>\s*([\s\S]*?)\s*<\s*\/(PersonNm|PersonName|PersonNameTxt)\s*>/gi;
+            /<\s*(PersonNm|PersonName|PersonNameTxt|NamePerson|NamePersonTxt|OfficerNm|OfficerName|OfficerNameTxt)\s*>\s*([\s\S]*?)\s*<\s*\/(PersonNm|PersonName|PersonNameTxt|NamePerson|NamePersonTxt|OfficerNm|OfficerName|OfficerNameTxt)\s*>/gi;
         const titleRe =
-            /<\s*(TitleTxt|Title)\s*>\s*([\s\S]*?)\s*<\s*\/(TitleTxt|Title)\s*>/gi;
+            /<\s*(TitleTxt|Title|TitleDesc|TitleDescTxt|TitleOrPositionTxt|PositionTitleTxt)\s*>\s*([\s\S]*?)\s*<\s*\/(TitleTxt|Title|TitleDesc|TitleDescTxt|TitleOrPositionTxt|PositionTitleTxt)\s*>/gi;
 
         const names: string[] = [];
         let m: RegExpExecArray | null;
@@ -862,12 +944,17 @@ function parsePartVIIAPeopleFromLoaded(loaded: LoadedXml): ParsedPerson[] {
             if (!name) continue;
             const roleGuess = (() => {
                 const t = (title || "").toLowerCase();
-                if (t.includes("director") || t.includes("trustee")) {
+                if (
+                    t.includes("chair") || t.includes("chairman") ||
+                    t.includes("board") || t.includes("director") ||
+                    t.includes("trustee")
+                ) {
                     return "director";
                 }
                 if (
                     t.includes("officer") || t.includes("president") ||
-                    t.includes("treasurer") || t.includes("secretary")
+                    t.includes("treasurer") || t.includes("secretary") ||
+                    t.includes("vice")
                 ) return "officer";
                 return "unknown";
             })();

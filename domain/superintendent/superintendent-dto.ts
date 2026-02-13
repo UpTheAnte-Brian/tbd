@@ -240,6 +240,12 @@ function buildNonprofitRow(params: {
         scopeRow.scope_id ??
         (ein ? `ein:${ein}` : "ein:unknown");
     const rowKey = String(resolvedEntityId);
+    const deductibilityCode = organization?.deductibility_code?.trim() ?? null;
+    const subsectionCodeRaw = organization?.subsection_code?.trim() ?? null;
+    const subsectionCode = subsectionCodeRaw
+        ? subsectionCodeRaw.padStart(2, "0")
+        : null;
+    const pub78 = deductibilityCode === "1" && subsectionCode === "03";
 
     return {
         row_key: rowKey,
@@ -261,6 +267,7 @@ function buildNonprofitRow(params: {
         ),
         net_assets_end: toNumber(latestFinancials?.net_assets_end),
         return_id: latestReturn?.id ?? null,
+        pub78,
         has_narrative: latestNarratives.length > 0,
         people_count: peopleCount,
         people_parse_quality: peopleQuality,
@@ -499,6 +506,7 @@ async function getSuperintendentDashboardByScopeEin(
                 total_liabilities_end: null,
                 net_assets_end: null,
                 return_id: null,
+                pub78: false,
                 has_narrative: false,
                 people_count: null,
                 people_parse_quality: "unknown",
@@ -561,6 +569,10 @@ async function getSuperintendentDashboardByScopeEin(
             return_id: latestReturn?.id ??
                 latestFinancials?.return_id ??
                 null,
+            pub78: (organization?.deductibility_code?.trim() ?? null) === "1" &&
+                (organization?.subsection_code?.trim()
+                    ? organization.subsection_code.trim().padStart(2, "0")
+                    : null) === "03",
             has_narrative: narratives.length > 0,
             people_count: people.length || null,
             people_parse_quality: assessPeopleParseQuality(people),
