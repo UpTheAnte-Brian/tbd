@@ -298,14 +298,24 @@ type ParsedReturn = {
         index_taxpayer_name?: string | null;
         index_return_type?: string | null;
         index_filed_on?: string | null;
+        xml_status?: "available" | "missing";
+        missing_xml?: {
+            reason: string;
+            tried_urls: string[];
+            year: number;
+            object_id: string;
+            shard: string | null;
+            error?: string | null;
+        };
     };
     xml: {
-        path: string;
-        sha256: string;
+        path: string | null;
+        sha256: string | null;
     };
 };
 
 const DEFAULT_BATCH_SIZE = 250;
+let returnsSupportsSourceMap: boolean | null = null;
 
 function mustGetEnv(name: string): string {
     tryLoadDotenvOnce();
@@ -746,6 +756,15 @@ function testZip(zipPath: string): { ok: boolean; message?: string } {
     return { ok: true };
 }
 
+function looksLikeCorruptZipMessage(input: string): boolean {
+    const msg = String(input || "").toLowerCase();
+    if (!msg) return false;
+    return /(central directory|zipfile|corrupt|invalid|extra bytes|stzip|end-of-central|bad zip)/i
+        .test(
+            msg,
+        );
+}
+
 async function downloadFileAtomic(url: string, outPath: string): Promise<void> {
     // Write to a temp file first, then rename (prevents partial files being treated as valid).
     const tmpPath = `${outPath}.tmp-${Date.now()}-${
@@ -1121,6 +1140,13 @@ function directXmlCandidateUrls(year: number, objectId: string): string[] {
     });
 }
 
+type DirectXmlAttemptResult = {
+    ok: boolean;
+    tried_urls: string[];
+    reason: "available" | "not_found" | "error";
+    error?: string;
+};
+
 // NOTE: HEAD checks proved unreliable in some environments; direct XML downloads now use GET-first logic.
 async function headWithRetry(
     url: string,
@@ -1156,16 +1182,17 @@ async function headWithRetry(
 
 // (resolveDirectXmlUrl removed; no longer used)
 
-async function downloadDirectXml(
+async function downloadDirectXmlWithMeta(
     year: number,
     objectId: string,
     outPath: string,
-): Promise<boolean> {
+): Promise<DirectXmlAttemptResult> {
     // IMPORTANT: Some environments/proxies (and occasionally the IRS/S3 edge) make HEAD unreliable.
     // So we try GET directly against the known endpoints.
     const urls = directXmlCandidateUrls(year, objectId);
 
     let lastErr: unknown = null;
+    let sawNotFoundHttp = false;
 
     for (const url of urls) {
         try {
@@ -1183,13 +1210,14 @@ async function downloadDirectXml(
                 );
             }
 
-            return true;
+            return { ok: true, tried_urls: urls, reason: "available" };
         } catch (e) {
             lastErr = e;
 
             // Treat 403/404 as “not found” and try the next known endpoint.
             if (e instanceof HttpStatusError) {
                 if (e.statusCode === 403 || e.statusCode === 404) {
+                    sawNotFoundHttp = true;
                     continue;
                 }
             }
@@ -1198,23 +1226,42 @@ async function downloadDirectXml(
             // If this was the last endpoint, surface the error.
             const isLast = url === urls[urls.length - 1];
             if (isLast) {
-                throw e;
+                return {
+                    ok: false,
+                    tried_urls: urls,
+                    reason: "error",
+                    error: compactErr(e, 600),
+                };
             }
         }
     }
 
     // All candidate endpoints were 403/404 (or otherwise treated as not-found).
-    if (lastErr instanceof HttpStatusError) {
+    if (lastErr instanceof HttpStatusError || sawNotFoundHttp) {
         const tried = urls.length;
         console.warn(
             `WARN: direct XML not found after trying ${tried} candidate URLs for object_id=${objectId} (start_year=${year}). ` +
                 `This can happen if the IRS/AWS dataset has not published this index year yet.`,
         );
-        return false;
+        return { ok: false, tried_urls: urls, reason: "not_found" };
     }
 
     // If we got here with a non-HTTP error, treat as not found (callers decide fallback behavior).
-    return false;
+    return {
+        ok: false,
+        tried_urls: urls,
+        reason: "error",
+        error: compactErr(lastErr, 600),
+    };
+}
+
+async function downloadDirectXml(
+    year: number,
+    objectId: string,
+    outPath: string,
+): Promise<boolean> {
+    const res = await downloadDirectXmlWithMeta(year, objectId, outPath);
+    return res.ok;
 }
 
 async function looksLikeReturnXml(filePath: string): Promise<boolean> {
@@ -1425,6 +1472,24 @@ function yyyyMmToIsoEndDate(taxPeriod: string | null): string | null {
     const lastDay = new Date(Date.UTC(y, mm, 0)).getUTCDate();
     const iso = `${m[1]}-${m[2]}-${String(lastDay).padStart(2, "0")}`;
     return iso;
+}
+
+function deriveTaxYear(
+    indexTaxYear: string | number | null | undefined,
+    taxPeriod: string | null | undefined,
+): number | null {
+    if (indexTaxYear != null) {
+        const n = Number(String(indexTaxYear).trim());
+        if (Number.isFinite(n) && n >= 1900 && n <= 3000) return n;
+    }
+    if (taxPeriod) {
+        const m = String(taxPeriod).trim().match(/^(\d{4})\d{2}$/);
+        if (m) {
+            const n = Number(m[1]);
+            if (Number.isFinite(n) && n >= 1900 && n <= 3000) return n;
+        }
+    }
+    return null;
 }
 
 async function parseXmlToReturn(
@@ -1721,6 +1786,19 @@ async function upsertReturns(supabaseAdmin: any, rows: ParsedReturn[]) {
     const payload = rows.map((r) => {
         const returnType = normalizeReturnTypeForEnum(r.return_type) ||
             normalizeReturnTypeForEnum(r.source.index_return_type ?? null);
+        const normalizedTaxYear = r.tax_year ??
+            deriveTaxYear(
+                r.source.index_tax_year ?? null,
+                r.source.index_tax_period ?? null,
+            );
+        const xmlStatus = r.source.xml_status ||
+            (r.xml.path ? "available" : "missing");
+        const sourceMap: Record<string, any> = {
+            xml_status: xmlStatus,
+        };
+        if (r.source.missing_xml) {
+            sourceMap.missing_xml = r.source.missing_xml;
+        }
 
         return {
             // Core identity
@@ -1729,7 +1807,7 @@ async function upsertReturns(supabaseAdmin: any, rows: ParsedReturn[]) {
 
             // Filing basics
             return_type: returnType,
-            tax_year: r.tax_year,
+            tax_year: normalizedTaxYear,
             tax_period_start: r.tax_period_begin_dt,
             tax_period_end: r.tax_period_end_dt,
             filed_on: r.filed_on ?? null,
@@ -1738,6 +1816,7 @@ async function upsertReturns(supabaseAdmin: any, rows: ParsedReturn[]) {
             source_system: "teos",
             source_priority: "xml",
             return_name: r.organization_name,
+            ...(returnsSupportsSourceMap === false ? {} : { source_map: sourceMap }),
 
             // TEOS/index metadata (only works if columns exist)
             teos_index_year: r.source.year ?? null,
@@ -1752,12 +1831,46 @@ async function upsertReturns(supabaseAdmin: any, rows: ParsedReturn[]) {
             xml_sha256: r.xml.sha256,
             xml_path: r.xml.path,
         };
-    });
+    }).filter((p) => p.tax_year != null);
 
-    const { error } = await supabaseAdmin
+    const skippedMissingTaxYear = rows.length - payload.length;
+    if (skippedMissingTaxYear > 0) {
+        console.warn(
+            `WARN: skipping ${skippedMissingTaxYear.toLocaleString()} return upsert(s) with null tax_year after fallback.`,
+        );
+    }
+
+    if (!payload.length) return { upserted: 0 };
+
+    let { error } = await supabaseAdmin
         .schema("irs")
         .from("returns")
         .upsert(payload, { onConflict: "irs_object_id" });
+
+    if (error) {
+        const msg = String(error.message || "").toLowerCase();
+        const missingSourceMap = msg.includes("source_map") &&
+            msg.includes("could not find");
+        if (missingSourceMap && returnsSupportsSourceMap !== false) {
+            returnsSupportsSourceMap = false;
+            console.warn(
+                "WARN: irs.returns.source_map column not found; retrying upsert without source_map payload.",
+            );
+
+            const fallbackPayload = payload.map((p) => {
+                const { source_map: _omit, ...rest } = p as Record<string, any>;
+                return rest;
+            });
+
+            const retry = await supabaseAdmin
+                .schema("irs")
+                .from("returns")
+                .upsert(fallbackPayload, { onConflict: "irs_object_id" });
+            error = retry.error || null;
+        }
+    } else if (returnsSupportsSourceMap == null) {
+        returnsSupportsSourceMap = true;
+    }
 
     if (error) {
         throw new Error(`Upsert into irs.returns failed: ${error.message}`);
@@ -2111,6 +2224,14 @@ async function processYear(params: {
 
     let parsedCount = 0;
     let upsertCount = 0;
+    let returnsKeptCount = 0;
+    let xmlFoundCount = 0;
+    let xmlMissingDirectCount = 0;
+    let xmlMissingShardCount = 0;
+    let zipCorruptDetected = 0;
+    let zipRedownloaded = 0;
+    let zipRecovered = 0;
+    let zipFailedFinal = 0;
     const upsertBatch: ParsedReturn[] = [];
 
     async function handleParsedReturn(parsed: ParsedReturn) {
@@ -2127,6 +2248,7 @@ async function processYear(params: {
 
         // Best-effort: populate irs.return_financials while XML is on disk.
         for (const r2 of upsertBatch) {
+            if (!r2.xml.path) continue;
             const returnUuid = await resolveReturnUuidByObjectId(
                 supabaseAdmin!,
                 r2.object_id,
@@ -2151,6 +2273,76 @@ async function processYear(params: {
         { zipPath: string; ready: boolean; failed: boolean; retried: boolean }
     >();
 
+    function sourceBaseFromIndex(
+        r: IndexRow,
+        effectiveShard: string | null,
+    ): ParsedReturn["source"] {
+        return {
+            year,
+            shard: effectiveShard ?? undefined,
+            index_return_id: r.return_id,
+            index_filing_type: r.filing_type,
+            index_tax_period: r.tax_period,
+            index_tax_year: r.tax_year,
+            index_taxpayer_name: r.taxpayer_name,
+            index_return_type: r.return_type,
+            index_filed_on: r.filed_on ?? null,
+        };
+    }
+
+    function buildMissingParsedReturn(params: {
+        row: IndexRow;
+        effectiveShard: string | null;
+        reason: string;
+        triedUrls?: string[];
+        error?: string | null;
+    }): ParsedReturn {
+        const { row, effectiveShard, reason, triedUrls, error } = params;
+        const derivedTaxYear = deriveTaxYear(row.tax_year, row.tax_period);
+        return {
+            ein: row.ein,
+            object_id: row.object_id,
+            tax_year: derivedTaxYear,
+            tax_period_begin_dt: null,
+            tax_period_end_dt: yyyyMmToIsoEndDate(row.tax_period),
+            filed_on: row.filed_on ?? null,
+            return_type: row.return_type || null,
+            organization_name: row.taxpayer_name || null,
+            source: {
+                ...sourceBaseFromIndex(row, effectiveShard),
+                xml_status: "missing",
+                missing_xml: {
+                    reason,
+                    tried_urls: triedUrls ?? [],
+                    year,
+                    object_id: row.object_id,
+                    shard: effectiveShard,
+                    error: error ?? null,
+                },
+            },
+            xml: {
+                path: null,
+                sha256: null,
+            },
+        };
+    }
+
+    async function redownloadShardZip(
+        shard: string,
+        zipPath: string,
+    ): Promise<{ ok: boolean; error?: string }> {
+        try {
+            await fsp.rm(zipPath, { force: true });
+        } catch {}
+        zipRedownloaded++;
+        try {
+            await downloadZipWithRetry(shardUrl(year, shard), zipPath, 3);
+            return { ok: true };
+        } catch (e) {
+            return { ok: false, error: compactErr(e, 700) };
+        }
+    }
+
     async function ensureShardZip(shard: string): Promise<string | null> {
         const existing = shardCache.get(shard);
         if (existing?.ready) return existing.zipPath;
@@ -2166,6 +2358,33 @@ async function processYear(params: {
 
         try {
             if (fs.existsSync(zipPath)) {
+                const validation = testZip(zipPath);
+                if (!validation.ok) {
+                    zipCorruptDetected++;
+                    console.warn(
+                        `WARN: shard ZIP failed integrity test: ${zipPath} (${
+                            validation.message || "unknown reason"
+                        })`,
+                    );
+                    const redownload = await redownloadShardZip(shard, zipPath);
+                    if (!redownload.ok) {
+                        zipFailedFinal++;
+                        shardCache.set(shard, {
+                            zipPath,
+                            ready: false,
+                            failed: true,
+                            retried: true,
+                        });
+                        console.warn(
+                            `WARN: failed to recover corrupt shard ZIP ${shard}: ${
+                                redownload.error
+                            }`,
+                        );
+                        return null;
+                    }
+                    zipRecovered++;
+                }
+
                 shardCache.set(shard, {
                     zipPath,
                     ready: true,
@@ -2197,6 +2416,83 @@ async function processYear(params: {
                 retried: false,
             });
             return null;
+        }
+    }
+
+    async function extractShardMemberWithRecovery(params: {
+        shard: string;
+        member: string;
+        xmlOut: string;
+    }): Promise<{ ok: boolean; reason?: string; error?: string }> {
+        const { shard, member, xmlOut } = params;
+        const zipPath = await ensureShardZip(shard);
+        if (!zipPath) {
+            return {
+                ok: false,
+                reason: "missing_shard_zip",
+                error: `Shard ZIP unavailable for ${shard}`,
+            };
+        }
+
+        try {
+            unzipExtractSingle(zipPath, member, xmlOut);
+            return { ok: true };
+        } catch (e) {
+            const firstErr = compactErr(e, 700);
+            const firstLooksCorrupt = looksLikeCorruptZipMessage(firstErr);
+            if (!firstLooksCorrupt) {
+                return {
+                    ok: false,
+                    reason: "shard_extract_failed",
+                    error: firstErr,
+                };
+            }
+
+            zipCorruptDetected++;
+            console.warn(
+                `WARN: shard extraction looks corrupt for ${shard} (${zipPath}): ${firstErr}`,
+            );
+
+            const cached = shardCache.get(shard);
+            if (cached?.retried) {
+                zipFailedFinal++;
+                return { ok: false, reason: "corrupt_zip", error: firstErr };
+            }
+            if (cached) cached.retried = true;
+
+            const redownload = await redownloadShardZip(shard, zipPath);
+            if (!redownload.ok) {
+                zipFailedFinal++;
+                if (cached) cached.failed = true;
+                return {
+                    ok: false,
+                    reason: "corrupt_zip",
+                    error: redownload.error || firstErr,
+                };
+            }
+
+            try {
+                unzipExtractSingle(zipPath, member, xmlOut);
+                zipRecovered++;
+                if (cached) {
+                    cached.ready = true;
+                    cached.failed = false;
+                }
+                return { ok: true };
+            } catch (e2) {
+                const secondErr = compactErr(e2, 700);
+                const looksCorruptAgain = looksLikeCorruptZipMessage(secondErr);
+                if (looksCorruptAgain) {
+                    zipFailedFinal++;
+                    if (cached) cached.failed = true;
+                    return { ok: false, reason: "corrupt_zip", error: secondErr };
+                }
+                return {
+                    ok: false,
+                    reason: "shard_extract_failed",
+                    error: secondErr,
+                };
+            }
         }
     }
 
@@ -2243,6 +2539,7 @@ async function processYear(params: {
     const keptRowsLimited = maxObjects > 0
         ? keptRows.slice(0, maxObjects)
         : keptRows;
+    returnsKeptCount = keptRowsLimited.length;
 
     function inferShardFromXmlPath(p: string): string | null {
         const m = String(p || "").match(
@@ -2255,7 +2552,7 @@ async function processYear(params: {
         // `outShardForPath` is only used to build the initial default output location.
         // `effectiveShard` is the shard we actually used (can differ when we locate the XML inside a local ZIP).
         const outShardForPath = r.shard || "DIRECT_XML";
-        const effectiveShard: string | undefined = r.shard || undefined;
+        let effectiveShard: string | null = r.shard || null;
 
         const member = `${r.object_id}_public.xml`;
         const xmlOut = persistentXmlOutPath({
@@ -2264,118 +2561,164 @@ async function processYear(params: {
             member,
         });
         let xmlPath = xmlOut;
+        let available = await ensureFileExists(xmlOut);
+        let missingReason: string | null = null;
+        let missingError: string | null = null;
+        let triedUrls: string[] = [];
 
-        if (!(await ensureFileExists(xmlOut))) {
-            let directOk = false;
-            try {
-                directOk = await downloadDirectXml(
-                    year,
-                    r.object_id,
-                    xmlOut,
-                );
-            } catch (e) {
+        if (!available) {
+            // First, honor any already-extracted local XML cache regardless of shard presence.
+            const localIdxAny = await getLocalXmlIndex(year);
+            const localPathAny = localIdxAny ? (localIdxAny.get(member) || null) : null;
+            if (localPathAny) {
+                xmlPath = localPathAny;
+                effectiveShard = inferShardFromXmlPath(localPathAny) || effectiveShard;
+                available = true;
                 console.warn(
-                    `WARN: direct XML download error for object_id=${r.object_id}: ${
-                        compactErr(e, 600)
-                    }`,
+                    `WARN: using local cache XML for object_id=${r.object_id}: ${localPathAny}`,
                 );
             }
+        }
 
-            if (!directOk) {
-                const member = `${r.object_id}_public.xml`;
-
-                // 1) If shard info exists, use shard zip (current behavior)
-                if (r.shard) {
-                    const zipPath = await ensureShardZip(r.shard);
-                    if (!zipPath) {
-                        console.warn(
-                            `WARN: shard unavailable for object_id=${r.object_id} shard=${r.shard}; skipping`,
-                        );
-                        continue;
-                    }
-
-                    try {
-                        unzipExtractSingle(zipPath, member, xmlOut);
-                        xmlPath = xmlOut;
-                    } catch (e) {
-                        console.warn(
-                            `WARN: shard extraction failed for object_id=${r.object_id} shard=${r.shard}: ${
-                                compactErr(e, 600)
-                            }`,
-                        );
-                        continue;
-                    }
+        if (!available) {
+            if (r.shard) {
+                // Shard-first for indexed rows with shard metadata.
+                const fromShard = await extractShardMemberWithRecovery({
+                    shard: r.shard,
+                    member,
+                    xmlOut,
+                });
+                if (fromShard.ok) {
+                    xmlPath = xmlOut;
+                    effectiveShard = r.shard;
+                    available = true;
+                } else if (fromShard.reason === "corrupt_zip") {
+                    missingReason = "corrupt_zip";
+                    missingError = fromShard.error || null;
                 } else {
-                    // 2) No shard info — DO NOT skip. Try local cache / local zips.
-
-                    // 2a) Optional: local extracted XML cache (can keep or remove later)
-                    const localIdx = await getLocalXmlIndex(year);
-                    const localPath = localIdx
-                        ? (localIdx.get(member) || null)
-                        : null;
-                    if (localPath) {
-                        xmlPath = localPath;
-                        console.warn(
-                            `WARN: no shard info for object_id=${r.object_id}; using local cache at ${localPath}`,
-                        );
+                    // Fallback to direct XML endpoints before declaring missing.
+                    const direct = await downloadDirectXmlWithMeta(
+                        year,
+                        r.object_id,
+                        xmlOut,
+                    );
+                    triedUrls = direct.tried_urls;
+                    if (direct.ok) {
+                        xmlPath = xmlOut;
+                        available = true;
                     } else {
-                        // 2b) NEW: scan local ZIPs for the member and extract from the first match
+                        // Last resort: scan any local year ZIP for this member.
                         const found = findLocalZipContainingMember({
                             y: year,
                             memberName: member,
                         });
                         if (found) {
-                            const effectiveShard = found.shard; // label-only, for provenance
+                            effectiveShard = found.shard;
                             try {
-                                unzipExtractSingle(
-                                    found.zipPath,
-                                    member,
-                                    xmlOut,
-                                );
+                                unzipExtractSingle(found.zipPath, member, xmlOut);
                                 xmlPath = xmlOut;
+                                available = true;
+                                console.warn(
+                                    `WARN: extracted object_id=${r.object_id} from fallback local zip ${
+                                        path.basename(found.zipPath)
+                                    } (${found.shard})`,
+                                );
+                            } catch (e) {
+                                missingReason = "shard_local_zip_extract_failed";
+                                missingError = compactErr(e, 700);
+                            }
+                        } else {
+                            missingReason = fromShard.reason === "missing_shard_zip"
+                                ? "missing_shard_zip"
+                                : "shard_extract_failed";
+                            missingError = fromShard.error || direct.error || null;
+                        }
+                    }
+                }
+            } else {
+                // No shard metadata: local cache/local ZIP fallback + direct candidate URLs.
+                const localIdx = await getLocalXmlIndex(year);
+                const localPath = localIdx ? (localIdx.get(member) || null) : null;
+                if (localPath) {
+                    xmlPath = localPath;
+                    effectiveShard = inferShardFromXmlPath(localPath);
+                    available = true;
+                    console.warn(
+                        `WARN: no shard info for object_id=${r.object_id}; using local cache at ${localPath}`,
+                    );
+                } else {
+                    const direct = await downloadDirectXmlWithMeta(
+                        year,
+                        r.object_id,
+                        xmlOut,
+                    );
+                    triedUrls = direct.tried_urls;
+                    if (direct.ok) {
+                        xmlPath = xmlOut;
+                        available = true;
+                    } else {
+                        const found = findLocalZipContainingMember({
+                            y: year,
+                            memberName: member,
+                        });
+                        if (found) {
+                            effectiveShard = found.shard;
+                            try {
+                                unzipExtractSingle(found.zipPath, member, xmlOut);
+                                xmlPath = xmlOut;
+                                available = true;
                                 console.warn(
                                     `WARN: no shard info for object_id=${r.object_id}; extracted from local zip ${
                                         path.basename(found.zipPath)
-                                    } (${effectiveShard})`,
+                                    } (${found.shard})`,
                                 );
                             } catch (e) {
-                                console.warn(
-                                    `WARN: local-zip extraction failed for object_id=${r.object_id} zip=${
-                                        path.basename(found.zipPath)
-                                    }: ${compactErr(e, 600)}`,
-                                );
-                                continue;
+                                missingReason = "no_shard_local_zip_extract_failed";
+                                missingError = compactErr(e, 700);
                             }
                         } else {
-                            console.warn(
-                                `WARN: no shard info for object_id=${r.object_id}; direct XML not found; and no local zip contained ${member}. Skipping.`,
-                            );
-                            continue;
+                            missingReason = "no_shard_direct_not_found";
+                            missingError = direct.error || null;
                         }
                     }
                 }
             }
         }
 
+        if (!available) {
+            const reason = missingReason || (r.shard
+                ? "missing_shard_zip"
+                : "no_shard_direct_not_found");
+            if (r.shard) {
+                xmlMissingShardCount++;
+            } else {
+                xmlMissingDirectCount++;
+            }
+
+            const missingParsed = buildMissingParsedReturn({
+                row: r,
+                effectiveShard,
+                reason,
+                triedUrls,
+                error: missingError,
+            });
+            await handleParsedReturn(missingParsed);
+            continue;
+        }
+        xmlFoundCount++;
+
         const parsed = await parseXmlToReturn(xmlPath, {
             ein: r.ein,
             object_id: r.object_id,
-            tax_year: r.tax_year ? Number(r.tax_year) : null,
+            tax_year: deriveTaxYear(r.tax_year, r.tax_period),
             tax_period_begin_dt: null,
             tax_period_end_dt: yyyyMmToIsoEndDate(r.tax_period),
             filed_on: r.filed_on ?? null,
             return_type: r.return_type || null,
             organization_name: null,
             source: {
-                year,
-                shard: effectiveShard,
-                index_return_id: r.return_id,
-                index_filing_type: r.filing_type,
-                index_tax_period: r.tax_period,
-                index_tax_year: r.tax_year,
-                index_taxpayer_name: r.taxpayer_name,
-                index_return_type: r.return_type,
-                index_filed_on: r.filed_on ?? null,
+                ...sourceBaseFromIndex(r, effectiveShard),
+                xml_status: "available",
             },
         });
 
@@ -2402,6 +2745,7 @@ async function processYear(params: {
         upsertCount += res.upserted;
         // Best-effort: populate irs.return_financials while XML is on disk.
         for (const r2 of upsertBatch) {
+            if (!r2.xml.path) continue;
             const returnUuid = await resolveReturnUuidByObjectId(
                 supabaseAdmin!,
                 r2.object_id,
@@ -2420,8 +2764,12 @@ async function processYear(params: {
     outStream.end();
     if (upsert) process.stdout.write("\n");
 
+    const xmlMissingTotal = xmlMissingDirectCount + xmlMissingShardCount;
     console.log(
         `Done. parsed=${parsedCount.toLocaleString()} jsonl=${outJsonl}`,
+    );
+    console.log(
+        `Year ${year} summary: returns_kept=${returnsKeptCount.toLocaleString()} xml_found=${xmlFoundCount.toLocaleString()} xml_missing_direct=${xmlMissingDirectCount.toLocaleString()} xml_missing_shard=${xmlMissingShardCount.toLocaleString()} xml_missing_total=${xmlMissingTotal.toLocaleString()} zip_corrupt_detected=${zipCorruptDetected.toLocaleString()} zip_redownloaded=${zipRedownloaded.toLocaleString()} zip_recovered=${zipRecovered.toLocaleString()} zip_failed_final=${zipFailedFinal.toLocaleString()}`,
     );
     if (upsert) {
         console.log(

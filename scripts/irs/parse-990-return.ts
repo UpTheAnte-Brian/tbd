@@ -765,6 +765,98 @@ function inferRestrictionsFromNarratives(
     return deduped;
 }
 
+function findPersonLikeObjects(
+    doc: any,
+    max: number = 200,
+): Array<{ obj: any; path: string }> {
+    const results: Array<{ obj: any; path: string }> = [];
+
+    const nameKeys = new Set([
+        "PersonNm",
+        "PersonName",
+        "PersonNameTxt",
+        "NamePerson",
+        "NamePersonTxt",
+        "OfficerNm",
+        "OfficerName",
+        "OfficerNameTxt",
+    ]);
+
+    const titleKeys = new Set([
+        "TitleTxt",
+        "Title",
+        "TitleDesc",
+        "TitleDescTxt",
+        "TitleOrPositionTxt",
+        "PositionTitleTxt",
+    ]);
+
+    const signalKeys = new Set([
+        // hours
+        "AverageHoursPerWeekRt",
+        "AverageHoursPerWeek",
+        "AvgHrsPerWkDevotedToPosRt",
+        "AverageHrsPerWkDevotedToPosRt",
+        "AverageHoursPerWeekDevotedToPosRt",
+        // comp
+        "ReportableCompFromOrgAmt",
+        "ReportableCompFromOrg",
+        "ReportableCompensationAmt",
+        "CompensationAmt",
+        "RptblCompFromOrgAmt",
+        "RptblCompFromOrg",
+        "OtherCompensationAmt",
+        "OtherCompensation",
+        "EstimatedAmountOfOtherCompensationAmt",
+        "EstAmtOtherCompensationAmt",
+    ]);
+
+    const isPlainObject = (v: any) =>
+        v != null && typeof v === "object" && !Array.isArray(v);
+
+    const hasAnyKey = (obj: any, keys: Set<string>) => {
+        if (!isPlainObject(obj)) return false;
+        for (const k of keys) {
+            if (obj[k] != null) return true;
+        }
+        return false;
+    };
+
+    const hasName = (obj: any) => hasAnyKey(obj, nameKeys);
+    const hasTitle = (obj: any) => hasAnyKey(obj, titleKeys);
+    const hasSignal = (obj: any) => hasAnyKey(obj, signalKeys);
+
+    const walk = (node: any, p: string) => {
+        if (results.length >= max) return;
+        if (Array.isArray(node)) {
+            for (let i = 0; i < node.length; i++) {
+                walk(node[i], `${p}[${i}]`);
+                if (results.length >= max) return;
+            }
+            return;
+        }
+        if (!isPlainObject(node)) return;
+
+        // Capture objects that look like a person row.
+        // Require a name plus either a title or another strong signal (hours/comp).
+        if (hasName(node) && (hasTitle(node) || hasSignal(node))) {
+            results.push({ obj: node, path: p });
+            if (results.length >= max) return;
+        }
+
+        for (const [k, v] of Object.entries(node)) {
+            walk(v as any, p ? `${p}.${k}` : k);
+            if (results.length >= max) return;
+        }
+    };
+
+    // Start walking near the likely area if present; otherwise walk entire doc.
+    const start = getByPath(doc, "Return.ReturnData") ?? doc;
+    walk(start, "Return.ReturnData");
+
+    return results;
+}
+
 function parsePartVIIAPeopleFromLoaded(loaded: LoadedXml): ParsedPerson[] {
     const { xml, doc, usedParser } = loaded;
 
@@ -779,24 +871,58 @@ function parsePartVIIAPeopleFromLoaded(loaded: LoadedXml): ParsedPerson[] {
 
             // Form 990-EZ – Part IV (Officers/Directors/Trustees/Key Employees)
             // Different schema vintages use slightly different group tag names.
+            "Return.ReturnData.IRS990EZ.OfficerDirectorTrusteeEmplGrp",
+            "Return.ReturnData.IRS990EZ.OffcrDrTrstEmplGrp",
             "Return.ReturnData.IRS990EZ.OfficerDirectorTrusteeKeyEmplGrp",
             "Return.ReturnData.IRS990EZ.OffcrDrTrstKyEmplGrp",
             "Return.ReturnData.IRS990EZ.OfficerDirectorTrusteeGrp",
             "Return.ReturnData.IRS990EZ.OffcrDrTrstGrp",
             "Return.ReturnData.IRS990EZ.Form990EZPartIVGrp",
 
+            // Very common TEOS schema: officer groups are nested under IRS990EZPartIVGrp
+            "Return.ReturnData.IRS990EZ.IRS990EZPartIVGrp.OfficerDirectorTrusteeKeyEmplGrp",
+            "Return.ReturnData.IRS990EZ.IRS990EZPartIVGrp.OffcrDrTrstKyEmplGrp",
+            "Return.ReturnData.IRS990EZ.IRS990EZPartIVGrp.OfficerDirectorTrusteeGrp",
+            "Return.ReturnData.IRS990EZ.IRS990EZPartIVGrp.OffcrDrTrstGrp",
+
             // Some XMLs tuck the EZ groups under IRS990EZ rather than a named part group
             "Return.ReturnData.IRS990EZ.OfficerDirectorTrusteeKeyEmployeeGrp",
             "Return.ReturnData.IRS990EZ.OfficerDirectorTrusteeKeyEmplGroup",
         ];
 
+        const debug = Boolean(process.env.IRS_PARSE_DEBUG);
+
         let groups: any[] = [];
+        let pickedPath: string | null = null;
+
         for (const p of groupPaths) {
             const arr = getArrayByPath(doc, p);
+            if (debug) {
+                console.log(`[people-debug] path=${p} count=${arr.length}`);
+            }
             if (arr.length) {
                 groups = arr;
+                pickedPath = p;
                 break;
             }
+        }
+
+        // Fallback: TEOS/XML schema sometimes nests the Part IV table in unexpected places.
+        // If our explicit group paths miss, do a bounded recursive search for person-like objects.
+        if (!groups.length) {
+            const found = findPersonLikeObjects(doc, 500);
+            if (debug) {
+                console.log(
+                    `[people-debug] fallback findPersonLikeObjects found=${found.length}`,
+                );
+                console.log(
+                    `[people-debug] sample paths: ` +
+                        found.slice(0, 10).map((x) => x.path).join(" | "),
+                );
+            }
+            groups = found.map((x) => x.obj);
+            // keep a synthetic picked path for source_map
+            pickedPath = found.length ? "<recursive-search>" : null;
         }
 
         // Helper: best-effort pick of a text field from multiple candidate keys.
@@ -909,9 +1035,7 @@ function parsePartVIIAPeopleFromLoaded(loaded: LoadedXml): ParsedPerson[] {
                 is_current: isCurrent,
                 source_map: {
                     parser: "fast-xml-parser",
-                    picked_group: groupPaths.find((p) =>
-                        getArrayByPath(doc, p).length
-                    ) || null,
+                    picked_group: pickedPath,
                 },
             });
         }
@@ -1761,6 +1885,7 @@ async function resolveReturnRowByReturnIdOrObjectId(params: {
 }): Promise<{ id: string; xml_path: string }> {
     const { supabaseAdmin, returnIdOrObjectId } = params;
 
+    console.log("returnIdOrObjectId: ", returnIdOrObjectId);
     const q = supabaseAdmin
         .schema("irs")
         .from("returns")
@@ -1776,7 +1901,7 @@ async function resolveReturnRowByReturnIdOrObjectId(params: {
             `Failed to load irs.returns for returnId=${returnIdOrObjectId}: ${error.message}`,
         );
     }
-
+    console.log("data: ", JSON.stringify(data));
     if (!data?.id || !data.xml_path) {
         throw new Error(
             `Return not found or xml_path missing for returnId=${returnIdOrObjectId}. (If you passed a TEOS object id, it must exist in irs.returns.irs_object_id.)`,
@@ -1964,6 +2089,12 @@ async function processDistrict(params: {
     let skippedMissingXml = 0;
     let parseErrors = 0;
 
+    // People parsing visibility
+    let totalPeopleParsed = 0;
+    let returnsWithPeople = 0;
+    const peopleByReturnType: Record<string, number> = {};
+    const returnsWithPeopleByReturnType: Record<string, number> = {};
+
     // NOTE: PostgREST has a URL length limit, so we chunk the EIN list.
     const chunkSize = 200;
     for (let i = 0; i < eins.length; i += chunkSize) {
@@ -1974,7 +2105,7 @@ async function processDistrict(params: {
             const q = supabaseAdmin
                 .schema("irs")
                 .from("returns")
-                .select("id, ein, xml_path")
+                .select("id, ein, xml_path, return_type")
                 .in("ein", chunk)
                 .not("xml_path", "is", null)
                 .range(pageFrom, pageFrom + returnsPageSize - 1);
@@ -1990,6 +2121,7 @@ async function processDistrict(params: {
                 id: string;
                 ein: string | null;
                 xml_path: string | null;
+                return_type: string | null;
             }>;
             if (!rows.length) break;
 
@@ -2035,6 +2167,16 @@ async function processDistrict(params: {
                         loaded,
                     );
                     const people = parsePartVIIAPeopleFromLoaded(loaded);
+                    const rt = (r.return_type || "unknown").toString();
+                    const pplCount = Array.isArray(people) ? people.length : 0;
+                    totalPeopleParsed += pplCount;
+                    peopleByReturnType[rt] = (peopleByReturnType[rt] || 0) +
+                        pplCount;
+                    if (pplCount > 0) {
+                        returnsWithPeople++;
+                        returnsWithPeopleByReturnType[rt] =
+                            (returnsWithPeopleByReturnType[rt] || 0) + 1;
+                    }
                     const restrictions = parseRestrictionsFromLoaded(loaded);
                     // Restrictions inference layer (narrative + signal tags)
                     const inferredRestrictions =
@@ -2085,7 +2227,7 @@ async function processDistrict(params: {
 
                 if (processed % 50 === 0) {
                     console.log(
-                        `Progress: processed=${processed.toLocaleString()} upserted=${upserted.toLocaleString()} missing_xml=${skippedMissingXml.toLocaleString()} errors=${parseErrors.toLocaleString()}`,
+                        `Progress: processed=${processed.toLocaleString()} upserted=${upserted.toLocaleString()} missing_xml=${skippedMissingXml.toLocaleString()} errors=${parseErrors.toLocaleString()} people_total=${totalPeopleParsed.toLocaleString()} returns_with_people=${returnsWithPeople.toLocaleString()}`,
                     );
                 }
             }
@@ -2102,10 +2244,22 @@ async function processDistrict(params: {
     console.log(
         `Done. processed=${processed.toLocaleString()} upserted=${
             dryRun ? 0 : upserted.toLocaleString()
-        } missing_xml=${skippedMissingXml.toLocaleString()} errors=${parseErrors.toLocaleString()}${
+        } missing_xml=${skippedMissingXml.toLocaleString()} errors=${parseErrors.toLocaleString()} people_total=${totalPeopleParsed.toLocaleString()} returns_with_people=${returnsWithPeople.toLocaleString()}${
             dryRun ? " (dryRun)" : ""
         }`,
     );
+
+    const debugSummary = Boolean(process.env.IRS_PARSE_DEBUG);
+    if (debugSummary) {
+        console.log(
+            "[people-debug] peopleByReturnType:",
+            JSON.stringify(peopleByReturnType),
+        );
+        console.log(
+            "[people-debug] returnsWithPeopleByReturnType:",
+            JSON.stringify(returnsWithPeopleByReturnType),
+        );
+    }
 }
 
 async function main() {
@@ -2150,9 +2304,25 @@ async function main() {
     const xml = await fsp.readFile(xml_path, "utf8");
     const loaded = loadXmlDoc(xml);
 
-    const parsed = parseReturnFinancialsFromLoaded(loaded);
+    const parsed = await parseReturnFinancialsFromXmlPath(xml_path);
     const narratives = parseMissionAndProgramsFromLoaded(loaded);
     const people = parsePartVIIAPeopleFromLoaded(loaded);
+    console.log("DEBUG people count:", people.length);
+    if (people.length) console.log("DEBUG sample:", people.slice(0, 3));
+    if (people.length === 0) {
+        // Helpful diagnostics to understand why Part IV/VII-A isn't being found.
+        const debug = Boolean(process.env.IRS_PARSE_DEBUG);
+        if (debug && loaded.doc) {
+            const found = findPersonLikeObjects(loaded.doc, 50);
+            console.log(
+                `[people-debug] recursive candidates found=${found.length}`,
+            );
+            console.log(
+                `[people-debug] candidate paths: ` +
+                    found.slice(0, 20).map((x) => x.path).join(" | "),
+            );
+        }
+    }
     const restrictions = parseRestrictionsFromLoaded(loaded);
     const inferredRestrictions = inferRestrictionsFromNarratives(
         loaded,

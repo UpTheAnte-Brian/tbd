@@ -1,0 +1,398 @@
+{
+  "schema_version": "0.1",
+  "last_reviewed_date": "2026-02-13",
+  "jurisdiction": "US-federal",
+  "default_state_overlay": "unspecified",
+  "entities": [
+    {
+      "entity_type": "501c3_public_charity",
+      "irs_code_section": ["501(c)(3)", "509(a)"],
+      "deductible_contributions": true,
+      "annual_filing": {
+        "forms": ["990-N", "990-EZ", "990"],
+        "thresholds": {
+          "990N_gross_receipts_normally_leq": 50000,
+          "990EZ_gross_receipts_lt": 200000,
+          "990EZ_total_assets_lt": 500000,
+          "990_required_if_gross_receipts_ge_or_assets_ge": {
+            "gross_receipts_ge": 200000,
+            "total_assets_ge": 500000
+          },
+          "due_date_rule": "15th day of 5th month after tax year end",
+          "extension_form": "8868",
+          "extension_available_for": ["990", "990-EZ"],
+          "extension_not_available_for": ["990-N"]
+        }
+      },
+      "ubi": {
+        "threshold": {
+          "metric": "total gross income from all unrelated trades or businesses",
+          "amount_usd": 1000
+        },
+        "form": "990-T",
+        "due_date_rule": "15th day of 5th month after tax year end (most organizations)"
+      },
+      "payroll_requirements": [
+        "941 (or 944 if eligible) to report income tax withholding and FICA",
+        "W-2 issuance to employees",
+        "940 only if not exempt from unemployment taxes (FUTA); state unemployment rules vary"
+      ],
+      "public_disclosure": [
+        "Provide exemption application (e.g., 1023/1023-EZ) and IRS determination letter for public inspection/copying",
+        "Provide annual return(s) for public inspection/copying for 3-year period (990/990-EZ; and 990-T where applicable)",
+        "Do not disclose contributor name/address except as required by law (private foundation exception applies)"
+      ],
+      "audit_requirements": {
+        "single_audit_threshold": {
+          "metric": "federal awards expended in fiscal year",
+          "amount_usd_current_ecfr": 1000000,
+          "prior_amount_usd": 750000,
+          "notes": "Threshold increased by OMB 2024 Uniform Guidance final rule; verify applicability by fiscal period/award."
+        },
+        "state_thresholds": "unspecified"
+      },
+      "governance_requirements": [
+        "Form 990 Part VI asks about conflict of interest policy and practices",
+        "Form 990 Part VI asks about whistleblower policy",
+        "Form 990 Part VI asks about document retention and destruction policy",
+        "Form 990 Part VI asks about process for review of Form 990"
+      ],
+      "revocation_risks": [
+        "Automatic revocation after 3 consecutive years of failing to file required 990-series return or 990-N",
+        "Prohibited political campaign intervention for 501(c)(3) organizations",
+        "Late filing penalties for 990-series returns"
+      ],
+      "state_overlays": {
+        "MN": {
+          "secretary_of_state_annual_renewal": {
+            "required": true,
+            "deadline": "December 31 (annual renewal)",
+            "consequence": "administrative dissolution if not filed by deadline (per statute referenced on form)"
+          },
+          "charitable_solicitation_registration": {
+            "registration_triggers": {
+              "total_contributions_gt": 25000,
+              "not_wholly_volunteer_operations": true,
+              "uses_professional_fundraiser": true
+            },
+            "exemptions": "See MN statute 309.515 (specified categories).",
+            "annual_report_due": "July 15 for calendar-year; otherwise 15th day of 7th month after fiscal year end",
+            "annual_report_fee_usd": 25,
+            "late_fee_usd": 50,
+            "audit_required_if_total_revenue_exceeds_usd": 750000
+          }
+        },
+        "other_states": "unspecified"
+      },
+      "references": [
+        "https://www.irs.gov/charities-non-profits/exempt-organization-types",
+        "https://www.irs.gov/charities-non-profits/form-990-series-which-forms-do-exempt-organizations-file-filing-phase-in",
+        "https://www.irs.gov/charities-non-profits/return-due-dates-for-exempt-organizations-annual-return",
+        "https://www.irs.gov/charities-non-profits/public-disclosure-and-availability-of-exempt-organizations-returns-and-applications-documents-subject-to-public-disclosure",
+        "https://www.irs.gov/pub/irs-pdf/i8868.pdf",
+        "https://www.ecfr.gov/current/title-2/subtitle-A/chapter-II/part-200/subpart-F/section-200.501",
+        "https://www.revisor.mn.gov/statutes/cite/309.53",
+        "https://www.revisor.mn.gov/statutes/cite/309.515",
+        "https://www.sos.mn.gov/media/1534/nonprofitrenewal.pdf"
+      ]
+    },
+    {
+      "entity_type": "501c3_private_foundation",
+      "irs_code_section": ["501(c)(3)", "509(a) (default classification)", "chapter 42 (4940/4941/4942/4945)"],
+      "deductible_contributions": true,
+      "annual_filing": {
+        "forms": ["990-PF"],
+        "thresholds": {
+          "always_file_990PF": true,
+          "due_date_rule": "15th day of 5th month after tax year end",
+          "extension_form": "8868"
+        }
+      },
+      "ubi": {
+        "threshold": {
+          "metric": "total gross income from all unrelated trades or businesses",
+          "amount_usd": 1000,
+          "notes": "UBI rule applies when foundation has unrelated business income tax exposure."
+        },
+        "form": "990-T",
+        "due_date_rule": "15th day of 5th month after tax year end (most foundations)"
+      },
+      "payroll_requirements": [
+        "941 (or 944 if eligible) if employees",
+        "W-2 issuance to employees",
+        "940 only if not exempt from FUTA; state unemployment rules vary"
+      ],
+      "public_disclosure": [
+        "Provide exemption application (e.g., 1023) and determination letter for public inspection/copying",
+        "Provide 990-PF for public inspection/copying for 3-year period; contributor disclosure differs from most other exempt orgs"
+      ],
+      "audit_requirements": {
+        "single_audit_threshold": {
+          "metric": "federal awards expended in fiscal year",
+          "amount_usd_current_ecfr": 1000000,
+          "prior_amount_usd": 750000
+        },
+        "state_thresholds": "unspecified"
+      },
+      "governance_requirements": [
+        "Document governance and conflict management consistent with Form 990-PF and best practice (federal law does not generally mandate specific policies; requirements vary)"
+      ],
+      "revocation_risks": [
+        "Automatic revocation after 3 consecutive years failing to file 990-PF",
+        "Excise taxes for failure to distribute income (4942)",
+        "Excise taxes for self-dealing (4941)",
+        "Excise taxes for taxable expenditures (4945)",
+        "Net investment income excise tax (4940)"
+      ],
+      "state_overlays": {
+        "MN": {
+          "charitable_solicitation_exemption_note": "MN statute 309.515 includes certain private foundation exemptions tied to solicitation facts; verify applicability.",
+          "audit_required_if_total_revenue_exceeds_usd": 750000
+        },
+        "other_states": "unspecified"
+      },
+      "references": [
+        "https://www.irs.gov/charities-non-profits/exempt-organization-types",
+        "https://www.irs.gov/pub/irs-pdf/i990pf.pdf",
+        "https://www.irs.gov/charities-non-profits/irc-section-4940d-exemption-for-certain-operating-foundations",
+        "https://www.irs.gov/charities-non-profits/private-foundations/taxes-on-failure-to-distribute-income-private-foundations",
+        "https://www.irs.gov/charities-non-profits/private-foundations/taxes-on-self-dealing-private-foundations",
+        "https://www.irs.gov/charities-non-profits/private-foundations/taxes-on-taxable-expenditures-private-foundations"
+      ]
+    },
+    {
+      "entity_type": "501c4_social_welfare",
+      "irs_code_section": ["501(c)(4)", "506", "26 CFR 1.506-1"],
+      "deductible_contributions": false,
+      "annual_filing": {
+        "forms": ["8976 (notice)", "990-N/990-EZ/990", "990-T (if applicable)"],
+        "thresholds": {
+          "8976_due_within_days_of_establishment": 60,
+          "8976_penalty_per_day_usd": 20,
+          "8976_penalty_max_usd": 5000,
+          "990_series_thresholds": {
+            "990N_gross_receipts_normally_leq": 50000,
+            "990EZ_gross_receipts_lt": 200000,
+            "990EZ_total_assets_lt": 500000
+          },
+          "due_date_rule_990_series": "15th day of 5th month after tax year end",
+          "extension_form": "8868",
+          "extension_not_available_for": ["990-N"]
+        }
+      },
+      "ubi": {
+        "threshold": {
+          "metric": "total gross income from all unrelated trades or businesses",
+          "amount_usd": 1000
+        },
+        "form": "990-T"
+      },
+      "payroll_requirements": [
+        "941 (or 944 if eligible) if employees",
+        "W-2 issuance to employees",
+        "940 only if not exempt from FUTA; state unemployment rules vary"
+      ],
+      "public_disclosure": [
+        "Provide annual return(s) and exemption application (if filed) for public inspection/copying",
+        "Form 8976 is not required to be disclosed (per IRS public disclosure rules)"
+      ],
+      "audit_requirements": {
+        "single_audit_threshold": {
+          "metric": "federal awards expended in fiscal year",
+          "amount_usd_current_ecfr": 1000000,
+          "prior_amount_usd": 750000
+        },
+        "state_thresholds": "unspecified"
+      },
+      "governance_requirements": [
+        "Form 990 Part VI governance-policy questions (conflict of interest, whistleblower, document retention) if filing 990/990-EZ"
+      ],
+      "revocation_risks": [
+        "Automatic revocation after 3 consecutive years failing to file required annual return/notice",
+        "Late 8976 penalties if notice not timely"
+      ],
+      "state_overlays": {
+        "MN": {
+          "charitable_solicitation_registration_triggers": {
+            "total_contributions_gt": 25000,
+            "not_wholly_volunteer_operations": true,
+            "uses_professional_fundraiser": true
+          }
+        },
+        "other_states": "unspecified"
+      },
+      "references": [
+        "https://www.irs.gov/charities-non-profits/electronically-submit-your-form-8976-notice-of-intent-to-operate-under-section-501c4",
+        "https://www.irs.gov/instructions/i1024a",
+        "https://www.ecfr.gov/current/title-26/chapter-I/subchapter-A/part-1/section-1.506-1"
+      ]
+    },
+    {
+      "entity_type": "501c6_business_league",
+      "irs_code_section": ["501(c)(6)"],
+      "deductible_contributions": false,
+      "annual_filing": {
+        "forms": ["990-N/990-EZ/990", "990-T (if applicable)"],
+        "thresholds": {
+          "990N_gross_receipts_normally_leq": 50000,
+          "990EZ_gross_receipts_lt": 200000,
+          "990EZ_total_assets_lt": 500000,
+          "due_date_rule": "15th day of 5th month after tax year end",
+          "extension_form": "8868"
+        }
+      },
+      "ubi": {
+        "threshold": {
+          "metric": "total gross income from all unrelated trades or businesses",
+          "amount_usd": 1000
+        },
+        "form": "990-T",
+        "notes": "Form 990-T is also used to pay 6033(e) proxy tax when applicable."
+      },
+      "payroll_requirements": [
+        "941 (or 944 if eligible) if employees",
+        "W-2 issuance to employees",
+        "940 only if not exempt from FUTA; state unemployment rules vary"
+      ],
+      "public_disclosure": [
+        "Provide annual return(s) and exemption application (if filed) for public inspection/copying"
+      ],
+      "audit_requirements": {
+        "single_audit_threshold": {
+          "metric": "federal awards expended in fiscal year",
+          "amount_usd_current_ecfr": 1000000,
+          "prior_amount_usd": 750000
+        },
+        "state_thresholds": "unspecified"
+      },
+      "governance_requirements": [
+        "Form 990 Part VI governance-policy questions if filing 990/990-EZ"
+      ],
+      "revocation_risks": [
+        "Automatic revocation after 3 consecutive years failing to file required annual return/notice",
+        "6033(e) proxy tax exposure if nondeductible dues notices not handled"
+      ],
+      "state_overlays": {
+        "MN": {
+          "charitable_solicitation_registration": "If soliciting contributions in MN, apply MN AG triggers/exemptions; otherwise unspecified."
+        },
+        "other_states": "unspecified"
+      },
+      "references": [
+        "https://www.irs.gov/charities-non-profits/other-non-profits/business-leagues",
+        "https://www.irs.gov/charities-non-profits/organizations-subject-to-proxy-tax"
+      ]
+    },
+    {
+      "entity_type": "527_political_organization",
+      "irs_code_section": ["527"],
+      "deductible_contributions": false,
+      "annual_filing": {
+        "forms": ["8871", "8872", "1120-POL", "990/990-EZ (when required)"],
+        "thresholds": {
+          "8871_exception_if_annual_gross_receipts_expected_always_lt": 25000,
+          "8871_file_within_days_of_reaching_threshold": 30,
+          "990_required_if_annual_gross_receipts_ge": 25000,
+          "990_required_if_QSLPO_and_annual_gross_receipts_ge": 100000,
+          "1120POL_due_date_rule": "15th day of 4th month after tax year end",
+          "8872_due_date_rules": "election-driven pre/post election deadlines and/or monthly reporting (see IRS guidance)"
+        }
+      },
+      "ubi": {
+        "threshold": "unspecified",
+        "form": "unspecified",
+        "notes": "Political organizations are primarily governed by 8871/8872/1120-POL/990 regime rather than UBI framing."
+      },
+      "payroll_requirements": [
+        "941 (or 944 if eligible) if employees",
+        "W-2 issuance to employees",
+        "940 only if not exempt from FUTA; state unemployment rules vary"
+      ],
+      "public_disclosure": [
+        "Form 8871 subject to public inspection/copying",
+        "Form 8872 subject to public inspection/copying",
+        "Form 1120-POL not required to be publicly disclosed by the organization under IRS disclosure rules"
+      ],
+      "audit_requirements": {
+        "single_audit_threshold": {
+          "metric": "federal awards expended in fiscal year",
+          "amount_usd_current_ecfr": 1000000,
+          "prior_amount_usd": 750000
+        },
+        "state_thresholds": "unspecified"
+      },
+      "governance_requirements": [
+        "Maintain controls for contribution/expenditure reporting consistency across 8872 and any state election reporting (state rules unspecified)"
+      ],
+      "revocation_risks": [
+        "Loss of tax-exempt treatment under 527 regime if required notice/reporting not satisfied (see IRS instructions)",
+        "Late filing penalties and disclosure-related penalties"
+      ],
+      "state_overlays": {
+        "MN": {
+          "state_election_reporting": "unspecified (outside scope of MN charitable solicitation statutes; election law applies separately)"
+        },
+        "other_states": "unspecified"
+      },
+      "references": [
+        "https://www.irs.gov/charities-non-profits/political-organizations/life-cycle-of-a-section-527-political-organization-filing-requirements",
+        "https://www.irs.gov/charities-non-profits/political-organizations/political-organization-annual-reporting-requirements-political-organizations-required-to-file-form-990",
+        "https://www.irs.gov/charities-non-profits/political-organizations/form-8872-when-to-file",
+        "https://www.irs.gov/charities-non-profits/political-organizations/political-organization-filing-requirements-form-1120-pol-due-date"
+      ]
+    },
+    {
+      "entity_type": "governmental_entity_public_school",
+      "irs_code_section": ["170(c)(1) (donor deductibility)", "2 CFR 200 Subpart F (if federal awards)"],
+      "deductible_contributions": true,
+      "annual_filing": {
+        "forms": [],
+        "thresholds": {
+          "990_series_required": false,
+          "notes": "Governmental organizations are generally not required to file annual exempt organization information returns."
+        }
+      },
+      "ubi": {
+        "threshold": "unspecified",
+        "form": "990-T (elective payment election/direct pay context)",
+        "notes": "Governmental entities may file 990-T for elective payment elections; UBI framing is generally not primary."
+      },
+      "payroll_requirements": [
+        "Withhold and pay federal income tax, Social Security, and Medicare taxes as applicable",
+        "Issue W-2",
+        "No Form 940 required for state/local government employers (FUTA exemption)"
+      ],
+      "public_disclosure": [
+        "unspecified (not a 990-series filer by default)"
+      ],
+      "audit_requirements": {
+        "single_audit_threshold": {
+          "metric": "federal awards expended in fiscal year",
+          "amount_usd_current_ecfr": 1000000,
+          "prior_amount_usd": 750000
+        },
+        "state_thresholds": "unspecified"
+      },
+      "governance_requirements": [
+        "unspecified (varies by state/local law and governance regime)"
+      ],
+      "revocation_risks": [
+        "unspecified (not grounded in 501(c) revocation framework)"
+      ],
+      "state_overlays": {
+        "MN": {
+          "public_school_state_audit": "unspecified",
+          "secretary_of_state_nonprofit_renewal": "not applicable unless separately incorporated as a nonprofit corporation"
+        },
+        "other_states": "unspecified"
+      },
+      "references": [
+        "https://www.irs.gov/government-entities/federal-state-local-governments/governmental-information-letter",
+        "https://www.irs.gov/charities-non-profits/exempt-organizations-annual-reporting-requirements-overview-annual-return-filing-exceptions",
+        "https://www.irs.gov/instructions/i940",
+        "https://www.irs.gov/credits-deductions/elective-pay-and-transferability",
+        "https://www.irs.gov/instructions/i990t"
+      ]
+    }
+  ]
+}

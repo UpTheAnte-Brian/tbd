@@ -1,0 +1,66 @@
+IRS exempt organization types (user-provided topic hub):
+https://www.irs.gov/charities-non-profits/exempt-organization-types
+
+Form 990-series filing thresholds chart:
+https://www.irs.gov/charities-non-profits/form-990-series-which-forms-do-exempt-organizations-file-filing-phase-in
+
+IRS return due dates (990/990-EZ/990-PF and 990-N notes):
+https://www.irs.gov/charities-non-profits/return-due-dates-for-exempt-organizations-annual-return
+
+Form 8868 instructions (automatic 6-month extensions; no extension for 990-N):
+https://www.irs.gov/pub/irs-pdf/i8868.pdf
+
+IRS late filing penalties + automatic revocation:
+https://www.irs.gov/charities-non-profits/exempt-organizations-annual-reporting-requirements-filing-procedures-late-filing-of-annual-returns
+
+IRS public disclosure rules (what must be disclosed; 990-T; 8976 carveout; 527 carveouts):
+https://www.irs.gov/charities-non-profits/public-disclosure-and-availability-of-exempt-organizations-returns-and-applications-documents-subject-to-public-disclosure
+
+501(c)(3) political campaign intervention restriction:
+https://www.irs.gov/charities-non-profits/charitable-organizations/restriction-of-political-campaign-intervention-by-section-501c3-tax-exempt-organizations
+
+Intermediate sanctions (IRC 4958):
+https://www.irs.gov/charities-non-profits/charitable-organizations/intermediate-sanctions
+
+Form 8976 (501(c)(4) notice) hub:
+https://www.irs.gov/charities-non-profits/electronically-submit-your-form-8976-notice-of-intent-to-operate-under-section-501c4
+
+Form 1024-A instructions (501(c)(4) recognition and notice requirement context):
+https://www.irs.gov/instructions/i1024a
+
+501(c)(6) business leagues overview:
+https://www.irs.gov/charities-non-profits/other-non-profits/business-leagues
+
+6033(e) proxy tax and nondeductible dues notice topic:
+https://www.irs.gov/charities-non-profits/organizations-subject-to-proxy-tax
+
+Section 527 lifecycle and filing requirements:
+https://www.irs.gov/charities-non-profits/political-organizations/life-cycle-of-a-section-527-political-organization-filing-requirements
+
+1120-POL due date:
+https://www.irs.gov/charities-non-profits/political-organizations/political-organization-filing-requirements-form-1120-pol-due-date
+
+8872 timing:
+https://www.irs.gov/charities-non-profits/political-organizations/form-8872-when-to-file
+
+Private foundation excise tax and payout-related IRS pages:
+https://www.irs.gov/charities-non-profits/irc-section-4940d-exemption-for-certain-operating-foundations
+https://www.irs.gov/charities-non-profits/private-foundations/taxes-on-failure-to-distribute-income-private-foundations
+https://www.irs.gov/charities-non-profits/private-foundations/taxes-on-self-dealing-private-foundations
+https://www.irs.gov/charities-non-profits/private-foundations/taxes-on-taxable-expenditures-private-foundations
+
+Uniform Guidance Single Audit threshold (current eCFR text):
+https://www.ecfr.gov/current/title-2/subtitle-A/chapter-II/part-200/subpart-F/section-200.501
+
+OMB 2024 final rule (threshold increase background):
+https://www.federalregister.gov/documents/2024/04/22/2024-07496/guidance-for-federal-financial-assistance
+
+Minnesota: Secretary of State annual renewal (nonprofit corp) form:
+https://www.sos.mn.gov/media/1534/nonprofitrenewal.pdf
+
+Minnesota statutes (charitable solicitation/reporting + audit threshold + exemptions):
+https://www.revisor.mn.gov/statutes/cite/309.53
+https://www.revisor.mn.gov/statutes/cite/309.515
+
+Minnesota AG charities registration/reporting overview:
+https://www.ag.state.mn.us/charity/InfoCharitableorgandTrusts.asp
