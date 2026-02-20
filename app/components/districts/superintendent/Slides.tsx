@@ -115,9 +115,9 @@ const SLIDES: Slide[] = [
   {
     title: "Engagement Investment",
     bullets: [
-      "Landscape Assessment (Core Engagement): $9,500 – $14,500 (fixed fee)",
-      "Optional Phase 2: Modernization Strategy & Implementation Planning: $18,000 – $45,000 (scope dependent)",
-      "Value philosophy: deliver measurable governance clarity and financial visibility that materially exceeds the engagement investment",
+      "Landscape Assessment (Core Engagement): $4,500 – $8,000 (fixed fee)",
+      "Optional Phase 2: Modernization Strategy & Implementation Planning: TBD (scope dependent)",
+      "Value philosophy: deliver measurable governance clarity and financial visibility that exceeds the engagement investment",
     ],
   },
   {
@@ -264,7 +264,8 @@ export function SuperintendentSlides(props: {
           ref={cardFrameRef}
           className="rounded-xl border border-brand-secondary-1 bg-brand-secondary-1 p-6 shadow-sm text-brand-primary-1 md:p-8"
           style={{
-            minHeight: uniformCardHeight > 0 ? `${uniformCardHeight}px` : "320px",
+            minHeight:
+              uniformCardHeight > 0 ? `${uniformCardHeight}px` : "320px",
           }}
         >
           <div className="h-1 w-14 rounded-full bg-brand-primary-0" />
