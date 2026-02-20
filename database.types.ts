@@ -1028,11 +1028,17 @@ export type Database = {
           created_at: string
           deductibility_code: string | null
           ein: string
+          eobmf_last_seen_at: string | null
+          epostcard_last_seen_at: string | null
           foundation_code: string | null
+          is_pub78: boolean
+          is_revoked: boolean
           last_seen_at: string
           latest_return_id: string | null
           legal_name: string
           normalized_legal_name: string | null
+          pub78_last_seen_at: string | null
+          revocation_last_seen_at: string | null
           ruling_year: number | null
           state: string | null
           subsection_code: string | null
@@ -1046,11 +1052,17 @@ export type Database = {
           created_at?: string
           deductibility_code?: string | null
           ein: string
+          eobmf_last_seen_at?: string | null
+          epostcard_last_seen_at?: string | null
           foundation_code?: string | null
+          is_pub78?: boolean
+          is_revoked?: boolean
           last_seen_at?: string
           latest_return_id?: string | null
           legal_name: string
           normalized_legal_name?: string | null
+          pub78_last_seen_at?: string | null
+          revocation_last_seen_at?: string | null
           ruling_year?: number | null
           state?: string | null
           subsection_code?: string | null
@@ -1064,11 +1076,17 @@ export type Database = {
           created_at?: string
           deductibility_code?: string | null
           ein?: string
+          eobmf_last_seen_at?: string | null
+          epostcard_last_seen_at?: string | null
           foundation_code?: string | null
+          is_pub78?: boolean
+          is_revoked?: boolean
           last_seen_at?: string
           latest_return_id?: string | null
           legal_name?: string
           normalized_legal_name?: string | null
+          pub78_last_seen_at?: string | null
+          revocation_last_seen_at?: string | null
           ruling_year?: number | null
           state?: string | null
           subsection_code?: string | null
@@ -1583,6 +1601,27 @@ export type Database = {
       format_ein: { Args: { ein_digits: string }; Returns: string }
       normalize_ein: { Args: { p_ein: string }; Returns: string }
       refresh_latest_return_id: { Args: { p_ein: string }; Returns: undefined }
+      search_organizations_trgm: {
+        Args: {
+          p_city_prefix?: string
+          p_limit?: number
+          p_offset?: number
+          p_only_pub78?: boolean
+          p_only_revoked?: boolean
+          p_query: string
+          p_state?: string
+        }
+        Returns: {
+          city: string
+          country: string
+          ein: string
+          is_pub78: boolean
+          is_revoked: boolean
+          legal_name: string
+          score: number
+          state: string
+        }[]
+      }
     }
     Enums: {
       irs_doc_type: "pdf" | "xml" | "other"
@@ -2941,6 +2980,8 @@ export type Database = {
           id: string
           label: string | null
           org_type: Database["public"]["Enums"]["org_type"]
+          source_ref: string | null
+          source_system: string | null
           status: string
           tier: string
           updated_at: string
@@ -2953,6 +2994,8 @@ export type Database = {
           id?: string
           label?: string | null
           org_type?: Database["public"]["Enums"]["org_type"]
+          source_ref?: string | null
+          source_system?: string | null
           status?: string
           tier?: string
           updated_at?: string
@@ -2965,6 +3008,8 @@ export type Database = {
           id?: string
           label?: string | null
           org_type?: Database["public"]["Enums"]["org_type"]
+          source_ref?: string | null
+          source_system?: string | null
           status?: string
           tier?: string
           updated_at?: string

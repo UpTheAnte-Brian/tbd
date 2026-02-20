@@ -1,0 +1,34 @@
+[
+  {
+    "relname": "returns",
+    "total_size": "144 kB"
+  },
+  {
+    "relname": "organizations",
+    "total_size": "120 kB"
+  },
+  {
+    "relname": "return_people",
+    "total_size": "48 kB"
+  },
+  {
+    "relname": "return_restrictions",
+    "total_size": "32 kB"
+  },
+  {
+    "relname": "entity_links",
+    "total_size": "32 kB"
+  },
+  {
+    "relname": "return_documents",
+    "total_size": "32 kB"
+  },
+  {
+    "relname": "return_narratives",
+    "total_size": "32 kB"
+  },
+  {
+    "relname": "return_financials",
+    "total_size": "24 kB"
+  }
+]

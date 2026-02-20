@@ -12,6 +12,12 @@
 */
 
 import { formatEinDashed, normalizeEinInput } from "./lib/ein";
+import {
+    atomicWriteFile,
+    getXmlCachePath,
+    isValidCachedFile,
+    makeCacheKey,
+} from "./lib/cache";
 import { parseReturnFinancialsFromXmlPath } from "./parse-990-financials";
 
 function getPersistentTeosRoot(): string {
@@ -32,12 +38,6 @@ function getTeosShardZipPath(year: number, shard: string): string {
     return path.join(dir, `${shard}.zip`);
 }
 
-function getTeosTmpRoot(): string {
-    const dir = path.join(getPersistentTeosRoot(), "tmp");
-    ensureDir(dir);
-    return dir;
-}
-
 async function listLocalCacheYears(): Promise<number[]> {
     const root = path.join(getPersistentTeosRoot(), "xml");
     let entries: fs.Dirent[];
@@ -54,21 +54,6 @@ async function listLocalCacheYears(): Promise<number[]> {
         if (Number.isFinite(y)) years.push(y);
     }
     return years.sort((a, b) => a - b);
-}
-
-function persistentXmlOutPath(
-    params: { year: number; shard: string; member: string },
-): string {
-    const { year, shard, member } = params;
-    // Keep the same shard structure under a stable root.
-    // Example: <root>/xml/2025/2025_TEOS_XML_08A/<object>_public.xml
-    return path.join(
-        getPersistentTeosRoot(),
-        "xml",
-        String(year),
-        shard,
-        member,
-    );
 }
 
 type LocalXmlIndex = {
@@ -120,15 +105,6 @@ async function getLocalXmlIndex(
     if (!idx) return null;
     localXmlIndex = { year, byBasename: idx };
     return idx;
-}
-
-async function ensureFileExists(p: string): Promise<boolean> {
-    try {
-        await fsp.access(p, fs.constants.F_OK);
-        return true;
-    } catch {
-        return false;
-    }
 }
 
 async function upsertReturnFinancialsBestEffort(params: {
@@ -316,6 +292,7 @@ type ParsedReturn = {
 
 const DEFAULT_BATCH_SIZE = 250;
 let returnsSupportsSourceMap: boolean | null = null;
+let returnsSupports990T: boolean | null = null;
 
 function mustGetEnv(name: string): string {
     tryLoadDotenvOnce();
@@ -364,6 +341,12 @@ function normalizeReturnTypeForEnum(input: string | null | undefined):
     return null;
 }
 
+function isInvalid990TEnumError(message: string): boolean {
+    const msg = String(message || "").toLowerCase();
+    return msg.includes("invalid input value for enum") &&
+        msg.includes("990t");
+}
+
 function parseArgs(argv: string[]) {
     const args: Record<string, string | boolean> = {};
     for (let i = 2; i < argv.length; i++) {
@@ -385,6 +368,19 @@ function parseCommaList(input: string | null | undefined): string[] {
     if (!input) return [];
     return String(input)
         .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+}
+
+function readEinInputsFromFile(filePath: string): string[] {
+    const resolved = path.resolve(filePath);
+    if (!fs.existsSync(resolved)) {
+        throw new Error(`EIN file not found: ${resolved}`);
+    }
+
+    const raw = fs.readFileSync(resolved, "utf8");
+    return raw
+        .split(/\r?\n|,/g)
         .map((s) => s.trim())
         .filter(Boolean);
 }
@@ -487,16 +483,6 @@ function compactErr(e: unknown, max = 240): string {
 
 function looksLikeContainerPath(p: string): boolean {
     return p.startsWith("/mnt/") || p.startsWith("/home/");
-}
-
-async function downloadToTemp(url: string): Promise<string> {
-    const tmpDir = await fsp.mkdtemp(path.join(getTeosTmpRoot(), "irs-xml-"));
-    const out = path.join(
-        tmpDir,
-        path.basename(new URL(url).pathname) || "download.xml",
-    );
-    await downloadFileWithRetry(url, out, DEFAULT_MAX_RETRIES);
-    return out;
 }
 
 const CONNECT_TIMEOUT_MS = 30_000;
@@ -772,7 +758,7 @@ async function downloadFileAtomic(url: string, outPath: string): Promise<void> {
     }`;
     try {
         await downloadFile(url, tmpPath);
-        await fsp.rename(tmpPath, outPath);
+        atomicWriteFile(tmpPath, outPath);
     } catch (e) {
         try {
             await fsp.rm(tmpPath, { force: true });
@@ -1492,6 +1478,106 @@ function deriveTaxYear(
     return null;
 }
 
+function resolveCacheDir(cacheDirArg: string | null | undefined): string {
+    return path.resolve(cacheDirArg || path.join(process.cwd(), "data", "irs-cache"));
+}
+
+function buildXmlCachePath(params: {
+    cacheDir: string;
+    objectId?: string | null;
+    url?: string | null;
+    ein?: string | null;
+}): string {
+    const key = makeCacheKey({
+        objectId: params.objectId,
+        url: params.url,
+        ein: params.ein,
+    });
+    return getXmlCachePath(key, params.cacheDir);
+}
+
+function parseTaxPeriodRank(
+    taxPeriod: string | null | undefined,
+    fallbackTaxYear: string | number | null | undefined,
+): number {
+    if (taxPeriod) {
+        const m = String(taxPeriod).trim().match(/^(\d{4})(\d{2})$/);
+        if (m) {
+            const y = Number(m[1]);
+            const mm = Number(m[2]);
+            if (
+                Number.isFinite(y) &&
+                Number.isFinite(mm) &&
+                mm >= 1 &&
+                mm <= 12
+            ) {
+                return (y * 100) + mm;
+            }
+        }
+    }
+
+    const y = deriveTaxYear(fallbackTaxYear, taxPeriod);
+    return y ? (y * 100) : 0;
+}
+
+function parseFiledOnRank(filedOn: string | null | undefined): number {
+    if (!filedOn) return 0;
+    const ts = Date.parse(String(filedOn).trim());
+    return Number.isFinite(ts) ? ts : 0;
+}
+
+function compareNumericLikeStrings(a: string, b: string): number {
+    const aNorm = String(a || "").replace(/\D/g, "");
+    const bNorm = String(b || "").replace(/\D/g, "");
+    if (aNorm.length !== bNorm.length) return aNorm.length - bNorm.length;
+    if (aNorm === bNorm) return 0;
+    return aNorm > bNorm ? 1 : -1;
+}
+
+function compareRowsByRecency(a: IndexRow, b: IndexRow): number {
+    const aYear = deriveTaxYear(a.tax_year, a.tax_period) ?? 0;
+    const bYear = deriveTaxYear(b.tax_year, b.tax_period) ?? 0;
+    if (aYear !== bYear) return aYear - bYear;
+
+    const aPeriod = parseTaxPeriodRank(a.tax_period, a.tax_year);
+    const bPeriod = parseTaxPeriodRank(b.tax_period, b.tax_year);
+    if (aPeriod !== bPeriod) return aPeriod - bPeriod;
+
+    const aFiled = parseFiledOnRank(a.filed_on);
+    const bFiled = parseFiledOnRank(b.filed_on);
+    if (aFiled !== bFiled) return aFiled - bFiled;
+
+    return compareNumericLikeStrings(a.object_id, b.object_id);
+}
+
+function selectLatestRowsPerEin(params: {
+    rows: IndexRow[];
+    excludeEins?: Set<string> | null;
+}): IndexRow[] {
+    const { rows, excludeEins } = params;
+
+    const latestByEin = new Map<string, IndexRow>();
+    for (const row of rows) {
+        if (excludeEins?.has(row.ein)) continue;
+
+        const existing = latestByEin.get(row.ein);
+        if (!existing || compareRowsByRecency(row, existing) > 0) {
+            latestByEin.set(row.ein, row);
+        }
+    }
+
+    const selected = Array.from(latestByEin.values());
+    selected.sort((a, b) => {
+        const einCmp = a.ein.localeCompare(b.ein);
+        if (einCmp !== 0) return einCmp;
+        const recencyCmp = compareRowsByRecency(b, a);
+        if (recencyCmp !== 0) return recencyCmp;
+        return a.object_id.localeCompare(b.object_id);
+    });
+
+    return selected;
+}
+
 async function parseXmlToReturn(
     xmlPath: string,
     fallback: Partial<ParsedReturn>,
@@ -1783,7 +1869,7 @@ async function upsertReturns(supabaseAdmin: any, rows: ParsedReturn[]) {
     //   teos_tax_year, teos_taxpayer_name, teos_return_type, teos_shard,
     //   xml_sha256, xml_path
 
-    const payload = rows.map((r) => {
+    const payloadInputs = rows.map((r) => {
         const returnType = normalizeReturnTypeForEnum(r.return_type) ||
             normalizeReturnTypeForEnum(r.source.index_return_type ?? null);
         const normalizedTaxYear = r.tax_year ??
@@ -1801,82 +1887,107 @@ async function upsertReturns(supabaseAdmin: any, rows: ParsedReturn[]) {
         }
 
         return {
-            // Core identity
-            irs_object_id: r.object_id,
-            ein: r.ein,
-
-            // Filing basics
-            return_type: returnType,
-            tax_year: normalizedTaxYear,
-            tax_period_start: r.tax_period_begin_dt,
-            tax_period_end: r.tax_period_end_dt,
-            filed_on: r.filed_on ?? null,
-
-            // Optional / provenance
-            source_system: "teos",
-            source_priority: "xml",
-            return_name: r.organization_name,
-            ...(returnsSupportsSourceMap === false ? {} : { source_map: sourceMap }),
-
-            // TEOS/index metadata (only works if columns exist)
-            teos_index_year: r.source.year ?? null,
-            teos_tax_period_yyyymm: r.source.index_tax_period ?? null,
-            teos_return_id: r.source.index_return_id ?? null,
-            teos_filing_type: r.source.index_filing_type ?? null,
-            teos_tax_year: r.source.index_tax_year ?? null,
-            teos_taxpayer_name: r.source.index_taxpayer_name ?? null,
-            teos_return_type: r.source.index_return_type ?? null,
-            teos_shard: r.source.shard ?? null,
-
-            xml_sha256: r.xml.sha256,
-            xml_path: r.xml.path,
+            r,
+            returnType,
+            normalizedTaxYear,
+            sourceMap,
         };
-    }).filter((p) => p.tax_year != null);
+    }).filter((p) => p.normalizedTaxYear != null);
 
-    const skippedMissingTaxYear = rows.length - payload.length;
+    const skippedMissingTaxYear = rows.length - payloadInputs.length;
     if (skippedMissingTaxYear > 0) {
         console.warn(
             `WARN: skipping ${skippedMissingTaxYear.toLocaleString()} return upsert(s) with null tax_year after fallback.`,
         );
     }
 
-    if (!payload.length) return { upserted: 0 };
+    if (!payloadInputs.length) return { upserted: 0 };
 
-    let { error } = await supabaseAdmin
-        .schema("irs")
-        .from("returns")
-        .upsert(payload, { onConflict: "irs_object_id" });
+    const hasPotential990T = payloadInputs.some((p) => p.returnType === "990T");
+    let includeSourceMap = returnsSupportsSourceMap !== false;
+    let downgrade990T = returnsSupports990T === false;
 
-    if (error) {
-        const msg = String(error.message || "").toLowerCase();
-        const missingSourceMap = msg.includes("source_map") &&
-            msg.includes("could not find");
-        if (missingSourceMap && returnsSupportsSourceMap !== false) {
+    while (true) {
+        const payload = payloadInputs.map(({ r, returnType, normalizedTaxYear, sourceMap }) => {
+            const returnTypeForDb = !returnType
+                ? "unknown"
+                : downgrade990T && returnType === "990T"
+                ? "unknown"
+                : returnType;
+
+            return {
+                // Core identity
+                irs_object_id: r.object_id,
+                ein: r.ein,
+
+                // Filing basics
+                return_type: returnTypeForDb,
+                tax_year: normalizedTaxYear,
+                tax_period_start: r.tax_period_begin_dt,
+                tax_period_end: r.tax_period_end_dt,
+                filed_on: r.filed_on ?? null,
+
+                // Optional / provenance
+                source_system: "teos",
+                source_priority: "xml",
+                return_name: r.organization_name,
+                ...(includeSourceMap ? { source_map: sourceMap } : {}),
+
+                // TEOS/index metadata (only works if columns exist)
+                teos_index_year: r.source.year ?? null,
+                teos_tax_period_yyyymm: r.source.index_tax_period ?? null,
+                teos_return_id: r.source.index_return_id ?? null,
+                teos_filing_type: r.source.index_filing_type ?? null,
+                teos_tax_year: r.source.index_tax_year ?? null,
+                teos_taxpayer_name: r.source.index_taxpayer_name ?? null,
+                teos_return_type: r.source.index_return_type ?? null,
+                teos_shard: r.source.shard ?? null,
+
+                xml_sha256: r.xml.sha256,
+                xml_path: r.xml.path,
+            };
+        });
+
+        const { error } = await supabaseAdmin
+            .schema("irs")
+            .from("returns")
+            .upsert(payload, { onConflict: "irs_object_id" });
+
+        if (!error) {
+            if (returnsSupportsSourceMap == null && includeSourceMap) {
+                returnsSupportsSourceMap = true;
+            }
+            if (returnsSupports990T == null && hasPotential990T && !downgrade990T) {
+                returnsSupports990T = true;
+            }
+            return { upserted: payload.length };
+        }
+
+        const msg = String(error.message || "");
+        const msgLower = msg.toLowerCase();
+        const missingSourceMap = includeSourceMap &&
+            msgLower.includes("source_map") &&
+            msgLower.includes("could not find");
+        if (missingSourceMap) {
             returnsSupportsSourceMap = false;
+            includeSourceMap = false;
             console.warn(
                 "WARN: irs.returns.source_map column not found; retrying upsert without source_map payload.",
             );
-
-            const fallbackPayload = payload.map((p) => {
-                const { source_map: _omit, ...rest } = p as Record<string, any>;
-                return rest;
-            });
-
-            const retry = await supabaseAdmin
-                .schema("irs")
-                .from("returns")
-                .upsert(fallbackPayload, { onConflict: "irs_object_id" });
-            error = retry.error || null;
+            continue;
         }
-    } else if (returnsSupportsSourceMap == null) {
-        returnsSupportsSourceMap = true;
-    }
 
-    if (error) {
+        if (!downgrade990T && isInvalid990TEnumError(msg)) {
+            returnsSupports990T = false;
+            downgrade990T = true;
+            console.warn(
+                'WARN: irs.irs_return_type does not include "990T"; retrying with return_type="unknown" for 990-T filings.',
+            );
+            continue;
+        }
+
         throw new Error(`Upsert into irs.returns failed: ${error.message}`);
     }
-
-    return { upserted: rows.length };
 }
 
 async function processYear(params: {
@@ -1890,6 +2001,10 @@ async function processYear(params: {
     batchSize: number;
     maxObjects: number;
     scopedEinOverride?: Set<string> | null;
+    latestOnly?: boolean;
+    latestOnlyExcludeEins?: Set<string> | null;
+    cacheDir: string;
+    forceDownload?: boolean;
 }) {
     const {
         year,
@@ -1902,6 +2017,10 @@ async function processYear(params: {
         batchSize,
         maxObjects,
         scopedEinOverride,
+        latestOnly,
+        latestOnlyExcludeEins,
+        cacheDir,
+        forceDownload,
     } = params;
 
     if (!Number.isFinite(year)) {
@@ -1978,14 +2097,18 @@ async function processYear(params: {
     // 1) Download index CSV
     const indexUrl = indexUrlForYear(year);
     const indexPath = getTeosIndexPath(year);
+    const hasLocalIndex = isValidCachedFile(indexPath);
 
-    if (download) {
+    if (forceDownload || !hasLocalIndex) {
+        if (!download) {
+            throw new Error(
+                `Missing local index file ${indexPath}. Pass --download to fetch it.`,
+            );
+        }
         console.log(`Downloading index: ${indexUrl}`);
         await downloadFileWithRetry(indexUrl, indexPath, DEFAULT_MAX_RETRIES);
     } else {
-        throw new Error(
-            "For year processing, pass --download (index+shards are remote)",
-        );
+        console.log(`Using local index: ${indexPath}`);
     }
 
     // 2) Parse index CSV and filter
@@ -2172,6 +2295,9 @@ async function processYear(params: {
     console.log(
         `Index parsed. total_rows=${totalIndexRows.toLocaleString()} kept=${totalScopedKept.toLocaleString()} shards=${neededByShard.size.toLocaleString()} direct=${directRows.length.toLocaleString()}`,
     );
+    if (latestOnly) {
+        console.log("latestOnly mode: selecting one most-recent row per EIN.");
+    }
     summarizeKeptRows(keptRows);
 
     if (debug) {
@@ -2208,7 +2334,31 @@ async function processYear(params: {
 
     if (totalScopedKept === 0) {
         console.log("No matching index rows after filtering; nothing to do.");
-        return;
+        return { selectedEins: new Set<string>() };
+    }
+
+    const selectedRows = latestOnly
+        ? selectLatestRowsPerEin({
+            rows: keptRows,
+            excludeEins: latestOnlyExcludeEins,
+        })
+        : keptRows;
+    const selectedEins = new Set<string>(selectedRows.map((r) => r.ein));
+
+    if (latestOnly) {
+        const excludedByPriorYears = totalScopedKept - selectedRows.length;
+        console.log(
+            `latestOnly selected=${selectedRows.length.toLocaleString()} excluded_by_prior_or_older=${
+                excludedByPriorYears.toLocaleString()
+            }`,
+        );
+    }
+
+    if (!selectedRows.length) {
+        console.log(
+            "No rows selected for this year after latestOnly filtering; nothing to do.",
+        );
+        return { selectedEins };
     }
 
     // 3) For each shard, download zip once, extract matching XMLs, parse, write JSONL.
@@ -2536,9 +2686,14 @@ async function processYear(params: {
         return null;
     }
 
-    const keptRowsLimited = maxObjects > 0
-        ? keptRows.slice(0, maxObjects)
-        : keptRows;
+    if (latestOnly && maxObjects > 0) {
+        console.log("INFO: --latestOnly set; ignoring --maxObjects.");
+    }
+    const keptRowsLimited = latestOnly
+        ? selectedRows
+        : maxObjects > 0
+        ? selectedRows.slice(0, maxObjects)
+        : selectedRows;
     returnsKeptCount = keptRowsLimited.length;
 
     function inferShardFromXmlPath(p: string): string | null {
@@ -2549,31 +2704,35 @@ async function processYear(params: {
     }
 
     for (const r of keptRowsLimited) {
-        // `outShardForPath` is only used to build the initial default output location.
         // `effectiveShard` is the shard we actually used (can differ when we locate the XML inside a local ZIP).
-        const outShardForPath = r.shard || "DIRECT_XML";
         let effectiveShard: string | null = r.shard || null;
 
         const member = `${r.object_id}_public.xml`;
-        const xmlOut = persistentXmlOutPath({
-            year,
-            shard: outShardForPath,
-            member,
+        const xmlOut = buildXmlCachePath({
+            cacheDir,
+            objectId: r.object_id,
+            ein: r.ein,
         });
         let xmlPath = xmlOut;
-        let available = await ensureFileExists(xmlOut);
+        let available = !forceDownload && isValidCachedFile(xmlOut);
         let missingReason: string | null = null;
         let missingError: string | null = null;
         let triedUrls: string[] = [];
 
-        if (!available) {
+        if (!available && !forceDownload) {
             // First, honor any already-extracted local XML cache regardless of shard presence.
             const localIdxAny = await getLocalXmlIndex(year);
             const localPathAny = localIdxAny ? (localIdxAny.get(member) || null) : null;
             if (localPathAny) {
-                xmlPath = localPathAny;
+                try {
+                    fs.mkdirSync(path.dirname(xmlOut), { recursive: true });
+                    fs.copyFileSync(localPathAny, xmlOut);
+                    xmlPath = xmlOut;
+                } catch {
+                    xmlPath = localPathAny;
+                }
                 effectiveShard = inferShardFromXmlPath(localPathAny) || effectiveShard;
-                available = true;
+                available = isValidCachedFile(xmlPath);
                 console.warn(
                     `WARN: using local cache XML for object_id=${r.object_id}: ${localPathAny}`,
                 );
@@ -2637,12 +2796,22 @@ async function processYear(params: {
                 }
             } else {
                 // No shard metadata: local cache/local ZIP fallback + direct candidate URLs.
-                const localIdx = await getLocalXmlIndex(year);
-                const localPath = localIdx ? (localIdx.get(member) || null) : null;
+                const localIdx = forceDownload ? null : await getLocalXmlIndex(year);
+                const localPath = forceDownload
+                    ? null
+                    : localIdx
+                    ? (localIdx.get(member) || null)
+                    : null;
                 if (localPath) {
-                    xmlPath = localPath;
+                    try {
+                        fs.mkdirSync(path.dirname(xmlOut), { recursive: true });
+                        fs.copyFileSync(localPath, xmlOut);
+                        xmlPath = xmlOut;
+                    } catch {
+                        xmlPath = localPath;
+                    }
                     effectiveShard = inferShardFromXmlPath(localPath);
-                    available = true;
+                    available = isValidCachedFile(xmlPath);
                     console.warn(
                         `WARN: no shard info for object_id=${r.object_id}; using local cache at ${localPath}`,
                     );
@@ -2776,6 +2945,8 @@ async function processYear(params: {
             `Upserted into irs.returns: ${upsertCount.toLocaleString()}`,
         );
     }
+
+    return { selectedEins };
 }
 
 async function main() {
@@ -2796,18 +2967,36 @@ async function main() {
         : args.eins
         ? String(args.eins)
         : null;
+    const einsFileArg = args.einsFile
+        ? String(args.einsFile)
+        : args["eins-file"]
+        ? String(args["eins-file"])
+        : null;
     const statuses = parseCommaList(
         args.statuses ? String(args.statuses) : "candidate,active",
     );
 
     const download = Boolean(args.download);
     const upsert = Boolean(args.upsert);
+    const latestOnly = Boolean(args.latestOnly);
+    const forceDownload = Boolean(args.forceDownload);
+    const cacheDirArg = args.cacheDir ? String(args.cacheDir) : null;
+    const cacheDir = resolveCacheDir(cacheDirArg);
     const debug = Boolean(args.debug);
     const debugRow = args.debugRow ? String(args.debugRow) : null;
-    const einList = parseCommaList(einArg)
+    const einInputs = [
+        ...parseCommaList(einArg),
+        ...(einsFileArg ? readEinInputsFromFile(einsFileArg) : []),
+    ];
+    const einList = einInputs
         .map((s) => normalizeEinInput(s))
         .filter((s): s is string => Boolean(s));
     const einSet = einList.length ? new Set(einList) : null;
+    if (einsFileArg) {
+        console.log(
+            `Loaded EIN filter file: ${path.resolve(einsFileArg)} (normalized EINs=${einSet?.size ?? 0})`,
+        );
+    }
     const batchSize = args.batchSize
         ? Number(args.batchSize)
         : DEFAULT_BATCH_SIZE;
@@ -2820,13 +3009,42 @@ async function main() {
     const maxObjects = Number.isFinite(maxObjectsRaw as number)
         ? Number(maxObjectsRaw)
         : maxObjectsDefault;
+    if (latestOnly && maxObjects > 0) {
+        console.log("INFO: --latestOnly set; --maxObjects will be ignored.");
+    }
+    console.log(`XML cache dir: ${cacheDir}`);
 
     // Single-XML mode (local file or downloaded URL)
     if (xmlArg || xmlUrlArg) {
         let p: string;
 
         if (xmlUrlArg) {
-            p = await downloadToTemp(xmlUrlArg);
+            const cachedByUrl = buildXmlCachePath({
+                cacheDir,
+                url: xmlUrlArg,
+            });
+            const useCached = !forceDownload && isValidCachedFile(cachedByUrl);
+            if (useCached) {
+                p = cachedByUrl;
+            } else {
+                await downloadFileWithRetry(
+                    xmlUrlArg,
+                    cachedByUrl,
+                    DEFAULT_MAX_RETRIES,
+                );
+                if (!(await looksLikeReturnXml(cachedByUrl))) {
+                    const head = (await fsp.readFile(cachedByUrl)).subarray(
+                        0,
+                        200,
+                    ).toString("utf8");
+                    throw new Error(
+                        `Downloaded XML did not look like Return XML. url=${xmlUrlArg} head=${
+                            JSON.stringify(head)
+                        }`,
+                    );
+                }
+                p = cachedByUrl;
+            }
         } else {
             p = path.resolve(String(xmlArg));
         }
@@ -2874,12 +3092,11 @@ async function main() {
         }
 
         const member = `${objectIdArg}_public.xml`;
-        const xmlOut = persistentXmlOutPath({
-            year: yearArg,
-            shard: "DIRECT_XML",
-            member,
+        const xmlOut = buildXmlCachePath({
+            cacheDir,
+            objectId: objectIdArg,
         });
-        if (!(await ensureFileExists(xmlOut))) {
+        if (forceDownload || !isValidCachedFile(xmlOut)) {
             // 1) Try S3-direct first.
             let ok = false;
             try {
@@ -3089,12 +3306,11 @@ async function main() {
         await downloadZipWithRetry(url, zipPath, 3);
 
         const member = `${objectIdArg}_public.xml`;
-        const xmlOut = persistentXmlOutPath({
-            year: yearArg,
-            shard: normalizedShardArg,
-            member,
+        const xmlOut = buildXmlCachePath({
+            cacheDir,
+            objectId: objectIdArg,
         });
-        if (!(await ensureFileExists(xmlOut))) {
+        if (forceDownload || !isValidCachedFile(xmlOut)) {
             unzipExtractSingle(zipPath, member, xmlOut);
         }
 
@@ -3158,11 +3374,18 @@ async function main() {
             );
         }
 
-        console.log(`Years to import (EIN filter): ${years.join(", ")}`);
-        for (const year of years) {
+        const yearOrder = latestOnly ? [...years].sort((a, b) => b - a) : years;
+        console.log(
+            `Years to import (EIN filter): ${yearOrder.join(", ")}${
+                latestOnly ? " [latestOnly order]" : ""
+            }`,
+        );
+        const latestOnlySeenEins = latestOnly ? new Set<string>() : null;
+        const failedYears: Array<{ year: number; error: string }> = [];
+        for (const year of yearOrder) {
             console.log(`\n=== Import year ${year} (EIN filter) ===`);
             try {
-                await processYear({
+                const res = await processYear({
                     year,
                     districtEntityId: null,
                     statuses,
@@ -3173,22 +3396,54 @@ async function main() {
                     batchSize,
                     maxObjects,
                     scopedEinOverride: einSet,
+                    latestOnly,
+                    latestOnlyExcludeEins: latestOnlySeenEins,
+                    cacheDir,
+                    forceDownload,
                 });
+                if (latestOnlySeenEins) {
+                    for (const ein of res.selectedEins) latestOnlySeenEins.add(ein);
+                    console.log(
+                        `latestOnly coverage: ${latestOnlySeenEins.size.toLocaleString()}/${einSet.size.toLocaleString()} EINs`,
+                    );
+                    if (latestOnlySeenEins.size >= einSet.size) {
+                        console.log(
+                            "latestOnly satisfied all requested EINs; stopping older years.",
+                        );
+                        break;
+                    }
+                }
             } catch (e) {
                 const msg = compactErr(e, 600);
                 console.warn(`WARN: failed to process year ${year}: ${msg}`);
+                failedYears.push({ year, error: msg });
             }
+        }
+        if (failedYears.length) {
+            const summary = failedYears
+                .map((f) => `${f.year}: ${f.error}`)
+                .join(" | ");
+            throw new Error(
+                `Failed to process ${failedYears.length} year(s): ${summary}`,
+            );
         }
         return;
     }
 
     const years = parseYearsFromArgs(args);
-    console.log(`Years to import: ${years.join(", ")}`);
+    const yearOrder = latestOnly ? [...years].sort((a, b) => b - a) : years;
+    console.log(
+        `Years to import: ${yearOrder.join(", ")}${
+            latestOnly ? " [latestOnly order]" : ""
+        }`,
+    );
+    const latestOnlySeenEins = latestOnly ? new Set<string>() : null;
+    const failedYears: Array<{ year: number; error: string }> = [];
 
-    for (const year of years) {
+    for (const year of yearOrder) {
         console.log(`\n=== Import year ${year} ===`);
         try {
-            await processYear({
+            const res = await processYear({
                 year,
                 districtEntityId,
                 statuses,
@@ -3198,11 +3453,31 @@ async function main() {
                 debugRow,
                 batchSize,
                 maxObjects,
+                latestOnly,
+                latestOnlyExcludeEins: latestOnlySeenEins,
+                cacheDir,
+                forceDownload,
             });
+            if (latestOnlySeenEins) {
+                for (const ein of res.selectedEins) latestOnlySeenEins.add(ein);
+                console.log(
+                    `latestOnly coverage so far: ${latestOnlySeenEins.size.toLocaleString()} EINs`,
+                );
+            }
         } catch (e) {
             const msg = compactErr(e, 600);
             console.warn(`WARN: failed to process year ${year}: ${msg}`);
+            failedYears.push({ year, error: msg });
         }
+    }
+
+    if (failedYears.length) {
+        const summary = failedYears.map((f) => `${f.year}: ${f.error}`).join(
+            " | ",
+        );
+        throw new Error(
+            `Failed to process ${failedYears.length} year(s): ${summary}`,
+        );
     }
 }
 

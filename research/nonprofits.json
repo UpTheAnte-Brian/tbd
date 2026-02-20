@@ -2335,6 +2335,1950 @@
         }
       ],
       "count": 23
+    },
+    "a-c-g-c": {
+      "name": "A.C.G.C.",
+      "id": "54ecab91-289c-5167-a565-df12c13c1be6",
+      "items": [],
+      "count": 0
+    },
+    "ada-borup-west": {
+      "name": "Ada-Borup-West",
+      "id": "44aad8e5-ec06-521a-9f4d-96e30b3930b9",
+      "items": [],
+      "count": 0
+    },
+    "adrian": {
+      "name": "Adrian",
+      "id": "95f6f6c0-8ccb-5cb4-a9a4-bdcf52ba8705",
+      "items": [],
+      "count": 0
+    },
+    "aitkin": {
+      "name": "Aitkin",
+      "id": "3b96fbda-3cfc-5c21-94bf-d67e2cba789f",
+      "items": [],
+      "count": 0
+    },
+    "albany": {
+      "name": "Albany",
+      "id": "40511d60-7a7e-50a9-a9f7-07ee03710d15",
+      "items": [],
+      "count": 0
+    },
+    "albert-lea": {
+      "name": "Albert Lea",
+      "id": "28e96819-78af-57d2-bae9-15773fd26ae9",
+      "items": [],
+      "count": 0
+    },
+    "alden-conger": {
+      "name": "Alden-Conger",
+      "id": "0a76abf3-fa12-528e-a388-70372585e239",
+      "items": [],
+      "count": 0
+    },
+    "alexandria": {
+      "name": "Alexandria",
+      "id": "95fa6e47-666b-574a-8cd5-11db49c0bd0d",
+      "items": [],
+      "count": 0
+    },
+    "annandale": {
+      "name": "Annandale",
+      "id": "139b1e53-3741-590c-b2ee-781d15214cb7",
+      "items": [],
+      "count": 0
+    },
+    "anoka-hennepin": {
+      "name": "Anoka-Hennepin",
+      "id": "9581bd5a-c7f6-523e-99c8-38028a61410b",
+      "items": [],
+      "count": 0
+    },
+    "ashby": {
+      "name": "Ashby",
+      "id": "0ed96f7e-36dd-561c-98b6-5b043077049d",
+      "items": [],
+      "count": 0
+    },
+    "austin": {
+      "name": "Austin",
+      "id": "256e017b-764c-55c6-8d31-f4a3f7e4c451",
+      "items": [],
+      "count": 0
+    },
+    "badger": {
+      "name": "Badger",
+      "id": "55de3ba3-c0ba-595f-8d40-fc18e41b1b68",
+      "items": [],
+      "count": 0
+    },
+    "bagley": {
+      "name": "Bagley",
+      "id": "964e6e21-5e13-527e-8265-bdac71d78876",
+      "items": [],
+      "count": 0
+    },
+    "barnesville": {
+      "name": "Barnesville",
+      "id": "d6939da9-149f-533b-8e8e-e613cb170303",
+      "items": [],
+      "count": 0
+    },
+    "barnum": {
+      "name": "Barnum",
+      "id": "a3ac825d-b0f8-57b6-a318-16068c52f168",
+      "items": [],
+      "count": 0
+    },
+    "battle-lake": {
+      "name": "Battle Lake",
+      "id": "a8b61d88-8443-5434-a29b-8e3ba55ec7a4",
+      "items": [],
+      "count": 0
+    },
+    "becker": {
+      "name": "Becker",
+      "id": "f13cfbe3-b89f-58d5-ae3e-1dfaa5f7739c",
+      "items": [],
+      "count": 0
+    },
+    "belgrade-brooten-elrosa": {
+      "name": "Belgrade-Brooten-Elrosa",
+      "id": "543a2ae0-379f-56ed-a4c5-b7fe9f1e83da",
+      "items": [],
+      "count": 0
+    },
+    "belle-plaine": {
+      "name": "Belle Plaine",
+      "id": "9f1995f1-3362-5228-97ef-870412fa55ff",
+      "items": [],
+      "count": 0
+    },
+    "bemidji": {
+      "name": "Bemidji",
+      "id": "fe645da6-e41c-5ef4-a9fe-1e38e3fa8f72",
+      "items": [],
+      "count": 0
+    },
+    "benson": {
+      "name": "Benson",
+      "id": "29e8058d-7557-5d29-85fa-9080c766a48a",
+      "items": [],
+      "count": 0
+    },
+    "bertha-hewitt": {
+      "name": "Bertha-Hewitt",
+      "id": "dfabf4d1-3f78-5afe-971d-b52cd8adac93",
+      "items": [],
+      "count": 0
+    },
+    "big-lake": {
+      "name": "Big Lake",
+      "id": "5f928528-1ab8-54fa-8e00-e47dd9b52b7c",
+      "items": [],
+      "count": 0
+    },
+    "bird-island-olivia-lake-lillian": {
+      "name": "Bird Island-Olivia-Lake Lillian",
+      "id": "c95eb90f-d30c-5bc6-964b-07fdd59ad915",
+      "items": [],
+      "count": 0
+    },
+    "blackduck": {
+      "name": "Blackduck",
+      "id": "76bee807-d10b-5090-bcbe-d48140b0fe3f",
+      "items": [],
+      "count": 0
+    },
+    "blooming-prairie": {
+      "name": "Blooming Prairie",
+      "id": "a427da57-fbc3-56b8-abbd-1958d2f2362c",
+      "items": [],
+      "count": 0
+    },
+    "bloomington": {
+      "name": "Bloomington",
+      "id": "d13a56e8-9732-57e2-94dc-62f085ac5414",
+      "items": [],
+      "count": 0
+    },
+    "blue-earth-area": {
+      "name": "Blue Earth Area",
+      "id": "06a9ac4e-3adc-529c-8994-eeae9beef932",
+      "items": [],
+      "count": 0
+    },
+    "braham": {
+      "name": "Braham",
+      "id": "84f2e0de-c925-52ba-8b90-b211298d6f92",
+      "items": [],
+      "count": 0
+    },
+    "brainerd": {
+      "name": "Brainerd",
+      "id": "eea46323-5bdd-5941-a045-d1cd2e48834c",
+      "items": [],
+      "count": 0
+    },
+    "brandon-evansville": {
+      "name": "Brandon-Evansville",
+      "id": "ecd29b8f-543a-57ba-a82c-8f7c2e6327f5",
+      "items": [],
+      "count": 0
+    },
+    "breckenridge": {
+      "name": "Breckenridge",
+      "id": "9c587985-feb3-5f9a-9d7a-02bec8ac9e53",
+      "items": [],
+      "count": 0
+    },
+    "brooklyn-center": {
+      "name": "Brooklyn Center",
+      "id": "8ee7fdbf-84fb-52ce-9221-9246020e7d42",
+      "items": [],
+      "count": 0
+    },
+    "browerville": {
+      "name": "Browerville",
+      "id": "9729a949-da19-53fc-9231-f56fcfb4d29f",
+      "items": [],
+      "count": 0
+    },
+    "browns-valley": {
+      "name": "Browns Valley",
+      "id": "e1315c8a-afda-5c5e-a7ee-ae3ed96480d2",
+      "items": [],
+      "count": 0
+    },
+    "buffalo-hanover-montrose": {
+      "name": "Buffalo-Hanover-Montrose",
+      "id": "f2af4409-26c2-5f2f-81b8-a28fb823daaf",
+      "items": [],
+      "count": 0
+    },
+    "buffalo-lake-hector-stewart": {
+      "name": "Buffalo Lake-Hector-Stewart",
+      "id": "26e006ef-795b-5164-bd8c-927b324ca3f9",
+      "items": [],
+      "count": 0
+    },
+    "burnsville-eagan-savage": {
+      "name": "Burnsville-Eagan-Savage",
+      "id": "ac1c557c-e8f0-582a-8124-1931498a3053",
+      "items": [],
+      "count": 0
+    },
+    "butterfield-odin": {
+      "name": "Butterfield-Odin",
+      "id": "0dac29eb-81f0-59b3-8639-2930d795bdf6",
+      "items": [],
+      "count": 0
+    },
+    "byron": {
+      "name": "Byron",
+      "id": "4828289c-36f8-5cdf-98f0-7a9730b946de",
+      "items": [],
+      "count": 0
+    },
+    "caledonia": {
+      "name": "Caledonia",
+      "id": "314e2037-2ade-5c65-9acd-e6a47ebcafd2",
+      "items": [],
+      "count": 0
+    },
+    "cambridge-isanti": {
+      "name": "Cambridge-Isanti",
+      "id": "b9455889-fa9c-528b-a0c1-257231656a90",
+      "items": [],
+      "count": 0
+    },
+    "campbell-tintah": {
+      "name": "Campbell-Tintah",
+      "id": "b7ef5898-5703-5add-9f9b-5d4e9675c9e1",
+      "items": [],
+      "count": 0
+    },
+    "canby": {
+      "name": "Canby",
+      "id": "527b5c8b-1d84-5faa-be02-3efc8a4fb749",
+      "items": [],
+      "count": 0
+    },
+    "cannon-falls": {
+      "name": "Cannon Falls",
+      "id": "c512abd0-2b36-5163-bccf-4c9cfb1b2070",
+      "items": [],
+      "count": 0
+    },
+    "carlton": {
+      "name": "Carlton",
+      "id": "533aff90-8d60-58b0-9c65-30d7e12ee816",
+      "items": [],
+      "count": 0
+    },
+    "cass-lake-bena": {
+      "name": "Cass Lake-Bena",
+      "id": "667ac78c-8672-5a76-bda9-30fa77757c10",
+      "items": [],
+      "count": 0
+    },
+    "cedar-mountain": {
+      "name": "Cedar Mountain",
+      "id": "c095c63e-05cd-5f4c-a73b-337041761a7a",
+      "items": [],
+      "count": 0
+    },
+    "centennial": {
+      "name": "Centennial",
+      "id": "c3f9b19e-bcbb-5825-a846-5d4ba1ee43ed",
+      "items": [],
+      "count": 0
+    },
+    "central": {
+      "name": "Central",
+      "id": "d0780adc-75b6-5e18-8313-97f7f918764e",
+      "items": [],
+      "count": 0
+    },
+    "chatfield": {
+      "name": "Chatfield",
+      "id": "7d0ecf24-dceb-5189-9a24-e456e0c58a45",
+      "items": [],
+      "count": 0
+    },
+    "chisago-lakes": {
+      "name": "Chisago Lakes",
+      "id": "13cd3c01-3dac-568c-9f83-8d12dd430842",
+      "items": [],
+      "count": 0
+    },
+    "chisholm": {
+      "name": "Chisholm",
+      "id": "2873a738-ecf7-5403-b8df-20b4fe7c11d9",
+      "items": [],
+      "count": 0
+    },
+    "chokio-alberta": {
+      "name": "Chokio-Alberta",
+      "id": "c5e0c64e-5f90-55da-9c19-2ca7c70ddbf4",
+      "items": [],
+      "count": 0
+    },
+    "clearbrook-gonvick": {
+      "name": "Clearbrook-Gonvick",
+      "id": "a672d79c-8a12-5cae-ad1d-ed8df2315dbe",
+      "items": [],
+      "count": 0
+    },
+    "cleveland": {
+      "name": "Cleveland",
+      "id": "22806c46-b616-5d4e-8fe5-c7b8c470f338",
+      "items": [],
+      "count": 0
+    },
+    "climax-shelly": {
+      "name": "Climax-Shelly",
+      "id": "39f005ce-d436-5fdb-9dad-ebb3888d5cc5",
+      "items": [],
+      "count": 0
+    },
+    "clinton-graceville-beardsley": {
+      "name": "Clinton-Graceville-Beardsley",
+      "id": "22a9a406-a28c-5b97-80d7-eecf5b20ea7f",
+      "items": [],
+      "count": 0
+    },
+    "cloquet": {
+      "name": "Cloquet",
+      "id": "fd105f70-0202-5346-aded-f449b1e631f8",
+      "items": [],
+      "count": 0
+    },
+    "columbia-heights": {
+      "name": "Columbia Heights",
+      "id": "962c9269-5e8e-5ff4-a29d-a1ff185ce17f",
+      "items": [],
+      "count": 0
+    },
+    "comfrey": {
+      "name": "Comfrey",
+      "id": "cec25195-83ea-5b34-9f11-16b981fddbc2",
+      "items": [],
+      "count": 0
+    },
+    "cook-county": {
+      "name": "Cook County",
+      "id": "98d89080-9dee-560e-b480-89de9416f255",
+      "items": [],
+      "count": 0
+    },
+    "cromwell-wright": {
+      "name": "Cromwell-Wright",
+      "id": "e9bdf517-4b92-5ec1-adc4-46ac668933de",
+      "items": [],
+      "count": 0
+    },
+    "crookston": {
+      "name": "Crookston",
+      "id": "617f049d-ec6e-5b17-9be5-7460af153c2d",
+      "items": [],
+      "count": 0
+    },
+    "crosby-ironton": {
+      "name": "Crosby-Ironton",
+      "id": "f4a946bc-bf2c-5690-a338-13f6b9000048",
+      "items": [],
+      "count": 0
+    },
+    "dassel-cokato": {
+      "name": "Dassel-Cokato",
+      "id": "fe4c620d-7e97-5042-a755-5e8ad6fae848",
+      "items": [],
+      "count": 0
+    },
+    "dawson-boyd": {
+      "name": "Dawson-Boyd",
+      "id": "a494a668-435b-57bb-9434-e1f6ba51b56e",
+      "items": [],
+      "count": 0
+    },
+    "deer-river": {
+      "name": "Deer River",
+      "id": "941fbdd8-5fbd-55c9-924f-02095a2bb801",
+      "items": [],
+      "count": 0
+    },
+    "detroit-lakes": {
+      "name": "Detroit Lakes",
+      "id": "d07208fe-9bd4-56a4-8d23-eeb9386242a6",
+      "items": [],
+      "count": 0
+    },
+    "dilworth-glyndon-felton": {
+      "name": "Dilworth-Glyndon-Felton",
+      "id": "fb11ed22-2e64-5363-bee4-07944f4eebc9",
+      "items": [],
+      "count": 0
+    },
+    "dover-eyota": {
+      "name": "Dover-Eyota",
+      "id": "18da9755-85d5-50c3-b92d-34592ec158b5",
+      "items": [],
+      "count": 0
+    },
+    "duluth": {
+      "name": "Duluth",
+      "id": "12342d35-4eac-508a-bc65-a96f24eea467",
+      "items": [],
+      "count": 0
+    },
+    "east-central": {
+      "name": "East Central",
+      "id": "335c3b04-9ae1-5952-bdcf-8f1fec3edb77",
+      "items": [],
+      "count": 0
+    },
+    "eastern-carver-county": {
+      "name": "Eastern Carver County",
+      "id": "54fe6cb4-b073-5efc-b490-83266ff1faf1",
+      "items": [],
+      "count": 0
+    },
+    "east-grand-forks": {
+      "name": "East Grand Forks",
+      "id": "f90abae5-e7c1-501d-9993-56d074c63e9f",
+      "items": [],
+      "count": 0
+    },
+    "eden-prairie": {
+      "name": "Eden Prairie",
+      "id": "392b3672-2e4c-52d8-8111-e6828663d04b",
+      "items": [],
+      "count": 0
+    },
+    "eden-valley-watkins": {
+      "name": "Eden Valley-Watkins",
+      "id": "8ceada99-3847-5115-9a6b-47ec800cdaec",
+      "items": [],
+      "count": 0
+    },
+    "edgerton": {
+      "name": "Edgerton",
+      "id": "3f9d288c-d482-56d5-81f6-3349d15bc801",
+      "items": [],
+      "count": 0
+    },
+    "edina": {
+      "name": "Edina",
+      "id": "e656a7a6-5df4-5df6-84fb-d4655e443ac4",
+      "items": [],
+      "count": 0
+    },
+    "elk-river": {
+      "name": "Elk River",
+      "id": "1151e0ad-9779-5be3-b99d-19b578e005cb",
+      "items": [],
+      "count": 0
+    },
+    "ellsworth": {
+      "name": "Ellsworth",
+      "id": "6537fe7e-333b-5c6d-87f9-7ae2de67d403",
+      "items": [],
+      "count": 0
+    },
+    "ely": {
+      "name": "Ely",
+      "id": "7ddc014c-ab70-524f-a15a-94969d771ba2",
+      "items": [],
+      "count": 0
+    },
+    "esko": {
+      "name": "Esko",
+      "id": "8d64f796-29aa-5ee9-ad0e-19abd91b68d2",
+      "items": [],
+      "count": 0
+    },
+    "fairmont-area": {
+      "name": "Fairmont Area",
+      "id": "01137e2e-d936-5ff1-87a5-7fa500c5e223",
+      "items": [],
+      "count": 0
+    },
+    "faribault": {
+      "name": "Faribault",
+      "id": "53ac350e-9083-5f75-ab66-5dca8b3998f5",
+      "items": [],
+      "count": 0
+    },
+    "farmington": {
+      "name": "Farmington",
+      "id": "0ca5206d-e6eb-5058-aa46-1fe0d5772537",
+      "items": [],
+      "count": 0
+    },
+    "fergus-falls": {
+      "name": "Fergus Falls",
+      "id": "805cbd99-43ef-5fd4-b2dd-66bf6e854490",
+      "items": [],
+      "count": 0
+    },
+    "fertile-beltrami": {
+      "name": "Fertile-Beltrami",
+      "id": "7c9a26dc-9634-588b-9cec-557e56b1439f",
+      "items": [],
+      "count": 0
+    },
+    "fillmore-central": {
+      "name": "Fillmore Central",
+      "id": "ff801ec9-45e5-547d-bab2-6561c5a21796",
+      "items": [],
+      "count": 0
+    },
+    "fisher": {
+      "name": "Fisher",
+      "id": "62e250ef-1b18-5f3f-8d14-853927e7f580",
+      "items": [],
+      "count": 0
+    },
+    "floodwood": {
+      "name": "Floodwood",
+      "id": "cae0d083-9993-5a83-bf26-1f2b55128d2d",
+      "items": [],
+      "count": 0
+    },
+    "foley": {
+      "name": "Foley",
+      "id": "f6b47a16-1830-543a-abb5-214b018dbb0b",
+      "items": [],
+      "count": 0
+    },
+    "forest-lake": {
+      "name": "Forest Lake",
+      "id": "8c89f793-32ed-5b13-9899-accb961e5961",
+      "items": [],
+      "count": 0
+    },
+    "fosston": {
+      "name": "Fosston",
+      "id": "4c056259-c5c8-51fe-90a4-1d8c3115cd59",
+      "items": [],
+      "count": 0
+    },
+    "franconia": {
+      "name": "Franconia",
+      "id": "cca39d46-0a71-58ed-90f1-e6855592ecac",
+      "items": [],
+      "count": 0
+    },
+    "frazee-vergas": {
+      "name": "Frazee-Vergas",
+      "id": "3a0a73dd-508d-54aa-927a-73fb6e7f95b6",
+      "items": [],
+      "count": 0
+    },
+    "fridley": {
+      "name": "Fridley",
+      "id": "fd0574bb-2135-572b-bfa2-dc97d8709fe1",
+      "items": [],
+      "count": 0
+    },
+    "fulda": {
+      "name": "Fulda",
+      "id": "82c23e6c-3801-567e-9e79-2a7876cc2d26",
+      "items": [],
+      "count": 0
+    },
+    "gfw": {
+      "name": "GFW",
+      "id": "75dfc5f8-ffb1-5e35-8bcf-f56b13d3766d",
+      "items": [],
+      "count": 0
+    },
+    "glencoe-silver-lake": {
+      "name": "Glencoe-Silver Lake",
+      "id": "2d280fce-3268-57f5-81fa-ca35d4aafa68",
+      "items": [],
+      "count": 0
+    },
+    "glenville-emmons": {
+      "name": "Glenville-Emmons",
+      "id": "48c6fb5b-4a55-5fd2-88da-f779f9461032",
+      "items": [],
+      "count": 0
+    },
+    "goodhue": {
+      "name": "Goodhue",
+      "id": "bcd0348f-9d14-5993-ac43-1a1f452e92e5",
+      "items": [],
+      "count": 0
+    },
+    "goodridge": {
+      "name": "Goodridge",
+      "id": "3a87309d-fee2-5225-bfb4-4617db223cc0",
+      "items": [],
+      "count": 0
+    },
+    "granada-huntley-east-chain": {
+      "name": "Granada Huntley East Chain",
+      "id": "108c37cf-0653-5611-b0c1-e51552b9bb92",
+      "items": [],
+      "count": 0
+    },
+    "grand-meadow": {
+      "name": "Grand Meadow",
+      "id": "2c267b4f-6448-5ad3-b052-27d636b2163d",
+      "items": [],
+      "count": 0
+    },
+    "grand-rapids": {
+      "name": "Grand Rapids",
+      "id": "2e90cbb4-95c2-5208-8808-a1ffc34488a0",
+      "items": [],
+      "count": 0
+    },
+    "greenbush-middle-river": {
+      "name": "Greenbush Middle River",
+      "id": "5b13bf70-f779-5eac-b3ac-ad39cd21753b",
+      "items": [],
+      "count": 0
+    },
+    "greenway": {
+      "name": "Greenway",
+      "id": "cee7b9f7-cc10-5c5d-84ad-5e00aeae7fcd",
+      "items": [],
+      "count": 0
+    },
+    "grygla": {
+      "name": "Grygla",
+      "id": "77570676-5974-5328-b3b9-8f98644af8e2",
+      "items": [],
+      "count": 0
+    },
+    "hancock": {
+      "name": "Hancock",
+      "id": "93f9abc3-28af-57be-8874-f630c29a609f",
+      "items": [],
+      "count": 0
+    },
+    "hastings": {
+      "name": "Hastings",
+      "id": "e0d13000-f36d-550a-b21f-c8302fec9f4f",
+      "items": [],
+      "count": 0
+    },
+    "hawley": {
+      "name": "Hawley",
+      "id": "178bb17a-84d6-5942-86d0-678b73a4859d",
+      "items": [],
+      "count": 0
+    },
+    "hayfield": {
+      "name": "Hayfield",
+      "id": "63b6f516-1578-5d6f-b7a9-7025584a6bcf",
+      "items": [],
+      "count": 0
+    },
+    "hendricks": {
+      "name": "Hendricks",
+      "id": "7bef9091-6510-56ef-a8c1-d19c3f26d29b",
+      "items": [],
+      "count": 0
+    },
+    "henning": {
+      "name": "Henning",
+      "id": "ac9dd61e-a1c0-5f43-9c0f-786005318fcb",
+      "items": [],
+      "count": 0
+    },
+    "herman-norcross-community-school": {
+      "name": "Herman-Norcross Community School",
+      "id": "b295c420-e092-54be-9656-999fea4094cd",
+      "items": [],
+      "count": 0
+    },
+    "hermantown": {
+      "name": "Hermantown",
+      "id": "751b87ed-bd3c-513d-a058-c9f5253c17bf",
+      "items": [],
+      "count": 0
+    },
+    "heron-lake-okabena": {
+      "name": "Heron Lake-Okabena",
+      "id": "ef898b7e-b94f-5bdc-9728-b7c30f3b1ac5",
+      "items": [],
+      "count": 0
+    },
+    "hibbing": {
+      "name": "Hibbing",
+      "id": "cf383db9-2a36-5a75-8a63-d76732e41f63",
+      "items": [],
+      "count": 0
+    },
+    "hill-city": {
+      "name": "Hill City",
+      "id": "dbead671-11f3-5a17-bb7b-a3f6a7c2fafb",
+      "items": [],
+      "count": 0
+    },
+    "hills-beaver-creek": {
+      "name": "Hills-Beaver Creek",
+      "id": "3b0f2c43-3255-5637-aa72-1d56fdad5c39",
+      "items": [],
+      "count": 0
+    },
+    "hinckley-finlayson": {
+      "name": "Hinckley-Finlayson",
+      "id": "3f9a723e-9992-54b4-885d-b69fad1f847a",
+      "items": [],
+      "count": 0
+    },
+    "holdingford": {
+      "name": "Holdingford",
+      "id": "15bc6554-060b-5077-9194-229e49b75f25",
+      "items": [],
+      "count": 0
+    },
+    "hopkins": {
+      "name": "Hopkins",
+      "id": "aba19083-ac6e-53c9-9536-b8dc1611e9c3",
+      "items": [],
+      "count": 0
+    },
+    "houston": {
+      "name": "Houston",
+      "id": "6819cfb6-2a60-5e2e-ba91-5954fd969ad3",
+      "items": [],
+      "count": 0
+    },
+    "howard-lake-waverly-winsted": {
+      "name": "Howard Lake-Waverly-Winsted",
+      "id": "3ed192be-ecac-54ec-8d22-6565217fa412",
+      "items": [],
+      "count": 0
+    },
+    "hutchinson": {
+      "name": "Hutchinson",
+      "id": "60a233d9-ecf7-56b2-a0ee-49caecc32bba",
+      "items": [],
+      "count": 0
+    },
+    "international-falls": {
+      "name": "International Falls",
+      "id": "feebf58e-590a-5fa1-aff6-6defd2fdd247",
+      "items": [],
+      "count": 0
+    },
+    "inver-grove-heights": {
+      "name": "Inver Grove Heights",
+      "id": "6cbdc325-1be4-5905-b3d4-f8ceab5cc86f",
+      "items": [],
+      "count": 0
+    },
+    "isle": {
+      "name": "Isle",
+      "id": "b923db81-b90c-56d2-a57c-0b3249dc31bb",
+      "items": [],
+      "count": 0
+    },
+    "ivanhoe": {
+      "name": "Ivanhoe",
+      "id": "94ea90af-9bde-506c-adb8-28bfe0b2182f",
+      "items": [],
+      "count": 0
+    },
+    "jackson-county-central": {
+      "name": "Jackson County Central",
+      "id": "b7bebfe7-2096-5b74-ad01-affe7903984f",
+      "items": [],
+      "count": 0
+    },
+    "janesville-waldorf-pemberton": {
+      "name": "Janesville-Waldorf-Pemberton",
+      "id": "9d44a925-8821-5d02-a44c-e5b9bdd610c7",
+      "items": [],
+      "count": 0
+    },
+    "jordan": {
+      "name": "Jordan",
+      "id": "28a5a5bf-7427-5586-a6a1-983e81e28a98",
+      "items": [],
+      "count": 0
+    },
+    "kasson-mantorville": {
+      "name": "Kasson-Mantorville",
+      "id": "86ac7379-3402-5d08-9cfc-bec075c56a4b",
+      "items": [],
+      "count": 0
+    },
+    "kelliher": {
+      "name": "Kelliher",
+      "id": "acfc526b-d669-5e0f-8ee8-00157859c97e",
+      "items": [],
+      "count": 0
+    },
+    "kenyon-wanamingo": {
+      "name": "Kenyon-Wanamingo",
+      "id": "12cdbd1a-5204-56c6-a8d4-9ed737f73f05",
+      "items": [],
+      "count": 0
+    },
+    "kerkhoven-murdock-sunburg": {
+      "name": "Kerkhoven-Murdock-Sunburg",
+      "id": "d3012c05-54c5-5fc5-8af1-ddef6979ed12",
+      "items": [],
+      "count": 0
+    },
+    "kimball": {
+      "name": "Kimball",
+      "id": "b034ae8c-12f9-58fb-a3ef-115f7212c58c",
+      "items": [],
+      "count": 0
+    },
+    "kingsland": {
+      "name": "Kingsland",
+      "id": "f2cee797-8467-5155-b365-914f9f28f66e",
+      "items": [],
+      "count": 0
+    },
+    "kittson-central": {
+      "name": "Kittson Central",
+      "id": "ba9253f5-6834-541a-b2f5-d3ab224c70b5",
+      "items": [],
+      "count": 0
+    },
+    "lac-qui-parle-valley": {
+      "name": "Lac qui Parle Valley",
+      "id": "f9b070ed-659d-5017-8327-353c5f7a23ad",
+      "items": [],
+      "count": 0
+    },
+    "la-crescent-hokah": {
+      "name": "La Crescent-Hokah",
+      "id": "6c888cb9-823f-550f-94f1-43d3c8323373",
+      "items": [],
+      "count": 0
+    },
+    "lake-benton": {
+      "name": "Lake Benton",
+      "id": "cd4b235b-b249-516e-b1d7-2ba2a388de94",
+      "items": [],
+      "count": 0
+    },
+    "lake-city": {
+      "name": "Lake City",
+      "id": "15e798a0-7e9e-57d8-9ce5-01dd8f274585",
+      "items": [],
+      "count": 0
+    },
+    "lake-crystal-wellcome-memorial": {
+      "name": "Lake Crystal-Wellcome Memorial",
+      "id": "bd835b28-af9d-51cd-93b8-21050d6c1e30",
+      "items": [],
+      "count": 0
+    },
+    "lake-of-the-woods": {
+      "name": "Lake of the Woods",
+      "id": "1a93abe4-b20c-5691-8422-1fb75d397e1b",
+      "items": [],
+      "count": 0
+    },
+    "lake-park-audubon": {
+      "name": "Lake Park Audubon",
+      "id": "708174f4-c930-5c50-a44d-e45ecd4dee8f",
+      "items": [],
+      "count": 0
+    },
+    "lake-superior": {
+      "name": "Lake Superior",
+      "id": "9b315c9f-72df-5174-8f36-200af524c302",
+      "items": [],
+      "count": 0
+    },
+    "lakeview": {
+      "name": "Lakeview",
+      "id": "30c63ec5-3fcf-5fba-92b3-225103fb9d28",
+      "items": [],
+      "count": 0
+    },
+    "lakeville": {
+      "name": "Lakeville",
+      "id": "9dcc2288-2b00-5fb5-bc58-49288ebfd96a",
+      "items": [],
+      "count": 0
+    },
+    "lancaster": {
+      "name": "Lancaster",
+      "id": "ca5cef05-ca75-565a-9b96-68ca195ba548",
+      "items": [],
+      "count": 0
+    },
+    "lanesboro": {
+      "name": "Lanesboro",
+      "id": "4659fe78-d1b7-576c-9cb4-f24dac93156e",
+      "items": [],
+      "count": 0
+    },
+    "laporte": {
+      "name": "Laporte",
+      "id": "01392a7a-327b-5107-be32-df4e22be1c0f",
+      "items": [],
+      "count": 0
+    },
+    "leroy-ostrander": {
+      "name": "LeRoy-Ostrander",
+      "id": "5ac05909-483e-564d-8e37-af0a62e5f44d",
+      "items": [],
+      "count": 0
+    },
+    "lester-prairie": {
+      "name": "Lester Prairie",
+      "id": "0b569e10-c1e9-5177-b0af-31a4b8466e37",
+      "items": [],
+      "count": 0
+    },
+    "le-sueur-henderson": {
+      "name": "Le Sueur-Henderson",
+      "id": "5693b409-6c44-5eba-9ef4-45811274a0a8",
+      "items": [],
+      "count": 0
+    },
+    "lewiston-altura": {
+      "name": "Lewiston-Altura",
+      "id": "dfa6e528-ca90-53dd-8c17-8815dae3f595",
+      "items": [],
+      "count": 0
+    },
+    "litchfield": {
+      "name": "Litchfield",
+      "id": "799b58a3-b7a3-515b-a1fb-27eba7a04daf",
+      "items": [],
+      "count": 0
+    },
+    "little-falls": {
+      "name": "Little Falls",
+      "id": "f0ace512-91f6-5766-b884-ce0770bd3337",
+      "items": [],
+      "count": 0
+    },
+    "littlefork-big-falls": {
+      "name": "Littlefork-Big Falls",
+      "id": "e27f6e24-e404-5916-8f5e-a4deb0ac30e7",
+      "items": [],
+      "count": 0
+    },
+    "long-prairie-grey-eagle": {
+      "name": "Long Prairie-Grey Eagle",
+      "id": "d5006c8d-b084-5a6d-87b3-65853756aa40",
+      "items": [],
+      "count": 0
+    },
+    "luverne": {
+      "name": "Luverne",
+      "id": "82c4e6dc-140d-57a6-a7a2-b9c9d6f13cd3",
+      "items": [],
+      "count": 0
+    },
+    "lyle": {
+      "name": "Lyle",
+      "id": "0a90cc89-6004-50b4-a829-680429fbb3f6",
+      "items": [],
+      "count": 0
+    },
+    "lynd": {
+      "name": "Lynd",
+      "id": "0919a3f2-0815-5126-ac58-57fdaad7d296",
+      "items": [],
+      "count": 0
+    },
+    "mabel-canton": {
+      "name": "Mabel-Canton",
+      "id": "c10c92f9-3f03-5e15-85e4-125f07f1f944",
+      "items": [],
+      "count": 0
+    },
+    "maccray": {
+      "name": "MACCRAY",
+      "id": "d32774ab-e7e9-5dc4-9560-7ca54c7840a8",
+      "items": [],
+      "count": 0
+    },
+    "madelia": {
+      "name": "Madelia",
+      "id": "b05a1d06-aded-54ee-afe7-fe9121b4c780",
+      "items": [],
+      "count": 0
+    },
+    "mahnomen": {
+      "name": "Mahnomen",
+      "id": "92067f8d-5e03-51b6-96e6-1914fa54822e",
+      "items": [],
+      "count": 0
+    },
+    "mahtomedi": {
+      "name": "Mahtomedi",
+      "id": "5d0eabce-1a05-50b5-b8e6-116a61702c79",
+      "items": [],
+      "count": 0
+    },
+    "mankato": {
+      "name": "Mankato",
+      "id": "6131a5f1-1a86-5846-b016-754477041ef7",
+      "items": [],
+      "count": 0
+    },
+    "maple-lake": {
+      "name": "Maple Lake",
+      "id": "971de09a-671b-5b85-a35d-2a21a1ee3e1f",
+      "items": [],
+      "count": 0
+    },
+    "maple-river": {
+      "name": "Maple River",
+      "id": "7250a503-e9c1-5ba6-9b6e-106342730adf",
+      "items": [],
+      "count": 0
+    },
+    "marshall-county-central": {
+      "name": "Marshall County Central",
+      "id": "7fac087f-9a59-5e36-ac8c-761b233e876a",
+      "items": [],
+      "count": 0
+    },
+    "marshall": {
+      "name": "Marshall",
+      "id": "439e837f-3505-57f9-9fa8-006724c4e892",
+      "items": [],
+      "count": 0
+    },
+    "martin-county-west": {
+      "name": "Martin County West",
+      "id": "1d4ca777-8bbc-54ea-a3b3-c898910c5f55",
+      "items": [],
+      "count": 0
+    },
+    "mcgregor": {
+      "name": "McGregor",
+      "id": "10c605c8-5a81-5437-b754-4965664b3863",
+      "items": [],
+      "count": 0
+    },
+    "medford": {
+      "name": "Medford",
+      "id": "8f30d538-250b-528b-b69a-133b3c7dcd0d",
+      "items": [],
+      "count": 0
+    },
+    "melrose": {
+      "name": "Melrose",
+      "id": "a8edb464-fb32-59ad-ae35-c93ed964a265",
+      "items": [],
+      "count": 0
+    },
+    "menahga": {
+      "name": "Menahga",
+      "id": "2f8822c2-18c8-5733-a617-65b57d04874d",
+      "items": [],
+      "count": 0
+    },
+    "mesabi-east": {
+      "name": "Mesabi East",
+      "id": "76f74ef8-6912-5b25-9427-464a4888d3ee",
+      "items": [],
+      "count": 0
+    },
+    "milaca": {
+      "name": "Milaca",
+      "id": "40c7427a-bb83-553b-8f8a-776b9404e989",
+      "items": [],
+      "count": 0
+    },
+    "milroy": {
+      "name": "Milroy",
+      "id": "cd15457f-155e-5adb-9aaf-1a5c57a7d890",
+      "items": [],
+      "count": 0
+    },
+    "minneapolis": {
+      "name": "Minneapolis",
+      "id": "81714238-92dd-5886-9ff6-3e08c8256d79",
+      "items": [],
+      "count": 0
+    },
+    "minneota": {
+      "name": "Minneota",
+      "id": "5b2b4296-4478-5dbc-9617-af62e8376725",
+      "items": [],
+      "count": 0
+    },
+    "minnetonka": {
+      "name": "Minnetonka",
+      "id": "16fdbca4-32cb-50bf-a3df-0b182ad1c26e",
+      "items": [],
+      "count": 0
+    },
+    "minnewaska": {
+      "name": "Minnewaska",
+      "id": "c974c34b-730c-5459-a8d2-232ba03d118b",
+      "items": [],
+      "count": 0
+    },
+    "montevideo": {
+      "name": "Montevideo",
+      "id": "dd0417d0-8596-5559-bc7e-4e56d6891555",
+      "items": [],
+      "count": 0
+    },
+    "monticello": {
+      "name": "Monticello",
+      "id": "11d130ac-6806-5825-a67b-6e62c584b8f1",
+      "items": [],
+      "count": 0
+    },
+    "moorhead-area": {
+      "name": "Moorhead Area",
+      "id": "971fc011-982a-5845-91dc-35220646d6d4",
+      "items": [],
+      "count": 0
+    },
+    "moose-lake": {
+      "name": "Moose Lake",
+      "id": "931fcf2d-87e1-56a7-ab0f-5f9152ee6549",
+      "items": [],
+      "count": 0
+    },
+    "mora": {
+      "name": "Mora",
+      "id": "26e1063d-9fa0-5d3d-b6d3-b53da61483c2",
+      "items": [],
+      "count": 0
+    },
+    "morris-area": {
+      "name": "Morris Area",
+      "id": "54dfcbcd-ce73-5e2c-bfb8-730c06cdf157",
+      "items": [],
+      "count": 0
+    },
+    "mounds-view": {
+      "name": "Mounds View",
+      "id": "5f98cfb4-7050-5800-9b1c-edf993685585",
+      "items": [],
+      "count": 0
+    },
+    "mountain-iron-buhl": {
+      "name": "Mountain Iron-Buhl",
+      "id": "5c1e501e-a842-57d1-a015-ad5138a796da",
+      "items": [],
+      "count": 0
+    },
+    "mountain-lake": {
+      "name": "Mountain Lake",
+      "id": "1ee5f918-7d08-5779-ab97-888fd2d3d3cd",
+      "items": [],
+      "count": 0
+    },
+    "murray-county-central": {
+      "name": "Murray County Central",
+      "id": "5024dc31-7b7e-5a6a-b0c6-be80ed552ae5",
+      "items": [],
+      "count": 0
+    },
+    "nashwauk-keewatin": {
+      "name": "Nashwauk-Keewatin",
+      "id": "fa9f01eb-c788-522d-b674-47346b9836e8",
+      "items": [],
+      "count": 0
+    },
+    "nett-lake": {
+      "name": "Nett Lake",
+      "id": "a066a5dd-2878-52e3-ab7b-7ae36227470a",
+      "items": [],
+      "count": 0
+    },
+    "nevis": {
+      "name": "Nevis",
+      "id": "7a4fc9a2-13e4-5234-b2ce-f7eb5ae6c326",
+      "items": [],
+      "count": 0
+    },
+    "new-london-spicer": {
+      "name": "New London-Spicer",
+      "id": "d9496d8c-33f2-54f9-b778-8c5f8f2c91f2",
+      "items": [],
+      "count": 0
+    },
+    "new-prague": {
+      "name": "New Prague",
+      "id": "bc55c9db-99d8-5b5b-ad48-5236c2098317",
+      "items": [],
+      "count": 0
+    },
+    "new-ulm": {
+      "name": "New Ulm",
+      "id": "1e037add-3f5d-50ac-b4aa-d4ba14a127bd",
+      "items": [],
+      "count": 0
+    },
+    "new-york-mills": {
+      "name": "New York Mills",
+      "id": "6668798a-c55a-5eee-a6ae-89af44a7982e",
+      "items": [],
+      "count": 0
+    },
+    "nicollet": {
+      "name": "Nicollet",
+      "id": "1769aa73-4b17-5435-aad1-6ca24135b55a",
+      "items": [],
+      "count": 0
+    },
+    "norman-county-east": {
+      "name": "Norman County East",
+      "id": "15b6cc93-017f-5da3-babe-2d76e35a8b35",
+      "items": [],
+      "count": 0
+    },
+    "north-branch-area": {
+      "name": "North Branch Area",
+      "id": "4e823c81-0fe9-5cac-8916-58d2cbff65d5",
+      "items": [],
+      "count": 0
+    },
+    "northfield": {
+      "name": "Northfield",
+      "id": "04707874-eb04-5b91-98c4-a57eb1e2077d",
+      "items": [],
+      "count": 0
+    },
+    "northland": {
+      "name": "Northland",
+      "id": "16e5542c-dc50-50fa-8df6-b1dcca40bc2c",
+      "items": [],
+      "count": 0
+    },
+    "north-st-paul-maplewood-oakdale": {
+      "name": "North St. Paul-Maplewood Oakdale",
+      "id": "55bb5148-1865-523d-a1d2-31fd36ddfa3e",
+      "items": [],
+      "count": 0
+    },
+    "nrheg": {
+      "name": "NRHEG",
+      "id": "23d15874-e666-5379-b0c5-7af47d45b17c",
+      "items": [],
+      "count": 0
+    },
+    "ogilvie": {
+      "name": "Ogilvie",
+      "id": "afb46263-f085-547a-9186-7bdd5be5cbe7",
+      "items": [],
+      "count": 0
+    },
+    "onamia": {
+      "name": "Onamia",
+      "id": "9e76c932-c47f-59d0-bfcd-5ec86f5a77c7",
+      "items": [],
+      "count": 0
+    },
+    "ortonville": {
+      "name": "Ortonville",
+      "id": "0ce5916e-432b-5d3b-905c-d5185eb5302b",
+      "items": [],
+      "count": 0
+    },
+    "osakis": {
+      "name": "Osakis",
+      "id": "03f2a801-9cf1-5cad-93f9-60324cb60bb8",
+      "items": [],
+      "count": 0
+    },
+    "osseo": {
+      "name": "Osseo",
+      "id": "bd7f89e3-13a4-5ba5-8000-b9c1e21e4ef1",
+      "items": [],
+      "count": 0
+    },
+    "owatonna": {
+      "name": "Owatonna",
+      "id": "5e5dbdc5-56ef-5a6e-aa17-189613f7355c",
+      "items": [],
+      "count": 0
+    },
+    "parkers-prairie": {
+      "name": "Parkers Prairie",
+      "id": "e690bdbd-9832-5b39-891f-667243ac29e8",
+      "items": [],
+      "count": 0
+    },
+    "park-rapids": {
+      "name": "Park Rapids",
+      "id": "32db3c82-42b2-59ef-9e3e-978a67e2e0cc",
+      "items": [],
+      "count": 0
+    },
+    "paynesville": {
+      "name": "Paynesville",
+      "id": "0238ed35-6b53-5036-a987-001efd933b27",
+      "items": [],
+      "count": 0
+    },
+    "pelican-rapids": {
+      "name": "Pelican Rapids",
+      "id": "39dafded-ac73-55bd-92c8-e98e8e8ebb7e",
+      "items": [],
+      "count": 0
+    },
+    "pequot-lakes": {
+      "name": "Pequot Lakes",
+      "id": "49200394-e8ce-5424-83be-e23f8b03af68",
+      "items": [],
+      "count": 0
+    },
+    "perham-dent": {
+      "name": "Perham-Dent",
+      "id": "15d56b50-38c9-57a5-9558-f76ef270291f",
+      "items": [],
+      "count": 0
+    },
+    "pierz": {
+      "name": "Pierz",
+      "id": "3e686c9a-be66-5422-a4b1-e944d21ef442",
+      "items": [],
+      "count": 0
+    },
+    "pillager": {
+      "name": "Pillager",
+      "id": "5d0940d5-f9d2-528f-993c-ca03b467029b",
+      "items": [],
+      "count": 0
+    },
+    "pine-city": {
+      "name": "Pine City",
+      "id": "27973b97-232c-5347-b6bb-1c97025f6683",
+      "items": [],
+      "count": 0
+    },
+    "pine-island": {
+      "name": "Pine Island",
+      "id": "5ae722d7-f62b-5d12-94ef-f210d335cbd3",
+      "items": [],
+      "count": 0
+    },
+    "pine-point": {
+      "name": "Pine Point",
+      "id": "e450f13c-6018-5cfa-9b23-f45472d10591",
+      "items": [],
+      "count": 0
+    },
+    "pine-river-backus": {
+      "name": "Pine River-Backus",
+      "id": "4d7e8698-e222-51bd-bfce-4d67e3797d77",
+      "items": [],
+      "count": 0
+    },
+    "pipestone-area": {
+      "name": "Pipestone Area",
+      "id": "88a35a6b-202a-56d0-a4ed-91fce6484048",
+      "items": [],
+      "count": 0
+    },
+    "plainview-elgin-millville": {
+      "name": "Plainview-Elgin-Millville",
+      "id": "3eb80889-4914-5f2f-8ba7-4ec310511274",
+      "items": [],
+      "count": 0
+    },
+    "princeton": {
+      "name": "Princeton",
+      "id": "e39acc9d-3930-5e10-b01b-ad269af4ff3e",
+      "items": [],
+      "count": 0
+    },
+    "prinsburg": {
+      "name": "Prinsburg",
+      "id": "0943e9de-fb1f-52a2-b889-f946be30d7dd",
+      "items": [],
+      "count": 0
+    },
+    "prior-lake-savage": {
+      "name": "Prior Lake-Savage",
+      "id": "3a5f304f-e7bd-54d6-b40c-9a7ab32cd4fb",
+      "items": [],
+      "count": 0
+    },
+    "proctor": {
+      "name": "Proctor",
+      "id": "ae70ef40-c241-5789-9ba7-fb00e75e5e3e",
+      "items": [],
+      "count": 0
+    },
+    "randolph": {
+      "name": "Randolph",
+      "id": "b636a5b9-d9c7-5979-89e6-c09130722b56",
+      "items": [],
+      "count": 0
+    },
+    "red-lake-county-central": {
+      "name": "Red Lake County Central",
+      "id": "fbf52034-9365-5698-955d-53546e48ae3c",
+      "items": [],
+      "count": 0
+    },
+    "red-lake-falls": {
+      "name": "Red Lake Falls",
+      "id": "60174890-7033-57e2-a851-5dcba307713f",
+      "items": [],
+      "count": 0
+    },
+    "red-lake": {
+      "name": "Red Lake",
+      "id": "4d1ef0e1-e884-543b-b849-6c87abf6831a",
+      "items": [],
+      "count": 0
+    },
+    "red-rock-central": {
+      "name": "Red Rock Central",
+      "id": "e4c3086e-b1dc-5de3-ad73-0ec16657ba1f",
+      "items": [],
+      "count": 0
+    },
+    "red-wing": {
+      "name": "Red Wing",
+      "id": "290b3bd8-9847-5d36-8d6f-997e4b65ecce",
+      "items": [],
+      "count": 0
+    },
+    "redwood-area": {
+      "name": "Redwood Area",
+      "id": "b47e5e0b-12ef-563e-a303-e1864980520c",
+      "items": [],
+      "count": 0
+    },
+    "renville-county-west": {
+      "name": "Renville County West",
+      "id": "902f22e4-62b6-569c-80bd-ad9fe66412a8",
+      "items": [],
+      "count": 0
+    },
+    "richfield": {
+      "name": "Richfield",
+      "id": "90d9bbfb-e173-5950-99a7-7494fa8f04d9",
+      "items": [],
+      "count": 0
+    },
+    "robbinsdale": {
+      "name": "Robbinsdale",
+      "id": "eb4aef02-0fee-5a31-9a6f-08bc63024e16",
+      "items": [],
+      "count": 0
+    },
+    "rochester": {
+      "name": "Rochester",
+      "id": "ee86519c-f90b-55e5-94de-d79fe624a0ac",
+      "items": [],
+      "count": 0
+    },
+    "rockford": {
+      "name": "Rockford",
+      "id": "014cc9da-850d-5d78-9c57-0f5f429e6acf",
+      "items": [],
+      "count": 0
+    },
+    "rock-ridge": {
+      "name": "Rock Ridge",
+      "id": "afa61825-9a63-51d9-8e46-16c4363f1b6b",
+      "items": [],
+      "count": 0
+    },
+    "rocori": {
+      "name": "ROCORI",
+      "id": "30aaf767-ad60-5cbe-b57f-9b3c664cd440",
+      "items": [],
+      "count": 0
+    },
+    "roseau": {
+      "name": "Roseau",
+      "id": "959bc43d-c373-536b-b249-b2053a103c7f",
+      "items": [],
+      "count": 0
+    },
+    "rosemount-apple-valley-eagan": {
+      "name": "Rosemount-Apple Valley-Eagan",
+      "id": "1911b9a7-01f7-5695-9257-983e869694ca",
+      "items": [],
+      "count": 0
+    },
+    "roseville": {
+      "name": "Roseville",
+      "id": "c93844b2-07e3-53da-94ef-78ef8a542a2e",
+      "items": [],
+      "count": 0
+    },
+    "rothsay": {
+      "name": "Rothsay",
+      "id": "3161b090-3708-52fc-94cc-18aaeec96455",
+      "items": [],
+      "count": 0
+    },
+    "round-lake-brewster": {
+      "name": "Round Lake-Brewster",
+      "id": "9364ea01-714a-5a0c-8758-73fb2da05526",
+      "items": [],
+      "count": 0
+    },
+    "royalton": {
+      "name": "Royalton",
+      "id": "aad7ecf2-ce97-5826-bc72-82d13938313b",
+      "items": [],
+      "count": 0
+    },
+    "rtr": {
+      "name": "RTR",
+      "id": "27ab3f9b-a149-56af-a0b0-678513bb5796",
+      "items": [],
+      "count": 0
+    },
+    "rush-city": {
+      "name": "Rush City",
+      "id": "a658fb84-9efc-5d91-b2a5-6b94b503cc9b",
+      "items": [],
+      "count": 0
+    },
+    "rushford-peterson": {
+      "name": "Rushford-Peterson",
+      "id": "c4e56cf1-dee0-559e-a18e-18b42e8945b4",
+      "items": [],
+      "count": 0
+    },
+    "saint-paul": {
+      "name": "Saint Paul",
+      "id": "a63b12a8-9cf4-57b2-9783-4153b7c008c6",
+      "items": [],
+      "count": 0
+    },
+    "sartell-st-stephen": {
+      "name": "Sartell-St. Stephen",
+      "id": "f9d9084d-d73d-5892-9014-6f24afd6c243",
+      "items": [],
+      "count": 0
+    },
+    "sauk-centre": {
+      "name": "Sauk Centre",
+      "id": "e5a35490-3986-5e49-84fa-2b0f9eb2b6f7",
+      "items": [],
+      "count": 0
+    },
+    "sauk-rapids-rice": {
+      "name": "Sauk Rapids-Rice",
+      "id": "4c02f9df-b621-58ec-9b08-35a951ea6e28",
+      "items": [],
+      "count": 0
+    },
+    "sebeka": {
+      "name": "Sebeka",
+      "id": "3b66de8c-4cb6-5e7f-ad53-41a9ee7047c0",
+      "items": [],
+      "count": 0
+    },
+    "shakopee": {
+      "name": "Shakopee",
+      "id": "1dd5b496-ee17-5de8-a447-a421a3e3a0ab",
+      "items": [],
+      "count": 0
+    },
+    "sibley-east": {
+      "name": "Sibley East",
+      "id": "3b2f3d88-e575-59f0-8050-3314aad962a9",
+      "items": [],
+      "count": 0
+    },
+    "sleepy-eye": {
+      "name": "Sleepy Eye",
+      "id": "ced25faf-6454-500d-9826-0963202525de",
+      "items": [],
+      "count": 0
+    },
+    "south-koochiching": {
+      "name": "South Koochiching",
+      "id": "c277e6c8-4109-5256-8550-ef79cc159bb3",
+      "items": [],
+      "count": 0
+    },
+    "southland": {
+      "name": "Southland",
+      "id": "92c22959-6340-5d14-a3cb-28994af5a8fd",
+      "items": [],
+      "count": 0
+    },
+    "south-st-paul": {
+      "name": "South St. Paul",
+      "id": "7e1808e9-5c34-5e88-8ad1-bdd19ba01fe9",
+      "items": [],
+      "count": 0
+    },
+    "south-washington-county": {
+      "name": "South Washington County",
+      "id": "8eed2718-bbed-5693-8d5d-209b2e82b1e0",
+      "items": [],
+      "count": 0
+    },
+    "springfield": {
+      "name": "Springfield",
+      "id": "a6a37a48-2b97-59ef-8c2a-a5cba3533232",
+      "items": [],
+      "count": 0
+    },
+    "spring-grove": {
+      "name": "Spring Grove",
+      "id": "e91156d6-0c05-56d7-a46f-01b1ec5517ba",
+      "items": [],
+      "count": 0
+    },
+    "spring-lake-park": {
+      "name": "Spring Lake Park",
+      "id": "893b1175-62d8-5c48-84b8-18d0ad5cdd77",
+      "items": [],
+      "count": 0
+    },
+    "st-anthony-new-brighton": {
+      "name": "St. Anthony-New Brighton",
+      "id": "b7c788d2-8e38-50a7-a007-9561e5fd530d",
+      "items": [],
+      "count": 0
+    },
+    "staples-motley": {
+      "name": "Staples-Motley",
+      "id": "5bdc4862-0e60-5bcf-82ee-7aca9b7d70e0",
+      "items": [],
+      "count": 0
+    },
+    "st-charles": {
+      "name": "St. Charles",
+      "id": "1b34b910-5dd0-55d8-a093-458c9cc8473b",
+      "items": [],
+      "count": 0
+    },
+    "st-clair": {
+      "name": "St. Clair",
+      "id": "bd4de969-6944-58e8-9994-351366822306",
+      "items": [],
+      "count": 0
+    },
+    "st-cloud": {
+      "name": "St. Cloud",
+      "id": "3d6b3dd0-e1f5-5cd8-8e02-44555e323b75",
+      "items": [],
+      "count": 0
+    },
+    "stephen-argyle-central": {
+      "name": "Stephen-Argyle Central",
+      "id": "bc10f7cb-75d4-5bd0-8b77-57aa98f52961",
+      "items": [],
+      "count": 0
+    },
+    "stewartville": {
+      "name": "Stewartville",
+      "id": "746fbf7c-286e-5f7c-8356-86ddd0a54fc0",
+      "items": [],
+      "count": 0
+    },
+    "st-francis": {
+      "name": "St. Francis",
+      "id": "c8aed984-83b9-5aaa-986e-da54f65a4530",
+      "items": [],
+      "count": 0
+    },
+    "stillwater-area": {
+      "name": "Stillwater Area",
+      "id": "10c9b9a6-f85e-51d1-b3c8-393e86bf4728",
+      "items": [],
+      "count": 0
+    },
+    "st-james": {
+      "name": "St. James",
+      "id": "c3cb06c1-2f4d-5383-9ab8-27cca9b2d856",
+      "items": [],
+      "count": 0
+    },
+    "st-louis-county": {
+      "name": "St. Louis County",
+      "id": "b539a1df-41e6-5a98-b998-67d8079ee60b",
+      "items": [],
+      "count": 0
+    },
+    "st-louis-park": {
+      "name": "St. Louis Park",
+      "id": "50e6df97-d00e-53b6-a0ca-04e1a4c43b9d",
+      "items": [],
+      "count": 0
+    },
+    "st-michael-albertville": {
+      "name": "St. Michael-Albertville",
+      "id": "541f7d95-c725-5737-916f-bb1d62843493",
+      "items": [],
+      "count": 0
+    },
+    "st-peter": {
+      "name": "St. Peter",
+      "id": "fe9c0522-2fd8-5edf-a96b-dc6ff047ab7c",
+      "items": [],
+      "count": 0
+    },
+    "swanville": {
+      "name": "Swanville",
+      "id": "33aa28e6-4af7-5d8f-93de-43ee235d783d",
+      "items": [],
+      "count": 0
+    },
+    "thief-river-falls": {
+      "name": "Thief River Falls",
+      "id": "13d91719-3cac-5582-85bf-ce34556e0289",
+      "items": [],
+      "count": 0
+    },
+    "tracy-area": {
+      "name": "Tracy Area",
+      "id": "7ab5395e-976a-5248-84fb-eafad1ec7242",
+      "items": [],
+      "count": 0
+    },
+    "tri-city-united": {
+      "name": "Tri-City United",
+      "id": "2b7c1e66-3a51-541c-8881-4515def4280b",
+      "items": [],
+      "count": 0
+    },
+    "tri-county": {
+      "name": "Tri-County",
+      "id": "fdf1439d-27ef-5fcb-8b41-3688490cad77",
+      "items": [],
+      "count": 0
+    },
+    "triton": {
+      "name": "Triton",
+      "id": "493ab791-597a-57e0-bdb2-e78c89a9dfda",
+      "items": [],
+      "count": 0
+    },
+    "truman": {
+      "name": "Truman",
+      "id": "429a79e1-a699-5160-8e2f-18fa81e4b361",
+      "items": [],
+      "count": 0
+    },
+    "ulen-hitterdal": {
+      "name": "Ulen-Hitterdal",
+      "id": "13f90788-96e5-560b-81d9-71c8866f0d66",
+      "items": [],
+      "count": 0
+    },
+    "underwood": {
+      "name": "Underwood",
+      "id": "7e1516d6-9010-5684-9b13-fbb0f8482888",
+      "items": [],
+      "count": 0
+    },
+    "united-south-central": {
+      "name": "United South Central",
+      "id": "b59491df-b13a-5a13-b318-6dd9151ab3a7",
+      "items": [],
+      "count": 0
+    },
+    "upsala": {
+      "name": "Upsala",
+      "id": "91454cc6-de84-535e-b6c1-4426b8d3e65f",
+      "items": [],
+      "count": 0
+    },
+    "verndale": {
+      "name": "Verndale",
+      "id": "13754a35-e978-5ced-aa99-0e11e70be981",
+      "items": [],
+      "count": 0
+    },
+    "wabasha-kellogg": {
+      "name": "Wabasha-Kellogg",
+      "id": "903ae674-1488-5361-a8d6-81ec971d03cb",
+      "items": [],
+      "count": 0
+    },
+    "wabasso": {
+      "name": "Wabasso",
+      "id": "8472e44a-0bdb-5495-9129-698025bba21c",
+      "items": [],
+      "count": 0
+    },
+    "wadena-deer-creek": {
+      "name": "Wadena-Deer Creek",
+      "id": "2c93af29-8d1a-513c-9a9d-14db77ed7489",
+      "items": [],
+      "count": 0
+    },
+    "walker-hackensack-akeley": {
+      "name": "Walker-Hackensack-Akeley",
+      "id": "11579e6a-f602-5e7f-a0c0-1d1425f91667",
+      "items": [],
+      "count": 0
+    },
+    "warren-alvarado-oslo": {
+      "name": "Warren-Alvarado-Oslo",
+      "id": "e829533b-5957-5b91-972e-92d1bd12fc9c",
+      "items": [],
+      "count": 0
+    },
+    "warroad": {
+      "name": "Warroad",
+      "id": "08299092-a278-51dd-9dd7-6f33257113fa",
+      "items": [],
+      "count": 0
+    },
+    "waseca": {
+      "name": "Waseca",
+      "id": "5546ab98-be6d-562f-b600-bafb168b3589",
+      "items": [],
+      "count": 0
+    },
+    "waterville-elysian-morristown": {
+      "name": "Waterville-Elysian-Morristown",
+      "id": "ae4c0387-1995-5ac8-8a8a-9d8506a8379e",
+      "items": [],
+      "count": 0
+    },
+    "waubun-ogema-white-earth": {
+      "name": "Waubun-Ogema-White Earth",
+      "id": "be28e090-3a6c-5eff-8604-6e9870803010",
+      "items": [],
+      "count": 0
+    },
+    "wayzata": {
+      "name": "Wayzata",
+      "id": "e71380ae-35b5-5cd0-8cbb-407ea0e51884",
+      "items": [],
+      "count": 0
+    },
+    "westbrook-walnut-grove": {
+      "name": "Westbrook-Walnut Grove",
+      "id": "e088c30c-0d44-58e1-b7d4-175dd85f4a77",
+      "items": [],
+      "count": 0
+    },
+    "west-central-area": {
+      "name": "West Central Area",
+      "id": "70f22e75-166c-5542-a0ab-48febea8b625",
+      "items": [],
+      "count": 0
+    },
+    "west-st-paul-mendota-heights-eagan": {
+      "name": "West St. Paul-Mendota Heights-Eagan",
+      "id": "67b140c5-7000-58b0-9c26-56dbbfdc2abc",
+      "items": [],
+      "count": 0
+    },
+    "wheaton-area": {
+      "name": "Wheaton Area",
+      "id": "effd83db-3221-5766-a46b-e77ef65e38ab",
+      "items": [],
+      "count": 0
+    },
+    "white-bear-lake": {
+      "name": "White Bear Lake",
+      "id": "5612bb24-ea9c-5f32-b3fb-6149414dbb9d",
+      "items": [],
+      "count": 0
+    },
+    "willmar": {
+      "name": "Willmar",
+      "id": "d05ce66e-5360-5a85-89b7-78e626ca144a",
+      "items": [],
+      "count": 0
+    },
+    "willow-river": {
+      "name": "Willow River",
+      "id": "5408ee5c-39fd-56d9-a662-063e289b0b32",
+      "items": [],
+      "count": 0
+    },
+    "windom": {
+      "name": "Windom",
+      "id": "8228cb8b-ca9e-5442-9602-065ea26d3a24",
+      "items": [],
+      "count": 0
+    },
+    "win-e-mac": {
+      "name": "Win-E-Mac",
+      "id": "e2df4565-cf14-5747-a4c3-fc6c69abe786",
+      "items": [],
+      "count": 0
+    },
+    "winona-area": {
+      "name": "Winona Area",
+      "id": "4621bb01-8f0d-506c-ba67-b73a2d318923",
+      "items": [],
+      "count": 0
+    },
+    "worthington": {
+      "name": "Worthington",
+      "id": "9975a942-9e84-5ddc-b2be-d3cd5b0a2e40",
+      "items": [],
+      "count": 0
+    },
+    "wrenshall": {
+      "name": "Wrenshall",
+      "id": "7440ebca-83f3-53b1-89d4-60e34afef539",
+      "items": [],
+      "count": 0
+    },
+    "yellow-medicine-east": {
+      "name": "Yellow Medicine East",
+      "id": "cbac18c1-3b8a-527c-90bf-265084174858",
+      "items": [],
+      "count": 0
+    },
+    "zumbrota-mazeppa": {
+      "name": "Zumbrota-Mazeppa",
+      "id": "0c256ba9-17a6-5deb-9efe-1f6ebf8c1cb4",
+      "items": [],
+      "count": 0
     }
   },
   "count": 182

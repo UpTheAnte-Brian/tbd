@@ -3,6 +3,7 @@
   Minimal v1: Parse a single 990 XML into irs.return_financials
 
   Inputs
+    --ein <ein>           Process all returns for one EIN (overrides --district)
     --district <uuid>     Process all scoped EINs for a district (preferred)
     --returnId <uuid>     Read xml_path from irs.returns
     --xml <path>          Local path to *_public.xml
@@ -18,6 +19,7 @@
     pnpm tsx scripts/irs/parse-990-return.ts --xml /path/to/123_public.xml --returnId <RETURN_UUID>
     pnpm tsx scripts/irs/parse-990-return.ts --returnId <RETURN_UUID>
     pnpm tsx scripts/irs/parse-990-return.ts --xml /path/to/123_public.xml   # will try to resolve return_id by xml_path
+    pnpm tsx scripts/irs/parse-990-return.ts --ein 41-1839631
     pnpm tsx scripts/irs/parse-990-return.ts --district <DISTRICT_UUID>
     pnpm tsx scripts/irs/parse-990-return.ts --district <DISTRICT_UUID> --statuses active --limit 500 --dryRun
 */
@@ -2262,9 +2264,179 @@ async function processDistrict(params: {
     }
 }
 
+async function processEin(params: {
+    ein: string;
+    limit?: number;
+    dryRun?: boolean;
+}) {
+    const { ein, limit, dryRun } = params;
+    const normalizedEin = normalizeEinInput(ein);
+    if (!normalizedEin) {
+        throw new Error(`Invalid --ein value: ${ein}`);
+    }
+
+    const supabaseAdmin = createSupabaseAdmin();
+    const returnsPageSize = 500;
+    let pageFrom = 0;
+
+    let processed = 0;
+    let upserted = 0;
+    let skippedMissingXml = 0;
+    let parseErrors = 0;
+
+    let totalPeopleParsed = 0;
+    let returnsWithPeople = 0;
+    const peopleByReturnType: Record<string, number> = {};
+    const returnsWithPeopleByReturnType: Record<string, number> = {};
+
+    console.log(
+        `Processing returns for EIN ${formatEinDashed(normalizedEin)} (${normalizedEin})`,
+    );
+
+    while (true) {
+        const q = supabaseAdmin
+            .schema("irs")
+            .from("returns")
+            .select("id, ein, xml_path, return_type")
+            .eq("ein", normalizedEin)
+            .not("xml_path", "is", null)
+            .range(pageFrom, pageFrom + returnsPageSize - 1);
+
+        const { data, error } = await q;
+        if (error) {
+            throw new Error(`Failed to load irs.returns page: ${error.message}`);
+        }
+
+        const rows = (data || []) as Array<{
+            id: string;
+            ein: string | null;
+            xml_path: string | null;
+            return_type: string | null;
+        }>;
+        if (!rows.length) break;
+
+        console.log(
+            `Fetched ${rows.length} irs.returns rows for EIN=${normalizedEin} (pageFrom=${pageFrom})`,
+        );
+
+        for (const r of rows) {
+            if (limit && processed >= limit) break;
+            processed++;
+
+            const xmlPath = String(r.xml_path || "");
+            if (!xmlPath) {
+                skippedMissingXml++;
+                continue;
+            }
+
+            const resolved = resolveXmlPathOnDisk(xmlPath);
+            if (!resolved.path) {
+                skippedMissingXml++;
+                console.warn(
+                    `WARN: Skipping return_id=${r.id} - XML not found on disk. Tried: ${
+                        resolved.tried.join(", ")
+                    }. Set IRS_TEOS_XML_ROOT to your persistent XML directory.`,
+                );
+                continue;
+            }
+
+            try {
+                const xml = await fsp.readFile(resolved.path, "utf8");
+                const loaded = loadXmlDoc(xml);
+
+                const parsed = await parseReturnFinancialsFromXmlPath(
+                    resolved.path,
+                );
+                const narratives = parseMissionAndProgramsFromLoaded(loaded);
+                const people = parsePartVIIAPeopleFromLoaded(loaded);
+                const rt = (r.return_type || "unknown").toString();
+                const pplCount = Array.isArray(people) ? people.length : 0;
+                totalPeopleParsed += pplCount;
+                peopleByReturnType[rt] = (peopleByReturnType[rt] || 0) + pplCount;
+                if (pplCount > 0) {
+                    returnsWithPeople++;
+                    returnsWithPeopleByReturnType[rt] =
+                        (returnsWithPeopleByReturnType[rt] || 0) + 1;
+                }
+                const inferredRestrictions = inferRestrictionsFromNarratives(
+                    loaded,
+                    narratives,
+                );
+
+                if (!dryRun) {
+                    await upsertReturnFinancials({
+                        supabaseAdmin,
+                        return_id: r.id,
+                        parsed,
+                    });
+
+                    await bestEffortUpsertNarratives({
+                        supabaseAdmin,
+                        return_id: r.id,
+                        narratives,
+                    });
+
+                    await bestEffortUpsertPeople({
+                        supabaseAdmin,
+                        return_id: r.id,
+                        people,
+                    });
+
+                    await bestEffortUpsertRestrictions({
+                        supabaseAdmin,
+                        return_id: r.id,
+                        restrictions: inferredRestrictions,
+                    });
+
+                    upserted++;
+                }
+            } catch (e) {
+                parseErrors++;
+                const msg = (e && typeof e === "object" && "message" in e)
+                    ? String((e as any).message)
+                    : String(e);
+                console.warn(
+                    `WARN: parse/upsert failed for return_id=${r.id}: ${msg}`,
+                );
+            }
+
+            if (processed % 50 === 0) {
+                console.log(
+                    `Progress: processed=${processed.toLocaleString()} upserted=${upserted.toLocaleString()} missing_xml=${skippedMissingXml.toLocaleString()} errors=${parseErrors.toLocaleString()} people_total=${totalPeopleParsed.toLocaleString()} returns_with_people=${returnsWithPeople.toLocaleString()}`,
+                );
+            }
+        }
+
+        if (limit && processed >= limit) break;
+        if (rows.length < returnsPageSize) break;
+        pageFrom += returnsPageSize;
+    }
+
+    console.log(
+        `Done. processed=${processed.toLocaleString()} upserted=${
+            dryRun ? 0 : upserted.toLocaleString()
+        } missing_xml=${skippedMissingXml.toLocaleString()} errors=${parseErrors.toLocaleString()} people_total=${totalPeopleParsed.toLocaleString()} returns_with_people=${returnsWithPeople.toLocaleString()}${
+            dryRun ? " (dryRun)" : ""
+        }`,
+    );
+
+    const debugSummary = Boolean(process.env.IRS_PARSE_DEBUG);
+    if (debugSummary) {
+        console.log(
+            "[people-debug] peopleByReturnType:",
+            JSON.stringify(peopleByReturnType),
+        );
+        console.log(
+            "[people-debug] returnsWithPeopleByReturnType:",
+            JSON.stringify(returnsWithPeopleByReturnType),
+        );
+    }
+}
+
 async function main() {
     const args = parseArgs(process.argv);
 
+    const einArg = args.ein ? String(args.ein) : null;
     const district = args.district ? String(args.district) : null;
     const returnId = args.returnId ? String(args.returnId) : null;
     const xmlArg = args.xml ? String(args.xml) : null;
@@ -2275,6 +2447,20 @@ async function main() {
 
     if (limit != null && (!Number.isFinite(limit) || limit <= 0)) {
         throw new Error("--limit must be a positive number.");
+    }
+
+    if (einArg) {
+        if (district) {
+            console.warn(
+                "WARN: --ein provided; ignoring --district filter in EIN mode.",
+            );
+        }
+        await processEin({
+            ein: einArg,
+            limit,
+            dryRun,
+        });
+        return;
     }
 
     if (district) {
@@ -2292,7 +2478,7 @@ async function main() {
 
     if (!returnId && !xmlArg) {
         throw new Error(
-            "Usage: pass --district <DISTRICT_ENTITY_UUID> (preferred) or --returnId/--xml for single return.",
+            "Usage: pass --ein <EIN>, --district <DISTRICT_ENTITY_UUID>, or --returnId/--xml for single return.",
         );
     }
 

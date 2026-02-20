@@ -1,0 +1,34 @@
+[
+  {
+    "relname": "entity_links",
+    "n_live_tup": 0
+  },
+  {
+    "relname": "returns",
+    "n_live_tup": 0
+  },
+  {
+    "relname": "return_financials",
+    "n_live_tup": 0
+  },
+  {
+    "relname": "organizations",
+    "n_live_tup": 0
+  },
+  {
+    "relname": "return_documents",
+    "n_live_tup": 0
+  },
+  {
+    "relname": "return_narratives",
+    "n_live_tup": 0
+  },
+  {
+    "relname": "return_people",
+    "n_live_tup": 0
+  },
+  {
+    "relname": "return_restrictions",
+    "n_live_tup": 0
+  }
+]

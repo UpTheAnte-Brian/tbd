@@ -334,16 +334,22 @@ type OrgParsedRow = {
 
 type OrgUpsertRow = {
     ein: string; // normalized 9 digits (e.g. "411619499")
-    legal_name: string | null;
-    normalized_legal_name: string | null;
-    city: string | null;
-    state: string | null;
-    country: string | null;
+    legal_name?: string | null;
+    normalized_legal_name?: string | null;
+    city?: string | null;
+    state?: string | null;
+    country?: string | null;
     website?: string | null;
     deductibility_code?: string | null;
     subsection_code?: string | null;
     foundation_code?: string | null;
     ruling_year?: number | null;
+    pub78_last_seen_at?: string | null;
+    revocation_last_seen_at?: string | null;
+    epostcard_last_seen_at?: string | null;
+    eobmf_last_seen_at?: string | null;
+    is_pub78?: boolean;
+    is_revoked?: boolean;
 };
 
 async function loadScopedScopeRows(params: {
@@ -561,7 +567,12 @@ function mapEpostcardRow(cols: string[]): OrgParsedRow | null {
     };
 }
 
-async function upsertOrganizations(supabaseAdmin: any, rows: OrgParsedRow[]) {
+async function upsertOrganizations(
+    supabaseAdmin: any,
+    rows: OrgParsedRow[],
+    source: Exclude<Source, "teos" | "all">,
+    runStartedAtIso: string,
+) {
     if (!rows.length) return { upserted: 0 };
 
     const nowIso = new Date().toISOString();
@@ -575,6 +586,21 @@ async function upsertOrganizations(supabaseAdmin: any, rows: OrgParsedRow[]) {
             ein: r.ein,
             last_seen_at: nowIso,
         };
+
+        if (source === "pub78") {
+            out.pub78_last_seen_at = runStartedAtIso;
+            out.is_pub78 = true;
+        }
+        if (source === "revocation") {
+            out.revocation_last_seen_at = runStartedAtIso;
+            out.is_revoked = true;
+        }
+        if (source === "epostcard") {
+            out.epostcard_last_seen_at = runStartedAtIso;
+        }
+        if (source === "eobmf") {
+            out.eobmf_last_seen_at = runStartedAtIso;
+        }
 
         if (r.legal_name && String(r.legal_name).trim().length) {
             out.legal_name = r.legal_name;
@@ -650,7 +676,7 @@ async function seedOrganizationsFromScope(params: {
 
 async function parseAndIngestPipeFile(params: {
     supabaseAdmin: any;
-    source: Exclude<Source, "teos" | "all">;
+    source: "pub78" | "revocation" | "epostcard";
     filePath: string;
     batchSize: number;
     scopedEinSet?: Set<string> | null;
@@ -670,6 +696,7 @@ async function parseAndIngestPipeFile(params: {
     let totalScopedSkipped = 0;
 
     const started = Date.now();
+    const runStartedAtIso = new Date().toISOString();
 
     for await (const lineRaw of rl) {
         const line = String(lineRaw || "").trim();
@@ -686,7 +713,7 @@ async function parseAndIngestPipeFile(params: {
         if (!mapped) continue;
 
         // If a district scope set is provided, only ingest organizations that are in scope.
-        if (scopedEinSet && scopedEinSet.size) {
+        if (scopedEinSet) {
             if (!scopedEinSet.has(mapped.ein)) {
                 totalScopedSkipped++;
                 continue;
@@ -698,7 +725,12 @@ async function parseAndIngestPipeFile(params: {
         batch.push(mapped);
 
         if (batch.length >= batchSize) {
-            const r = await upsertOrganizations(supabaseAdmin, batch);
+            const r = await upsertOrganizations(
+                supabaseAdmin,
+                batch,
+                source,
+                runStartedAtIso,
+            );
             totalUpserted += r.upserted;
             batch = [];
 
@@ -714,7 +746,12 @@ async function parseAndIngestPipeFile(params: {
     }
 
     if (batch.length) {
-        const r = await upsertOrganizations(supabaseAdmin, batch);
+        const r = await upsertOrganizations(
+            supabaseAdmin,
+            batch,
+            source,
+            runStartedAtIso,
+        );
         totalUpserted += r.upserted;
     }
 
@@ -723,6 +760,8 @@ async function parseAndIngestPipeFile(params: {
     console.log(
         `Done. Source=${source} lines=${totalLines.toLocaleString()} mapped=${totalMapped.toLocaleString()} scoped=${totalScopedMatched.toLocaleString()} skipped=${totalScopedSkipped.toLocaleString()} upserted=${totalUpserted.toLocaleString()} elapsed=${elapsedSec}s`,
     );
+
+    return { runStartedAtIso };
 }
 
 // ----------------------------
@@ -859,6 +898,7 @@ async function parseAndIngestCsvFile(params: {
     let totalScopedSkipped = 0;
 
     const started = Date.now();
+    const runStartedAtIso = new Date().toISOString();
 
     for await (const lineRaw of rl) {
         const line = String(lineRaw ?? "").trimEnd();
@@ -888,7 +928,7 @@ async function parseAndIngestCsvFile(params: {
         const mapped = mapEobmfCsvRow(cols, headerIdx);
         if (!mapped) continue;
 
-        if (scopedEinSet && scopedEinSet.size) {
+        if (scopedEinSet) {
             if (!scopedEinSet.has(mapped.ein)) {
                 totalScopedSkipped++;
                 continue;
@@ -900,7 +940,12 @@ async function parseAndIngestCsvFile(params: {
         batch.push(mapped);
 
         if (batch.length >= batchSize) {
-            const r = await upsertOrganizations(supabaseAdmin, batch);
+            const r = await upsertOrganizations(
+                supabaseAdmin,
+                batch,
+                source,
+                runStartedAtIso,
+            );
             totalUpserted += r.upserted;
             batch = [];
 
@@ -916,7 +961,12 @@ async function parseAndIngestCsvFile(params: {
     }
 
     if (batch.length) {
-        const r = await upsertOrganizations(supabaseAdmin, batch);
+        const r = await upsertOrganizations(
+            supabaseAdmin,
+            batch,
+            source,
+            runStartedAtIso,
+        );
         totalUpserted += r.upserted;
     }
 
@@ -925,6 +975,71 @@ async function parseAndIngestCsvFile(params: {
     console.log(
         `Done. Source=${source} lines=${totalLines.toLocaleString()} mapped=${totalMapped.toLocaleString()} scoped=${totalScopedMatched.toLocaleString()} skipped=${totalScopedSkipped.toLocaleString()} upserted=${totalUpserted.toLocaleString()} elapsed=${elapsedSec}s`,
     );
+
+    return { runStartedAtIso };
+}
+
+async function expirePresenceForSource(params: {
+    supabaseAdmin: any;
+    source: "pub78" | "revocation";
+    runStartedAtIso: string;
+    scopedEinSet?: Set<string> | null;
+}) {
+    const { supabaseAdmin, source, runStartedAtIso, scopedEinSet } = params;
+    const isPub78 = source === "pub78";
+    const flagColumn = isPub78 ? "is_pub78" : "is_revoked";
+    const lastSeenColumn = isPub78
+        ? "pub78_last_seen_at"
+        : "revocation_last_seen_at";
+    const clearPatch = isPub78 ? { is_pub78: false } : { is_revoked: false };
+
+    const expireForChunk = async (einChunk?: string[]) => {
+        let nullSeenQ = supabaseAdmin
+            .schema("irs")
+            .from("organizations")
+            .update(clearPatch)
+            .eq(flagColumn, true)
+            .is(lastSeenColumn, null);
+        if (einChunk) {
+            nullSeenQ = nullSeenQ.in("ein", einChunk);
+        }
+
+        const { error: nullSeenErr } = await nullSeenQ;
+        if (nullSeenErr) {
+            throw new Error(
+                `Expire ${source} failed (null last_seen): ${nullSeenErr.message}`,
+            );
+        }
+
+        let staleSeenQ = supabaseAdmin
+            .schema("irs")
+            .from("organizations")
+            .update(clearPatch)
+            .eq(flagColumn, true)
+            .neq(lastSeenColumn, runStartedAtIso);
+        if (einChunk) {
+            staleSeenQ = staleSeenQ.in("ein", einChunk);
+        }
+
+        const { error: staleSeenErr } = await staleSeenQ;
+        if (staleSeenErr) {
+            throw new Error(
+                `Expire ${source} failed (stale last_seen): ${staleSeenErr.message}`,
+            );
+        }
+    };
+
+    if (scopedEinSet) {
+        if (!scopedEinSet.size) return;
+        const chunkSize = 1000;
+        const eins = Array.from(scopedEinSet);
+        for (let i = 0; i < eins.length; i += chunkSize) {
+            await expireForChunk(eins.slice(i, i + chunkSize));
+        }
+        return;
+    }
+
+    await expireForChunk();
 }
 
 async function main() {
@@ -1107,22 +1222,37 @@ async function main() {
 
         if (src === "eobmf") {
             console.log(`Parsing file (${src}): ${runDataFilePath}`);
-            await parseAndIngestCsvFile({
+            const ingestResult = await parseAndIngestCsvFile({
                 supabaseAdmin,
                 source: "eobmf",
                 filePath: runDataFilePath,
                 batchSize,
                 scopedEinSet,
             });
+            console.log(
+                `Ingest complete for ${src} run_started_at=${ingestResult.runStartedAtIso}`,
+            );
         } else {
             console.log(`Parsing file (${src}): ${runDataFilePath}`);
-            await parseAndIngestPipeFile({
+            const ingestResult = await parseAndIngestPipeFile({
                 supabaseAdmin,
                 source: src,
                 filePath: runDataFilePath,
                 batchSize,
                 scopedEinSet,
             });
+
+            if (src === "pub78" || src === "revocation") {
+                await expirePresenceForSource({
+                    supabaseAdmin,
+                    source: src,
+                    runStartedAtIso: ingestResult.runStartedAtIso,
+                    scopedEinSet,
+                });
+                console.log(
+                    `Presence expiry complete for ${src} run_started_at=${ingestResult.runStartedAtIso}`,
+                );
+            }
         }
 
         // Keep temp dir around if user asks for it later; otherwise clean up.

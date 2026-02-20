@@ -6,8 +6,11 @@
   - irs.returns (return_type = '990N')
 
   Usage examples
-    # Download latest ZIP and import
+    # Download latest ZIP and import (district scope)
     pnpm tsx scripts/irs/import-irs-990n.ts --download --district <DISTRICT_UUID>
+
+    # Download latest ZIP and import only one EIN
+    pnpm tsx scripts/irs/import-irs-990n.ts --download --ein 41-1839631
 
     # Use an already-downloaded zip
     pnpm tsx scripts/irs/import-irs-990n.ts --zip /path/to/data-download-epostcard.zip --district <DISTRICT_UUID>
@@ -23,6 +26,7 @@
       header-driven parser when a header row is present, and falls back to
       conservative positional heuristics otherwise.
     - By default this script expects --district to scope EINs; use --all to import everything.
+    - --ein overrides --district and scopes to exactly one EIN.
 */
 
 import fs from "node:fs";
@@ -54,6 +58,7 @@ type Args = {
   maxRows?: number;
   cleanupFile?: boolean;
   district?: string;
+  ein?: string;
   statuses?: string;
   all?: boolean;
 };
@@ -143,6 +148,11 @@ function parseArgs(argv: string[]): Args {
       i++;
     } else if (token.startsWith("--district=")) {
       args.district = token.slice("--district=".length);
+    } else if (token === "--ein") {
+      args.ein = argv[i + 1];
+      i++;
+    } else if (token.startsWith("--ein=")) {
+      args.ein = token.slice("--ein=".length);
     } else if (token === "--statuses") {
       args.statuses = argv[i + 1];
       i++;
@@ -1209,17 +1219,33 @@ async function main() {
     },
   );
 
-  const districtEntityId = args.district ? String(args.district) : null;
+  const explicitEin = args.ein ? normalizeEinInput(String(args.ein)) : null;
+  if (args.ein && !explicitEin) {
+    throw new Error(`Invalid --ein value: ${String(args.ein)}`);
+  }
+
+  if (explicitEin && args.district) {
+    console.warn("WARN: --ein provided; ignoring --district filter in EIN mode.");
+  }
+
+  const districtEntityId = explicitEin
+    ? null
+    : args.district
+    ? String(args.district)
+    : null;
   const statuses = parseCommaList(args.statuses ?? "candidate,active");
 
-  if (!districtEntityId && !args.all) {
+  if (!explicitEin && !districtEntityId && !args.all) {
     throw new Error(
-      "Provide --district <DISTRICT_UUID> (or use --all to import every EIN).",
+      "Provide --ein <EIN>, --district <DISTRICT_UUID>, or use --all to import every EIN.",
     );
   }
 
   let scopedEinSet: Set<string> | null = null;
-  if (districtEntityId) {
+  if (explicitEin) {
+    scopedEinSet = new Set([explicitEin]);
+    console.log(`Using explicit EIN filter: ${explicitEin}`);
+  } else if (districtEntityId) {
     console.log(
       `Loading scoped EINs for district_entity_id=${districtEntityId} statuses=${
         statuses.join(",")
@@ -1231,6 +1257,14 @@ async function main() {
       statuses,
     });
     console.log(`Loaded ${scopedEinSet.size.toLocaleString()} EINs.`);
+
+    // District-scoped import with no scoped EINs should be a no-op.
+    if (!scopedEinSet.size) {
+      console.log(
+        "No scoped EINs found for this district/status filter. Skipping 990-N import.",
+      );
+      return;
+    }
   }
 
   console.log(`Parsing 990-N file: ${filePath}`);

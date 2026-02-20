@@ -1,0 +1,186 @@
+[
+  {
+    "indexrelname": "return_people_pkey",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "return_people_name_trgm",
+    "index_size": "16 kB"
+  },
+  {
+    "indexrelname": "return_people_return_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "return_people_unique_uidx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "return_financials_pkey",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "return_financials_net_assets_end_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_unique_authoritative_xml",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_unique_authoritative_xml_period",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_unique_authoritative_xml_year",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_irs_object_id_uidx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_ein_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_tax_period_end_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_irs_object_id_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_teos_index_year_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_ein_tax_period_end_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_return_type_tax_year_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_pkey",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_unique",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_ein_type_year_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_ein_year_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_object_id_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "returns_return_name_trgm",
+    "index_size": "16 kB"
+  },
+  {
+    "indexrelname": "organizations_normalized_legal_name_trgm_idx",
+    "index_size": "16 kB"
+  },
+  {
+    "indexrelname": "organizations_ein_uidx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "organizations_latest_return_id_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "organizations_pub78_last_seen_at_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "organizations_revocation_last_seen_at_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "organizations_epostcard_last_seen_at_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "organizations_eobmf_last_seen_at_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "organizations_is_pub78_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "organizations_is_revoked_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "organizations_pkey",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "organizations_legal_name_trgm",
+    "index_size": "16 kB"
+  },
+  {
+    "indexrelname": "organizations_state_city_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "return_documents_pkey",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "return_documents_return_id_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "return_documents_unique_path_uidx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "return_narratives_pkey",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "return_narratives_return_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "return_narratives_section_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "return_restrictions_pkey",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "return_restrictions_return_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "return_restrictions_type_idx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "entity_links_pkey",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "entity_links_entity_id_ein_uidx",
+    "index_size": "8192 bytes"
+  },
+  {
+    "indexrelname": "irs_entity_links_entity_id_idx",
+    "index_size": "8192 bytes"
+  }
+]
