@@ -472,6 +472,146 @@ export type Database = {
           },
         ]
       }
+      action_items: {
+        Row: {
+          agent_run_id: string | null
+          created_at: string
+          description: string
+          due_date: string | null
+          id: string
+          meeting_id: string
+          motion_id: string | null
+          owner_name: string | null
+          source_excerpt: string | null
+          source_line_number: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_run_id?: string | null
+          created_at?: string
+          description: string
+          due_date?: string | null
+          id?: string
+          meeting_id: string
+          motion_id?: string | null
+          owner_name?: string | null
+          source_excerpt?: string | null
+          source_line_number?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_run_id?: string | null
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          meeting_id?: string
+          motion_id?: string | null
+          owner_name?: string | null
+          source_excerpt?: string | null
+          source_line_number?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_items_agent_run_id_fkey"
+            columns: ["agent_run_id"]
+            isOneToOne: false
+            referencedRelation: "agent_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "action_items_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "board_meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "action_items_motion_id_fkey"
+            columns: ["motion_id"]
+            isOneToOne: false
+            referencedRelation: "motions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_runs: {
+        Row: {
+          agent_name: string
+          applied_minutes_id: string | null
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          id: string
+          input_hash: string
+          input_payload: Json
+          meeting_id: string
+          output_payload: Json | null
+          result_payload: Json | null
+          run_type: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_name: string
+          applied_minutes_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          input_hash: string
+          input_payload?: Json
+          meeting_id: string
+          output_payload?: Json | null
+          result_payload?: Json | null
+          run_type: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_name?: string
+          applied_minutes_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          input_hash?: string
+          input_payload?: Json
+          meeting_id?: string
+          output_payload?: Json | null
+          result_payload?: Json | null
+          run_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_runs_applied_minutes_id_fkey"
+            columns: ["applied_minutes_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_minutes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_runs_applied_minutes_id_fkey"
+            columns: ["applied_minutes_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_minutes_expanded"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_runs_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "board_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       board_meetings: {
         Row: {
           adjourned_at: string | null
@@ -708,6 +848,41 @@ export type Database = {
           },
           {
             foreignKeyName: "meeting_minutes_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: true
+            referencedRelation: "board_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_transcripts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          meeting_id: string
+          transcript: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          meeting_id: string
+          transcript?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          meeting_id?: string
+          transcript?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_transcripts_meeting_id_fkey"
             columns: ["meeting_id"]
             isOneToOne: true
             referencedRelation: "board_meetings"

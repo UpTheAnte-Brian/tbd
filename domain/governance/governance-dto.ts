@@ -511,16 +511,18 @@ export async function createBoardMeeting(
     options?: GovernanceClientOptions,
 ): Promise<BoardMeeting> {
     const supabase = await getGovernanceClient(options);
+    // Elevated writes use service_role, but auth identity still needs request cookies.
+    const authClient = options?.elevated ? await createApiClient() : supabase;
     const {
         data: { user },
         error: userError,
-    } = await supabase.auth.getUser();
+    } = await authClient.auth.getUser();
     if (userError || !user?.id) {
         throw new Error("You must be signed in to create a meeting");
     }
     const payload: Record<string, unknown> = {
         board_id: boardId,
-        created_by: user.id,
+        called_by_user_id: user.id,
         title: input.title,
         meeting_type: input.meeting_type ?? null,
         scheduled_start: input.scheduled_start ?? null,

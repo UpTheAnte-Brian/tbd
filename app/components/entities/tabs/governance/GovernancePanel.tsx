@@ -17,6 +17,7 @@ import {
 } from "@/domain/governance/governance";
 import type { BoardPacketSnapshot } from "@/domain/governance/governance-approvals";
 import type { EntityType } from "@/domain/entities/types";
+import { MeetingAssistantSecretaryPanel } from "./meeting/MeetingAssistantSecretaryPanel";
 
 interface GovernancePanelProps {
   entityId: string;
@@ -1492,6 +1493,11 @@ export default function GovernancePanel({
                   )}
                 </div>
               ) : null}
+
+              <MeetingAssistantSecretaryPanel
+                meetingId={meeting.id}
+                onApplied={loadSnapshot}
+              />
 
               <div className="space-y-2">
                 <h4 className="font-semibold">Minutes</h4>

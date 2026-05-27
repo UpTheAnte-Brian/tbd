@@ -13,6 +13,7 @@ import { MeetingActions } from "./MeetingActions";
 import { MotionVotePanel } from "./MotionVotePanel";
 import { VersionHistory } from "./VersionHistory";
 import { MinutesEditor } from "./MinutesEditor";
+import { MeetingAssistantSecretaryPanel } from "./MeetingAssistantSecretaryPanel";
 import toast from "react-hot-toast";
 
 async function getJSON<T>(url: string): Promise<T> {
@@ -234,6 +235,11 @@ export function MeetingDetail(props: {
                     )}
                 </div>
             </div>
+
+            <MeetingAssistantSecretaryPanel
+                meetingId={meetingId}
+                onApplied={refreshAll}
+            />
 
             <div className="border rounded p-4 space-y-3">
                 <div className="flex items-center justify-between gap-3">

@@ -1,14 +1,49 @@
 import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 import { performance } from "node:perf_hooks";
 import { createClient } from "@supabase/supabase-js";
 import { loadEnvFiles } from "../lib/load-env";
 
 const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
+const supabaseCmd = process.platform === "win32" ? "supabase.cmd" : "supabase";
 
-const loadedEnv = loadEnvFiles();
+const loadedEnv = loadEnvFiles([
+    ".env.supabase.local.generated",
+    ".env.local",
+    ".env.development.local",
+]);
 if (loadedEnv.length > 0) {
     console.log(`Loaded env: ${loadedEnv.join(", ")}`);
 }
+
+function applyForcedLocalSupabaseEnv() {
+    const generatedEnvPath = path.resolve(
+        process.cwd(),
+        ".env.supabase.local.generated",
+    );
+    if (!fs.existsSync(generatedEnvPath)) return;
+
+    const contents = fs.readFileSync(generatedEnvPath, "utf8");
+    for (const line of contents.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const eqIndex = trimmed.indexOf("=");
+        if (eqIndex === -1) continue;
+        const key = trimmed.slice(0, eqIndex).trim();
+        const value = trimmed.slice(eqIndex + 1).trim();
+        if (
+            key === "NEXT_PUBLIC_SUPABASE_URL" ||
+            key === "NEXT_PUBLIC_SUPABASE_ANON_KEY" ||
+            key === "SUPABASE_SERVICE_ROLE_KEY" ||
+            key === "SUPABASE_URL"
+        ) {
+            process.env[key] = value;
+        }
+    }
+}
+
+applyForcedLocalSupabaseEnv();
 
 type Step = {
     name: string;
@@ -33,10 +68,54 @@ const steps: Step[] = [
 ];
 
 function getSupabaseEnv() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
-    const servicekey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // Prefer live credentials from running local Supabase to avoid stale key mismatches.
+    const status = spawnSync(
+        supabaseCmd,
+        ["status", "--output", "json"],
+        { encoding: "utf8", env: process.env },
+    );
+    let url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
+    let servicekey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!status.error && status.status === 0) {
+        const output = `${status.stdout ?? ""}\n${status.stderr ?? ""}`;
+        const start = output.indexOf("{");
+        const end = output.lastIndexOf("}");
+        if (start >= 0 && end > start) {
+            try {
+                const parsed = JSON.parse(output.slice(start, end + 1)) as {
+                    API_URL?: string;
+                    SECRET_KEY?: string;
+                    SERVICE_ROLE_KEY?: string;
+                };
+                if (parsed.API_URL) {
+                    url = parsed.API_URL;
+                    process.env.NEXT_PUBLIC_SUPABASE_URL = parsed.API_URL;
+                    process.env.SUPABASE_URL = parsed.API_URL;
+                }
+                if (parsed.SECRET_KEY) {
+                    servicekey = parsed.SECRET_KEY;
+                    process.env.SUPABASE_SERVICE_ROLE_KEY = parsed.SECRET_KEY;
+                } else if (parsed.SERVICE_ROLE_KEY) {
+                    servicekey = parsed.SERVICE_ROLE_KEY;
+                    process.env.SUPABASE_SERVICE_ROLE_KEY = parsed.SERVICE_ROLE_KEY;
+                }
+            } catch {
+                // Fallback to env values when JSON parsing fails.
+            }
+        }
+    }
+
     if (!url) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL)");
     if (!servicekey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
+    const normalized = url.toLowerCase();
+    const isLocal = normalized.includes("127.0.0.1") ||
+        normalized.includes("localhost");
+    if (!isLocal) {
+        throw new Error(
+            `Refusing to run seed:local against non-local Supabase URL: ${url}`,
+        );
+    }
     return { url, servicekey };
 }
 

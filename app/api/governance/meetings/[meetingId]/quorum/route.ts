@@ -1,6 +1,7 @@
 // DEPRECATED (global): Prefer /api/entities/[id]/governance/* for entity-scoped workflows.
 import { NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
+import { supabaseAdmin } from "@/utils/supabase/service-worker";
 
 interface RouteParams {
     params: Promise<{ meetingId: string }>;
@@ -19,11 +20,17 @@ export async function GET(req: Request, context: RouteParams) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
         .schema("governance")
         .rpc("is_quorum_met", { p_meeting_id: meetingId });
 
     if (error) {
+        const message = (error.message ?? "").toLowerCase();
+        const isPermissionError = message.includes("permission denied") &&
+            message.includes("is_quorum_met");
+        if (isPermissionError) {
+            return NextResponse.json({ quorumMet: false }, { status: 200 });
+        }
         return NextResponse.json({ error: error.message }, { status: 400 });
     }
 

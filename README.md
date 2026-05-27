@@ -49,6 +49,16 @@ Tooling such as Dependabot, migrations, and linting are used deliberately — no
 
 ⸻
 
+Local Supabase + Dev Workflows
+
+- `npm run dev` now auto-checks local Supabase and starts it if needed before launching Next.js.
+- Local Supabase data persists across restarts; use `npm run sb:local:reset` only when you want a fresh local database.
+- For cloud workflows, use dedicated env files:
+  - `.env.dev.cloud` with `npm run dev:cloud:dev`
+  - `.env.test.cloud` with `npm run dev:cloud:test`
+
+⸻
+
 About the Author
 
 This project is developed and maintained by Brian Johnson.
