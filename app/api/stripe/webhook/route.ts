@@ -45,27 +45,34 @@ export async function POST(req: Request) {
             amount: number;
             email?: string | null;
             type?: "platform" | "district";
+            entity_id?: string | null;
             user_id?: string | null;
             subscription_id?: string | null;
             receipt_url?: string | null;
-        }) => {
+        }): Promise<{ id: string } | null> => {
             console.log("data: ", data);
             if (data.stripe_session_id) {
                 // Only include stripe_session_id if it exists
-                await supabase.from("donations").upsert(
+                const { data: donation, error } = await supabase.from("donations").upsert(
                     { ...data },
                     { onConflict: "stripe_session_id" },
-                );
+                ).select("id").single();
+                if (error) throw error;
+                return donation;
             } else if (data.invoice_id) {
-                await supabase
+                const { data: donation, error } = await supabase
                     .from("donations")
                     .update({ receipt_url: data.receipt_url })
-                    .eq("invoice_id", data.invoice_id);
+                    .eq("invoice_id", data.invoice_id)
+                    .select("id")
+                    .maybeSingle();
+                if (error) throw error;
+                return donation;
             } else {
                 // throw new Error(
                 //     "Cannot upsert donation: no primary key provided",
                 // );
-                return;
+                return null;
             }
         };
 
@@ -75,6 +82,8 @@ export async function POST(req: Request) {
         if (event.type === "checkout.session.completed") {
             const session = event.data.object as Stripe.Checkout.Session;
             const districtId = session.metadata?.district_id ?? null;
+            const entityId = session.metadata?.entity_id ?? null;
+            const fundingPurpose = session.metadata?.funding_purpose ?? null;
             const userId = session.metadata?.user_id ?? null;
             const interval = session.metadata?.interval ?? null;
             const email = await getEmail(session);
@@ -83,12 +92,13 @@ export async function POST(req: Request) {
             const finalReceiptUrl =
                 `https://dashboard.stripe.com/invoices/${session.invoice}`;
 
-            await upsertDonation({
+            const donation = await upsertDonation({
                 stripe_session_id: session.id,
                 invoice_id: session.invoice as string,
                 amount: session.amount_total || 0,
                 email,
                 type: districtId ? "district" : "platform",
+                entity_id: entityId,
                 ...(userId && { user_id: userId }),
                 ...(interval &&
                     {
@@ -98,6 +108,24 @@ export async function POST(req: Request) {
                     }),
                 receipt_url: finalReceiptUrl,
             });
+
+            if (
+                donation?.id &&
+                fundingPurpose === "ai_credits" &&
+                entityId &&
+                session.amount_total
+            ) {
+                const { error: creditError } = await supabase.rpc(
+                    "grant_entity_ai_donation_credits",
+                    {
+                        p_entity_id: entityId,
+                        p_donation_id: donation.id,
+                        p_amount_cents: session.amount_total,
+                        p_created_by: userId,
+                    },
+                );
+                if (creditError) throw creditError;
+            }
             // console.log("receipt ", session);
             if (session.mode === "subscription" && session.subscription) {
                 const payload = {
@@ -106,6 +134,7 @@ export async function POST(req: Request) {
                     email,
                     amount: session.amount_total ?? 0,
                     type: districtId ? "district" : "platform",
+                    entity_id: entityId ?? undefined,
                     status: "active",
                     created_at: new Date().toISOString(),
                     ...(interval && { interval }),

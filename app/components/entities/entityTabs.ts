@@ -7,6 +7,7 @@ export type EntityTabKey =
   | "users"
   | "branding"
   | "governance"
+  | "agent"
   | "irs"
   | "map"
   | "superintendent";
@@ -17,9 +18,11 @@ export type EntityTabContext = {
   canViewDistrictGovernance?: boolean;
   isPlatformAdmin?: boolean;
   canManageUsersForEntity?: boolean;
+  canViewAgentForEntity?: boolean;
   featureFlags: {
     governanceTabsEnabled: boolean;
     mapTabEnabled: boolean;
+    agentTabEnabled: boolean;
     usersTabEnabled?: boolean;
   };
 };
@@ -89,6 +92,14 @@ const ENTITY_TABS: EntityTabDefinition[] = [
       }
       return true;
     },
+  },
+  {
+    key: "agent",
+    label: "Agent",
+    order: 65,
+    isVisible: (context) =>
+      Boolean(context.canViewAgentForEntity) &&
+      context.featureFlags.agentTabEnabled,
   },
   {
     key: "irs",

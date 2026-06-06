@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
-  }
   branding: {
     Tables: {
       asset_categories: {
@@ -428,50 +423,6 @@ export type Database = {
   }
   governance: {
     Tables: {
-      approvals: {
-        Row: {
-          approval_method: string
-          approved_at: string
-          board_member_id: string
-          entity_id: string
-          id: string
-          ip_address: unknown
-          signature_hash: string
-          target_id: string
-          target_type: Database["governance"]["Enums"]["approval_target_type"]
-        }
-        Insert: {
-          approval_method?: string
-          approved_at?: string
-          board_member_id: string
-          entity_id: string
-          id?: string
-          ip_address?: unknown
-          signature_hash: string
-          target_id: string
-          target_type: Database["governance"]["Enums"]["approval_target_type"]
-        }
-        Update: {
-          approval_method?: string
-          approved_at?: string
-          board_member_id?: string
-          entity_id?: string
-          id?: string
-          ip_address?: unknown
-          signature_hash?: string
-          target_id?: string
-          target_type?: Database["governance"]["Enums"]["approval_target_type"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "approvals_board_member_id_fkey"
-            columns: ["board_member_id"]
-            isOneToOne: false
-            referencedRelation: "board_members"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       action_items: {
         Row: {
           agent_run_id: string | null
@@ -608,6 +559,50 @@ export type Database = {
             columns: ["meeting_id"]
             isOneToOne: false
             referencedRelation: "board_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approvals: {
+        Row: {
+          approval_method: string
+          approved_at: string
+          board_member_id: string
+          entity_id: string
+          id: string
+          ip_address: unknown
+          signature_hash: string
+          target_id: string
+          target_type: Database["governance"]["Enums"]["approval_target_type"]
+        }
+        Insert: {
+          approval_method?: string
+          approved_at?: string
+          board_member_id: string
+          entity_id: string
+          id?: string
+          ip_address?: unknown
+          signature_hash: string
+          target_id: string
+          target_type: Database["governance"]["Enums"]["approval_target_type"]
+        }
+        Update: {
+          approval_method?: string
+          approved_at?: string
+          board_member_id?: string
+          entity_id?: string
+          id?: string
+          ip_address?: unknown
+          signature_hash?: string
+          target_id?: string
+          target_type?: Database["governance"]["Enums"]["approval_target_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approvals_board_member_id_fkey"
+            columns: ["board_member_id"]
+            isOneToOne: false
+            referencedRelation: "board_members"
             referencedColumns: ["id"]
           },
         ]
@@ -1834,6 +1829,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_credit_rates: {
+        Row: {
+          created_at: string
+          effective_at: string
+          id: string
+          name: string
+          retired_at: string | null
+          usd_cents_per_credit: number
+        }
+        Insert: {
+          created_at?: string
+          effective_at?: string
+          id?: string
+          name: string
+          retired_at?: string | null
+          usd_cents_per_credit: number
+        }
+        Update: {
+          created_at?: string
+          effective_at?: string
+          id?: string
+          name?: string
+          retired_at?: string | null
+          usd_cents_per_credit?: number
+        }
+        Relationships: []
+      }
       businesses: {
         Row: {
           address: string | null
@@ -2264,6 +2286,332 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "entity_addresses_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_agent_runs: {
+        Row: {
+          agent_id: string | null
+          capability: string
+          completed_at: string | null
+          created_at: string
+          credit_estimate: number
+          credits_charged: number
+          entity_id: string
+          id: string
+          prompt_summary: string | null
+          requested_by: string | null
+          result_summary: string | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          agent_id?: string | null
+          capability: string
+          completed_at?: string | null
+          created_at?: string
+          credit_estimate?: number
+          credits_charged?: number
+          entity_id: string
+          id?: string
+          prompt_summary?: string | null
+          requested_by?: string | null
+          result_summary?: string | null
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          agent_id?: string | null
+          capability?: string
+          completed_at?: string | null
+          created_at?: string
+          credit_estimate?: number
+          credits_charged?: number
+          entity_id?: string
+          id?: string
+          prompt_summary?: string | null
+          requested_by?: string | null
+          result_summary?: string | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_agent_runs_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "entity_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_agent_runs_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_agent_runs_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_agent_runs_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles_with_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_agents: {
+        Row: {
+          created_at: string
+          enabled_capabilities: Json
+          entity_id: string
+          id: string
+          instructions: string | null
+          safety_policy: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled_capabilities?: Json
+          entity_id: string
+          id?: string
+          instructions?: string | null
+          safety_policy?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled_capabilities?: Json
+          entity_id?: string
+          id?: string
+          instructions?: string | null
+          safety_policy?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_agents_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: true
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_ai_accounts: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          entity_id: string
+          hard_limit_credits: number
+          id: string
+          low_balance_threshold_credits: number
+          monthly_budget_credits: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          entity_id: string
+          hard_limit_credits?: number
+          id?: string
+          low_balance_threshold_credits?: number
+          monthly_budget_credits?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          entity_id?: string
+          hard_limit_credits?: number
+          id?: string
+          low_balance_threshold_credits?: number
+          monthly_budget_credits?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_ai_accounts_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: true
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_ai_credit_ledger: {
+        Row: {
+          account_id: string
+          amount_credits: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          direction: string
+          entity_id: string
+          id: string
+          metadata: Json
+          money_amount_cents: number | null
+          source_id: string | null
+          source_type: string
+        }
+        Insert: {
+          account_id: string
+          amount_credits: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          direction: string
+          entity_id: string
+          id?: string
+          metadata?: Json
+          money_amount_cents?: number | null
+          source_id?: string | null
+          source_type: string
+        }
+        Update: {
+          account_id?: string
+          amount_credits?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          direction?: string
+          entity_id?: string
+          id?: string
+          metadata?: Json
+          money_amount_cents?: number | null
+          source_id?: string | null
+          source_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_ai_credit_ledger_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "entity_ai_account_summaries"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "entity_ai_credit_ledger_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "entity_ai_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_ai_credit_ledger_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_ai_credit_ledger_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles_with_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_ai_credit_ledger_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_ai_usage_events: {
+        Row: {
+          agent_run_id: string | null
+          billed_credits: number
+          cached_tokens: number
+          capability: string
+          created_at: string
+          created_by: string | null
+          entity_id: string
+          id: string
+          input_tokens: number
+          metadata: Json
+          model: string | null
+          output_tokens: number
+          provider: string | null
+          provider_cost_cents: number
+          status: string
+        }
+        Insert: {
+          agent_run_id?: string | null
+          billed_credits?: number
+          cached_tokens?: number
+          capability: string
+          created_at?: string
+          created_by?: string | null
+          entity_id: string
+          id?: string
+          input_tokens?: number
+          metadata?: Json
+          model?: string | null
+          output_tokens?: number
+          provider?: string | null
+          provider_cost_cents?: number
+          status?: string
+        }
+        Update: {
+          agent_run_id?: string | null
+          billed_credits?: number
+          cached_tokens?: number
+          capability?: string
+          created_at?: string
+          created_by?: string | null
+          entity_id?: string
+          id?: string
+          input_tokens?: number
+          metadata?: Json
+          model?: string | null
+          output_tokens?: number
+          provider?: string | null
+          provider_cost_cents?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_ai_usage_events_agent_run_id_fkey"
+            columns: ["agent_run_id"]
+            isOneToOne: false
+            referencedRelation: "entity_agent_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_ai_usage_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_ai_usage_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles_with_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_ai_usage_events_entity_id_fkey"
             columns: ["entity_id"]
             isOneToOne: false
             referencedRelation: "entities"
@@ -3208,6 +3556,32 @@ export type Database = {
       }
     }
     Views: {
+      entity_ai_account_summaries: {
+        Row: {
+          account_id: string | null
+          balance_credits: number | null
+          created_at: string | null
+          display_name: string | null
+          entity_id: string | null
+          hard_limit_credits: number | null
+          last_funded_at: string | null
+          last_used_at: string | null
+          low_balance_threshold_credits: number | null
+          month_usage_credits: number | null
+          monthly_budget_credits: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_ai_accounts_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: true
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entity_donation_totals: {
         Row: {
           donation_count: number | null
@@ -3379,7 +3753,76 @@ export type Database = {
         Returns: boolean
       }
       create_user: { Args: { email: string }; Returns: string }
+      current_ai_credit_rate: {
+        Args: never
+        Returns: {
+          created_at: string
+          effective_at: string
+          id: string
+          name: string
+          retired_at: string | null
+          usd_cents_per_credit: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ai_credit_rates"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       custom_access_token_hook: { Args: { event: Json }; Returns: Json }
+      ensure_entity_ai_account: {
+        Args: { p_entity_id: string }
+        Returns: {
+          created_at: string
+          display_name: string | null
+          entity_id: string
+          hard_limit_credits: number
+          id: string
+          low_balance_threshold_credits: number
+          monthly_budget_credits: number
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "entity_ai_accounts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      entity_ai_credit_balance: {
+        Args: { p_entity_id: string }
+        Returns: number
+      }
+      grant_entity_ai_donation_credits: {
+        Args: {
+          p_amount_cents: number
+          p_created_by?: string
+          p_donation_id: string
+          p_entity_id: string
+        }
+        Returns: {
+          account_id: string
+          amount_credits: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          direction: string
+          entity_id: string
+          id: string
+          metadata: Json
+          money_amount_cents: number | null
+          source_id: string | null
+          source_type: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "entity_ai_credit_ledger"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       is_entity_admin:
         | { Args: { p_entity_id: string }; Returns: boolean }
         | { Args: { p_entity_id: string; p_user_id: string }; Returns: boolean }
@@ -3395,6 +3838,46 @@ export type Database = {
       link_schools_to_districts: {
         Args: { p_limit: number; p_offset: number }
         Returns: Json
+      }
+      record_entity_ai_usage: {
+        Args: {
+          p_agent_run_id?: string
+          p_billed_credits: number
+          p_cached_tokens?: number
+          p_capability: string
+          p_created_by?: string
+          p_entity_id: string
+          p_input_tokens?: number
+          p_metadata?: Json
+          p_model?: string
+          p_output_tokens?: number
+          p_provider?: string
+          p_provider_cost_cents?: number
+          p_status?: string
+        }
+        Returns: {
+          agent_run_id: string | null
+          billed_credits: number
+          cached_tokens: number
+          capability: string
+          created_at: string
+          created_by: string | null
+          entity_id: string
+          id: string
+          input_tokens: number
+          metadata: Json
+          model: string | null
+          output_tokens: number
+          provider: string | null
+          provider_cost_cents: number
+          status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "entity_ai_usage_events"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       safe_geom_from_geojson_4326: {
         Args: { p_geojson: Json }
