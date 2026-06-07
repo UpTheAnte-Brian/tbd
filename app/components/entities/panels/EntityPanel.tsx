@@ -128,6 +128,7 @@ export default function EntityPanel({ entityId, entityType }: Props) {
         resolvedType !== "district" ? true : governanceHasBoard,
       isPlatformAdmin,
       canManageUsersForEntity,
+      canViewAgentForEntity: isPlatformAdmin || Boolean(entityUserRole),
       featureFlags,
     }),
     [
@@ -136,6 +137,7 @@ export default function EntityPanel({ entityId, entityType }: Props) {
       isPlatformAdmin,
       resolvedType,
       canManageUsersForEntity,
+      entityUserRole,
       featureFlags,
     ],
   );

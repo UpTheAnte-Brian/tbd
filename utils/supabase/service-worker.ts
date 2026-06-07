@@ -14,7 +14,7 @@ export const supabaseAdmin = createClient<Database>(
 
 export type IrsPostgrestClient = PostgrestClient<
     Database,
-    Database["__InternalSupabase"],
+    { PostgrestVersion: "12" },
     "irs",
     Database["irs"]
 >;

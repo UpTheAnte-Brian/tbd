@@ -1,6 +1,7 @@
 export type FeatureFlags = {
   governanceTabsEnabled: boolean;
   mapTabEnabled: boolean;
+  agentTabEnabled: boolean;
   usersTabEnabled?: boolean;
 };
 
@@ -14,6 +15,9 @@ export function getFeatureFlags(): FeatureFlags {
       process.env.NEXT_PUBLIC_FEATURE_GOVERNANCE_TABS,
     ),
     mapTabEnabled: parseEnvFlag(process.env.NEXT_PUBLIC_FEATURE_MAP_TAB),
+    agentTabEnabled: process.env.NEXT_PUBLIC_FEATURE_AGENT_TAB === undefined
+      ? true
+      : parseEnvFlag(process.env.NEXT_PUBLIC_FEATURE_AGENT_TAB),
     ...(usersTabEnabled === undefined
       ? {}
       : { usersTabEnabled: parseEnvFlag(usersTabEnabled) }),

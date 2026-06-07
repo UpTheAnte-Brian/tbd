@@ -10,6 +10,7 @@ import EntityMapTab from "@/app/components/entities/tabs/map/EntityMapTab";
 import EntityGovernanceTab from "@/app/components/entities/tabs/governance/EntityGovernanceTab";
 import EntityUsersTab from "@/app/components/entities/tabs/users/EntityUsersTab";
 import EntitySuperintendentTab from "@/app/components/entities/tabs/superintendent/EntitySuperintendentTab";
+import EntityAgentTab from "@/app/components/entities/tabs/agent/EntityAgentTab";
 import type { EntityTabKey } from "@/app/components/entities/entityTabs";
 import type { EntityType } from "@/domain/entities/types";
 
@@ -67,6 +68,13 @@ export default function EntityPanelContent({
           <EntityGovernanceTab
             entityId={entityId}
             entityType={entityType}
+          />
+        );
+      case "agent":
+        return (
+          <EntityAgentTab
+            entityId={entityId}
+            entityName={entityName ?? "Entity"}
           />
         );
       case "users":
