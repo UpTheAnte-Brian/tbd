@@ -76,7 +76,8 @@ type GeometryQueryResult = {
 const BATCH_SIZE = 200;
 const STATE_GEOMETRY_TYPES = ["boundary_simplified", "boundary"] as const;
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
+export const revalidate = 3600;
 
 export async function GET() {
   const requestStart = Date.now();
@@ -217,7 +218,8 @@ export async function GET() {
     },
     {
       headers: {
-        "Cache-Control": "public, max-age=60, s-maxage=600",
+        "Cache-Control":
+          "public, max-age=60, s-maxage=3600, stale-while-revalidate=86400",
       },
     }
   );
