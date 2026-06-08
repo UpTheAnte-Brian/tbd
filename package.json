@@ -99,7 +99,7 @@
     "jsonwebtoken": "^9.0.2",
     "jszip": "^3.10.1",
     "lucide-react": "^0.563.0",
-    "next": "15.5.9",
+    "next": "16.2.7",
     "nodemailer": "^7.0.5",
     "react": "19.2.3",
     "react-canvas-confetti": "^2.0.7",
