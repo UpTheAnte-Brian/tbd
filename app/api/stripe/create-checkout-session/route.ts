@@ -3,7 +3,7 @@ import Stripe from "stripe";
 import { createApiClient } from "@/utils/supabase/route";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2025-08-27.basil",
+    apiVersion: "2025-12-15.clover",
 });
 
 // This route creates a Stripe Checkout session for a district donation
