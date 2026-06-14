@@ -19,6 +19,7 @@ export default function Avatar({
   const supabase = getSupabaseClient();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const inputId = uid ? `avatar-upload-${uid}` : "avatar-upload";
 
   // Resolve storage path → public URL
   useEffect(() => {
@@ -61,32 +62,40 @@ export default function Avatar({
   };
 
   return (
-    <div>
+    <div className="flex flex-col gap-3">
       {avatarUrl ? (
         <Image
           width={size}
           height={size}
           src={avatarUrl}
           alt="Avatar"
-          className="avatar image"
+          className="rounded-[22px] border border-[#d7dce5] object-cover shadow-sm"
           style={{ height: size, width: size }}
           priority
         />
       ) : (
         <div
-          className="avatar no-image"
+          className="flex items-center justify-center rounded-[22px] border border-dashed border-[#cbd5e1] bg-[#f8fafc] text-sm font-semibold text-[#64748b]"
           style={{ height: size, width: size }}
-        />
+        >
+          No photo
+        </div>
       )}
       <div
         style={{ width: secondaryAction ? "100%" : size }}
-        className={secondaryAction ? "flex items-center gap-2" : ""}
+        className={
+          secondaryAction
+            ? "flex flex-col gap-3 sm:flex-row sm:items-center"
+            : ""
+        }
       >
         <label
-          className={`button primary ${secondaryAction ? "" : "block"}`}
-          htmlFor="single"
+          className={`inline-flex cursor-pointer items-center justify-center rounded-xl border border-[#d7dce5] bg-white px-4 py-2.5 text-sm font-semibold text-[#0f172a] transition hover:bg-[#f8fafc] ${
+            secondaryAction ? "" : "w-full"
+          }`}
+          htmlFor={inputId}
         >
-          {uploading ? "Uploading ..." : "Upload"}
+          {uploading ? "Uploading..." : "Upload Photo"}
         </label>
         {secondaryAction ? (
           <div className="flex-1">{secondaryAction}</div>
@@ -94,7 +103,7 @@ export default function Avatar({
         <input
           style={{ visibility: "hidden", position: "absolute" }}
           type="file"
-          id="single"
+          id={inputId}
           accept="image/*"
           onChange={uploadAvatar}
           disabled={uploading}

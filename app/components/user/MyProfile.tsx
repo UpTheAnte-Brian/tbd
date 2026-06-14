@@ -140,9 +140,14 @@ export default function MyProfile({
     }
   }
 
+  const inputClasses =
+    "h-11 w-full rounded-xl border border-[#cbd5e1] bg-white px-3 text-sm text-[#0f172a] shadow-sm transition placeholder:text-[#94a3b8] focus:border-[#2563eb] focus:outline-none focus:ring-4 focus:ring-[#bfdbfe]";
+  const labelClasses =
+    "m-0 flex flex-col gap-1.5 text-sm font-medium normal-case tracking-normal text-[#334155]";
+
   return (
     <AccordionCard title="My Profile" defaultOpen={open} onToggle={setOpen}>
-      <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-[240px,1fr]">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[220px,1fr]">
         <div className="flex flex-col items-start gap-3">
           <Avatar
             uid={user?.id ?? null}
@@ -154,7 +159,7 @@ export default function MyProfile({
             }}
             secondaryAction={
               <button
-                className="w-full rounded bg-brand-primary-0 px-3 py-2 text-sm font-semibold text-brand-primary-1 hover:bg-brand-primary-2 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-xl bg-[#0f172a] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1e293b] disabled:cursor-not-allowed disabled:bg-[#94a3b8]"
                 onClick={() =>
                   updateProfile({
                     username,
@@ -173,61 +178,74 @@ export default function MyProfile({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <label className="text-xs uppercase tracking-wide text-brand-secondary-2">
-            Full Name
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <label className={`${labelClasses} sm:col-span-2`} htmlFor="fullName">
+            <span>Full Name</span>
+            <input
+              id="fullName"
+              type="text"
+              className={inputClasses}
+              value={fullname || ""}
+              onChange={(e) => setFullname(e.target.value)}
+              placeholder="How your name should appear"
+            />
           </label>
-          <input
-            id="fullName"
-            type="text"
-            className="rounded border border-brand-secondary-0 bg-brand-secondary-1 px-3 py-2 text-brand-primary-1 md:col-span-1"
-            value={fullname || ""}
-            onChange={(e) => setFullname(e.target.value)}
-          />
 
-          <label className="text-xs uppercase tracking-wide text-brand-secondary-2">
-            First Name
+          <label className={labelClasses} htmlFor="firstName">
+            <span>First Name</span>
+            <input
+              id="firstName"
+              type="text"
+              className={inputClasses}
+              value={firstName || ""}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="First name"
+            />
           </label>
-          <input
-            id="firstName"
-            type="text"
-            className="rounded border border-brand-secondary-0 bg-brand-secondary-1 px-3 py-2 text-brand-primary-1 md:col-span-1"
-            value={firstName || ""}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
 
-          <label className="text-xs uppercase tracking-wide text-brand-secondary-2">
-            Last Name
+          <label className={labelClasses} htmlFor="lastName">
+            <span>Last Name</span>
+            <input
+              id="lastName"
+              type="text"
+              className={inputClasses}
+              value={lastName || ""}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Last name"
+            />
           </label>
-          <input
-            id="lastName"
-            type="text"
-            className="rounded border border-brand-secondary-0 bg-brand-secondary-1 px-3 py-2 text-brand-primary-1 md:col-span-1"
-            value={lastName || ""}
-            onChange={(e) => setLastName(e.target.value)}
-          />
 
-          <label className="text-xs uppercase tracking-wide text-brand-secondary-2">
-            Username
+          <label className={labelClasses} htmlFor="username">
+            <span>Username</span>
+            <input
+              id="username"
+              type="text"
+              className={inputClasses}
+              value={username || ""}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Username"
+            />
           </label>
-          <input
-            id="username"
-            type="text"
-            className="rounded border border-brand-secondary-0 bg-brand-secondary-1 px-3 py-2 text-brand-primary-1 md:col-span-1"
-            value={username || ""}
-            onChange={(e) => setUsername(e.target.value)}
-          />
 
-          <label className="text-xs uppercase tracking-wide text-brand-secondary-2 md:col-span-2">
-            Website
+          <label className={labelClasses} htmlFor="website">
+            <span>Website</span>
+            <input
+              id="website"
+              type="url"
+              className={inputClasses}
+              value={website || ""}
+              onChange={(e) => setWebsite(e.target.value)}
+              placeholder="https://example.org"
+            />
           </label>
-          <input
-            id="website"
-            type="url"
-            className="rounded border border-brand-secondary-0 bg-brand-secondary-1 px-3 py-2 text-brand-primary-1 md:col-span-2"
-            value={website || ""}
-            onChange={(e) => setWebsite(e.target.value)}
-          />
+
+          <div className="rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3 sm:col-span-2">
+            <p className="text-sm font-medium text-[#334155]">Profile photo</p>
+            <p className="mt-1 text-sm leading-6 text-[#64748b]">
+              Upload a square image for the clearest crop across navigation and
+              account views.
+            </p>
+          </div>
         </div>
       </div>
     </AccordionCard>

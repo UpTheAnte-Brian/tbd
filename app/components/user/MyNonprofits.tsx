@@ -15,7 +15,9 @@ export default function MyNonprofits() {
   if (nonprofits.length === 0) {
     return (
       <AccordionCard title="My Nonprofits">
-        <p className="text-sm text-brand-secondary-2">No nonprofits assigned.</p>
+        <p className="text-sm leading-6 text-[#64748b]">
+          No nonprofits are currently tied to this account.
+        </p>
       </AccordionCard>
     );
   }
@@ -29,21 +31,23 @@ export default function MyNonprofits() {
           return (
             <div
               key={`${n.entity_id}-${n.role}`}
-              className="rounded border border-brand-secondary-0 bg-brand-secondary-1 px-3 py-2"
+              className="rounded-2xl border border-[#d7dce5] bg-[#f8fafc] px-4 py-3"
             >
               {nonprofitId ? (
                 <Link
                   href={`/nonprofits/${nonprofitId}`}
-                  className="text-sm font-semibold text-brand-primary-1 hover:underline"
+                  className="text-sm font-semibold text-[#0f172a] hover:text-[#1d4ed8] hover:underline"
                 >
                   {name}
                 </Link>
               ) : (
-                <div className="text-sm font-semibold text-brand-primary-1">
+                <div className="text-sm font-semibold text-[#0f172a]">
                   {name}
                 </div>
               )}
-              <div className="text-xs text-brand-secondary-2">Role: {n.role}</div>
+              <div className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-[#64748b]">
+                Role: {n.role}
+              </div>
             </div>
           );
         })}

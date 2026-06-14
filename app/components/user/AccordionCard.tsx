@@ -19,11 +19,11 @@ export default function AccordionCard({
   const [open, setOpen] = useState(defaultOpen);
 
   const containerClasses =
-    "rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 text-brand-secondary-0";
+    "overflow-hidden rounded-[24px] border border-[#d7dce5] bg-[rgba(255,255,255,0.96)] text-[#0f172a] shadow-[0_18px_45px_rgba(15,23,42,0.08)]";
   const headerClasses =
-    "flex w-full items-center justify-between border-b border-brand-secondary-1 px-4 py-3 text-left bg-brand-secondary-2 text-brand-secondary-0";
-  const bodyClasses = "px-4 py-3";
-  const chevronClasses = `h-4 w-4 text-brand-secondary-0 transition-transform ${
+    "flex w-full items-center justify-between border-b border-[#e5e7eb] bg-transparent px-5 py-4 text-left";
+  const bodyClasses = "px-5 py-5";
+  const chevronClasses = `h-4 w-4 text-[#64748b] transition-transform ${
     open ? "rotate-180" : ""
   }`;
 
@@ -38,7 +38,9 @@ export default function AccordionCard({
           onToggle?.(next);
         }}
       >
-        <span className="font-semibold flex items-center gap-2">{title}</span>
+        <span className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-[#334155]">
+          {title}
+        </span>
         <ChevronDown className={chevronClasses} />
       </button>
       {open && <div className={bodyClasses}>{children}</div>}

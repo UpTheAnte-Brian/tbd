@@ -15,7 +15,9 @@ export default function MyDistricts() {
   if (districts.length === 0) {
     return (
       <AccordionCard title="My Districts">
-        <p className="text-sm text-brand-secondary-2">No districts assigned.</p>
+        <p className="text-sm leading-6 text-[#64748b]">
+          No districts are currently tied to this account.
+        </p>
       </AccordionCard>
     );
   }
@@ -29,21 +31,21 @@ export default function MyDistricts() {
           return (
             <div
               key={`${d.entity_id}-${d.role}`}
-              className="rounded border border-brand-secondary-0 bg-brand-secondary-1 px-3 py-2"
+              className="rounded-2xl border border-[#d7dce5] bg-[#f8fafc] px-4 py-3"
             >
               {districtId ? (
                 <Link
                   href={`/districts/${districtId}`}
-                  className="text-sm font-semibold text-brand-primary-1 hover:underline"
+                  className="text-sm font-semibold text-[#0f172a] hover:text-[#1d4ed8] hover:underline"
                 >
                   {shortname}
                 </Link>
               ) : (
-                <div className="text-sm font-semibold text-brand-primary-1">
+                <div className="text-sm font-semibold text-[#0f172a]">
                   {shortname}
                 </div>
               )}
-              <div className="text-xs text-brand-secondary-2">
+              <div className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-[#64748b]">
                 Role: {d.role}
               </div>
             </div>
