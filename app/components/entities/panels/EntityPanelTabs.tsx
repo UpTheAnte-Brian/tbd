@@ -62,7 +62,7 @@ export default function EntityPanelTabs({
           type="button"
           className={`rounded px-3 py-1 text-sm transition ${
             activeTab === tab.key
-              ? "bg-brand-primary-0 text-brand-secondary-2"
+              ? "bg-brand-primary-0 text-brand-primary-1"
               : "bg-transparent text-brand-secondary-0 hover:bg-brand-secondary-1"
           }`}
           onClick={() => onTabChange(tab.key)}

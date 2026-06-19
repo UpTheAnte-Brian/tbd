@@ -57,7 +57,7 @@ export default function EntitySidebar({
               onClick={() => onTabChange(tab.key)}
               className={`w-full rounded-md px-3 py-2 text-left text-sm transition ${
                 activeTab === tab.key
-                  ? "bg-brand-primary-0 text-brand-secondary-2"
+                  ? "bg-brand-primary-0 text-brand-primary-1"
                   : "bg-transparent text-brand-secondary-2 hover:bg-brand-primary-2"
               }`}
             >
