@@ -33,9 +33,9 @@ const ADMIN_SECTIONS: AdminSectionGroup[] = [
       },
       {
         title: "Businesses",
-        description: "MN SOS + OpenCorporates intake.",
+        description: "Manual business shell creation and registry review.",
         href: "/admin/businesses",
-        tag: "Scaffolded",
+        tag: "Active",
       },
       {
         title: "Places",

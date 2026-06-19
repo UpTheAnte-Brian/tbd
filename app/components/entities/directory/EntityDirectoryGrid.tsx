@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { EntityDirectoryRow } from "@/app/lib/types/entity-directory";
 import type { EntityType } from "@/domain/entities/types";
 import { entityPath } from "@/app/lib/routes";
+import { Input } from "@/app/components/ui/input";
 
 const GRID_OPTIONS = {
   // AG Grid v33+ defaults to Theming API (themeQuartz). We are using CSS theme files,
@@ -222,37 +223,48 @@ export default function EntityDirectoryGrid({
     }
   };
 
+  const toolbarCardClasses =
+    "rounded-[28px] border border-[#d7dce5] bg-[rgba(255,255,255,0.96)] p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] md:p-5";
+  const pillBaseClasses =
+    "rounded-full border px-4 py-2 text-sm font-semibold normal-case tracking-normal transition";
+  const searchPanelClasses =
+    "mt-4 flex flex-col gap-3 rounded-[22px] border border-[#e2e8f0] bg-[#f8fafc] p-4 md:flex-row md:items-center";
+  const gridCardClasses =
+    "overflow-hidden rounded-[24px] border border-[#d7dce5] bg-white shadow-[0_18px_45px_rgba(15,23,42,0.08)]";
+
   return (
     <div className="min-h-screen bg-surface-page px-4 py-6 md:px-8">
       <div className="mx-auto max-w-6xl space-y-4">
-        {showTypeSwitch ? (
-          <div className="flex flex-wrap items-center gap-3">
-            {filterKeys.map((key) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => handlePillClick(key)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  activeType === key
-                    ? "bg-brand-primary-0 text-brand-primary-1"
-                    : "border border-border-subtle text-text-on-light hover:border-brand-primary-0"
-                }`}
-              >
-                {FILTER_LABELS[key]}
-              </button>
-            ))}
-          </div>
-        ) : null}
+        <div className={toolbarCardClasses}>
+          {showTypeSwitch ? (
+            <div className="flex flex-wrap items-center gap-3">
+              {filterKeys.map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => handlePillClick(key)}
+                  className={`${pillBaseClasses} ${
+                    activeType === key
+                      ? "border-[#d6422b] bg-[#d6422b] text-white shadow-sm"
+                      : "border-[#d7dce5] bg-white text-[#334155] hover:border-[#d6422b] hover:text-[#d6422b]"
+                  }`}
+                >
+                  {FILTER_LABELS[key]}
+                </button>
+              ))}
+            </div>
+          ) : null}
 
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between rounded-md border border-border-subtle bg-brand-secondary-1 px-3 py-2">
-          <input
-            value={searchText}
-            onChange={handleSearchChange}
-            placeholder="Search entities..."
-            className="w-full rounded border border-border-subtle bg-brand-primary-1 px-3 py-2 text-sm text-text-on-light focus:outline-none focus:ring-2 focus:ring-focus-ring md:flex-1"
-          />
-          <div className="text-xs text-text-on-light">
-            Showing {visibleCount} / {rows.length}
+          <div className={searchPanelClasses}>
+            <Input
+              value={searchText}
+              onChange={handleSearchChange}
+              placeholder="Search entities..."
+              className="h-12 rounded-2xl border-[#cbd5e1] bg-white text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#2563eb] focus:ring-4 focus:ring-[#bfdbfe] focus:ring-offset-0 md:flex-1"
+            />
+            <div className="inline-flex items-center rounded-full border border-[#d7dce5] bg-white px-4 py-2 text-sm font-medium text-[#475569] shadow-sm">
+              Showing {visibleCount} of {rows.length}
+            </div>
           </div>
         </div>
 
@@ -262,39 +274,41 @@ export default function EntityDirectoryGrid({
           </div>
         ) : null}
 
-        <div
-          className="ag-theme-quartz h-[640px] w-full rounded-md bg-white text-black"
-          style={{ minHeight: 640 }}
-        >
-          <AgGridReact<EntityDirectoryRow>
-            gridOptions={GRID_OPTIONS}
-            rowData={rows}
-            quickFilterText={searchText}
-            columnDefs={columnDefs}
-            defaultColDef={defaultColDef}
-            domLayout="autoHeight"
-            getRowId={(params) => params.data.entity_id}
-            rowHeight={44}
-            headerHeight={44}
-            onGridReady={(params) => {
-              gridApiRef.current = params.api;
-              onGridReady(params);
-            }}
-            onFirstDataRendered={(e) => {
-              setVisibleCount(e.api.getDisplayedRowCount());
-            }}
-            overlayLoadingTemplate={
-              "<span class='ag-overlay-loading-center'>Loading...</span>"
-            }
-            overlayNoRowsTemplate={
-              "<span class='ag-overlay-loading-center'>No entities found.</span>"
-            }
-            onRowClicked={(event) => {
-              const entityId = event.data?.entity_id;
-              if (!entityId) return;
-              router.push(entityPath(entityId));
-            }}
-          />
+        <div className={gridCardClasses}>
+          <div
+            className="ag-theme-quartz h-[640px] w-full bg-white text-black"
+            style={{ minHeight: 640 }}
+          >
+            <AgGridReact<EntityDirectoryRow>
+              gridOptions={GRID_OPTIONS}
+              rowData={rows}
+              quickFilterText={searchText}
+              columnDefs={columnDefs}
+              defaultColDef={defaultColDef}
+              domLayout="autoHeight"
+              getRowId={(params) => params.data.entity_id}
+              rowHeight={44}
+              headerHeight={44}
+              onGridReady={(params) => {
+                gridApiRef.current = params.api;
+                onGridReady(params);
+              }}
+              onFirstDataRendered={(e) => {
+                setVisibleCount(e.api.getDisplayedRowCount());
+              }}
+              overlayLoadingTemplate={
+                "<span class='ag-overlay-loading-center'>Loading...</span>"
+              }
+              overlayNoRowsTemplate={
+                "<span class='ag-overlay-loading-center'>No entities found.</span>"
+              }
+              onRowClicked={(event) => {
+                const entityId = event.data?.entity_id;
+                if (!entityId) return;
+                router.push(entityPath(entityId));
+              }}
+            />
+          </div>
         </div>
         {loading ? (
           <div className="text-xs text-text-on-light">Loading…</div>

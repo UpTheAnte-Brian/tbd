@@ -242,23 +242,6 @@ export interface KmlFeatureData {
     pixelOffset: google.maps.Size | null;
 }
 
-export type PlaceDetailsType = {
-    name: string;
-    formatted_address?: string;
-    formatted_phone_number?: string;
-    place_id?: string;
-    website?: string;
-    rating?: number;
-    user_ratings_total?: number;
-    geometry?: {
-        location: {
-            lat?: number;
-            lng?: number;
-        };
-    };
-    types?: string[];
-};
-
 // ----------------------------
 // Payments / receipts
 // ----------------------------

@@ -5,7 +5,6 @@ import type {
     EntityUserRole,
 } from "@/app/lib/types/types";
 import { createClient } from "@/utils/supabase/server";
-import type { Database } from "@/database.types";
 
 type EntityUserRow = {
     id: string;
@@ -280,39 +279,6 @@ export async function getBusiness(id: string): Promise<Business> {
         updated_at: business.updated_at,
         users: entityUsers,
     } as Business;
-}
-
-export async function registerBusiness(
-    userId: string,
-    business: Omit<
-        Business,
-        "id" | "created_at" | "updated_at" | "status" | "users"
-    >,
-) {
-    const supabase = await createClient();
-    if (!business.entity_id) {
-        throw new Error("Business entity_id is required");
-    }
-    const payload: Database["public"]["Tables"]["businesses"]["Insert"] = {
-        ...business,
-        entity_id: business.entity_id,
-        status: "pending",
-    };
-    const { data: newBusiness, error } = await supabase
-        .from("businesses")
-        .insert(payload)
-        .select()
-        .single();
-
-    if (error) throw error;
-
-    await supabase.from("entity_users").insert({
-        entity_id: newBusiness.id,
-        user_id: userId,
-        role: "admin",
-    });
-
-    return newBusiness;
 }
 
 export async function approveBusiness(businessId: string) {
