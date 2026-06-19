@@ -554,47 +554,49 @@ async function upsertAssetSlotsAndAssets() {
         throw new Error("Missing logo category id");
     }
 
-    // Upsert asset_slots for entity_type 'district' and category_id for 'logo'
-    let sortOrder = 10;
-    for (
-        const subcategoryKey of ASSET_SUBCATEGORIES.filter((s) =>
-            s.category_key === "logo"
-        ).map((s) => s.key)
-    ) {
-        const sub = subByKey.get(subcategoryKey);
-        if (!sub) continue;
-        const insertData = {
-            entity_type: "district",
-            category_id: logoCategoryId,
-            subcategory_id: sub.id,
-            label_override: sub.label,
-            help_text: "Upload an asset for this slot.",
-            sort_order: sortOrder,
-            is_required: false,
-            max_assets: 1,
-            allowed_mime_types: ["image/png", "image/svg+xml"],
-            active: true,
-        };
-        const updateData = {
-            label_override: sub.label,
-            help_text: "Upload an asset for this slot.",
-            sort_order: sortOrder,
-            is_required: false,
-            max_assets: 1,
-            allowed_mime_types: ["image/png", "image/svg+xml"],
-            active: true,
-        };
-        await upsertRowBySelect(
-            "asset_slots",
-            {
-                entity_type: "district",
+    // Upsert logo asset_slots for each supported public entity type.
+    for (const targetEntityType of ["district", "business", "nonprofit"]) {
+        let sortOrder = 10;
+        for (
+            const subcategoryKey of ASSET_SUBCATEGORIES.filter((s) =>
+                s.category_key === "logo"
+            ).map((s) => s.key)
+        ) {
+            const sub = subByKey.get(subcategoryKey);
+            if (!sub) continue;
+            const insertData = {
+                entity_type: targetEntityType,
                 category_id: logoCategoryId,
                 subcategory_id: sub.id,
-            },
-            insertData,
-            updateData,
-        );
-        sortOrder += 10;
+                label_override: sub.label,
+                help_text: "Upload an asset for this slot.",
+                sort_order: sortOrder,
+                is_required: false,
+                max_assets: 1,
+                allowed_mime_types: ["image/png", "image/svg+xml"],
+                active: true,
+            };
+            const updateData = {
+                label_override: sub.label,
+                help_text: "Upload an asset for this slot.",
+                sort_order: sortOrder,
+                is_required: false,
+                max_assets: 1,
+                allowed_mime_types: ["image/png", "image/svg+xml"],
+                active: true,
+            };
+            await upsertRowBySelect(
+                "asset_slots",
+                {
+                    entity_type: targetEntityType,
+                    category_id: logoCategoryId,
+                    subcategory_id: sub.id,
+                },
+                insertData,
+                updateData,
+            );
+            sortOrder += 10;
+        }
     }
 
     // Upsert assets for provided entityId with WESTONKA_ASSETS

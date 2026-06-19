@@ -59,7 +59,7 @@ export default function NewBusinessForm() {
       }
 
       const created = (await response.json()) as { entity_id: string };
-      router.push(`/entities/${created.entity_id}`);
+      router.push(`/entities/${created.entity_id}?tab=branding`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create business");
     } finally {

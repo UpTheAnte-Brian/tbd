@@ -3,6 +3,10 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createApiClient } from "@/utils/supabase/route";
 import type { Database } from "@/database.types";
+import {
+  DEFAULT_BRAND_COLORS,
+  DEFAULT_BRAND_TYPOGRAPHY,
+} from "@/app/lib/branding/resolveBranding";
 import type {
   CreateBusinessRequest,
   CreateBusinessResponse,
@@ -64,6 +68,130 @@ async function bestEffortCleanup(
     await supabase.from("entities").delete().eq("id", entityId);
   } catch (err) {
     console.error("Cleanup failed for entity", err);
+  }
+}
+
+async function ensureDefaultBranding(
+  supabase: SupabaseClient<Database>,
+  entityId: string,
+  entityName: string,
+) {
+  const paletteDefaults = [
+    {
+      role: "primary" as const,
+      name: `${entityName} Primary`,
+      colors: [
+        DEFAULT_BRAND_COLORS.primary0,
+        DEFAULT_BRAND_COLORS.primary1,
+        DEFAULT_BRAND_COLORS.primary2,
+      ],
+    },
+    {
+      role: "secondary" as const,
+      name: `${entityName} Secondary`,
+      colors: [
+        DEFAULT_BRAND_COLORS.secondary0,
+        DEFAULT_BRAND_COLORS.secondary1,
+        DEFAULT_BRAND_COLORS.secondary2,
+      ],
+    },
+    {
+      role: "accent" as const,
+      name: `${entityName} Accent`,
+      colors: [
+        DEFAULT_BRAND_COLORS.accent0,
+        DEFAULT_BRAND_COLORS.accent1,
+        DEFAULT_BRAND_COLORS.accent2,
+      ],
+    },
+  ];
+
+  const typographyDefaults = [
+    { role: "header1", font_name: DEFAULT_BRAND_TYPOGRAPHY.header1 },
+    { role: "header2", font_name: DEFAULT_BRAND_TYPOGRAPHY.header2 },
+    { role: "subheader", font_name: DEFAULT_BRAND_TYPOGRAPHY.subheader },
+    { role: "body", font_name: DEFAULT_BRAND_TYPOGRAPHY.body },
+    { role: "display", font_name: DEFAULT_BRAND_TYPOGRAPHY.display },
+    { role: "logo", font_name: DEFAULT_BRAND_TYPOGRAPHY.logo },
+  ] as const;
+
+  const patternDefaults = [
+    "none",
+    "dots",
+    "stripes",
+    "grid",
+    "chevrons",
+    "waves",
+  ] as const;
+
+  for (const paletteDefault of paletteDefaults) {
+    const { data: palette, error: paletteError } = await supabase
+      .schema("branding")
+      .from("palettes")
+      .upsert(
+        {
+          entity_id: entityId,
+          role: paletteDefault.role,
+          name: paletteDefault.name,
+        },
+        { onConflict: "entity_id,role" },
+      )
+      .select("id")
+      .single();
+
+    if (paletteError || !palette?.id) {
+      throw new Error(paletteError?.message ?? "Failed to seed palettes");
+    }
+
+    const paletteColors = paletteDefault.colors.map((hex, slot) => ({
+      palette_id: palette.id,
+      slot,
+      hex,
+    }));
+
+    const { error: colorsError } = await supabase
+      .schema("branding")
+      .from("palette_colors")
+      .upsert(paletteColors, { onConflict: "palette_id,slot" });
+
+    if (colorsError) {
+      throw new Error(colorsError.message);
+    }
+  }
+
+  const { error: typographyError } = await supabase
+    .schema("branding")
+    .from("typography")
+    .upsert(
+      typographyDefaults.map((entry) => ({
+        entity_id: entityId,
+        role: entry.role,
+        font_name: entry.font_name,
+        availability: "system",
+        weights: [],
+        usage_rules: null,
+      })),
+      { onConflict: "entity_id,role" },
+    );
+
+  if (typographyError) {
+    throw new Error(typographyError.message);
+  }
+
+  const { error: patternsError } = await supabase
+    .schema("branding")
+    .from("patterns")
+    .upsert(
+      patternDefaults.map((patternType) => ({
+        entity_id: entityId,
+        pattern_type: patternType,
+        notes: null,
+      })),
+      { onConflict: "entity_id,pattern_type" },
+    );
+
+  if (patternsError) {
+    throw new Error(patternsError.message);
   }
 }
 
@@ -164,6 +292,8 @@ export async function createBusinessShell(
     if (businessError || !business) {
       throw new Error(businessError?.message ?? "Failed to create business");
     }
+
+    await ensureDefaultBranding(supabase, entityId, name);
 
     return {
       entity_id: entityId,

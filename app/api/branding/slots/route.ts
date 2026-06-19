@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const { data: slots, error: slotsError } = await supabase
+  const { data: directSlots, error: slotsError } = await supabase
     .schema("branding")
     .from("asset_slots")
     .select("*")
@@ -22,6 +22,29 @@ export async function GET(req: NextRequest) {
 
   if (slotsError) {
     return NextResponse.json({ error: slotsError.message }, { status: 500 });
+  }
+
+  let slots = directSlots ?? [];
+
+  if (
+    slots.length === 0 &&
+    (entityType === "business" || entityType === "nonprofit")
+  ) {
+    const { data: fallbackSlots, error: fallbackError } = await supabase
+      .schema("branding")
+      .from("asset_slots")
+      .select("*")
+      .eq("entity_type", "district")
+      .order("sort_order", { ascending: true });
+
+    if (fallbackError) {
+      return NextResponse.json({ error: fallbackError.message }, { status: 500 });
+    }
+
+    slots = (fallbackSlots ?? []).map((slot) => ({
+      ...slot,
+      entity_type: entityType,
+    }));
   }
 
   const { data: categories, error: categoriesError } = await supabase
@@ -51,7 +74,7 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({
-    slots: slots ?? [],
+    slots,
     categories: categories ?? [],
     subcategories: subcategories ?? [],
   });
