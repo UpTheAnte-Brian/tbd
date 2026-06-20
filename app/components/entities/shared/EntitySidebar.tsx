@@ -37,7 +37,7 @@ export default function EntitySidebar({
   }));
   return (
     <aside className="hidden md:block w-72 shrink-0 md:sticky md:top-4 md:self-start">
-      <div className="rounded border border-brand-secondary-1 bg-brand-secondary-0 p-4 text-brand-secondary-2">
+      <div className="rounded-[24px] border border-[#d7dce5] bg-[rgba(255,255,255,0.96)] p-5 text-[#334155] shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
         {entityType ? (
           <EntityLogo
             entityId={entityId}
@@ -46,19 +46,19 @@ export default function EntitySidebar({
             minHeight={80}
             fallbackName={entityName}
             fallbackType={entityType}
-            className="w-full rounded-md border border-brand-secondary-1 bg-brand-secondary-2 p-2"
+            className="w-full rounded-[18px] border border-[#d7dce5] bg-[#f8fafc] p-3"
           />
         ) : null}
-        <nav className="mt-2 space-y-2">
+        <nav className="mt-4 space-y-2">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               type="button"
               onClick={() => onTabChange(tab.key)}
-              className={`w-full rounded-md px-3 py-2 text-left text-sm transition ${
+              className={`w-full rounded-xl border px-4 py-2.5 text-left text-sm font-semibold normal-case tracking-normal transition ${
                 activeTab === tab.key
-                  ? "bg-brand-primary-0 text-brand-primary-1"
-                  : "bg-transparent text-brand-secondary-2 hover:bg-brand-primary-2"
+                  ? "border-[#d6422b] bg-[#d6422b] text-white shadow-sm"
+                  : "border-transparent bg-white text-[#334155] hover:border-[#d7dce5] hover:bg-[#f8fafc] hover:text-[#0f172a]"
               }`}
             >
               {tab.label}

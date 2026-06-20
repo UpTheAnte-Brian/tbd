@@ -36,7 +36,7 @@ export default function EntityPanelTabs({
     return (
       <div className={tabsClassName ?? ""}>
         <select
-          className="mt-1 w-full rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-sm text-brand-secondary-0"
+          className="mt-1 w-full rounded-xl border border-[#cbd5e1] bg-white px-3 py-2.5 text-sm font-medium text-[#0f172a] shadow-sm focus:border-[#2563eb] focus:outline-none focus:ring-4 focus:ring-[#bfdbfe]"
           value={activeTab}
           onChange={(event) => onTabChange(event.target.value as EntityTabKey)}
         >
@@ -52,7 +52,7 @@ export default function EntityPanelTabs({
 
   return (
     <div
-      className={`flex flex-wrap gap-2 border-b border-brand-secondary-1 pb-2 ${
+      className={`flex flex-wrap gap-2 border-b border-[#d7dce5] pb-3 ${
         tabsClassName ?? ""
       }`}
     >
@@ -60,10 +60,10 @@ export default function EntityPanelTabs({
         <button
           key={tab.key}
           type="button"
-          className={`rounded px-3 py-1 text-sm transition ${
+          className={`rounded-xl border px-3 py-1.5 text-sm font-semibold normal-case tracking-normal transition ${
             activeTab === tab.key
-              ? "bg-brand-primary-0 text-brand-primary-1"
-              : "bg-transparent text-brand-secondary-0 hover:bg-brand-secondary-1"
+              ? "border-[#d6422b] bg-[#d6422b] text-white shadow-sm"
+              : "border-transparent bg-white text-[#334155] hover:border-[#d7dce5] hover:bg-[#f8fafc] hover:text-[#0f172a]"
           }`}
           onClick={() => onTabChange(tab.key)}
         >
