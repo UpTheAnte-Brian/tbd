@@ -22,31 +22,31 @@ export default function EntityHeader({
   showSuperintendentButton = false,
 }: Props) {
   return (
-    <div className="rounded border border-brand-secondary-1 bg-brand-secondary-2 p-4">
+    <div className="rounded border border-border-subtle bg-surface-card p-4 text-text-on-light">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-xl font-semibold text-brand-secondary-0">
+        <h1 className="text-xl font-semibold text-text-on-light">
           {entityName}
         </h1>
         {entityType && (
-          <span className="rounded bg-brand-secondary-0 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-brand-primary-1">
+          <span className="rounded bg-surface-nav px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-text-on-dark">
             {entityType}
           </span>
         )}
         {active === false && (
-          <span className="rounded bg-brand-primary-2 px-2 py-0.5 text-xs text-brand-secondary-2">
+          <span className="rounded bg-surface-accent px-2 py-0.5 text-xs font-semibold text-text-on-dark">
             inactive
           </span>
         )}
         {showSuperintendentButton ? (
           <Link
             href={entityPath(entityId, "superintendent")}
-            className="rounded bg-brand-primary-0 px-3 py-1 text-xs font-semibold text-brand-secondary-2 transition hover:bg-brand-primary-2"
+            className="rounded bg-surface-accent px-3 py-1 text-xs font-semibold text-text-on-dark transition hover:bg-brand-primary-2"
           >
             Superintendent Dashboard
           </Link>
         ) : null}
       </div>
-      <div className="mt-2 text-xs text-brand-secondary-0 opacity-70">
+      <div className="mt-2 text-xs text-brand-secondary-0 opacity-80">
         <span>ID: {entityId}</span>
         {slug ? <span className="ml-3">Slug: {slug}</span> : null}
       </div>

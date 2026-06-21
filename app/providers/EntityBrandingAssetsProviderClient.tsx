@@ -3,6 +3,7 @@
 import { createContext, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
 import type { ResolvedEntityAssets } from "@/app/data/entity-assets";
+import { DEFAULT_ENTITY_LOGO_URL } from "@/app/lib/branding/resolveBranding";
 
 type BrandAssets = {
   primaryLogoUrl: string | null;
@@ -15,7 +16,7 @@ type BrandingAssetsContextValue = {
 };
 
 const fallbackAssets: BrandAssets = {
-  primaryLogoUrl: null,
+  primaryLogoUrl: DEFAULT_ENTITY_LOGO_URL,
 };
 
 const BrandingAssetsContext = createContext<BrandingAssetsContextValue>({
@@ -37,11 +38,12 @@ export function EntityBrandingAssetsProviderClient({
 }: Props) {
   const value = useMemo(() => {
     const resolvedEntityId = resolvedAssets?.entityId ?? entityId ?? null;
-    const primaryLogoUrl = resolvedAssets?.primaryLogoUrl ?? null;
+    const primaryLogoUrl =
+      resolvedAssets?.primaryLogoUrl ?? fallbackAssets.primaryLogoUrl;
     return {
       entityId: resolvedEntityId,
       assets: { primaryLogoUrl },
-      isFallback: !primaryLogoUrl,
+      isFallback: !resolvedAssets?.primaryLogoUrl,
     };
   }, [entityId, resolvedAssets]);
 

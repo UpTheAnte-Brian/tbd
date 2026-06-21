@@ -41,7 +41,7 @@ export default function LayerSources({
       >
         <button
           type="button"
-          className="text-xs uppercase text-brand-secondary-2 underline decoration-dotted underline-offset-2"
+          className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-primary-0 underline decoration-dotted underline-offset-2 hover:text-brand-primary-2"
           aria-label="Sources"
           aria-expanded={open}
           onClick={() => setOpen((prev) => !prev)}
@@ -50,7 +50,7 @@ export default function LayerSources({
         </button>
         {open ? (
           <div className="absolute left-0 top-5 z-10">
-            <div className="w-72 max-w-[80vw] rounded-lg border border-brand-secondary-0 bg-brand-secondary-1 p-3 text-brand-primary-1 shadow-lg">
+            <div className="w-72 max-w-[80vw] rounded-lg border border-border-subtle bg-surface-card p-3 text-text-on-light shadow-lg">
               <LayerLegend
                 visibleLayers={visibleLayers}
                 geometriesByType={geometriesByType}

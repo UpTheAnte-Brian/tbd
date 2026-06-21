@@ -2142,6 +2142,10 @@ video {
   background-color: rgb(248 250 252 / var(--tw-bg-opacity, 1));
 }
 
+.bg-surface-accent {
+  background-color: var(--surface-accent);
+}
+
 .bg-surface-card {
   background-color: var(--surface-card);
 }
@@ -2923,6 +2927,10 @@ video {
 .text-slate-800 {
   --tw-text-opacity: 1;
   color: rgb(30 41 59 / var(--tw-text-opacity, 1));
+}
+
+.text-text-on-dark {
+  color: var(--text-on-dark);
 }
 
 .text-text-on-light {
@@ -4039,10 +4047,6 @@ button.primary,
 .hover\:bg-amber-100:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(254 243 199 / var(--tw-bg-opacity, 1));
-}
-
-.hover\:bg-brand-accent-0:hover {
-  background-color: var(--brand-accent-0);
 }
 
 .hover\:bg-brand-accent-1:hover {

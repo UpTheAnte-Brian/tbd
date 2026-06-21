@@ -96,10 +96,10 @@ export default function BrandPaletteGrid({
   };
 
   return (
-    <div className="mt-2 rounded border border-brand-secondary-1 bg-brand-secondary-2 p-4">
+    <div className="mt-2 rounded border border-border-subtle bg-surface-inset p-4 text-text-on-light">
       {canEdit ? (
         <div className="mb-4 flex justify-center">
-          <div className="rounded bg-brand-accent-2 px-4 py-2 text-sm font-semibold text-brand-primary-1 shadow">
+          <div className="rounded bg-surface-nav px-4 py-2 text-sm font-semibold text-text-on-dark shadow">
             Click a color tile to customize to your brand
           </div>
         </div>

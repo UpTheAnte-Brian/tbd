@@ -55,7 +55,7 @@ export default function DistrictOverview({
           <div className="flex flex-col gap-3 rounded-md border border-brand-secondary-1 bg-brand-secondary-2 p-3">
             <Link
               href={`/donate/${district.id}`}
-              className="w-full rounded-md bg-brand-primary-0 px-4 py-2 text-center text-brand-secondary-2 hover:bg-brand-primary-2"
+              className="w-full rounded-md bg-surface-accent px-4 py-2 text-center font-semibold text-text-on-dark hover:bg-brand-primary-2"
             >
               Donate
             </Link>

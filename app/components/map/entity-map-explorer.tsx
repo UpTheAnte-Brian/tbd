@@ -381,7 +381,7 @@ export default function EntityMapExplorer({
     }
   };
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     const cachedStates =
       cacheRef.current.get(STATES_CACHE_KEY) ?? initialStates;
     setFeatureCollection(cachedStates);
@@ -406,7 +406,7 @@ export default function EntityMapExplorer({
     setHoveredNonprofitId(null);
     setSelectedNonprofitId(null);
     setFitBoundsToken((token) => (token ?? 0) + 1);
-  };
+  }, [initialStates]);
 
   useEffect(() => {
     if (!selectedDistrictEntityId) {
@@ -852,7 +852,7 @@ export default function EntityMapExplorer({
       .getPropertyValue("--brand-accent-1")
       .trim();
     return value || DEFAULT_BRAND_COLORS.accent1;
-  }, [selectedDistrictEntityId]);
+  }, []);
 
   const brandAccentAlt = useMemo(() => {
     if (typeof window === "undefined") {
@@ -862,7 +862,7 @@ export default function EntityMapExplorer({
       .getPropertyValue("--brand-accent-2")
       .trim();
     return value || DEFAULT_BRAND_COLORS.accent2;
-  }, [selectedDistrictEntityId]);
+  }, []);
 
   const schoolLayerConfig = layerConfigByType.get(SCHOOL_GEOMETRY_TYPE);
   const schoolBaseRadius = schoolLayerConfig?.pointRadiusMeters ?? 60;
@@ -913,17 +913,17 @@ export default function EntityMapExplorer({
     if (activeLayer !== "districts" && !loadingChildLayer) return null;
     return (
       <div className="absolute top-4 left-4 z-50 w-[min(100%,520px)] sm:min-w-[320px]">
-        <div className="rounded-xl border border-brand-secondary-0 bg-brand-secondary-1 p-3 text-brand-primary-1 shadow-lg">
+        <div className="rounded-xl border border-border-subtle bg-surface-nav p-3 text-text-on-dark shadow-lg">
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
-              className="rounded bg-brand-accent-1 px-3 py-1 text-sm font-semibold text-brand-primary-1 hover:bg-brand-accent-0"
+              className="rounded bg-surface-accent px-3 py-1 text-sm font-semibold text-text-on-dark hover:bg-brand-primary-2"
               onClick={handleBack}
             >
               Back to States
             </button>
-            <div className="rounded bg-brand-secondary-0 px-3 py-1">
-              <div className="text-xs uppercase text-brand-secondary-2">
+            <div className="rounded bg-surface-inset px-3 py-1 text-text-on-light">
+              <div className="text-xs uppercase text-brand-secondary-0">
                 Viewing districts
               </div>
               <div className="font-semibold">
@@ -932,16 +932,16 @@ export default function EntityMapExplorer({
             </div>
           </div>
           {loadingChildLayer ? (
-            <div className="mt-3 rounded bg-brand-secondary-0 px-3 py-1 text-xs text-brand-secondary-2">
+            <div className="mt-3 rounded bg-surface-inset px-3 py-1 text-xs text-brand-secondary-0">
               Loading districts...
             </div>
           ) : null}
           {selectedDistrictEntityId ? (
-            <div className="mt-3 rounded-lg border border-brand-secondary-0 bg-brand-secondary-0 p-3">
-              <div className="text-xs uppercase text-brand-secondary-2">
+            <div className="mt-3 rounded-lg border border-border-subtle bg-surface-card p-3 text-text-on-light">
+              <div className="text-xs uppercase tracking-[0.18em] text-brand-secondary-0">
                 Layers
               </div>
-              <label className="mt-2 flex items-center gap-2 text-sm">
+              <label className="mt-2 m-0 flex items-center gap-2 text-sm font-medium normal-case tracking-normal text-text-on-light">
                 <input
                   type="checkbox"
                   className="h-4 w-4"
@@ -955,11 +955,11 @@ export default function EntityMapExplorer({
                 <span>Schools</span>
               </label>
               {schoolsScanned !== null ? (
-                <div className="mt-1 text-xs text-brand-secondary-2">
+                <div className="mt-1 text-xs text-brand-secondary-0">
                   School Program Locations: {schoolsScanned}
                 </div>
               ) : null}
-              <label className="mt-3 flex items-center gap-2 text-sm">
+              <label className="mt-3 m-0 flex items-center gap-2 text-sm font-medium normal-case tracking-normal text-text-on-light">
                 <input
                   type="checkbox"
                   className="h-4 w-4"
@@ -973,7 +973,7 @@ export default function EntityMapExplorer({
                 <span>Nonprofits</span>
               </label>
               {nonprofitsScanned !== null ? (
-                <div className="mt-1 text-xs text-brand-secondary-2">
+                <div className="mt-1 text-xs text-brand-secondary-0">
                   Nonprofit Locations: {nonprofitsScanned}
                 </div>
               ) : null}
@@ -991,6 +991,7 @@ export default function EntityMapExplorer({
   }, [
     activeLayer,
     geometriesByType,
+    handleBack,
     layerLoadingByType,
     loadingChildLayer,
     nonprofitsScanned,

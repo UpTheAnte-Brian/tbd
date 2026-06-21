@@ -18,15 +18,15 @@ const DistrictPopUp = React.memo(
     }, []);
 
     return (
-      <div className="flex flex-col gap-3 rounded-xl border border-brand-secondary-1 bg-brand-secondary-1 p-4">
+      <div className="flex flex-col gap-3 rounded-xl border border-border-subtle bg-surface-nav p-4 text-text-on-dark">
         <Link href={entityPath(String(district.id))}>
-          <div className="text-center text-lg font-semibold text-brand-primary-0 underline decoration-brand-primary-0 hover:text-brand-primary-2">
+          <div className="text-center text-lg font-semibold text-text-on-dark underline decoration-brand-primary-0 underline-offset-4 hover:text-brand-primary-1">
             {props.name ?? props.slug ?? "District"}
           </div>
         </Link>
         <Link
           href={`/donate/${district.id}`}
-          className="inline-block justify-center rounded bg-brand-primary-0 px-4 py-2 text-center text-brand-secondary-2 hover:bg-brand-primary-2"
+          className="inline-block justify-center rounded bg-surface-accent px-4 py-2 text-center font-semibold text-text-on-dark hover:bg-brand-primary-2"
         >
           Donate
         </Link>

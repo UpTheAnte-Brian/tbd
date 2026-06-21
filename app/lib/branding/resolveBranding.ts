@@ -112,6 +112,8 @@ export const DEFAULT_BRAND_TYPOGRAPHY: BrandTypographyTokens = {
   logo: "Inter",
 };
 
+export const DEFAULT_ENTITY_LOGO_URL = "/logo.webp";
+
 const fillPalette = (
   role: PaletteRole,
   colors: unknown,
@@ -369,6 +371,15 @@ export const buildBrandCssVars = (tokens: ResolvedBranding) => {
     "--brand-font-heading": tokens.typography.header1,
     "--brand-font-display": tokens.typography.display,
     "--brand-font-logo": tokens.typography.logo,
+    "--surface-page": tokens.colors.primary1,
+    "--surface-card": tokens.colors.primary1,
+    "--surface-inset": tokens.colors.secondary2,
+    "--surface-nav": tokens.colors.secondary1,
+    "--surface-accent": tokens.colors.primary0,
+    "--text-on-light": tokens.colors.secondary1,
+    "--text-on-dark": tokens.colors.primary1,
+    "--border-subtle": tokens.colors.secondary2,
+    "--focus-ring": tokens.colors.accent1,
   };
 
   return vars;

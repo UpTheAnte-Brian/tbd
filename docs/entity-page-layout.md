@@ -30,6 +30,8 @@
   - Wraps `EntityBrandingPanel` for the branding tab.
 - app/components/branding/panels/EntityBrandingPanel.tsx#L21
   - Handles branding assets/palettes/typography data and UI.
+- docs/branding-9-box.md
+  - Canonical 9-box fallback rules, semantic surface/text variants, and entity branding fallback behavior.
 
 ## Tab selection (current behavior)
 - Query param `?tab=` drives the active tab.

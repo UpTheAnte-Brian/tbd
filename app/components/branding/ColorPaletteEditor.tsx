@@ -140,20 +140,20 @@ export default function ColorPaletteEditor({
   const handleDragEnd = () => setDragIndex(null);
 
   return (
-    <div className="flex max-w-lg flex-col gap-4 rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-4 text-brand-secondary-0">
-      <h2 className="text-xl font-semibold text-brand-secondary-0">{title}</h2>
+    <div className="flex max-w-lg flex-col gap-4 rounded-lg border border-border-subtle bg-surface-card p-4 text-text-on-light">
+      <h2 className="text-xl font-semibold text-text-on-light">{title}</h2>
 
       {error && <div className="text-sm text-brand-primary-2">{error}</div>}
 
       <div className="flex flex-col gap-2">
         {isFixedRole ? (
-          <div className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-sm text-brand-secondary-0">
+          <div className="rounded border border-border-subtle bg-surface-inset px-3 py-2 text-sm text-text-on-light">
             Role:{" "}
             <span className="font-semibold">{roleLabel || resolvedRole}</span>
           </div>
         ) : (
           <select
-            className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 text-brand-secondary-0"
+            className="rounded border border-border-subtle bg-surface-card px-3 py-2 text-text-on-light"
             value={role}
             onChange={(e) => setRole(e.target.value)}
             aria-label="Palette role"
@@ -164,9 +164,9 @@ export default function ColorPaletteEditor({
             <option value="accent">Accent</option>
           </select>
         )}
-        <div className="text-xs text-brand-secondary-0 opacity-70">
+        <div className="text-xs text-brand-secondary-0 opacity-80">
           Palette name will be:{" "}
-          <span className="font-semibold text-brand-secondary-0">
+          <span className="font-semibold text-text-on-light">
             {paletteName || "Select a role to generate the name"}
           </span>
         </div>
@@ -178,7 +178,7 @@ export default function ColorPaletteEditor({
         </label>
 
         {showPrimaryGuidance ? (
-          <div className="grid gap-2 text-xs text-brand-secondary-0 opacity-70 sm:grid-cols-2">
+          <div className="grid gap-2 text-xs text-brand-secondary-0 opacity-80 sm:grid-cols-2">
             <div>Up to 2 Dark Primary Colors</div>
             <div>One white or light Color</div>
           </div>
@@ -188,7 +188,7 @@ export default function ColorPaletteEditor({
           {colors.map((c, i) => (
             <div
               key={i}
-              className={`flex items-center gap-2 rounded border border-brand-secondary-1 bg-brand-secondary-2 px-3 py-2 ${
+              className={`flex items-center gap-2 rounded border border-border-subtle bg-surface-inset px-3 py-2 ${
                 dragIndex === i ? "ring-2 ring-brand-primary-1" : ""
               }`}
               draggable
@@ -200,13 +200,13 @@ export default function ColorPaletteEditor({
                 type="color"
                 value={isValidHex(c) ? c : "#000000"}
                 onChange={(e) => updateColor(i, e.target.value)}
-                className="h-8 w-8 rounded border border-brand-secondary-1 bg-brand-secondary-2"
+                className="h-8 w-8 rounded border border-border-subtle bg-surface-card"
               />
               <input
                 type="text"
                 value={c}
                 onChange={(e) => updateColor(i, e.target.value)}
-                className="w-28 rounded border border-brand-secondary-1 bg-brand-secondary-2 px-2 py-1 text-brand-secondary-0"
+                className="w-28 rounded border border-border-subtle bg-surface-card px-2 py-1 text-text-on-light"
                 placeholder="#RRGGBB"
               />
             </div>
@@ -218,14 +218,14 @@ export default function ColorPaletteEditor({
         <button
           onClick={handleSave}
           disabled={saving}
-          className="rounded bg-brand-primary-0 px-4 py-2 text-brand-secondary-2 hover:bg-brand-primary-2 disabled:opacity-50"
+          className="rounded bg-surface-accent px-4 py-2 font-semibold text-text-on-dark hover:bg-brand-primary-2 disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save"}
         </button>
 
         <button
           onClick={onCancel}
-          className="rounded border border-brand-secondary-1 bg-brand-secondary-2 px-4 py-2 text-brand-secondary-0 hover:bg-brand-secondary-1"
+          className="rounded border border-border-subtle bg-surface-card px-4 py-2 text-text-on-light hover:bg-surface-inset"
         >
           Cancel
         </button>
