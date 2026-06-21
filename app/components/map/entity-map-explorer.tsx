@@ -2,7 +2,7 @@
 "use client";
 
 import { CircleF, InfoWindowF } from "@react-google-maps/api";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EntityMapShell from "@/app/components/map/entity-map-shell";
 import DistrictSearch from "@/app/components/districts/district-search";
 import DistrictPopUp from "@/app/components/districts/district-pop-up";
