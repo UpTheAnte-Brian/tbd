@@ -15,7 +15,7 @@ import type {
   UpdateOnboardingIdentityRequest,
   UpsertOverrideRequest,
 } from "@/app/lib/types/nonprofit-onboarding";
-import type { Database } from "@/database.types";
+import type { Database, Json } from "@/database.types";
 import { materializeEntityPeople } from "@/domain/entities/entity-people-dto";
 
 type PostgrestMaybeSingleError = {
@@ -33,7 +33,7 @@ function slugify(value: string): string {
   const cleaned = value
     .toLowerCase()
     .normalize("NFKD")
-    .replace(/[^\u0000-\u007F]/g, "")
+    .replace(/[^\p{ASCII}]/gu, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .replace(/-{2,}/g, "-");
@@ -231,6 +231,41 @@ async function bestEffortCleanup(
   }
 }
 
+async function syncEntityEinExternalId(
+  supabase: SupabaseClient<Database>,
+  entityId: string,
+  ein: string | null,
+) {
+  const { data: entity, error: entityError } = await supabase
+    .from("entities")
+    .select("external_ids")
+    .eq("id", entityId)
+    .maybeSingle();
+
+  if (entityError) {
+    throw new Error(entityError.message);
+  }
+
+  const currentExternalIds =
+    (entity?.external_ids as Record<string, unknown> | null) ?? {};
+  const nextExternalIds = { ...currentExternalIds };
+
+  if (ein) {
+    nextExternalIds.ein = ein;
+  } else {
+    delete nextExternalIds.ein;
+  }
+
+  const { error: updateError } = await supabase
+    .from("entities")
+    .update({ external_ids: nextExternalIds as Json })
+    .eq("id", entityId);
+
+  if (updateError) {
+    throw new Error(updateError.message);
+  }
+}
+
 async function seedOnboardingProgress(
   supabase: SupabaseClient<Database>,
   entityId: string,
@@ -307,6 +342,9 @@ export async function createNonprofitShell(
           org_type: orgType,
         });
       }
+      if (normalizedEin) {
+        await syncEntityEinExternalId(supabase, existingEntityId, normalizedEin);
+      }
 
       return {
         entity_id: existingEntityId,
@@ -360,6 +398,7 @@ export async function createNonprofitShell(
           org_type: orgType ?? undefined,
         });
       }
+      await syncEntityEinExternalId(supabase, existingEntityId, normalizedEin);
 
       return {
         entity_id: existingEntityId,
@@ -386,6 +425,7 @@ export async function createNonprofitShell(
         name,
         slug,
         active: false,
+        external_ids: normalizedEin ? { ein: normalizedEin } : {},
       })
       .select("id, slug")
       .single();
@@ -765,7 +805,6 @@ export async function updateNonprofitIdentity(
         linkError: linkError
           ? {
             code: linkError?.code,
-            status: (linkError as any)?.status,
             message: linkError?.message,
           }
           : null,
@@ -837,7 +876,11 @@ export async function updateNonprofitIdentity(
     console.log("[updateNonprofitIdentity] nonprofits updated", { entityId });
   }
 
-  if (normalizedEin !== undefined && normalizedEin !== null) {
+  if (normalizedEin !== undefined) {
+    await syncEntityEinExternalId(supabase, entityId, normalizedEin);
+  }
+
+  if (normalizedEin) {
     await updateScopeByEntity(supabase, entityId, {
       ein: normalizedEin,
     });

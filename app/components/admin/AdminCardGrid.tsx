@@ -21,7 +21,8 @@ const ADMIN_SECTIONS: AdminSectionGroup[] = [
     tools: [
       {
         title: "Nonprofits",
-        description: "IRS search, scope tiers, and import controls.",
+        description:
+          "IRS search, scope tiers, import controls, and manual shell creation.",
         href: "/admin/nonprofits",
         tag: "Active",
       },
@@ -91,6 +92,7 @@ const ADMIN_SECTIONS: AdminSectionGroup[] = [
 
 const QUICK_LINKS = [
   { label: "Nonprofit scope queue", href: "/admin/nonprofits" },
+  { label: "Create nonprofit shell", href: "/admin/nonprofits/new" },
   { label: "Jobs dashboard", href: "/admin/jobs" },
   { label: "Source coverage", href: "/admin/sources" },
   { label: "QA triage", href: "/admin/qa" },

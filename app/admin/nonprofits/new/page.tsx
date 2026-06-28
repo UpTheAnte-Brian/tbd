@@ -24,7 +24,8 @@ export default async function AdminNonprofitNewPage({
             New Nonprofit
           </h1>
           <p className="text-sm text-text-on-light">
-            Create a minimal nonprofit shell and continue onboarding.
+            Create a minimal nonprofit shell, even before EIN or IRS data
+            exists, then continue onboarding.
           </p>
         </header>
         <NewNonprofitForm

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type {
   OnboardingQueueRow,
@@ -41,7 +42,7 @@ export default function AdminNonprofitsClient() {
   const [searchQuery, setSearchQuery] = useState("");
   const [districtFilter, setDistrictFilter] = useState("all");
 
-  const fetchQueue = async () => {
+  const fetchQueue = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -79,11 +80,11 @@ export default function AdminNonprofitsClient() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showArchived]);
 
   useEffect(() => {
-    fetchQueue();
-  }, [showArchived]);
+    void fetchQueue();
+  }, [fetchQueue]);
 
   const updateOrgType = async (row: OnboardingQueueRow, orgType: OrgType) => {
     if (!row.ein || !row.district_entity_id) return;
@@ -296,13 +297,25 @@ export default function AdminNonprofitsClient() {
 
   return (
     <section className="space-y-4">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold text-text-on-light">
-          Scope Queue (Exceptions)
-        </h1>
-        <p className="text-sm text-brand-secondary-0">
-          In-scope nonprofits showing data gaps and activation status.
-        </p>
+      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold text-text-on-light">
+            Scope Queue (Exceptions)
+          </h1>
+          <p className="text-sm text-brand-secondary-0">
+            In-scope nonprofits showing data gaps and activation status.
+          </p>
+          <p className="text-xs text-brand-secondary-0">
+            Need a pre-EIN shell? Create it manually and finish the IRS link
+            later.
+          </p>
+        </div>
+        <Link
+          href="/admin/nonprofits/new"
+          className="inline-flex items-center justify-center rounded-lg border border-brand-primary bg-brand-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-primary/90"
+        >
+          Create nonprofit shell
+        </Link>
       </header>
 
       {error ? (

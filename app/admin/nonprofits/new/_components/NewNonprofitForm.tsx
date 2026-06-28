@@ -1,14 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { OrgType } from "@/app/lib/types/nonprofits";
 import type { CreateNonprofitRequest } from "@/app/lib/types/nonprofit-onboarding";
+import { stripPublicSchoolDistrictSuffix } from "@/app/lib/utils/districts";
 
 const ORG_TYPE_LABELS: Record<OrgType, string> = {
   external_charity: "External Charity",
   district_foundation: "District Foundation",
   up_the_ante: "Up The Ante (Self)",
+};
+
+type DistrictOption = {
+  id: string;
+  label: string;
+  searchText: string;
 };
 
 export default function NewNonprofitForm({
@@ -27,9 +34,82 @@ export default function NewNonprofitForm({
   const [districtEntityId, setDistrictEntityId] = useState(
     defaultDistrictEntityId,
   );
+  const [districts, setDistricts] = useState<DistrictOption[]>([]);
+  const [districtSearch, setDistrictSearch] = useState("");
+  const [districtsLoading, setDistrictsLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scopeLabel, setScopeLabel] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDistricts = async () => {
+      setDistrictsLoading(true);
+      try {
+        const response = await fetch("/api/districts", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("Failed to load districts");
+        }
+
+        const payload = (await response.json()) as {
+          districts?: Array<{
+            entity_id?: string | null;
+            prefname?: string | null;
+            shortname?: string | null;
+            sdnumber?: string | null;
+          }>;
+        };
+
+        if (cancelled) return;
+
+        const options = (payload.districts ?? [])
+          .map((district) => {
+            const entityId = district.entity_id?.trim();
+            if (!entityId) return null;
+
+            const baseLabel =
+              stripPublicSchoolDistrictSuffix(
+                district.prefname ?? district.shortname ?? null,
+              ) ??
+              district.prefname ??
+              district.shortname ??
+              "Unknown district";
+            const number = district.sdnumber?.trim();
+            const label = number
+              ? `${baseLabel} (${number})`
+              : baseLabel;
+
+            return {
+              id: entityId,
+              label,
+              searchText: [label, number, entityId]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase(),
+            } satisfies DistrictOption;
+          })
+          .filter((district): district is DistrictOption => Boolean(district))
+          .sort((a, b) => a.label.localeCompare(b.label));
+
+        setDistricts(options);
+      } catch {
+        if (!cancelled) {
+          setDistricts([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setDistrictsLoading(false);
+        }
+      }
+    };
+
+    void loadDistricts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!scopeId) return;
@@ -58,6 +138,35 @@ export default function NewNonprofitForm({
     };
     loadScope();
   }, [scopeId]);
+
+  useEffect(() => {
+    if (!defaultDistrictEntityId) return;
+    setDistrictEntityId(defaultDistrictEntityId);
+  }, [defaultDistrictEntityId]);
+
+  const filteredDistricts = useMemo(() => {
+    const query = districtSearch.trim().toLowerCase();
+    if (!query) return districts;
+
+    const matches = districts.filter((district) =>
+      district.searchText.includes(query),
+    );
+    const selectedDistrict = districts.find(
+      (district) => district.id === districtEntityId,
+    );
+
+    if (
+      selectedDistrict &&
+      !matches.some((district) => district.id === selectedDistrict.id)
+    ) {
+      return [selectedDistrict, ...matches];
+    }
+
+    return matches;
+  }, [districtEntityId, districtSearch, districts]);
+
+  const selectedDistrictLabel =
+    districts.find((district) => district.id === districtEntityId)?.label ?? "";
 
   const canSubmit = Boolean(name.trim() && orgType && districtEntityId.trim());
 
@@ -148,24 +257,63 @@ export default function NewNonprofitForm({
         </label>
 
         <label className="grid gap-2 text-sm font-medium text-text-on-light">
-          District entity ID
-          <input
-            value={districtEntityId}
-            onChange={(event) => setDistrictEntityId(event.target.value)}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
-            placeholder="UUID"
-            required
-          />
+          District
+          <div className="grid gap-2">
+            <input
+              value={districtSearch}
+              onChange={(event) => setDistrictSearch(event.target.value)}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
+              placeholder="Search district name or number"
+            />
+            <select
+              value={districtEntityId}
+              onChange={(event) => setDistrictEntityId(event.target.value)}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
+              required
+              disabled={districtsLoading}
+            >
+              <option value="">
+                {districtsLoading
+                  ? "Loading districts..."
+                  : "Select a district"}
+              </option>
+              {filteredDistricts.map((district) => (
+                <option key={district.id} value={district.id}>
+                  {district.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs font-normal text-brand-secondary-0">
+              {selectedDistrictLabel
+                ? `Selected: ${selectedDistrictLabel}`
+                : "Choose the district this nonprofit should attach to."}
+            </p>
+            {!districtsLoading && districts.length === 0 ? (
+              <input
+                value={districtEntityId}
+                onChange={(event) => setDistrictEntityId(event.target.value)}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 font-mono text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
+                placeholder="District entity UUID"
+                required
+              />
+            ) : null}
+          </div>
         </label>
 
         <label className="grid gap-2 text-sm font-medium text-text-on-light">
           EIN (optional)
-          <input
-            value={ein}
-            onChange={(event) => setEin(event.target.value)}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
-            placeholder="12-3456789"
-          />
+          <div className="grid gap-2">
+            <input
+              value={ein}
+              onChange={(event) => setEin(event.target.value)}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
+              placeholder="12-3456789"
+            />
+            <p className="text-xs font-normal text-brand-secondary-0">
+              Leave this blank for pre-EIN or pre-IRS organizations. You can
+              add it later in onboarding.
+            </p>
+          </div>
         </label>
 
         <label className="grid gap-2 text-sm font-medium text-text-on-light">
