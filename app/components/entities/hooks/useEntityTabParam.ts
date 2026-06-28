@@ -38,16 +38,7 @@ export function useEntityTabParam(context: EntityTabContext) {
 
   const visibleTabs = useMemo(
     () => getVisibleEntityTabKeys(context),
-    [
-      context.entityType,
-      context.hasIrsLink,
-      context.canViewDistrictGovernance,
-      context.isPlatformAdmin,
-      context.canManageUsersForEntity,
-      context.featureFlags.governanceTabsEnabled,
-      context.featureFlags.mapTabEnabled,
-      context.featureFlags.usersTabEnabled,
-    ],
+    [context],
   );
 
   const activeTab = useMemo<EntityTabKey>(() => {

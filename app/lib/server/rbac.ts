@@ -63,6 +63,28 @@ export async function requireEntityAdmin({
   }
 }
 
+export async function requireEntityUser({
+  supabase,
+  userId,
+  entityId,
+}: EntityScope) {
+  const { data, error } = await supabase
+    .from("entity_users")
+    .select("id")
+    .eq("entity_id", entityId)
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to check entity_users: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("Unauthorized");
+  }
+}
+
 export async function requireBoardMember({
   supabase,
   userId,

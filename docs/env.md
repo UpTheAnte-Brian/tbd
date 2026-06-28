@@ -5,6 +5,19 @@
 2) Fill in the required values for your dev Supabase/Stripe/Google projects.
 3) If you run import scripts against test data, also create `.env.test.local`.
 
+## Supabase mode split
+- `npm run dev`
+  - local Supabase app runtime
+  - base env: `.env.local`
+  - local Supabase override: `.env.supabase.local.generated`
+- `npm run dev:remote`
+  - remote Supabase app runtime
+  - env: `.env.local`
+- `supabase link` / `supabase migration list --linked`
+  - CLI-to-remote workflow
+  - uses linked project ref plus remote DB password
+  - does not read app runtime env from `.env.local`
+
 ## Required keys (dev/test)
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`

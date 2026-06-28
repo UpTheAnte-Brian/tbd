@@ -421,6 +421,626 @@ export type Database = {
       [_ in never]: never
     }
   }
+  business: {
+    Tables: {
+      business_close_periods: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          entity_id: string
+          id: string
+          locked_at: string | null
+          notes: string | null
+          opened_at: string
+          owner_user_id: string | null
+          period_end: string
+          period_label: string
+          period_start: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          entity_id: string
+          id?: string
+          locked_at?: string | null
+          notes?: string | null
+          opened_at?: string
+          owner_user_id?: string | null
+          period_end: string
+          period_label: string
+          period_start: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          entity_id?: string
+          id?: string
+          locked_at?: string | null
+          notes?: string | null
+          opened_at?: string
+          owner_user_id?: string | null
+          period_end?: string
+          period_label?: string
+          period_start?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_close_periods_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_close_periods_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_close_tasks: {
+        Row: {
+          account_id: string | null
+          assigned_person_role_id: string | null
+          assigned_user_id: string | null
+          blocker_reason: string | null
+          close_period_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          due_date: string | null
+          entity_id: string
+          evidence_url: string | null
+          id: string
+          notes: string | null
+          status: string
+          system_id: string | null
+          task_type: string
+          template_task_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string | null
+          assigned_person_role_id?: string | null
+          assigned_user_id?: string | null
+          blocker_reason?: string | null
+          close_period_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          due_date?: string | null
+          entity_id: string
+          evidence_url?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          system_id?: string | null
+          task_type: string
+          template_task_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string | null
+          assigned_person_role_id?: string | null
+          assigned_user_id?: string | null
+          blocker_reason?: string | null
+          close_period_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          due_date?: string | null
+          entity_id?: string
+          evidence_url?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          system_id?: string | null
+          task_type?: string
+          template_task_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_close_tasks_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "business_financial_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_close_tasks_assigned_person_role_id_fkey"
+            columns: ["assigned_person_role_id"]
+            isOneToOne: false
+            referencedRelation: "entity_person_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_close_tasks_assigned_user_id_fkey"
+            columns: ["assigned_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_close_tasks_close_period_id_fkey"
+            columns: ["close_period_id"]
+            isOneToOne: false
+            referencedRelation: "business_close_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_close_tasks_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_close_tasks_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_close_tasks_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "business_systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_close_tasks_template_task_id_fkey"
+            columns: ["template_task_id"]
+            isOneToOne: false
+            referencedRelation: "business_close_template_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_close_template_tasks: {
+        Row: {
+          account_id: string | null
+          created_at: string
+          default_due_day: number | null
+          description: string | null
+          evidence_hint: string | null
+          id: string
+          is_required: boolean
+          responsibility_type: string | null
+          sort_order: number
+          system_id: string | null
+          task_key: string
+          task_type: string
+          template_id: string
+          title: string
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string
+          default_due_day?: number | null
+          description?: string | null
+          evidence_hint?: string | null
+          id?: string
+          is_required?: boolean
+          responsibility_type?: string | null
+          sort_order?: number
+          system_id?: string | null
+          task_key: string
+          task_type: string
+          template_id: string
+          title: string
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string
+          default_due_day?: number | null
+          description?: string | null
+          evidence_hint?: string | null
+          id?: string
+          is_required?: boolean
+          responsibility_type?: string | null
+          sort_order?: number
+          system_id?: string | null
+          task_key?: string
+          task_type?: string
+          template_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_close_template_tasks_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "business_financial_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_close_template_tasks_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "business_systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_close_template_tasks_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "business_close_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_close_templates: {
+        Row: {
+          close_frequency: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          entity_id: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          close_frequency?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entity_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          close_frequency?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entity_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_close_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_close_templates_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_financial_accounts: {
+        Row: {
+          account_name: string
+          account_type: string
+          created_at: string
+          currency_code: string
+          entity_id: string
+          external_account_ref: string | null
+          id: string
+          institution_name: string | null
+          is_active: boolean
+          is_reconcilable: boolean
+          masked_account_number: string | null
+          notes: string | null
+          reconciliation_cadence: string
+          system_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_name: string
+          account_type: string
+          created_at?: string
+          currency_code?: string
+          entity_id: string
+          external_account_ref?: string | null
+          id?: string
+          institution_name?: string | null
+          is_active?: boolean
+          is_reconcilable?: boolean
+          masked_account_number?: string | null
+          notes?: string | null
+          reconciliation_cadence?: string
+          system_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string
+          account_type?: string
+          created_at?: string
+          currency_code?: string
+          entity_id?: string
+          external_account_ref?: string | null
+          id?: string
+          institution_name?: string | null
+          is_active?: boolean
+          is_reconcilable?: boolean
+          masked_account_number?: string | null
+          notes?: string | null
+          reconciliation_cadence?: string
+          system_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_financial_accounts_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_financial_accounts_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "business_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_profiles: {
+        Row: {
+          bookkeeping_status: string
+          close_cadence: string
+          created_at: string
+          dba_name: string | null
+          default_accounting_basis: string | null
+          ein: string | null
+          entity_id: string
+          entity_structure: string | null
+          fiscal_year_end_day: number | null
+          fiscal_year_end_month: number | null
+          legal_name: string
+          notes: string | null
+          state_of_formation: string | null
+          updated_at: string
+        }
+        Insert: {
+          bookkeeping_status?: string
+          close_cadence?: string
+          created_at?: string
+          dba_name?: string | null
+          default_accounting_basis?: string | null
+          ein?: string | null
+          entity_id: string
+          entity_structure?: string | null
+          fiscal_year_end_day?: number | null
+          fiscal_year_end_month?: number | null
+          legal_name: string
+          notes?: string | null
+          state_of_formation?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bookkeeping_status?: string
+          close_cadence?: string
+          created_at?: string
+          dba_name?: string | null
+          default_accounting_basis?: string | null
+          ein?: string | null
+          entity_id?: string
+          entity_structure?: string | null
+          fiscal_year_end_day?: number | null
+          fiscal_year_end_month?: number | null
+          legal_name?: string
+          notes?: string | null
+          state_of_formation?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_profiles_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_responsibilities: {
+        Row: {
+          account_id: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          ends_on: string | null
+          entity_id: string
+          id: string
+          is_primary: boolean
+          notes: string | null
+          person_role_id: string | null
+          responsibility_type: string
+          starts_on: string | null
+          system_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          ends_on?: string | null
+          entity_id: string
+          id?: string
+          is_primary?: boolean
+          notes?: string | null
+          person_role_id?: string | null
+          responsibility_type: string
+          starts_on?: string | null
+          system_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          ends_on?: string | null
+          entity_id?: string
+          id?: string
+          is_primary?: boolean
+          notes?: string | null
+          person_role_id?: string | null
+          responsibility_type?: string
+          starts_on?: string | null
+          system_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_responsibilities_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "business_financial_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_responsibilities_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_responsibilities_person_role_id_fkey"
+            columns: ["person_role_id"]
+            isOneToOne: false
+            referencedRelation: "entity_person_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_responsibilities_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "business_systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_responsibilities_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_systems: {
+        Row: {
+          access_notes: string | null
+          created_at: string
+          entity_id: string
+          environment: string | null
+          external_org_id: string | null
+          id: string
+          is_primary: boolean
+          owner_person_role_id: string | null
+          owner_user_id: string | null
+          status: string
+          system_name: string
+          system_type: string
+          updated_at: string
+          vendor_name: string | null
+        }
+        Insert: {
+          access_notes?: string | null
+          created_at?: string
+          entity_id: string
+          environment?: string | null
+          external_org_id?: string | null
+          id?: string
+          is_primary?: boolean
+          owner_person_role_id?: string | null
+          owner_user_id?: string | null
+          status?: string
+          system_name: string
+          system_type: string
+          updated_at?: string
+          vendor_name?: string | null
+        }
+        Update: {
+          access_notes?: string | null
+          created_at?: string
+          entity_id?: string
+          environment?: string | null
+          external_org_id?: string | null
+          id?: string
+          is_primary?: boolean
+          owner_person_role_id?: string | null
+          owner_user_id?: string | null
+          status?: string
+          system_name?: string
+          system_type?: string
+          updated_at?: string
+          vendor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_systems_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_systems_owner_person_role_id_fkey"
+            columns: ["owner_person_role_id"]
+            isOneToOne: false
+            referencedRelation: "entity_person_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_systems_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   governance: {
     Tables: {
       action_items: {
@@ -4122,6 +4742,9 @@ export const Constants = {
         "display",
       ],
     },
+  },
+  business: {
+    Enums: {},
   },
   governance: {
     Enums: {

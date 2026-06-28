@@ -11,7 +11,7 @@ const args = [
     "typescript",
     "--local",
     "--schema",
-    "public,branding,governance,irs",
+    "public,branding,governance,irs,business",
 ];
 
 const result = spawnSync(supabaseCmd, args, { encoding: "utf8" });

@@ -129,6 +129,7 @@ export default function EntityPanel({ entityId, entityType }: Props) {
       isPlatformAdmin,
       canManageUsersForEntity,
       canViewAgentForEntity: isPlatformAdmin || Boolean(entityUserRole),
+      canReadBookkeepingForEntity: isPlatformAdmin || Boolean(entityUserRole),
       featureFlags,
     }),
     [

@@ -51,9 +51,12 @@ Tooling such as Dependabot, migrations, and linting are used deliberately — no
 
 Local Supabase + Dev Workflows
 
-- `npm run dev` now auto-checks local Supabase and starts it if needed before launching Next.js.
+- `npm run dev` is the local Supabase mode.
+  - It auto-checks local Supabase, starts it if needed, generates `.env.supabase.local.generated`, and runs the app with local Supabase values overriding any remote Supabase values in `.env.local`.
+- `npm run dev:remote` is the remote Supabase mode.
+  - It runs the app directly against the Supabase values already stored in `.env.local`.
 - Local Supabase data persists across restarts; use `npm run sb:local:reset` only when you want a fresh local database.
-- For cloud workflows, use dedicated env files:
+- For named remote env stacks, use:
   - `.env.dev.cloud` with `npm run dev:cloud:dev`
   - `.env.test.cloud` with `npm run dev:cloud:test`
 

@@ -4,6 +4,7 @@ export type EntityTabKey =
   | "overview"
   | "contacts"
   | "people"
+  | "bookkeeping"
   | "users"
   | "branding"
   | "governance"
@@ -19,6 +20,7 @@ export type EntityTabContext = {
   isPlatformAdmin?: boolean;
   canManageUsersForEntity?: boolean;
   canViewAgentForEntity?: boolean;
+  canReadBookkeepingForEntity?: boolean;
   featureFlags: {
     governanceTabsEnabled: boolean;
     mapTabEnabled: boolean;
@@ -58,6 +60,14 @@ const ENTITY_TABS: EntityTabDefinition[] = [
     label: "People",
     order: 35,
     isVisible: (context) => Boolean(context.canManageUsersForEntity),
+  },
+  {
+    key: "bookkeeping",
+    label: "Bookkeeping",
+    order: 38,
+    isVisible: (context) =>
+      context.entityType === "business" &&
+      Boolean(context.canReadBookkeepingForEntity),
   },
   {
     key: "branding",
