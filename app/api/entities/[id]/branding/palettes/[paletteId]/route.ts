@@ -245,10 +245,10 @@ export async function PATCH(
 // DELETE /api/entities/[id]/branding/palettes/[paletteId]
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string; paletteId: string } },
+  { params }: { params: Promise<{ id: string; paletteId: string }> },
 ) {
   const supabase = await createApiClient();
-  const { id: entityKey, paletteId } = params;
+  const { id: entityKey, paletteId } = await params;
 
   const { data: userData, error: userErr } = await supabase.auth.getUser();
   if (userErr || !userData?.user) {
