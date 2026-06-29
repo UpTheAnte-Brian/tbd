@@ -1115,10 +1115,6 @@ video {
   width: 7rem;
 }
 
-.w-3 {
-  width: 0.75rem;
-}
-
 .w-3\/4 {
   width: 75%;
 }
@@ -1237,8 +1233,8 @@ video {
   min-width: 1100px;
 }
 
-.min-w-\[130px\] {
-  min-width: 130px;
+.min-w-\[150px\] {
+  min-width: 150px;
 }
 
 .min-w-\[220px\] {
@@ -1916,6 +1912,10 @@ video {
 .border-rose-300 {
   --tw-border-opacity: 1;
   border-color: rgb(253 164 175 / var(--tw-border-opacity, 1));
+}
+
+.border-surface-accent {
+  border-color: var(--surface-accent);
 }
 
 .border-transparent {
@@ -3897,14 +3897,6 @@ button.primary,
 .placeholder\:text-gray-500::placeholder {
   --tw-text-opacity: 1;
   color: rgb(107 114 128 / var(--tw-text-opacity, 1));
-}
-
-.placeholder\:opacity-100::-moz-placeholder {
-  opacity: 1;
-}
-
-.placeholder\:opacity-100::placeholder {
-  opacity: 1;
 }
 
 .placeholder\:opacity-70::-moz-placeholder {

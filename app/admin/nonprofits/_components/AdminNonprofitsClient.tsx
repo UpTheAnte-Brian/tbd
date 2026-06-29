@@ -27,6 +27,58 @@ const TIERS: ScopeTier[] = [
   "institutional",
 ];
 
+const CONTROL_BASE_CLASSES =
+  "w-full rounded-md border px-2.5 py-2 text-xs font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-brand-accent-1";
+const FILTER_CONTROL_CLASSES =
+  "w-full rounded-lg border border-border-subtle bg-surface-card px-3 py-2 text-sm text-text-on-light shadow-sm transition focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1";
+const SIGNAL_PILL_BASE_CLASSES =
+  "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold";
+
+const ORG_TYPE_CONTROL_CLASSES: Record<OrgType, string> = {
+  district_foundation:
+    "border-brand-primary-0 bg-brand-primary-0 text-text-on-dark",
+  up_the_ante: "border-brand-accent-0 bg-brand-accent-0 text-text-on-dark",
+  external_charity: "border-border-subtle bg-surface-card text-text-on-light",
+};
+
+const TIER_LABELS: Record<ScopeTier, string> = {
+  registry_only: "Registry only",
+  disclosure_grade: "Disclosure grade",
+  institutional: "Institutional",
+};
+
+const TIER_CONTROL_CLASSES: Record<ScopeTier, string> = {
+  registry_only: "border-border-subtle bg-surface-card text-text-on-light",
+  disclosure_grade: "border-brand-accent-0 bg-brand-accent-0 text-text-on-dark",
+  institutional:
+    "border-brand-secondary-1 bg-brand-secondary-1 text-text-on-dark",
+};
+
+const STATUS_CONTROL_CLASSES: Record<
+  "candidate" | "active" | "archived",
+  string
+> = {
+  candidate: "border-border-subtle bg-surface-card text-text-on-light",
+  active: "border-brand-primary-0 bg-brand-primary-0 text-text-on-dark",
+  archived: "border-brand-secondary-0 bg-brand-secondary-0 text-text-on-dark",
+};
+
+function signalPillClasses(
+  tone: "neutral" | "accent" | "success" | "warning",
+) {
+  switch (tone) {
+    case "accent":
+      return `${SIGNAL_PILL_BASE_CLASSES} border-brand-accent-0 bg-brand-accent-0 text-text-on-dark`;
+    case "success":
+      return `${SIGNAL_PILL_BASE_CLASSES} border-brand-primary-0 bg-brand-primary-0 text-text-on-dark`;
+    case "warning":
+      return `${SIGNAL_PILL_BASE_CLASSES} border-amber-300 bg-amber-50 text-amber-800`;
+    case "neutral":
+    default:
+      return `${SIGNAL_PILL_BASE_CLASSES} border-border-subtle bg-surface-inset text-text-on-light`;
+  }
+}
+
 export default function AdminNonprofitsClient() {
   const router = useRouter();
   const [rows, setRows] = useState<OnboardingQueueRow[]>([]);
@@ -312,7 +364,7 @@ export default function AdminNonprofitsClient() {
         </div>
         <Link
           href="/admin/nonprofits/new"
-          className="inline-flex items-center justify-center rounded-lg border border-brand-primary bg-brand-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-primary/90"
+          className="inline-flex items-center justify-center rounded-lg border border-surface-accent bg-surface-accent px-4 py-2 text-sm font-semibold text-text-on-dark shadow-sm transition hover:bg-brand-primary-2 focus:outline-none focus:ring-2 focus:ring-brand-accent-1"
         >
           Create nonprofit shell
         </Link>
@@ -325,17 +377,17 @@ export default function AdminNonprofitsClient() {
       ) : null}
 
       <div className="rounded-xl border border-border-subtle bg-surface-card shadow-sm">
-        <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-subtle px-4 py-3">
           <h2 className="text-sm font-semibold text-text-on-light">
             Queue ({filteredRows.length})
           </h2>
-          <div className="flex flex-1 items-center justify-end gap-3 text-xs text-brand-secondary-0">
+          <div className="flex flex-1 flex-wrap items-center justify-end gap-3 text-sm text-brand-secondary-0">
             <div className="min-w-[220px]">
               <select
                 value={districtFilter}
                 onChange={(event) => setDistrictFilter(event.target.value)}
                 aria-label="Filter by district"
-                className="w-full rounded-md border border-border-subtle bg-white px-3 py-1 text-xs text-text-on-light shadow-sm focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1/30"
+                className={FILTER_CONTROL_CLASSES}
               >
                 <option value="all">All districts</option>
                 {districtOptions.map((option) => (
@@ -351,33 +403,35 @@ export default function AdminNonprofitsClient() {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search name, EIN, district…"
-                className="w-full rounded-md border-2 border-brand-primary-1/70 bg-white px-3 py-1 text-xs text-brand-primary-1 placeholder:text-brand-primary-1 placeholder:opacity-100 shadow-sm focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1/30"
+                className={`${FILTER_CONTROL_CLASSES} border-brand-primary-0 placeholder:text-brand-secondary-0`}
               />
             </div>
-            <label className="flex cursor-pointer items-center gap-2">
+            <label className="flex cursor-pointer items-center gap-2 rounded-full border border-border-subtle bg-surface-card px-3 py-2 text-xs font-medium text-text-on-light">
               <input
                 type="checkbox"
                 checked={showActive}
                 onChange={(event) => setShowActive(event.target.checked)}
-                className="h-3 w-3 rounded border-border-subtle"
+                className="h-4 w-4 rounded border-border-subtle text-brand-primary-0 focus:ring-brand-accent-1"
               />
               Show active
             </label>
-            <label className="flex cursor-pointer items-center gap-2">
+            <label className="flex cursor-pointer items-center gap-2 rounded-full border border-border-subtle bg-surface-card px-3 py-2 text-xs font-medium text-text-on-light">
               <input
                 type="checkbox"
                 checked={showArchived}
                 onChange={(event) => setShowArchived(event.target.checked)}
-                className="h-3 w-3 rounded border-border-subtle"
+                className="h-4 w-4 rounded border-border-subtle text-brand-primary-0 focus:ring-brand-accent-1"
               />
               Show archived
             </label>
-            <span>{loading ? "Loading…" : "In scope"}</span>
+            <span className="rounded-full border border-border-subtle bg-surface-inset px-3 py-2 text-xs font-medium text-text-on-light">
+              {loading ? "Loading…" : "In scope"}
+            </span>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="bg-surface-inset text-xs uppercase tracking-wide text-brand-secondary-0">
+            <thead className="bg-surface-nav text-xs uppercase tracking-[0.18em] text-text-on-dark">
               <tr>
                 <th className="px-4 py-3">Label</th>
                 <th className="px-4 py-3">District</th>
@@ -427,7 +481,7 @@ export default function AdminNonprofitsClient() {
                   return (
                     <tr
                       key={`${row.district_entity_id ?? "district"}-${row.ein ?? row.label ?? "row"}-${index}`}
-                      className={`hover:bg-surface-inset/50 ${
+                      className={`transition hover:bg-surface-inset ${
                         canLink ? "cursor-pointer" : ""
                       }`}
                       onClick={() => {
@@ -457,7 +511,7 @@ export default function AdminNonprofitsClient() {
                             onPointerDown={(event) => event.stopPropagation()}
                             onKeyDown={(event) => event.stopPropagation()}
                             disabled={!orgTypeKey || isOrgTypeSaving}
-                            className="w-full rounded-md border border-border-subtle bg-surface-card px-2 py-1 text-xs text-text-on-light"
+                            className={`${CONTROL_BASE_CLASSES} ${ORG_TYPE_CONTROL_CLASSES[orgTypeValue]}`}
                           >
                             {ORG_TYPE_OPTIONS.map((option) => (
                               <option key={option} value={option}>
@@ -484,11 +538,11 @@ export default function AdminNonprofitsClient() {
                             onPointerDown={(event) => event.stopPropagation()}
                             onKeyDown={(event) => event.stopPropagation()}
                             disabled={!orgTypeKey || isTierSaving}
-                            className="w-full rounded-md border border-border-subtle bg-surface-card px-2 py-1 text-xs text-text-on-light"
+                            className={`${CONTROL_BASE_CLASSES} ${TIER_CONTROL_CLASSES[tierValue]}`}
                           >
                             {TIERS.map((option) => (
                               <option key={option} value={option}>
-                                {option}
+                                {TIER_LABELS[option]}
                               </option>
                             ))}
                           </select>
@@ -501,17 +555,27 @@ export default function AdminNonprofitsClient() {
                       </td>
                       <td className="px-4 py-3 text-xs text-text-on-light">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-full bg-surface-inset px-2 py-1">
+                          <span
+                            className={signalPillClasses(
+                              row.has_entity ? "success" : "neutral",
+                            )}
+                          >
                             Entity: {row.has_entity ? "Yes" : "No"}
                           </span>
-                          <span className="rounded-full bg-surface-inset px-2 py-1">
+                          <span
+                            className={signalPillClasses(
+                              row.has_irs_org ? "accent" : "neutral",
+                            )}
+                          >
                             IRS org: {row.has_irs_org ? "Yes" : "No"}
                           </span>
                           <span
-                            className={`rounded-full px-2 py-1 ${
+                            className={`${
                               needsReturns
-                                ? "border border-rose-200 bg-rose-50 text-rose-700"
-                                : "bg-surface-inset"
+                                ? signalPillClasses("warning")
+                                : signalPillClasses(
+                                    row.has_returns ? "success" : "neutral",
+                                  )
                             }`}
                           >
                             Returns: {row.has_returns ? "Yes" : "No"}
@@ -541,7 +605,7 @@ export default function AdminNonprofitsClient() {
                             onPointerDown={(event) => event.stopPropagation()}
                             onKeyDown={(event) => event.stopPropagation()}
                             disabled={!orgTypeKey || isStatusSaving}
-                            className="w-full min-w-[130px] rounded-md border border-border-subtle bg-surface-card px-2 py-1 text-xs text-text-on-light"
+                            className={`${CONTROL_BASE_CLASSES} min-w-[150px] ${STATUS_CONTROL_CLASSES[row.status ?? "candidate"]}`}
                           >
                             <option value="candidate">candidate</option>
                             <option value="active">active</option>

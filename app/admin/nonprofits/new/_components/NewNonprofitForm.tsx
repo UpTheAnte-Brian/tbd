@@ -235,7 +235,7 @@ export default function NewNonprofitForm({
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
+            className="w-full rounded-lg border border-border-subtle bg-surface-card px-3 py-2 text-sm text-text-on-light shadow-sm transition focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1"
             placeholder="Organization name"
             required
           />
@@ -246,7 +246,7 @@ export default function NewNonprofitForm({
           <select
             value={orgType}
             onChange={(event) => setOrgType(event.target.value as OrgType)}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
+            className="w-full rounded-lg border border-border-subtle bg-surface-card px-3 py-2 text-sm text-text-on-light shadow-sm transition focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1"
           >
             {Object.entries(ORG_TYPE_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
@@ -262,13 +262,13 @@ export default function NewNonprofitForm({
             <input
               value={districtSearch}
               onChange={(event) => setDistrictSearch(event.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
+              className="w-full rounded-lg border border-border-subtle bg-surface-card px-3 py-2 text-sm text-text-on-light shadow-sm transition focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1"
               placeholder="Search district name or number"
             />
             <select
               value={districtEntityId}
               onChange={(event) => setDistrictEntityId(event.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
+              className="w-full rounded-lg border border-border-subtle bg-surface-card px-3 py-2 text-sm text-text-on-light shadow-sm transition focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1"
               required
               disabled={districtsLoading}
             >
@@ -292,7 +292,7 @@ export default function NewNonprofitForm({
               <input
                 value={districtEntityId}
                 onChange={(event) => setDistrictEntityId(event.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 font-mono text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
+                className="w-full rounded-lg border border-border-subtle bg-surface-card px-3 py-2 font-mono text-sm text-text-on-light shadow-sm transition focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1"
                 placeholder="District entity UUID"
                 required
               />
@@ -306,7 +306,7 @@ export default function NewNonprofitForm({
             <input
               value={ein}
               onChange={(event) => setEin(event.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
+              className="w-full rounded-lg border border-border-subtle bg-surface-card px-3 py-2 text-sm text-text-on-light shadow-sm transition focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1"
               placeholder="12-3456789"
             />
             <p className="text-xs font-normal text-brand-secondary-0">
@@ -321,7 +321,7 @@ export default function NewNonprofitForm({
           <input
             value={websiteUrl}
             onChange={(event) => setWebsiteUrl(event.target.value)}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
+            className="w-full rounded-lg border border-border-subtle bg-surface-card px-3 py-2 text-sm text-text-on-light shadow-sm transition focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1"
             placeholder="https://example.org"
           />
         </label>
@@ -331,7 +331,7 @@ export default function NewNonprofitForm({
           <textarea
             value={missionStatement}
             onChange={(event) => setMissionStatement(event.target.value)}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-text-on-light shadow-sm focus:border-brand-primary focus:outline-none"
+            className="w-full rounded-lg border border-border-subtle bg-surface-card px-3 py-2 text-sm text-text-on-light shadow-sm transition focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1"
             rows={4}
             placeholder="What is the mission?"
           />
@@ -342,14 +342,14 @@ export default function NewNonprofitForm({
         <button
           type="submit"
           disabled={!canSubmit || loading}
-          className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-text-on-light shadow-sm transition hover:bg-brand-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-lg border border-surface-accent bg-surface-accent px-4 py-2 text-sm font-semibold text-text-on-dark shadow-sm transition hover:bg-brand-primary-2 focus:outline-none focus:ring-2 focus:ring-brand-accent-1 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? "Creating..." : "Create & Continue"}
         </button>
         <button
           type="button"
           onClick={() => router.push("/admin/nonprofits")}
-          className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-text-on-light shadow-sm transition hover:border-brand-primary hover:text-brand-primary"
+          className="rounded-lg border border-border-subtle bg-surface-card px-4 py-2 text-sm font-semibold text-text-on-light shadow-sm transition hover:border-brand-primary-0 hover:text-brand-primary-0"
           disabled={loading}
         >
           Cancel
