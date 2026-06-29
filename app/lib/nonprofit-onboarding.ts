@@ -16,7 +16,7 @@ export type OnboardingSectionStatus =
 
 export const ONBOARDING_SECTION_LABELS: Record<OnboardingSection, string> = {
   identity: "Identity",
-  irs_link: "IRS Link",
+  irs_link: "IRS Link (Optional)",
   documents: "Documents",
   review: "Review & Overrides",
   activation: "Activate",

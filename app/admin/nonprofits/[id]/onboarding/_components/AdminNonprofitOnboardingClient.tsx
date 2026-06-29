@@ -219,8 +219,7 @@ export default function AdminNonprofitOnboardingClient({
     if (isEinLocked) {
       delete payload.ein;
     }
-
-    const ok = await runAction(
+    await runAction(
       "identity",
       `/api/admin/nonprofits/${entityId}/onboarding/identity`,
       {
@@ -228,12 +227,6 @@ export default function AdminNonprofitOnboardingClient({
         body: JSON.stringify(payload),
       },
     );
-
-    if (ok) {
-      setActiveSection("irs_link");
-      // Make the section change obvious after saving.
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
   };
 
   const handleProgressUpdate = async (
@@ -255,6 +248,24 @@ export default function AdminNonprofitOnboardingClient({
       "irs-link",
       `/api/admin/nonprofits/${entityId}/onboarding/irs-link`,
     );
+  };
+
+  const handleSkipIrsLink = async () => {
+    const ok = await runAction(
+      "progress-irs_link",
+      `/api/admin/nonprofits/${entityId}/onboarding/progress`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          section: "irs_link",
+          status: "skipped",
+        }),
+      },
+    );
+
+    if (ok) {
+      setActiveSection("documents");
+    }
   };
 
   const handleOverrideToggle = async (
@@ -556,7 +567,11 @@ export default function AdminNonprofitOnboardingClient({
                       title={`Status: ${effectiveStatus.replace("_", " ")}`}
                       aria-hidden="true"
                     >
-                      {effectiveStatus === "complete" ? "✓" : ""}
+                      {effectiveStatus === "complete"
+                        ? "✓"
+                        : effectiveStatus === "skipped"
+                          ? "-"
+                          : ""}
                     </span>
                   </button>
                 </li>
@@ -605,6 +620,12 @@ export default function AdminNonprofitOnboardingClient({
                     disabled={isEinLocked}
                     className="w-full rounded-lg border border-border-subtle px-3 py-2 text-sm text-text-on-light shadow-sm focus:border-brand-primary-0 focus:outline-none disabled:cursor-not-allowed disabled:bg-surface-inset"
                   />
+                  {!isEinLocked ? (
+                    <span className="text-xs text-brand-secondary-0">
+                      Enter a real 9-digit EIN or leave this blank. Saving
+                      identity does not trigger any IRS import job.
+                    </span>
+                  ) : null}
                   {isEinLocked ? (
                     <span className="text-xs text-brand-secondary-0">
                       EIN is locked after IRS link. To change, unlink IRS first
@@ -679,13 +700,24 @@ export default function AdminNonprofitOnboardingClient({
                   (organizations/returns already imported). No external IRS
                   calls happen here.
                 </p>
+                {!data.nonprofit?.ein && !data.irs_link ? (
+                  <p className="mt-1 text-sm text-brand-secondary-0">
+                    No EIN yet is valid. You can skip this step for now and
+                    continue onboarding.
+                  </p>
+                ) : null}
               </header>
 
               <div className="rounded-lg border border-border-subtle bg-surface-inset px-4 py-3 text-sm text-text-on-light">
                 {!data.nonprofit?.ein && !data.irs_link ? (
-                  <span className="text-brand-secondary-0">
-                    Add an EIN in Identity to enable IRS linking.
-                  </span>
+                  <div className="grid gap-1">
+                    <span className="text-brand-secondary-0">
+                      Add an EIN in Identity to enable IRS linking.
+                    </span>
+                    <span className="text-brand-secondary-0">
+                      Until then, this step can stay skipped.
+                    </span>
+                  </div>
                 ) : (
                   <div className="grid gap-1">
                     <span>
@@ -708,6 +740,14 @@ export default function AdminNonprofitOnboardingClient({
                 )}
               </div>
 
+              {getStatus("irs_link") === "skipped" && !data.irs_link ? (
+                <div className="rounded-lg border border-border-subtle bg-surface-inset px-4 py-3 text-sm text-brand-secondary-0">
+                  IRS Link is currently marked skipped. Add a valid EIN later,
+                  then come back here to link the nonprofit to internal IRS
+                  records.
+                </div>
+              ) : null}
+
               <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
@@ -721,6 +761,18 @@ export default function AdminNonprofitOnboardingClient({
                 >
                   {actionLoading === "irs-link" ? "Linking..." : "Link EIN"}
                 </button>
+                {!data.irs_link ? (
+                  <button
+                    type="button"
+                    onClick={handleSkipIrsLink}
+                    disabled={actionLoading === "progress-irs_link"}
+                    className="rounded-lg border border-border-subtle px-4 py-2 text-sm font-semibold text-text-on-light transition hover:border-brand-primary-0 hover:text-brand-primary-0 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {actionLoading === "progress-irs_link"
+                      ? "Skipping..."
+                      : "Skip IRS for now"}
+                  </button>
+                ) : null}
                 {data.irs_link?.ein ? (
                   <a
                     href="https://apps.irs.gov/app/eos/"

@@ -829,7 +829,13 @@ export async function updateNonprofitIdentity(
   });
 
   if (payload.ein !== undefined && allowEinUpdate) {
-    normalizedEin = normalizeEinInput(normalizeOptional(payload.ein));
+    const normalizedInput = normalizeOptional(payload.ein);
+    normalizedEin = normalizeEinInput(normalizedInput);
+
+    if (normalizedInput && !normalizedEin) {
+      throw new Error("EIN must be 9 digits or left blank.");
+    }
+
     updates.ein = normalizedEin;
   }
   if (payload.website_url !== undefined) {
