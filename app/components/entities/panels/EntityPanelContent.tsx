@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import EntityOverviewTab from "@/app/components/entities/tabs/overview/EntityOverviewTab";
+import EntityDocumentsTab from "@/app/components/entities/tabs/documents/EntityDocumentsTab";
 import EntityContactsTab from "@/app/components/entities/tabs/contacts/EntityContactsTab";
 import EntityPeopleTab from "@/app/components/entities/tabs/people/EntityPeopleTab";
 import EntityBookkeepingTab from "@/app/components/entities/tabs/bookkeeping/EntityBookkeepingTab";
@@ -40,6 +41,8 @@ export default function EntityPanelContent({
     switch (activeTab) {
       case "overview":
         return <EntityOverviewTab entityId={entityId} />;
+      case "documents":
+        return <EntityDocumentsTab entityId={entityId} />;
       case "contacts":
         return <EntityContactsTab entityId={entityId} />;
       case "people":

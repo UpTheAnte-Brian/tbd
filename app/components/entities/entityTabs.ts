@@ -2,6 +2,7 @@ import type { EntityType } from "@/domain/entities/types";
 
 export type EntityTabKey =
   | "overview"
+  | "documents"
   | "contacts"
   | "people"
   | "bookkeeping"
@@ -19,6 +20,7 @@ export type EntityTabContext = {
   canViewDistrictGovernance?: boolean;
   isPlatformAdmin?: boolean;
   canManageUsersForEntity?: boolean;
+  canReadDocumentsForEntity?: boolean;
   canViewAgentForEntity?: boolean;
   canReadBookkeepingForEntity?: boolean;
   featureFlags: {
@@ -44,9 +46,15 @@ const ENTITY_TABS: EntityTabDefinition[] = [
     isVisible: () => true,
   },
   {
+    key: "documents",
+    label: "Documents",
+    order: 20,
+    isVisible: (context) => Boolean(context.canReadDocumentsForEntity),
+  },
+  {
     key: "superintendent",
     label: "Superintendent",
-    order: 20,
+    order: 25,
     isVisible: (context) => context.entityType === "district",
   },
   {

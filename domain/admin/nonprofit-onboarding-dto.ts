@@ -2,7 +2,10 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createApiClient } from "@/utils/supabase/route";
-import { createIrsAdminClient } from "@/utils/supabase/service-worker";
+import {
+  createIrsAdminClient,
+  supabaseAdmin,
+} from "@/utils/supabase/service-worker";
 import {
   ONBOARDING_SECTIONS,
   type OnboardingSection,
@@ -565,7 +568,7 @@ export async function getNonprofitOnboardingData(
     throw new Error(overridesError.message);
   }
 
-  const { data: documents, error: documentsError } = await supabase
+  const { data: documents, error: documentsError } = await supabaseAdmin
     .from("documents")
     .select(
       "id, title, document_type, status, visibility, current_version_id, created_at, updated_at, tax_year",

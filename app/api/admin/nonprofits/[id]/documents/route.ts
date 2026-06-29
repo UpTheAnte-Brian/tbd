@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { safeRoute } from "@/app/lib/api/handler";
 import { jsonError } from "@/app/lib/api/errors";
-import { uploadNonprofitDocument } from "@/domain/admin/nonprofit-documents-dto";
+import { uploadEntityDocument } from "@/domain/entities/entity-documents-dto";
 import { getNonprofitOnboardingData } from "@/domain/admin/nonprofit-onboarding-dto";
 import type { Database } from "@/database.types";
 import { areAdminToolsDisabled } from "@/utils/admin-tools";
@@ -41,7 +41,7 @@ export async function POST(
       }
     }
 
-    await uploadNonprofitDocument({
+    await uploadEntityDocument({
       entityId: id,
       file,
       documentType: documentType ?? "other",
