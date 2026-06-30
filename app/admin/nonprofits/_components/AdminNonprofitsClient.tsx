@@ -114,7 +114,7 @@ export default function AdminNonprofitsClient() {
       const nextOrgTypes: Record<string, OrgType> = {};
       const nextTiers: Record<string, ScopeTier> = {};
       (payload ?? []).forEach((row) => {
-        if (!row.district_entity_id || !row.ein) return;
+        if (!row.has_scope_row || !row.district_entity_id || !row.ein) return;
         const key = `${row.district_entity_id}:${row.ein}`;
         if (row.org_type) {
           nextOrgTypes[key] = row.org_type;
@@ -139,7 +139,7 @@ export default function AdminNonprofitsClient() {
   }, [fetchQueue]);
 
   const updateOrgType = async (row: OnboardingQueueRow, orgType: OrgType) => {
-    if (!row.ein || !row.district_entity_id) return;
+    if (!row.has_scope_row || !row.ein || !row.district_entity_id) return;
     const key = `${row.district_entity_id}:${row.ein}`;
     const previous = orgTypeEdits[key] ?? row.org_type ?? "external_charity";
     setOrgTypeEdits((prev) => ({ ...prev, [key]: orgType }));
@@ -206,7 +206,7 @@ export default function AdminNonprofitsClient() {
     row: OnboardingQueueRow,
     status: "candidate" | "active" | "archived",
   ) => {
-    if (!row.ein || !row.district_entity_id) return;
+    if (!row.has_scope_row || !row.ein || !row.district_entity_id) return;
     const key = `${row.district_entity_id}:${row.ein}`;
     const previous = row.status ?? "candidate";
     setSavingStatus((prev) => new Set(prev).add(key));
@@ -258,7 +258,7 @@ export default function AdminNonprofitsClient() {
   };
 
   const updateScopeTier = async (row: OnboardingQueueRow, tier: ScopeTier) => {
-    if (!row.ein || !row.district_entity_id) return;
+    if (!row.has_scope_row || !row.ein || !row.district_entity_id) return;
     const key = `${row.district_entity_id}:${row.ein}`;
     const previous = tierEdits[key] ?? row.tier ?? "registry_only";
     setTierEdits((prev) => ({ ...prev, [key]: tier }));
@@ -355,7 +355,8 @@ export default function AdminNonprofitsClient() {
             Scope Queue (Exceptions)
           </h1>
           <p className="text-sm text-brand-secondary-0">
-            In-scope nonprofits showing data gaps and activation status.
+            Scoped nonprofits and unfinished manual shells showing data gaps and
+            activation status.
           </p>
           <p className="text-xs text-brand-secondary-0">
             Need a pre-EIN shell? Create it manually and finish the IRS link
@@ -425,7 +426,7 @@ export default function AdminNonprofitsClient() {
               Show archived
             </label>
             <span className="rounded-full border border-border-subtle bg-surface-inset px-3 py-2 text-xs font-medium text-text-on-light">
-              {loading ? "Loading…" : "In scope"}
+              {loading ? "Loading…" : "Queue"}
             </span>
           </div>
         </div>
@@ -444,190 +445,197 @@ export default function AdminNonprofitsClient() {
             </thead>
             <tbody className="divide-y divide-border-subtle">
               {filteredRows.map((row, index) => {
-                  const ein = row.ein ?? "";
-                  const canLink = Boolean(ein);
-                  const detailHref = canLink
-                    ? `/admin/nonprofits/${encodeURIComponent(ein)}`
-                    : "#";
-                  const orgTypeKey =
-                    row.district_entity_id && row.ein
-                      ? `${row.district_entity_id}:${row.ein}`
+                const detailHref =
+                  row.entity_id && (!row.has_scope_row || !row.ein)
+                    ? `/admin/nonprofits/${encodeURIComponent(row.entity_id)}/onboarding`
+                    : row.ein
+                      ? `/admin/nonprofits/${encodeURIComponent(row.ein)}`
                       : null;
-                  const orgTypeValue = orgTypeKey
-                    ? (orgTypeEdits[orgTypeKey] ??
-                      row.org_type ??
-                      "external_charity")
-                    : (row.org_type ?? "external_charity");
-                  const isOrgTypeSaving = orgTypeKey
-                    ? savingOrgType.has(orgTypeKey)
-                    : false;
-                  const tierValue = orgTypeKey
-                    ? (tierEdits[orgTypeKey] ?? row.tier ?? "registry_only")
-                    : (row.tier ?? "registry_only");
-                  const isTierSaving = orgTypeKey
-                    ? savingTier.has(orgTypeKey)
-                    : false;
+                const canLink = Boolean(detailHref);
+                const orgTypeKey =
+                  row.has_scope_row && row.district_entity_id && row.ein
+                    ? `${row.district_entity_id}:${row.ein}`
+                    : null;
+                const orgTypeValue = orgTypeKey
+                  ? (orgTypeEdits[orgTypeKey] ??
+                    row.org_type ??
+                    "external_charity")
+                  : (row.org_type ?? "external_charity");
+                const isOrgTypeSaving = orgTypeKey
+                  ? savingOrgType.has(orgTypeKey)
+                  : false;
+                const tierValue = orgTypeKey
+                  ? (tierEdits[orgTypeKey] ?? row.tier ?? "registry_only")
+                  : (row.tier ?? "registry_only");
+                const isTierSaving = orgTypeKey
+                  ? savingTier.has(orgTypeKey)
+                  : false;
 
-                  const statusKey = orgTypeKey ?? "";
-                  const isStatusSaving = statusKey
-                    ? savingStatus.has(statusKey)
-                    : false;
-                  const needsReturns =
-                    tierValue === "disclosure_grade" && !row.has_returns;
-                  const returnTypeLabel =
-                    row.latest_return_type && row.latest_return_type.trim()
-                      ? row.latest_return_type
-                      : null;
-                  return (
-                    <tr
-                      key={`${row.district_entity_id ?? "district"}-${row.ein ?? row.label ?? "row"}-${index}`}
-                      className={`transition hover:bg-surface-inset ${
-                        canLink ? "cursor-pointer" : ""
-                      }`}
-                      onClick={() => {
-                        if (canLink) router.push(detailHref);
-                      }}
-                    >
-                      <td className="px-4 py-3 font-medium text-text-on-light">
-                        {row.label ?? row.ein ?? "Untitled"}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-text-on-light">
-                        {stripPublicSchoolDistrictSuffix(row.district_name) ??
-                          row.district_name ??
-                          "--"}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-text-on-light">
-                        {row.ein ?? "--"}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-text-on-light">
-                        <div className="flex flex-col gap-2">
-                          <select
-                            value={orgTypeValue}
-                            onChange={(event) => {
-                              const next = event.target.value as OrgType;
-                              void updateOrgType(row, next);
-                            }}
-                            onClick={(event) => event.stopPropagation()}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onKeyDown={(event) => event.stopPropagation()}
-                            disabled={!orgTypeKey || isOrgTypeSaving}
-                            className={`${CONTROL_BASE_CLASSES} ${ORG_TYPE_CONTROL_CLASSES[orgTypeValue]}`}
-                          >
-                            {ORG_TYPE_OPTIONS.map((option) => (
-                              <option key={option} value={option}>
-                                {ORG_TYPE_LABELS[option]}
-                              </option>
-                            ))}
-                          </select>
-                          {isOrgTypeSaving ? (
-                            <span className="text-[11px] text-brand-secondary-0">
-                              Saving…
-                            </span>
-                          ) : null}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-text-on-light">
-                        <div className="flex flex-col gap-2">
-                          <select
-                            value={tierValue}
-                            onChange={(event) => {
-                              const next = event.target.value as ScopeTier;
-                              void updateScopeTier(row, next);
-                            }}
-                            onClick={(event) => event.stopPropagation()}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onKeyDown={(event) => event.stopPropagation()}
-                            disabled={!orgTypeKey || isTierSaving}
-                            className={`${CONTROL_BASE_CLASSES} ${TIER_CONTROL_CLASSES[tierValue]}`}
-                          >
-                            {TIERS.map((option) => (
-                              <option key={option} value={option}>
-                                {TIER_LABELS[option]}
-                              </option>
-                            ))}
-                          </select>
-                          {isTierSaving ? (
-                            <span className="text-[11px] text-brand-secondary-0">
-                              Saving…
-                            </span>
-                          ) : null}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-text-on-light">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span
-                            className={signalPillClasses(
-                              row.has_entity ? "success" : "neutral",
-                            )}
-                          >
-                            Entity: {row.has_entity ? "Yes" : "No"}
+                const statusKey = orgTypeKey ?? "";
+                const isStatusSaving = statusKey
+                  ? savingStatus.has(statusKey)
+                  : false;
+                const needsReturns =
+                  tierValue === "disclosure_grade" && !row.has_returns;
+                const returnTypeLabel =
+                  row.latest_return_type && row.latest_return_type.trim()
+                    ? row.latest_return_type
+                    : null;
+                return (
+                  <tr
+                    key={`${row.entity_id ?? row.district_entity_id ?? "district"}-${row.ein ?? row.label ?? "row"}-${index}`}
+                    className={`transition hover:bg-surface-inset ${
+                      canLink ? "cursor-pointer" : ""
+                    }`}
+                    onClick={() => {
+                      if (detailHref) router.push(detailHref);
+                    }}
+                  >
+                    <td className="px-4 py-3 font-medium text-text-on-light">
+                      {row.label ?? row.ein ?? "Untitled"}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-text-on-light">
+                      {stripPublicSchoolDistrictSuffix(row.district_name) ??
+                        row.district_name ??
+                        "--"}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-text-on-light">
+                      {row.ein ?? "--"}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-text-on-light">
+                      <div className="flex flex-col gap-2">
+                        <select
+                          value={orgTypeValue}
+                          onChange={(event) => {
+                            const next = event.target.value as OrgType;
+                            void updateOrgType(row, next);
+                          }}
+                          onClick={(event) => event.stopPropagation()}
+                          onPointerDown={(event) => event.stopPropagation()}
+                          onKeyDown={(event) => event.stopPropagation()}
+                          disabled={!orgTypeKey || isOrgTypeSaving}
+                          className={`${CONTROL_BASE_CLASSES} ${ORG_TYPE_CONTROL_CLASSES[orgTypeValue]}`}
+                        >
+                          {ORG_TYPE_OPTIONS.map((option) => (
+                            <option key={option} value={option}>
+                              {ORG_TYPE_LABELS[option]}
+                            </option>
+                          ))}
+                        </select>
+                        {isOrgTypeSaving ? (
+                          <span className="text-[11px] text-brand-secondary-0">
+                            Saving…
                           </span>
-                          <span
-                            className={signalPillClasses(
-                              row.has_irs_org ? "accent" : "neutral",
-                            )}
-                          >
-                            IRS org: {row.has_irs_org ? "Yes" : "No"}
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-text-on-light">
+                      <div className="flex flex-col gap-2">
+                        <select
+                          value={tierValue}
+                          onChange={(event) => {
+                            const next = event.target.value as ScopeTier;
+                            void updateScopeTier(row, next);
+                          }}
+                          onClick={(event) => event.stopPropagation()}
+                          onPointerDown={(event) => event.stopPropagation()}
+                          onKeyDown={(event) => event.stopPropagation()}
+                          disabled={!orgTypeKey || isTierSaving}
+                          className={`${CONTROL_BASE_CLASSES} ${TIER_CONTROL_CLASSES[tierValue]}`}
+                        >
+                          {TIERS.map((option) => (
+                            <option key={option} value={option}>
+                              {TIER_LABELS[option]}
+                            </option>
+                          ))}
+                        </select>
+                        {isTierSaving ? (
+                          <span className="text-[11px] text-brand-secondary-0">
+                            Saving…
                           </span>
-                          <span
-                            className={`${
-                              needsReturns
-                                ? signalPillClasses("warning")
-                                : signalPillClasses(
-                                    row.has_returns ? "success" : "neutral",
-                                  )
-                            }`}
-                          >
-                            Returns: {row.has_returns ? "Yes" : "No"}
-                            {row.has_returns && returnTypeLabel
-                              ? ` (${returnTypeLabel})`
-                              : ""}
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-text-on-light">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {row.queue_source === "manual_shell" ? (
+                          <span className={signalPillClasses("accent")}>
+                            Manual shell
                           </span>
-                          {needsReturns ? (
-                            <span className="text-[11px] font-semibold text-rose-600">
-                              Needs returns
-                            </span>
-                          ) : null}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-right text-xs text-text-on-light">
-                        <div className="flex flex-col items-end gap-1">
-                          <select
-                            value={row.status ?? "candidate"}
-                            onChange={(event) => {
-                              const next = event.target.value as
-                                | "candidate"
-                                | "active"
-                                | "archived";
-                              void updateScopeStatus(row, next);
-                            }}
-                            onClick={(event) => event.stopPropagation()}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onKeyDown={(event) => event.stopPropagation()}
-                            disabled={!orgTypeKey || isStatusSaving}
-                            className={`${CONTROL_BASE_CLASSES} min-w-[150px] ${STATUS_CONTROL_CLASSES[row.status ?? "candidate"]}`}
-                          >
-                            <option value="candidate">candidate</option>
-                            <option value="active">active</option>
-                            <option value="archived">archived</option>
-                          </select>
-                          {isStatusSaving ? (
-                            <span className="text-[11px] text-brand-secondary-0">
-                              Saving…
-                            </span>
-                          ) : null}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        ) : null}
+                        <span
+                          className={signalPillClasses(
+                            row.has_entity ? "success" : "neutral",
+                          )}
+                        >
+                          Entity: {row.has_entity ? "Yes" : "No"}
+                        </span>
+                        <span
+                          className={signalPillClasses(
+                            row.has_irs_org ? "accent" : "neutral",
+                          )}
+                        >
+                          IRS org: {row.has_irs_org ? "Yes" : "No"}
+                        </span>
+                        <span
+                          className={`${
+                            needsReturns
+                              ? signalPillClasses("warning")
+                              : signalPillClasses(
+                                  row.has_returns ? "success" : "neutral",
+                                )
+                          }`}
+                        >
+                          Returns: {row.has_returns ? "Yes" : "No"}
+                          {row.has_returns && returnTypeLabel
+                            ? ` (${returnTypeLabel})`
+                            : ""}
+                        </span>
+                        {needsReturns ? (
+                          <span className="text-[11px] font-semibold text-rose-600">
+                            Needs returns
+                          </span>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right text-xs text-text-on-light">
+                      <div className="flex flex-col items-end gap-1">
+                        <select
+                          value={row.status ?? "candidate"}
+                          onChange={(event) => {
+                            const next = event.target.value as
+                              | "candidate"
+                              | "active"
+                              | "archived";
+                            void updateScopeStatus(row, next);
+                          }}
+                          onClick={(event) => event.stopPropagation()}
+                          onPointerDown={(event) => event.stopPropagation()}
+                          onKeyDown={(event) => event.stopPropagation()}
+                          disabled={!orgTypeKey || isStatusSaving}
+                          className={`${CONTROL_BASE_CLASSES} min-w-[150px] ${STATUS_CONTROL_CLASSES[row.status ?? "candidate"]}`}
+                        >
+                          <option value="candidate">candidate</option>
+                          <option value="active">active</option>
+                          <option value="archived">archived</option>
+                        </select>
+                        {isStatusSaving ? (
+                          <span className="text-[11px] text-brand-secondary-0">
+                            Saving…
+                          </span>
+                        ) : null}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
               {!loading && filteredRows.length === 0 ? (
                 <tr>
                   <td
                     colSpan={7}
                     className="px-4 py-8 text-center text-sm text-brand-secondary-0"
                   >
-                    No scoped nonprofits match your search.
+                    No scoped nonprofits or manual shells match your search.
                   </td>
                 </tr>
               ) : null}

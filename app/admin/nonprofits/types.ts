@@ -23,6 +23,8 @@ export type OnboardingQueueRow = {
   label: string | null;
   ein: string | null;
   entity_id: string | null;
+  queue_source: "scope" | "manual_shell";
+  has_scope_row: boolean;
   status: ScopeStatus | null;
   tier: ScopeTier | null;
   org_type: OrgType | null;
