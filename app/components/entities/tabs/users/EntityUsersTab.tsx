@@ -138,14 +138,16 @@ export default function EntityUsersTab({ entityId }: Props) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">User Assignments</h2>
+      <h2 className="text-xl font-semibold text-text-on-light">
+        User Assignments
+      </h2>
       <p className="text-sm text-brand-secondary-0 opacity-70">
         Governance roles are managed separately. Use this list for operational
         access (admin, editor, viewer, employee).
       </p>
 
-      <div className="space-y-4 rounded border border-brand-secondary-1 bg-brand-secondary-1 p-4">
-        <h3 className="font-semibold text-lg">Add User</h3>
+      <div className="space-y-4 rounded-2xl border border-border-subtle bg-surface-card p-5 shadow-sm">
+        <h3 className="text-lg font-semibold text-text-on-light">Add User</h3>
 
         <div className="relative">
           <input
@@ -191,7 +193,7 @@ export default function EntityUsersTab({ entityId }: Props) {
                 setHighlightIndex(-1);
               }
             }}
-            className="w-full rounded border border-brand-secondary-1 bg-brand-secondary-2 p-2 text-brand-secondary-0 placeholder:text-brand-primary-1"
+            className="w-full rounded-lg border border-border-subtle bg-surface-inset p-2.5 text-text-on-light placeholder:text-brand-secondary-0 focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1"
             placeholder="Search users by name..."
           />
 
@@ -202,7 +204,7 @@ export default function EntityUsersTab({ entityId }: Props) {
           )}
 
           {dropdownOpen && searchResults.length > 0 && (
-            <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded border border-brand-secondary-1 bg-brand-secondary-2">
+            <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-border-subtle bg-surface-card shadow-lg">
               {searchResults.map((u, idx) => {
                 const alreadyAssigned = users.some(
                   (user) => user.user_id === u.id,
@@ -211,10 +213,10 @@ export default function EntityUsersTab({ entityId }: Props) {
                 return (
                   <div
                     key={u.id}
-                    className={`px-3 py-2 flex items-center gap-3 cursor-pointer ${
+                    className={`flex cursor-pointer items-center gap-3 px-3 py-2 ${
                       active
-                        ? "bg-brand-secondary-1"
-                        : "hover:bg-brand-secondary-1"
+                        ? "bg-surface-nav text-text-on-dark"
+                        : "text-text-on-light hover:bg-surface-inset"
                     }`}
                     onClick={() => {
                       setNewUserId(u.id);
@@ -233,7 +235,7 @@ export default function EntityUsersTab({ entityId }: Props) {
                       <p className="text-sm">{u.full_name ?? u.id}</p>
                     </div>
                     {alreadyAssigned && (
-                      <span className="rounded bg-brand-secondary-1 px-2 py-1 text-xs text-brand-secondary-0">
+                      <span className="rounded bg-surface-nav px-2 py-1 text-xs text-text-on-dark">
                         Assigned
                       </span>
                     )}
@@ -245,11 +247,13 @@ export default function EntityUsersTab({ entityId }: Props) {
         </div>
 
         <div>
-          <label className="block mb-1">Role</label>
+          <label className="mb-1 block text-sm font-medium text-text-on-light">
+            Role
+          </label>
           <select
             value={newRole}
             onChange={(e) => setNewRole(e.target.value)}
-            className="w-full rounded border border-brand-secondary-1 bg-brand-secondary-2 p-2 text-brand-secondary-0"
+            className="w-full rounded-lg border border-border-subtle bg-surface-inset p-2.5 text-text-on-light focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1"
           >
             <option value="viewer">Viewer</option>
             <option value="editor">Editor</option>
@@ -261,7 +265,7 @@ export default function EntityUsersTab({ entityId }: Props) {
         <button
           onClick={addUser}
           disabled={adding || !newUserId}
-          className="rounded bg-brand-primary-0 px-4 py-2 text-brand-secondary-2 hover:bg-brand-primary-2 disabled:bg-brand-secondary-1 disabled:text-brand-secondary-0"
+          className="rounded-lg bg-surface-accent px-4 py-2 font-semibold text-text-on-dark transition hover:bg-brand-primary-2 disabled:cursor-not-allowed disabled:bg-surface-inset disabled:text-brand-secondary-0"
         >
           {adding ? <LoadingSpinner /> : "Add User"}
         </button>
@@ -278,7 +282,7 @@ export default function EntityUsersTab({ entityId }: Props) {
           users.map((u) => (
             <div
               key={u.id}
-              className="flex flex-col gap-3 rounded border border-brand-secondary-1 bg-brand-secondary-2 p-4"
+              className="flex flex-col gap-3 rounded-xl border border-border-subtle bg-surface-card p-4 shadow-sm"
             >
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
@@ -288,7 +292,7 @@ export default function EntityUsersTab({ entityId }: Props) {
                     size={32}
                   />
                   <div>
-                    <p className="font-semibold">
+                    <p className="font-semibold text-text-on-light">
                       {u.profile?.full_name ?? u.user_id}
                     </p>
                   </div>
@@ -303,11 +307,13 @@ export default function EntityUsersTab({ entityId }: Props) {
               </div>
 
               <div>
-                <label className="block text-sm mb-1">Role</label>
+                <label className="mb-1 block text-sm font-medium text-text-on-light">
+                  Role
+                </label>
                 <select
                   value={u.role}
                   onChange={(e) => updateUser(u.user_id, e.target.value)}
-                  className="w-full rounded border border-brand-secondary-1 bg-brand-secondary-2 p-2 text-brand-secondary-0"
+                  className="w-full rounded-lg border border-border-subtle bg-surface-inset p-2.5 text-text-on-light focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1"
                 >
                   <option value="viewer">Viewer</option>
                   <option value="editor">Editor</option>

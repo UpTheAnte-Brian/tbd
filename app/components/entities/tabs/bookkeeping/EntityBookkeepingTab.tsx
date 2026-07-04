@@ -34,9 +34,9 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-3 rounded-xl border border-brand-secondary-1 bg-brand-secondary-1 p-4">
+    <section className="space-y-3 rounded-2xl border border-border-subtle bg-surface-card p-5 shadow-sm">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-lg font-semibold text-brand-secondary-0">{title}</h3>
+        <h3 className="text-lg font-semibold text-text-on-light">{title}</h3>
       </div>
       {children}
     </section>
@@ -179,11 +179,11 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
             {snapshot.systems.map((system) => (
               <div
                 key={system.id}
-                className="rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-3"
+                className="rounded-xl border border-border-subtle bg-surface-inset p-3"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-brand-secondary-0">
+                    <p className="font-semibold text-text-on-light">
                       {system.system_name}
                     </p>
                     <p className="text-sm capitalize text-brand-secondary-0 opacity-70">
@@ -191,7 +191,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                       {system.vendor_name ? ` · ${system.vendor_name}` : ""}
                     </p>
                   </div>
-                  <span className="rounded-full bg-brand-secondary-1 px-2 py-1 text-xs uppercase tracking-wide text-brand-secondary-0">
+                  <span className="rounded-full bg-surface-nav px-2 py-1 text-xs uppercase tracking-wide text-text-on-dark">
                     {formatStatus(system.status)}
                   </span>
                 </div>
@@ -238,20 +238,20 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
               </thead>
               <tbody>
                 {snapshot.accounts.map((account) => (
-                  <tr key={account.id} className="border-t border-brand-secondary-1">
-                    <td className="px-3 py-2 font-medium text-brand-secondary-0">
+                  <tr key={account.id} className="border-t border-border-subtle">
+                    <td className="px-3 py-2 font-medium text-text-on-light">
                       {account.account_name}
                     </td>
-                    <td className="px-3 py-2 capitalize text-brand-secondary-0">
+                    <td className="px-3 py-2 capitalize text-text-on-light">
                       {formatStatus(account.account_type)}
                     </td>
-                    <td className="px-3 py-2 text-brand-secondary-0">
+                    <td className="px-3 py-2 text-text-on-light">
                       {formatText(account.institution_name)}
                     </td>
-                    <td className="px-3 py-2 text-brand-secondary-0">
+                    <td className="px-3 py-2 text-text-on-light">
                       {formatText(account.system_name)}
                     </td>
-                    <td className="px-3 py-2 text-brand-secondary-0">
+                    <td className="px-3 py-2 text-text-on-light">
                       {account.is_reconcilable
                         ? formatStatus(account.reconciliation_cadence)
                         : "No"}
@@ -274,7 +274,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
             {snapshot.responsibilities.map((responsibility) => (
               <div
                 key={responsibility.id}
-                className="rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-3"
+                className="rounded-xl border border-border-subtle bg-surface-inset p-3"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -290,7 +290,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                     </p>
                   </div>
                   {responsibility.is_primary ? (
-                    <span className="rounded-full bg-brand-secondary-1 px-2 py-1 text-xs uppercase tracking-wide text-brand-secondary-0">
+                    <span className="rounded-full bg-surface-nav px-2 py-1 text-xs uppercase tracking-wide text-text-on-dark">
                       Primary
                     </span>
                   ) : null}
@@ -329,7 +329,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
             {snapshot.closeTemplates.map((template) => (
               <div
                 key={template.id}
-                className="rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-3"
+                className="rounded-xl border border-border-subtle bg-surface-inset p-3"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -341,7 +341,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                       {formatStatus(template.close_frequency)}
                     </p>
                   </div>
-                  <span className="rounded-full bg-brand-secondary-1 px-2 py-1 text-xs uppercase tracking-wide text-brand-secondary-0">
+                  <span className="rounded-full bg-surface-nav px-2 py-1 text-xs uppercase tracking-wide text-text-on-dark">
                     {template.is_active ? "Active" : "Inactive"}
                   </span>
                 </div>
@@ -350,7 +350,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                     {template.tasks.map((task) => (
                       <div
                         key={task.id}
-                        className="rounded border border-brand-secondary-1 px-3 py-2 text-sm text-brand-secondary-0"
+                        className="rounded-lg border border-border-subtle bg-surface-card px-3 py-2 text-sm text-text-on-light"
                       >
                         <p className="font-medium">{task.title}</p>
                         <p className="opacity-70">
@@ -378,7 +378,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
             {snapshot.closePeriods.map((period) => (
               <div
                 key={period.id}
-                className="rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-3"
+                className="rounded-xl border border-border-subtle bg-surface-inset p-3"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -390,7 +390,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                       {formatDate(period.period_end)}
                     </p>
                   </div>
-                  <span className="rounded-full bg-brand-secondary-1 px-2 py-1 text-xs uppercase tracking-wide text-brand-secondary-0">
+                  <span className="rounded-full bg-surface-nav px-2 py-1 text-xs uppercase tracking-wide text-text-on-dark">
                     {formatStatus(period.status)}
                   </span>
                 </div>
@@ -416,7 +416,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                     {period.tasks.map((task) => (
                       <div
                         key={task.id}
-                        className="rounded border border-brand-secondary-1 px-3 py-2 text-sm text-brand-secondary-0"
+                        className="rounded-lg border border-border-subtle bg-surface-card px-3 py-2 text-sm text-text-on-light"
                       >
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <p className="font-medium">{task.title}</p>

@@ -12,7 +12,7 @@ export default async function EntityLayout({
   const { id } = await params;
   return (
     <EntityThemeProvider entityId={id}>
-      <main className="min-h-screen bg-brand-secondary-1 p-4 text-brand-secondary-0">
+      <main className="min-h-screen bg-surface-page p-4 text-text-on-light">
         {children}
       </main>
     </EntityThemeProvider>

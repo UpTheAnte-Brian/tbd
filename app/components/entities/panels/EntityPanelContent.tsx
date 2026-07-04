@@ -32,7 +32,7 @@ export default function EntityPanelContent({
   const tabContent = useMemo(() => {
     if (!entityType) {
       return (
-        <div className="rounded border border-dashed border-brand-secondary-1 p-4 text-sm text-brand-secondary-0">
+        <div className="rounded-xl border border-dashed border-border-subtle bg-surface-card p-4 text-sm text-brand-secondary-0">
           Entity type not available.
         </div>
       );

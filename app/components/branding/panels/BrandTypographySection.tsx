@@ -113,10 +113,10 @@ export default function BrandTypographySection({
       {showTypographyEditor && entityId && (
         <div className="fixed inset-0 z-50 flex justify-end items-center">
           <div
-            className="absolute inset-0 bg-brand-secondary-0"
+            className="absolute inset-0 bg-surface-nav"
             style={{ opacity: 0.8 }}
           />
-          <div className="relative z-10 w-full max-w-md max-h-[calc(100vh-2rem)] bg-brand-secondary-2 text-brand-secondary-0 border border-brand-secondary-1 shadow-xl p-4 overflow-y-auto rounded-lg mr-2">
+          <div className="relative z-10 mr-2 max-h-[calc(100vh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-border-subtle bg-surface-card p-4 text-text-on-light shadow-xl">
             <TypographyEditor
               entityId={entityId}
               typography={typographyWithDefaults}
@@ -152,7 +152,7 @@ export default function BrandTypographySection({
               {typographyWithDefaults.map((t) => (
                 <div
                   key={t.role ?? t.id}
-                  className="rounded border border-brand-secondary-1 bg-brand-secondary-2 p-3 text-brand-secondary-0 space-y-2"
+                  className="space-y-2 rounded-xl border border-border-subtle bg-surface-inset p-3 text-text-on-light"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -161,7 +161,7 @@ export default function BrandTypographySection({
                           ? FONT_ROLE_LABELS[t.role as FontRole]
                           : "Typography"}
                       </div>
-                      <div className="font-semibold text-brand-secondary-0">
+                      <div className="font-semibold text-text-on-light">
                         {t.font_name || "Not set"}
                       </div>
                       <div className="text-xs text-brand-secondary-0 opacity-60 capitalize">
@@ -174,7 +174,7 @@ export default function BrandTypographySection({
                           setSelectedTypographyRole(t.role as string);
                           setShowTypographyEditor(true);
                         }}
-                        className="rounded bg-brand-secondary-0 px-2 py-1 text-xs text-brand-secondary-2 hover:bg-brand-secondary-1 disabled:opacity-50"
+                        className="rounded bg-surface-nav px-2 py-1 text-xs text-text-on-dark transition hover:bg-brand-secondary-0 disabled:opacity-50"
                         disabled={!canEdit}
                       >
                         Edit

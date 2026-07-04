@@ -17,7 +17,7 @@ export default function EntityPageShell({
   return (
     <EntityThemeProvider entityId={entityId}>
       <main
-        className="min-h-screen bg-brand-secondary-1 p-4 text-brand-secondary-0"
+        className="min-h-screen bg-surface-page p-4 text-text-on-light"
         data-entity-tab={resolvedTab}
       >
         <EntityPanel entityId={entityId} />

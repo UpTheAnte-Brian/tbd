@@ -39,8 +39,8 @@ function normalizeWebsite(value: string | null) {
 export default function EntityOverviewPanel({ data }: Props) {
   const website = normalizeWebsite(data.website);
   return (
-    <div className="rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-6 text-brand-secondary-0">
-      <div className="text-2xl font-semibold">
+    <div className="rounded-2xl border border-border-subtle bg-surface-card p-6 text-text-on-light shadow-sm">
+      <div className="text-2xl font-semibold text-text-on-light">
         {data.name ?? "Entity"}
       </div>
       <div className="mt-1 text-sm opacity-70">
@@ -50,7 +50,7 @@ export default function EntityOverviewPanel({ data }: Props) {
       <dl className="mt-6 grid gap-4 sm:grid-cols-2">
         <div>
           <dt className="text-xs uppercase tracking-wide opacity-60">Website</dt>
-          <dd className="mt-1 text-sm">
+          <dd className="mt-1 text-sm text-text-on-light">
             {website ? (
               <a
                 href={website}
@@ -69,13 +69,17 @@ export default function EntityOverviewPanel({ data }: Props) {
           <dt className="text-xs uppercase tracking-wide opacity-60">
             Created
           </dt>
-          <dd className="mt-1 text-sm">{formatDate(data.created_at)}</dd>
+          <dd className="mt-1 text-sm text-text-on-light">
+            {formatDate(data.created_at)}
+          </dd>
         </div>
         <div>
           <dt className="text-xs uppercase tracking-wide opacity-60">
             Entity ID
           </dt>
-          <dd className="mt-1 text-sm font-mono text-xs">{data.id}</dd>
+          <dd className="mt-1 text-xs font-mono text-text-on-light">
+            {data.id}
+          </dd>
         </div>
       </dl>
     </div>

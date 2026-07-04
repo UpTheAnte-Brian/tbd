@@ -17,8 +17,8 @@ const blocks: Block[] = [
 
 export function TypographyShowcase() {
   const { colors, fonts } = useBranding();
-  const highlight = colors.secondary1 || colors.primary1 || "#cfe8ff";
-  const textColor = colors.secondary0 || "#0f172a";
+  const highlight = colors.secondary1 || colors.primary0 || "#2c2a29";
+  const textColor = colors.primary1 || "#ffffff";
   const fontFor = (key: string) => {
     switch (key) {
       case "header1":
@@ -36,7 +36,7 @@ export function TypographyShowcase() {
   const bodyFont = fontFor("body");
 
   return (
-    <div className="mt-10 rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-6">
+    <div className="mt-10 rounded-2xl border border-border-subtle bg-surface-inset p-6">
       <div className="flex flex-col gap-8 md:flex-row md:items-start">
         <div className="flex flex-col gap-6 text-sm text-brand-secondary-0 md:w-1/4">
           <div className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-60">
@@ -44,7 +44,7 @@ export function TypographyShowcase() {
           </div>
           {blocks.map((b) => (
             <div key={b.label} className="space-y-0.5">
-              <div className="font-semibold uppercase text-brand-secondary-0">
+              <div className="font-semibold uppercase text-text-on-light">
                 {b.label}
               </div>
               <div className="capitalize text-brand-secondary-0 opacity-70">

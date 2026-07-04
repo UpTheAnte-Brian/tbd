@@ -11,7 +11,7 @@ type Props = {
 export default function EntityGovernanceTab({ entityId, entityType }: Props) {
   if (entityType !== "nonprofit" && entityType !== "district") {
     return (
-      <div className="rounded border border-dashed border-brand-secondary-1 p-4 text-sm text-brand-secondary-0">
+      <div className="rounded-xl border border-dashed border-border-subtle bg-surface-card p-4 text-sm text-brand-secondary-0">
         Governance is only available for nonprofits and districts.
       </div>
     );

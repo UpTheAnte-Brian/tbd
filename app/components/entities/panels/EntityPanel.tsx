@@ -149,7 +149,7 @@ export default function EntityPanel({ entityId, entityType }: Props) {
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-6">
+      <div className="rounded-2xl border border-border-subtle bg-surface-card p-6 text-text-on-light shadow-sm">
         <LoadingSpinner />
       </div>
     );
@@ -157,14 +157,14 @@ export default function EntityPanel({ entityId, entityType }: Props) {
 
   if (error || !entity) {
     return (
-      <div className="rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-6 text-brand-primary-2">
+      <div className="rounded-2xl border border-border-subtle bg-surface-card p-6 text-brand-primary-2 shadow-sm">
         {error ?? "Entity not found."}
       </div>
     );
   }
 
   const mobileHeader = (
-    <div className="flex items-center gap-3 rounded border border-brand-secondary-1 bg-brand-secondary-2 p-4">
+    <div className="flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-card p-4 text-text-on-light shadow-sm">
       {resolvedType ? (
         <EntityLogo entityId={entity.id} entityType={resolvedType} size={56} />
       ) : null}
@@ -190,7 +190,7 @@ export default function EntityPanel({ entityId, entityType }: Props) {
   );
 
   return (
-    <div className="rounded-lg border border-brand-secondary-1 bg-brand-secondary-2 p-4 md:p-6">
+    <div className="rounded-[28px] border border-border-subtle bg-surface-page p-4 shadow-sm md:p-6">
       <EntityPageLayout
         entityId={entity.id}
         entityName={entity.name ?? "Entity"}

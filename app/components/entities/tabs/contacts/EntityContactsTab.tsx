@@ -24,16 +24,16 @@ function formatDate(value: string | null) {
 
 function ContactCard({ contact }: { contact: EntityContactSummary }) {
   return (
-    <div className="rounded-md border border-brand-secondary-1 bg-brand-secondary-1/40 p-4 text-brand-primary-1">
-      <div className="text-sm font-semibold text-brand-primary-1">
+    <div className="rounded-xl border border-border-subtle bg-surface-card p-4 text-text-on-light shadow-sm">
+      <div className="text-sm font-semibold text-text-on-light">
         {contact.name ?? "Unnamed contact"}
       </div>
-      <div className="mt-1 inline-flex items-center rounded bg-brand-secondary-0 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-brand-primary-1">
+      <div className="mt-1 inline-flex items-center rounded bg-surface-nav px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-text-on-dark">
         {contact.contact_role}
       </div>
-      <div className="mt-3 space-y-1 text-sm">
+      <div className="mt-3 space-y-1 text-sm text-text-on-light">
         <div>
-          <span className="opacity-60">Email:</span>{" "}
+          <span className="text-brand-secondary-0 opacity-70">Email:</span>{" "}
           {contact.email ? (
             <a
               href={`mailto:${contact.email}`}
@@ -46,11 +46,11 @@ function ContactCard({ contact }: { contact: EntityContactSummary }) {
           )}
         </div>
         <div>
-          <span className="opacity-60">Phone:</span>{" "}
+          <span className="text-brand-secondary-0 opacity-70">Phone:</span>{" "}
           {contact.phone ?? "—"}
         </div>
         <div>
-          <span className="opacity-60">Last seen:</span>{" "}
+          <span className="text-brand-secondary-0 opacity-70">Last seen:</span>{" "}
           {formatDate(contact.last_seen_at)}
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function EntityContactsTab({ entityId }: Props) {
           ))}
         </div>
       ) : (
-        <div className="rounded border border-dashed border-brand-secondary-1 bg-brand-secondary-2 p-6 text-sm text-brand-secondary-0">
+        <div className="rounded-xl border border-dashed border-border-subtle bg-surface-card p-6 text-sm text-brand-secondary-0">
           No contacts are available for this entity yet.
         </div>
       )}

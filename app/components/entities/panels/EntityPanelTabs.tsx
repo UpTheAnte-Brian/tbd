@@ -36,7 +36,7 @@ export default function EntityPanelTabs({
     return (
       <div className={tabsClassName ?? ""}>
         <select
-          className="mt-1 w-full rounded-xl border border-[#cbd5e1] bg-white px-3 py-2.5 text-sm font-medium text-[#0f172a] shadow-sm focus:border-[#2563eb] focus:outline-none focus:ring-4 focus:ring-[#bfdbfe]"
+          className="mt-1 w-full rounded-xl border border-border-subtle bg-surface-card px-3 py-2.5 text-sm font-medium text-text-on-light shadow-sm focus:border-brand-accent-1 focus:outline-none focus:ring-4 focus:ring-focus-ring/20"
           value={activeTab}
           onChange={(event) => onTabChange(event.target.value as EntityTabKey)}
         >
@@ -52,7 +52,7 @@ export default function EntityPanelTabs({
 
   return (
     <div
-      className={`flex flex-wrap gap-2 border-b border-[#d7dce5] pb-3 ${
+      className={`flex flex-wrap gap-2 border-b border-border-subtle pb-3 ${
         tabsClassName ?? ""
       }`}
     >
@@ -62,8 +62,8 @@ export default function EntityPanelTabs({
           type="button"
           className={`rounded-xl border px-3 py-1.5 text-sm font-semibold normal-case tracking-normal transition ${
             activeTab === tab.key
-              ? "border-[#d6422b] bg-[#d6422b] text-white shadow-sm"
-              : "border-transparent bg-white text-[#334155] hover:border-[#d7dce5] hover:bg-[#f8fafc] hover:text-[#0f172a]"
+              ? "border-brand-primary-2 bg-surface-accent text-text-on-dark shadow-sm"
+              : "border-transparent bg-surface-card text-text-on-light hover:border-border-subtle hover:bg-surface-inset"
           }`}
           onClick={() => onTabChange(tab.key)}
         >
