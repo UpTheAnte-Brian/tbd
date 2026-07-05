@@ -6,6 +6,11 @@ import {
   createEntityBookkeepingResponsibility,
   createEntityBookkeepingSystem,
   getEntityBookkeepingSnapshot,
+  updateEntityBookkeepingAccount,
+  updateEntityBookkeepingClosePeriod,
+  updateEntityBookkeepingCloseTemplate,
+  updateEntityBookkeepingResponsibility,
+  updateEntityBookkeepingSystem,
   upsertEntityBookkeepingProfile,
 } from "@/domain/business/bookkeeping-dto";
 import {
@@ -107,6 +112,7 @@ export async function POST(
     const kind = typeof body.kind === "string" ? body.kind : "";
     const payload =
       body.payload && typeof body.payload === "object" ? body.payload : {};
+    const recordId = cleanOptionalString(payload.id);
 
     switch (kind) {
       case "profile":
@@ -130,67 +136,140 @@ export async function POST(
         });
         break;
       case "system":
-        await createEntityBookkeepingSystem(entityId, {
-          system_type: cleanRequiredString(payload.system_type, "System type"),
-          system_name: cleanRequiredString(payload.system_name, "System name"),
-          vendor_name: cleanOptionalString(payload.vendor_name),
-          external_org_id: cleanOptionalString(payload.external_org_id),
-          environment: cleanOptionalString(payload.environment),
-          is_primary: cleanBoolean(payload.is_primary),
-          status: cleanOptionalString(payload.status) ?? "active",
-          access_notes: cleanOptionalString(payload.access_notes),
-        });
+        if (recordId) {
+          await updateEntityBookkeepingSystem(entityId, {
+            id: recordId,
+            system_type: cleanRequiredString(payload.system_type, "System type"),
+            system_name: cleanRequiredString(payload.system_name, "System name"),
+            vendor_name: cleanOptionalString(payload.vendor_name),
+            external_org_id: cleanOptionalString(payload.external_org_id),
+            environment: cleanOptionalString(payload.environment),
+            is_primary: cleanBoolean(payload.is_primary),
+            status: cleanOptionalString(payload.status) ?? "active",
+            access_notes: cleanOptionalString(payload.access_notes),
+          });
+        } else {
+          await createEntityBookkeepingSystem(entityId, {
+            system_type: cleanRequiredString(payload.system_type, "System type"),
+            system_name: cleanRequiredString(payload.system_name, "System name"),
+            vendor_name: cleanOptionalString(payload.vendor_name),
+            external_org_id: cleanOptionalString(payload.external_org_id),
+            environment: cleanOptionalString(payload.environment),
+            is_primary: cleanBoolean(payload.is_primary),
+            status: cleanOptionalString(payload.status) ?? "active",
+            access_notes: cleanOptionalString(payload.access_notes),
+          });
+        }
         break;
       case "account":
-        await createEntityBookkeepingAccount(entityId, {
-          system_id: cleanOptionalString(payload.system_id),
-          account_type: cleanRequiredString(payload.account_type, "Account type"),
-          account_name: cleanRequiredString(payload.account_name, "Account name"),
-          institution_name: cleanOptionalString(payload.institution_name),
-          external_account_ref: cleanOptionalString(payload.external_account_ref),
-          masked_account_number: cleanOptionalString(
-            payload.masked_account_number,
-          ),
-          currency_code: cleanOptionalString(payload.currency_code) ?? "USD",
-          is_active: cleanBoolean(payload.is_active, true),
-          is_reconcilable: cleanBoolean(payload.is_reconcilable, true),
-          reconciliation_cadence:
-            cleanOptionalString(payload.reconciliation_cadence) ?? "monthly",
-          notes: cleanOptionalString(payload.notes),
-        });
+        if (recordId) {
+          await updateEntityBookkeepingAccount(entityId, {
+            id: recordId,
+            system_id: cleanOptionalString(payload.system_id),
+            account_type: cleanRequiredString(payload.account_type, "Account type"),
+            account_name: cleanRequiredString(payload.account_name, "Account name"),
+            institution_name: cleanOptionalString(payload.institution_name),
+            external_account_ref: cleanOptionalString(payload.external_account_ref),
+            masked_account_number: cleanOptionalString(
+              payload.masked_account_number,
+            ),
+            currency_code: cleanOptionalString(payload.currency_code) ?? "USD",
+            is_active: cleanBoolean(payload.is_active, true),
+            is_reconcilable: cleanBoolean(payload.is_reconcilable, true),
+            reconciliation_cadence:
+              cleanOptionalString(payload.reconciliation_cadence) ?? "monthly",
+            notes: cleanOptionalString(payload.notes),
+          });
+        } else {
+          await createEntityBookkeepingAccount(entityId, {
+            system_id: cleanOptionalString(payload.system_id),
+            account_type: cleanRequiredString(payload.account_type, "Account type"),
+            account_name: cleanRequiredString(payload.account_name, "Account name"),
+            institution_name: cleanOptionalString(payload.institution_name),
+            external_account_ref: cleanOptionalString(payload.external_account_ref),
+            masked_account_number: cleanOptionalString(
+              payload.masked_account_number,
+            ),
+            currency_code: cleanOptionalString(payload.currency_code) ?? "USD",
+            is_active: cleanBoolean(payload.is_active, true),
+            is_reconcilable: cleanBoolean(payload.is_reconcilable, true),
+            reconciliation_cadence:
+              cleanOptionalString(payload.reconciliation_cadence) ?? "monthly",
+            notes: cleanOptionalString(payload.notes),
+          });
+        }
         break;
       case "responsibility":
-        await createEntityBookkeepingResponsibility(entityId, {
-          responsibility_type: cleanRequiredString(
-            payload.responsibility_type,
-            "Responsibility type",
-          ),
-          contact_name: cleanOptionalString(payload.contact_name),
-          contact_email: cleanOptionalString(payload.contact_email),
-          contact_phone: cleanOptionalString(payload.contact_phone),
-          system_id: cleanOptionalString(payload.system_id),
-          account_id: cleanOptionalString(payload.account_id),
-          is_primary: cleanBoolean(payload.is_primary, true),
-          notes: cleanOptionalString(payload.notes),
-        });
+        if (recordId) {
+          await updateEntityBookkeepingResponsibility(entityId, {
+            id: recordId,
+            responsibility_type: cleanRequiredString(
+              payload.responsibility_type,
+              "Responsibility type",
+            ),
+            contact_name: cleanOptionalString(payload.contact_name),
+            contact_email: cleanOptionalString(payload.contact_email),
+            contact_phone: cleanOptionalString(payload.contact_phone),
+            system_id: cleanOptionalString(payload.system_id),
+            account_id: cleanOptionalString(payload.account_id),
+            is_primary: cleanBoolean(payload.is_primary, true),
+            notes: cleanOptionalString(payload.notes),
+          });
+        } else {
+          await createEntityBookkeepingResponsibility(entityId, {
+            responsibility_type: cleanRequiredString(
+              payload.responsibility_type,
+              "Responsibility type",
+            ),
+            contact_name: cleanOptionalString(payload.contact_name),
+            contact_email: cleanOptionalString(payload.contact_email),
+            contact_phone: cleanOptionalString(payload.contact_phone),
+            system_id: cleanOptionalString(payload.system_id),
+            account_id: cleanOptionalString(payload.account_id),
+            is_primary: cleanBoolean(payload.is_primary, true),
+            notes: cleanOptionalString(payload.notes),
+          });
+        }
         break;
       case "close_template":
-        await createEntityBookkeepingCloseTemplate(entityId, {
-          name: cleanRequiredString(payload.name, "Template name"),
-          description: cleanOptionalString(payload.description),
-          close_frequency:
-            cleanOptionalString(payload.close_frequency) ?? "monthly",
-          is_active: cleanBoolean(payload.is_active, true),
-        });
+        if (recordId) {
+          await updateEntityBookkeepingCloseTemplate(entityId, {
+            id: recordId,
+            name: cleanRequiredString(payload.name, "Template name"),
+            description: cleanOptionalString(payload.description),
+            close_frequency:
+              cleanOptionalString(payload.close_frequency) ?? "monthly",
+            is_active: cleanBoolean(payload.is_active, true),
+          });
+        } else {
+          await createEntityBookkeepingCloseTemplate(entityId, {
+            name: cleanRequiredString(payload.name, "Template name"),
+            description: cleanOptionalString(payload.description),
+            close_frequency:
+              cleanOptionalString(payload.close_frequency) ?? "monthly",
+            is_active: cleanBoolean(payload.is_active, true),
+          });
+        }
         break;
       case "close_period":
-        await createEntityBookkeepingClosePeriod(entityId, {
-          period_start: cleanRequiredString(payload.period_start, "Period start"),
-          period_end: cleanRequiredString(payload.period_end, "Period end"),
-          period_label: cleanRequiredString(payload.period_label, "Period label"),
-          status: cleanOptionalString(payload.status) ?? "open",
-          notes: cleanOptionalString(payload.notes),
-        });
+        if (recordId) {
+          await updateEntityBookkeepingClosePeriod(entityId, {
+            id: recordId,
+            period_start: cleanRequiredString(payload.period_start, "Period start"),
+            period_end: cleanRequiredString(payload.period_end, "Period end"),
+            period_label: cleanRequiredString(payload.period_label, "Period label"),
+            status: cleanOptionalString(payload.status) ?? "open",
+            notes: cleanOptionalString(payload.notes),
+          });
+        } else {
+          await createEntityBookkeepingClosePeriod(entityId, {
+            period_start: cleanRequiredString(payload.period_start, "Period start"),
+            period_end: cleanRequiredString(payload.period_end, "Period end"),
+            period_label: cleanRequiredString(payload.period_label, "Period label"),
+            status: cleanOptionalString(payload.status) ?? "open",
+            notes: cleanOptionalString(payload.notes),
+          });
+        }
         break;
       default:
         throw new Error("Invalid bookkeeping mutation");

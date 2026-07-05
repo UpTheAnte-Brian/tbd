@@ -30,6 +30,10 @@ export type CreateBusinessSystemInput = {
   access_notes: string | null;
 };
 
+export type UpdateBusinessSystemInput = CreateBusinessSystemInput & {
+  id: string;
+};
+
 export type CreateBusinessAccountInput = {
   system_id: string | null;
   account_type: string;
@@ -44,6 +48,10 @@ export type CreateBusinessAccountInput = {
   notes: string | null;
 };
 
+export type UpdateBusinessAccountInput = CreateBusinessAccountInput & {
+  id: string;
+};
+
 export type CreateBusinessResponsibilityInput = {
   responsibility_type: string;
   contact_name: string | null;
@@ -55,6 +63,11 @@ export type CreateBusinessResponsibilityInput = {
   notes: string | null;
 };
 
+export type UpdateBusinessResponsibilityInput =
+  CreateBusinessResponsibilityInput & {
+    id: string;
+  };
+
 export type CreateBusinessCloseTemplateInput = {
   name: string;
   description: string | null;
@@ -62,12 +75,21 @@ export type CreateBusinessCloseTemplateInput = {
   is_active: boolean;
 };
 
+export type UpdateBusinessCloseTemplateInput =
+  CreateBusinessCloseTemplateInput & {
+    id: string;
+  };
+
 export type CreateBusinessClosePeriodInput = {
   period_start: string;
   period_end: string;
   period_label: string;
   status: string;
   notes: string | null;
+};
+
+export type UpdateBusinessClosePeriodInput = CreateBusinessClosePeriodInput & {
+  id: string;
 };
 
 async function getBookkeepingClient(): Promise<SupabaseClient<Database>> {
@@ -152,12 +174,51 @@ export async function createEntityBookkeepingSystem(
   });
 }
 
+export async function updateEntityBookkeepingSystem(
+  entityId: string,
+  input: UpdateBusinessSystemInput,
+) {
+  await runBookkeepingRpc("update_entity_bookkeeping_system", {
+    p_entity_id: entityId,
+    p_system_id: input.id,
+    p_system_type: input.system_type,
+    p_system_name: input.system_name,
+    p_vendor_name: input.vendor_name,
+    p_external_org_id: input.external_org_id,
+    p_environment: input.environment,
+    p_is_primary: input.is_primary,
+    p_status: input.status,
+    p_access_notes: input.access_notes,
+  });
+}
+
 export async function createEntityBookkeepingAccount(
   entityId: string,
   input: CreateBusinessAccountInput,
 ) {
   await runBookkeepingRpc("create_entity_bookkeeping_account", {
     p_entity_id: entityId,
+    p_system_id: input.system_id,
+    p_account_type: input.account_type,
+    p_account_name: input.account_name,
+    p_institution_name: input.institution_name,
+    p_external_account_ref: input.external_account_ref,
+    p_masked_account_number: input.masked_account_number,
+    p_currency_code: input.currency_code,
+    p_is_active: input.is_active,
+    p_is_reconcilable: input.is_reconcilable,
+    p_reconciliation_cadence: input.reconciliation_cadence,
+    p_notes: input.notes,
+  });
+}
+
+export async function updateEntityBookkeepingAccount(
+  entityId: string,
+  input: UpdateBusinessAccountInput,
+) {
+  await runBookkeepingRpc("update_entity_bookkeeping_account", {
+    p_entity_id: entityId,
+    p_account_id: input.id,
     p_system_id: input.system_id,
     p_account_type: input.account_type,
     p_account_name: input.account_name,
@@ -189,6 +250,24 @@ export async function createEntityBookkeepingResponsibility(
   });
 }
 
+export async function updateEntityBookkeepingResponsibility(
+  entityId: string,
+  input: UpdateBusinessResponsibilityInput,
+) {
+  await runBookkeepingRpc("update_entity_bookkeeping_responsibility", {
+    p_entity_id: entityId,
+    p_responsibility_id: input.id,
+    p_responsibility_type: input.responsibility_type,
+    p_contact_name: input.contact_name,
+    p_contact_email: input.contact_email,
+    p_contact_phone: input.contact_phone,
+    p_system_id: input.system_id,
+    p_account_id: input.account_id,
+    p_is_primary: input.is_primary,
+    p_notes: input.notes,
+  });
+}
+
 export async function createEntityBookkeepingCloseTemplate(
   entityId: string,
   input: CreateBusinessCloseTemplateInput,
@@ -202,12 +281,41 @@ export async function createEntityBookkeepingCloseTemplate(
   });
 }
 
+export async function updateEntityBookkeepingCloseTemplate(
+  entityId: string,
+  input: UpdateBusinessCloseTemplateInput,
+) {
+  await runBookkeepingRpc("update_entity_bookkeeping_close_template", {
+    p_entity_id: entityId,
+    p_template_id: input.id,
+    p_name: input.name,
+    p_description: input.description,
+    p_close_frequency: input.close_frequency,
+    p_is_active: input.is_active,
+  });
+}
+
 export async function createEntityBookkeepingClosePeriod(
   entityId: string,
   input: CreateBusinessClosePeriodInput,
 ) {
   await runBookkeepingRpc("create_entity_bookkeeping_close_period", {
     p_entity_id: entityId,
+    p_period_start: input.period_start,
+    p_period_end: input.period_end,
+    p_period_label: input.period_label,
+    p_status: input.status,
+    p_notes: input.notes,
+  });
+}
+
+export async function updateEntityBookkeepingClosePeriod(
+  entityId: string,
+  input: UpdateBusinessClosePeriodInput,
+) {
+  await runBookkeepingRpc("update_entity_bookkeeping_close_period", {
+    p_entity_id: entityId,
+    p_close_period_id: input.id,
     p_period_start: input.period_start,
     p_period_end: input.period_end,
     p_period_label: input.period_label,

@@ -19,6 +19,12 @@ type MutationKind =
   | "close_template"
   | "close_period";
 
+type EditorState = {
+  kind: MutationKind;
+  mode: "create" | "edit";
+  id?: string;
+};
+
 type ProfileDraft = {
   legal_name: string;
   dba_name: string;
@@ -188,64 +194,74 @@ function buildProfileDraft(
   };
 }
 
-function buildEmptySystemDraft(): SystemDraft {
+function buildSystemDraft(
+  system?: BusinessBookkeepingSnapshot["systems"][number] | null,
+): SystemDraft {
   return {
-    system_type: "accounting",
-    system_name: "",
-    vendor_name: "",
-    external_org_id: "",
-    environment: "",
-    is_primary: false,
-    status: "active",
-    access_notes: "",
+    system_type: system?.system_type ?? "accounting",
+    system_name: system?.system_name ?? "",
+    vendor_name: system?.vendor_name ?? "",
+    external_org_id: system?.external_org_id ?? "",
+    environment: system?.environment ?? "",
+    is_primary: system?.is_primary ?? false,
+    status: system?.status ?? "active",
+    access_notes: system?.access_notes ?? "",
   };
 }
 
-function buildEmptyAccountDraft(): AccountDraft {
+function buildAccountDraft(
+  account?: BusinessBookkeepingSnapshot["accounts"][number] | null,
+): AccountDraft {
   return {
-    system_id: "",
-    account_type: "checking",
-    account_name: "",
-    institution_name: "",
-    external_account_ref: "",
-    masked_account_number: "",
-    currency_code: "USD",
-    is_active: true,
-    is_reconcilable: true,
-    reconciliation_cadence: "monthly",
-    notes: "",
+    system_id: account?.system_id ?? "",
+    account_type: account?.account_type ?? "checking",
+    account_name: account?.account_name ?? "",
+    institution_name: account?.institution_name ?? "",
+    external_account_ref: account?.external_account_ref ?? "",
+    masked_account_number: account?.masked_account_number ?? "",
+    currency_code: account?.currency_code ?? "USD",
+    is_active: account?.is_active ?? true,
+    is_reconcilable: account?.is_reconcilable ?? true,
+    reconciliation_cadence: account?.reconciliation_cadence ?? "monthly",
+    notes: account?.notes ?? "",
   };
 }
 
-function buildEmptyResponsibilityDraft(): ResponsibilityDraft {
+function buildResponsibilityDraft(
+  responsibility?: BusinessBookkeepingSnapshot["responsibilities"][number] | null,
+): ResponsibilityDraft {
   return {
-    responsibility_type: "owner",
-    contact_name: "",
-    contact_email: "",
-    contact_phone: "",
-    system_id: "",
-    account_id: "",
-    is_primary: true,
-    notes: "",
+    responsibility_type: responsibility?.responsibility_type ?? "owner",
+    contact_name: responsibility?.contact_name ?? "",
+    contact_email: responsibility?.contact_email ?? "",
+    contact_phone: responsibility?.contact_phone ?? "",
+    system_id: responsibility?.system_id ?? "",
+    account_id: responsibility?.account_id ?? "",
+    is_primary: responsibility?.is_primary ?? true,
+    notes: responsibility?.notes ?? "",
   };
 }
 
-function buildEmptyCloseTemplateDraft(): CloseTemplateDraft {
+function buildCloseTemplateDraft(
+  template?: BusinessBookkeepingSnapshot["closeTemplates"][number] | null,
+): CloseTemplateDraft {
   return {
-    name: "",
-    description: "",
-    close_frequency: "monthly",
-    is_active: true,
+    name: template?.name ?? "",
+    description: template?.description ?? "",
+    close_frequency: template?.close_frequency ?? "monthly",
+    is_active: template?.is_active ?? true,
   };
 }
 
-function buildEmptyClosePeriodDraft(): ClosePeriodDraft {
+function buildClosePeriodDraft(
+  period?: BusinessBookkeepingSnapshot["closePeriods"][number] | null,
+): ClosePeriodDraft {
   return {
-    period_start: "",
-    period_end: "",
-    period_label: "",
-    status: "open",
-    notes: "",
+    period_start: period?.period_start ?? "",
+    period_end: period?.period_end ?? "",
+    period_label: period?.period_label ?? "",
+    status: period?.status ?? "open",
+    notes: period?.notes ?? "",
   };
 }
 
@@ -373,23 +389,23 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [openForm, setOpenForm] = useState<MutationKind | null>(null);
+  const [editor, setEditor] = useState<EditorState | null>(null);
   const [saving, setSaving] = useState<MutationKind | null>(null);
   const [profileDraft, setProfileDraft] = useState<ProfileDraft>(
     buildProfileDraft(null),
   );
   const [systemDraft, setSystemDraft] = useState<SystemDraft>(
-    buildEmptySystemDraft(),
+    buildSystemDraft(null),
   );
   const [accountDraft, setAccountDraft] = useState<AccountDraft>(
-    buildEmptyAccountDraft(),
+    buildAccountDraft(null),
   );
   const [responsibilityDraft, setResponsibilityDraft] =
-    useState<ResponsibilityDraft>(buildEmptyResponsibilityDraft());
+    useState<ResponsibilityDraft>(buildResponsibilityDraft(null));
   const [closeTemplateDraft, setCloseTemplateDraft] =
-    useState<CloseTemplateDraft>(buildEmptyCloseTemplateDraft());
+    useState<CloseTemplateDraft>(buildCloseTemplateDraft(null));
   const [closePeriodDraft, setClosePeriodDraft] = useState<ClosePeriodDraft>(
-    buildEmptyClosePeriodDraft(),
+    buildClosePeriodDraft(null),
   );
 
   const entityUserRole = useMemo(
@@ -445,7 +461,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
       }
       const json = (await res.json()) as BusinessBookkeepingSnapshot;
       setSnapshot(json);
-      setOpenForm(null);
+      setEditor(null);
       toast.success(successMessage);
     } catch (err) {
       toast.error(
@@ -460,7 +476,69 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
 
   const openProfileForm = () => {
     setProfileDraft(buildProfileDraft(profile));
-    setOpenForm("profile");
+    setEditor({ kind: "profile", mode: profile ? "edit" : "create" });
+  };
+
+  const openSystemCreate = () => {
+    setSystemDraft(buildSystemDraft(null));
+    setEditor({ kind: "system", mode: "create" });
+  };
+
+  const openSystemEdit = (system: BusinessBookkeepingSnapshot["systems"][number]) => {
+    setSystemDraft(buildSystemDraft(system));
+    setEditor({ kind: "system", mode: "edit", id: system.id });
+  };
+
+  const openAccountCreate = () => {
+    setAccountDraft(buildAccountDraft(null));
+    setEditor({ kind: "account", mode: "create" });
+  };
+
+  const openAccountEdit = (
+    account: BusinessBookkeepingSnapshot["accounts"][number],
+  ) => {
+    setAccountDraft(buildAccountDraft(account));
+    setEditor({ kind: "account", mode: "edit", id: account.id });
+  };
+
+  const openResponsibilityCreate = () => {
+    setResponsibilityDraft(buildResponsibilityDraft(null));
+    setEditor({ kind: "responsibility", mode: "create" });
+  };
+
+  const openResponsibilityEdit = (
+    responsibility: BusinessBookkeepingSnapshot["responsibilities"][number],
+  ) => {
+    setResponsibilityDraft(buildResponsibilityDraft(responsibility));
+    setEditor({
+      kind: "responsibility",
+      mode: "edit",
+      id: responsibility.id,
+    });
+  };
+
+  const openCloseTemplateCreate = () => {
+    setCloseTemplateDraft(buildCloseTemplateDraft(null));
+    setEditor({ kind: "close_template", mode: "create" });
+  };
+
+  const openCloseTemplateEdit = (
+    template: BusinessBookkeepingSnapshot["closeTemplates"][number],
+  ) => {
+    setCloseTemplateDraft(buildCloseTemplateDraft(template));
+    setEditor({ kind: "close_template", mode: "edit", id: template.id });
+  };
+
+  const openClosePeriodCreate = () => {
+    setClosePeriodDraft(buildClosePeriodDraft(null));
+    setEditor({ kind: "close_period", mode: "create" });
+  };
+
+  const openClosePeriodEdit = (
+    period: BusinessBookkeepingSnapshot["closePeriods"][number],
+  ) => {
+    setClosePeriodDraft(buildClosePeriodDraft(period));
+    setEditor({ kind: "close_period", mode: "edit", id: period.id });
   };
 
   if (loading) {
@@ -489,15 +567,29 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
 
       <Section
         title="Profile"
-        actionLabel={canEdit ? (profile ? "Edit Profile" : "Create Profile") : undefined}
+        actionLabel={
+          canEdit && editor?.kind !== "profile"
+            ? profile
+              ? "Edit Profile"
+              : "Create Profile"
+            : undefined
+        }
         onAction={canEdit ? openProfileForm : undefined}
       >
-        {openForm === "profile" ? (
+        {editor?.kind === "profile" ? (
           <FormCard
-            title={profile ? "Edit bookkeeping profile" : "Create bookkeeping profile"}
-            onCancel={() => setOpenForm(null)}
+            title={
+              editor.mode === "edit"
+                ? "Edit bookkeeping profile"
+                : "Create bookkeeping profile"
+            }
+            onCancel={() => setEditor(null)}
             onSave={() =>
-              submitMutation("profile", profileDraft, profile ? "Profile updated" : "Profile created")
+              submitMutation(
+                "profile",
+                profileDraft,
+                editor.mode === "edit" ? "Profile updated" : "Profile created",
+              )
             }
             saving={saving === "profile"}
           >
@@ -706,22 +798,25 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
 
       <Section
         title={`Systems (${snapshot.systems.length})`}
-        actionLabel={canEdit ? "Add System" : undefined}
-        onAction={
-          canEdit
-            ? () => {
-                setSystemDraft(buildEmptySystemDraft());
-                setOpenForm("system");
-              }
-            : undefined
-        }
+        actionLabel={canEdit && editor?.kind !== "system" ? "Add System" : undefined}
+        onAction={canEdit ? openSystemCreate : undefined}
       >
-        {openForm === "system" ? (
+        {editor?.kind === "system" ? (
           <FormCard
-            title="Add bookkeeping system"
-            onCancel={() => setOpenForm(null)}
+            title={
+              editor.mode === "edit"
+                ? "Edit bookkeeping system"
+                : "Add bookkeeping system"
+            }
+            onCancel={() => setEditor(null)}
             onSave={() =>
-              submitMutation("system", systemDraft, "System added")
+              submitMutation(
+                "system",
+                editor.mode === "edit"
+                  ? { id: editor.id, ...systemDraft }
+                  : systemDraft,
+                editor.mode === "edit" ? "System updated" : "System added",
+              )
             }
             saving={saving === "system"}
           >
@@ -846,9 +941,20 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                       {system.vendor_name ? ` · ${system.vendor_name}` : ""}
                     </p>
                   </div>
-                  <span className="rounded-full bg-surface-nav px-2 py-1 text-xs uppercase tracking-wide text-text-on-dark">
-                    {formatStatus(system.status)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => openSystemEdit(system)}
+                        className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                      >
+                        Edit
+                      </button>
+                    ) : null}
+                    <span className="rounded-full bg-surface-nav px-2 py-1 text-xs uppercase tracking-wide text-text-on-dark">
+                      {formatStatus(system.status)}
+                    </span>
+                  </div>
                 </div>
                 <div className="mt-3 grid gap-2 text-sm md:grid-cols-2">
                   <p>
@@ -876,22 +982,25 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
 
       <Section
         title={`Accounts (${snapshot.accounts.length})`}
-        actionLabel={canEdit ? "Add Account" : undefined}
-        onAction={
-          canEdit
-            ? () => {
-                setAccountDraft(buildEmptyAccountDraft());
-                setOpenForm("account");
-              }
-            : undefined
-        }
+        actionLabel={canEdit && editor?.kind !== "account" ? "Add Account" : undefined}
+        onAction={canEdit ? openAccountCreate : undefined}
       >
-        {openForm === "account" ? (
+        {editor?.kind === "account" ? (
           <FormCard
-            title="Add financial account"
-            onCancel={() => setOpenForm(null)}
+            title={
+              editor.mode === "edit"
+                ? "Edit financial account"
+                : "Add financial account"
+            }
+            onCancel={() => setEditor(null)}
             onSave={() =>
-              submitMutation("account", accountDraft, "Account added")
+              submitMutation(
+                "account",
+                editor.mode === "edit"
+                  ? { id: editor.id, ...accountDraft }
+                  : accountDraft,
+                editor.mode === "edit" ? "Account updated" : "Account added",
+              )
             }
             saving={saving === "account"}
           >
@@ -1050,6 +1159,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                   <th className="px-3 py-2">Institution</th>
                   <th className="px-3 py-2">System</th>
                   <th className="px-3 py-2">Reconcile</th>
+                  {canEdit ? <th className="px-3 py-2">Actions</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -1072,6 +1182,17 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                         ? formatStatus(account.reconciliation_cadence)
                         : "No"}
                     </td>
+                    {canEdit ? (
+                      <td className="px-3 py-2">
+                        <button
+                          type="button"
+                          onClick={() => openAccountEdit(account)}
+                          className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                        >
+                          Edit
+                        </button>
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
               </tbody>
@@ -1082,29 +1203,36 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
 
       <Section
         title={`Responsibilities (${snapshot.responsibilities.length})`}
-        actionLabel={canEdit ? "Add Responsibility" : undefined}
-        onAction={
-          canEdit
-            ? () => {
-                setResponsibilityDraft(buildEmptyResponsibilityDraft());
-                setOpenForm("responsibility");
-              }
+        actionLabel={
+          canEdit && editor?.kind !== "responsibility"
+            ? "Add Responsibility"
             : undefined
         }
+        onAction={canEdit ? openResponsibilityCreate : undefined}
       >
-        {openForm === "responsibility" ? (
+        {editor?.kind === "responsibility" ? (
           <FormCard
-            title="Add responsibility"
-            onCancel={() => setOpenForm(null)}
+            title={
+              editor.mode === "edit" ? "Edit responsibility" : "Add responsibility"
+            }
+            onCancel={() => setEditor(null)}
             onSave={() =>
               submitMutation(
                 "responsibility",
-                responsibilityDraft,
-                "Responsibility added",
+                editor.mode === "edit"
+                  ? { id: editor.id, ...responsibilityDraft }
+                  : responsibilityDraft,
+                editor.mode === "edit"
+                  ? "Responsibility updated"
+                  : "Responsibility added",
               )
             }
             saving={saving === "responsibility"}
           >
+            <p className="text-sm text-brand-secondary-0 opacity-80">
+              Responsibilities assign a person or contact to an area of ownership.
+              Linking a system or account scopes that ownership. It does not create a task.
+            </p>
             <div className="grid gap-3 md:grid-cols-2">
               <Label label="Responsibility Type">
                 <Select
@@ -1152,7 +1280,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                     }))}
                 />
               </Label>
-              <Label label="System">
+              <Label label="Related System">
                 <Select
                   value={responsibilityDraft.system_id}
                   onChange={(event) =>
@@ -1169,7 +1297,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                   ))}
                 </Select>
               </Label>
-              <Label label="Account">
+              <Label label="Related Account">
                 <Select
                   value={responsibilityDraft.account_id}
                   onChange={(event) =>
@@ -1197,7 +1325,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                     is_primary: event.target.checked,
                   }))}
               />
-              Primary responsibility
+              Primary owner for this responsibility type
             </label>
             <Label label="Notes">
               <Textarea
@@ -1234,14 +1362,25 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                         responsibility.person_name ??
                           responsibility.user_name ??
                           responsibility.contact_name,
-                      )}
+                        )}
                     </p>
                   </div>
-                  {responsibility.is_primary ? (
-                    <span className="rounded-full bg-surface-nav px-2 py-1 text-xs uppercase tracking-wide text-text-on-dark">
-                      Primary
-                    </span>
-                  ) : null}
+                  <div className="flex items-center gap-2">
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => openResponsibilityEdit(responsibility)}
+                        className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                      >
+                        Edit
+                      </button>
+                    ) : null}
+                    {responsibility.is_primary ? (
+                      <span className="rounded-full bg-surface-nav px-2 py-1 text-xs uppercase tracking-wide text-text-on-dark">
+                        Primary
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="mt-3 grid gap-2 text-sm md:grid-cols-2">
                   <p>
@@ -1269,25 +1408,26 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
 
       <Section
         title={`Close Templates (${snapshot.closeTemplates.length})`}
-        actionLabel={canEdit ? "Add Template" : undefined}
-        onAction={
-          canEdit
-            ? () => {
-                setCloseTemplateDraft(buildEmptyCloseTemplateDraft());
-                setOpenForm("close_template");
-              }
-            : undefined
+        actionLabel={
+          canEdit && editor?.kind !== "close_template" ? "Add Template" : undefined
         }
+        onAction={canEdit ? openCloseTemplateCreate : undefined}
       >
-        {openForm === "close_template" ? (
+        {editor?.kind === "close_template" ? (
           <FormCard
-            title="Add close template"
-            onCancel={() => setOpenForm(null)}
+            title={
+              editor.mode === "edit" ? "Edit close template" : "Add close template"
+            }
+            onCancel={() => setEditor(null)}
             onSave={() =>
               submitMutation(
                 "close_template",
-                closeTemplateDraft,
-                "Close template added",
+                editor.mode === "edit"
+                  ? { id: editor.id, ...closeTemplateDraft }
+                  : closeTemplateDraft,
+                editor.mode === "edit"
+                  ? "Close template updated"
+                  : "Close template added",
               )
             }
             saving={saving === "close_template"}
@@ -1367,10 +1507,26 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                       {formatStatus(template.close_frequency)}
                     </p>
                   </div>
-                  <span className="rounded-full bg-surface-nav px-2 py-1 text-xs uppercase tracking-wide text-text-on-dark">
-                    {template.is_active ? "Active" : "Inactive"}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => openCloseTemplateEdit(template)}
+                        className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                      >
+                        Edit
+                      </button>
+                    ) : null}
+                    <span className="rounded-full bg-surface-nav px-2 py-1 text-xs uppercase tracking-wide text-text-on-dark">
+                      {template.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </div>
                 </div>
+                {template.description ? (
+                  <p className="mt-3 text-sm text-brand-secondary-0 opacity-80">
+                    {template.description}
+                  </p>
+                ) : null}
                 {template.tasks.length > 0 ? (
                   <div className="mt-3 space-y-2">
                     {template.tasks.map((task) => (
@@ -1396,29 +1552,34 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
 
       <Section
         title={`Recent Close Periods (${snapshot.closePeriods.length})`}
-        actionLabel={canEdit ? "Add Close Period" : undefined}
-        onAction={
-          canEdit
-            ? () => {
-                setClosePeriodDraft(buildEmptyClosePeriodDraft());
-                setOpenForm("close_period");
-              }
-            : undefined
+        actionLabel={
+          canEdit && editor?.kind !== "close_period" ? "Add Close Period" : undefined
         }
+        onAction={canEdit ? openClosePeriodCreate : undefined}
       >
-        {openForm === "close_period" ? (
+        {editor?.kind === "close_period" ? (
           <FormCard
-            title="Add close period"
-            onCancel={() => setOpenForm(null)}
+            title={
+              editor.mode === "edit" ? "Edit close period" : "Add close period"
+            }
+            onCancel={() => setEditor(null)}
             onSave={() =>
               submitMutation(
                 "close_period",
-                closePeriodDraft,
-                "Close period added",
+                editor.mode === "edit"
+                  ? { id: editor.id, ...closePeriodDraft }
+                  : closePeriodDraft,
+                editor.mode === "edit"
+                  ? "Close period updated"
+                  : "Close period added",
               )
             }
             saving={saving === "close_period"}
           >
+            <p className="text-sm text-brand-secondary-0 opacity-80">
+              Create one close period for each month, quarter, or ad hoc cycle
+              you want to track through reconciliation and close.
+            </p>
             <div className="grid gap-3 md:grid-cols-2">
               <Label label="Period Start">
                 <Input
@@ -1504,9 +1665,20 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                       {formatDate(period.period_end)}
                     </p>
                   </div>
-                  <span className="rounded-full bg-surface-nav px-2 py-1 text-xs uppercase tracking-wide text-text-on-dark">
-                    {formatStatus(period.status)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => openClosePeriodEdit(period)}
+                        className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                      >
+                        Edit
+                      </button>
+                    ) : null}
+                    <span className="rounded-full bg-surface-nav px-2 py-1 text-xs uppercase tracking-wide text-text-on-dark">
+                      {formatStatus(period.status)}
+                    </span>
+                  </div>
                 </div>
                 <div className="mt-3 grid gap-2 text-sm md:grid-cols-2">
                   <p>
@@ -1525,6 +1697,11 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                     <span className="opacity-70">Tasks:</span> {period.tasks.length}
                   </p>
                 </div>
+                {period.notes ? (
+                  <p className="mt-3 text-sm text-brand-secondary-0 opacity-80">
+                    {period.notes}
+                  </p>
+                ) : null}
                 {period.tasks.length > 0 ? (
                   <div className="mt-3 space-y-2">
                     {period.tasks.map((task) => (
