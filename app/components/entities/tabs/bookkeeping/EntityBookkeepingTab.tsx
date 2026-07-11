@@ -16,6 +16,8 @@ type MutationKind =
   | "system"
   | "account"
   | "responsibility"
+  | "recurring_task"
+  | "recurring_task_complete"
   | "close_template"
   | "close_period";
 
@@ -72,6 +74,20 @@ type ResponsibilityDraft = {
   system_id: string;
   account_id: string;
   is_primary: boolean;
+  notes: string;
+};
+
+type RecurringTaskDraft = {
+  title: string;
+  task_type: string;
+  description: string;
+  cadence: string;
+  interval_count: string;
+  anchor_date: string;
+  responsibility_id: string;
+  system_id: string;
+  account_id: string;
+  is_active: boolean;
   notes: string;
 };
 
@@ -141,12 +157,49 @@ const RESPONSIBILITY_OPTIONS = [
   "bank_admin",
   "qb_admin",
 ] as const;
+const RECURRING_TASK_TYPE_OPTIONS = [
+  "bill_payment",
+  "vendor_payable",
+  "profit_share",
+  "tax_filing",
+  "payroll",
+  "transfer",
+  "reconciliation",
+  "reporting",
+  "review",
+  "other",
+] as const;
+const RECURRING_TASK_CADENCE_OPTIONS = [
+  "daily",
+  "weekly",
+  "monthly",
+  "quarterly",
+  "annual",
+] as const;
 const CLOSE_PERIOD_STATUS_OPTIONS = [
   "open",
   "in_review",
   "closed",
   "blocked",
 ] as const;
+
+type RecurringTaskStatus =
+  | "inactive"
+  | "overdue"
+  | "due_today"
+  | "due_soon"
+  | "scheduled"
+  | "completed";
+
+type RecurringTaskView = {
+  task: BusinessBookkeepingSnapshot["recurringTasks"][number];
+  activeDueDate: string | null;
+  nextDueDate: string | null;
+  isCompleteForActiveCycle: boolean;
+  status: RecurringTaskStatus;
+  statusLabel: string;
+  daysUntilDue: number | null;
+};
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "—";
@@ -170,6 +223,268 @@ function toTitle(value: string) {
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function getRecurringTaskBadgeClass(status: RecurringTaskStatus) {
+  switch (status) {
+    case "overdue":
+      return "bg-red-100 text-red-800";
+    case "due_today":
+      return "bg-amber-100 text-amber-900";
+    case "due_soon":
+      return "bg-yellow-100 text-yellow-900";
+    case "completed":
+      return "bg-emerald-100 text-emerald-900";
+    case "inactive":
+      return "bg-slate-200 text-slate-700";
+    case "scheduled":
+    default:
+      return "bg-surface-nav text-text-on-dark";
+  }
+}
+
+function formatRelativeDue(daysUntilDue: number | null) {
+  if (daysUntilDue === null) return "No due date";
+  if (daysUntilDue < 0) {
+    const abs = Math.abs(daysUntilDue);
+    return `${abs} day${abs === 1 ? "" : "s"} late`;
+  }
+  if (daysUntilDue === 0) return "Due today";
+  if (daysUntilDue === 1) return "Due in 1 day";
+  return `Due in ${daysUntilDue} days`;
+}
+
+function formatRecurringCadence(cadence: string, intervalCount: number) {
+  const safeInterval = Math.max(intervalCount, 1);
+  if (safeInterval === 1) {
+    return `Every ${formatStatus(cadence)}`;
+  }
+
+  switch (cadence) {
+    case "daily":
+      return `Every ${safeInterval} days`;
+    case "weekly":
+      return `Every ${safeInterval} weeks`;
+    case "monthly":
+      return `Every ${safeInterval} months`;
+    case "quarterly":
+      return `Every ${safeInterval} quarters`;
+    case "annual":
+      return `Every ${safeInterval} years`;
+    default:
+      return `Every ${safeInterval} cycles`;
+  }
+}
+
+function parseDateOnly(value: string | null | undefined) {
+  if (!value) return null;
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed;
+}
+
+function toDateKey(date: Date) {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date.getTime());
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
+}
+
+function addMonthsClamped(date: Date, months: number) {
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth();
+  const day = date.getUTCDate();
+  const targetMonthIndex = month + months;
+  const targetYear = year + Math.floor(targetMonthIndex / 12);
+  const normalizedMonth = ((targetMonthIndex % 12) + 12) % 12;
+  const lastDayOfMonth = new Date(
+    Date.UTC(targetYear, normalizedMonth + 1, 0),
+  ).getUTCDate();
+
+  return new Date(
+    Date.UTC(targetYear, normalizedMonth, Math.min(day, lastDayOfMonth)),
+  );
+}
+
+function compareDateKeys(left: string | null, right: string | null) {
+  if (left === right) return 0;
+  if (!left) return 1;
+  if (!right) return -1;
+  return left.localeCompare(right);
+}
+
+function getDifferenceInDays(from: Date, to: Date) {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.round((to.getTime() - from.getTime()) / msPerDay);
+}
+
+function advanceRecurringTaskDueDate(
+  date: Date,
+  cadence: string,
+  intervalCount: number,
+) {
+  const safeInterval = Math.max(intervalCount, 1);
+
+  switch (cadence) {
+    case "daily":
+      return addDays(date, safeInterval);
+    case "weekly":
+      return addDays(date, safeInterval * 7);
+    case "quarterly":
+      return addMonthsClamped(date, safeInterval * 3);
+    case "annual":
+      return addMonthsClamped(date, safeInterval * 12);
+    case "monthly":
+    default:
+      return addMonthsClamped(date, safeInterval);
+  }
+}
+
+function getLatestDueOnOrBefore(
+  task: BusinessBookkeepingSnapshot["recurringTasks"][number],
+  todayKey: string,
+) {
+  const anchorDate = parseDateOnly(task.anchor_date);
+  if (!anchorDate) return null;
+
+  let current = anchorDate;
+  let latest: Date | null = null;
+
+  while (toDateKey(current) <= todayKey) {
+    latest = current;
+    current = advanceRecurringTaskDueDate(
+      current,
+      task.cadence,
+      task.interval_count,
+    );
+  }
+
+  return latest;
+}
+
+function buildRecurringTaskView(
+  task: BusinessBookkeepingSnapshot["recurringTasks"][number],
+  today: Date,
+): RecurringTaskView {
+  const todayKey = toDateKey(today);
+  const latestDue = getLatestDueOnOrBefore(task, todayKey);
+  const latestDueKey = latestDue ? toDateKey(latestDue) : null;
+  const completedForDueDate = task.last_completed_for_due_date;
+  const isCompleteForLatestDue =
+    Boolean(latestDueKey) && completedForDueDate === latestDueKey;
+
+  let activeDueDate: string | null;
+  let nextDueDate: string | null;
+
+  if (latestDueKey && !isCompleteForLatestDue) {
+    activeDueDate = latestDueKey;
+    nextDueDate = latestDueKey;
+  } else if (latestDue) {
+    const next = advanceRecurringTaskDueDate(
+      latestDue,
+      task.cadence,
+      task.interval_count,
+    );
+    activeDueDate = toDateKey(next);
+    nextDueDate = activeDueDate;
+  } else {
+    activeDueDate = task.anchor_date;
+    nextDueDate = task.anchor_date;
+  }
+
+  if (!task.is_active) {
+    const inactiveDue = activeDueDate ? parseDateOnly(activeDueDate) : null;
+    return {
+      task,
+      activeDueDate,
+      nextDueDate,
+      isCompleteForActiveCycle: false,
+      status: "inactive",
+      statusLabel: "Inactive",
+      daysUntilDue: inactiveDue ? getDifferenceInDays(today, inactiveDue) : null,
+    };
+  }
+
+  const activeDue = parseDateOnly(activeDueDate);
+  const daysUntilDue = activeDue ? getDifferenceInDays(today, activeDue) : null;
+
+  if (latestDueKey && isCompleteForLatestDue) {
+    return {
+      task,
+      activeDueDate,
+      nextDueDate,
+      isCompleteForActiveCycle: true,
+      status: "completed",
+      statusLabel: "Current cycle done",
+      daysUntilDue,
+    };
+  }
+
+  if (daysUntilDue === null) {
+    return {
+      task,
+      activeDueDate,
+      nextDueDate,
+      isCompleteForActiveCycle: false,
+      status: "scheduled",
+      statusLabel: "Scheduled",
+      daysUntilDue: null,
+    };
+  }
+
+  if (daysUntilDue < 0) {
+    return {
+      task,
+      activeDueDate,
+      nextDueDate,
+      isCompleteForActiveCycle: false,
+      status: "overdue",
+      statusLabel: "Overdue",
+      daysUntilDue,
+    };
+  }
+
+  if (daysUntilDue === 0) {
+    return {
+      task,
+      activeDueDate,
+      nextDueDate,
+      isCompleteForActiveCycle: false,
+      status: "due_today",
+      statusLabel: "Due today",
+      daysUntilDue,
+    };
+  }
+
+  if (daysUntilDue <= 7) {
+    return {
+      task,
+      activeDueDate,
+      nextDueDate,
+      isCompleteForActiveCycle: false,
+      status: "due_soon",
+      statusLabel: "Due soon",
+      daysUntilDue,
+    };
+  }
+
+  return {
+    task,
+    activeDueDate,
+    nextDueDate,
+    isCompleteForActiveCycle: false,
+    status: "scheduled",
+    statusLabel: "Scheduled",
+    daysUntilDue,
+  };
 }
 
 function buildProfileDraft(
@@ -239,6 +554,24 @@ function buildResponsibilityDraft(
     account_id: responsibility?.account_id ?? "",
     is_primary: responsibility?.is_primary ?? true,
     notes: responsibility?.notes ?? "",
+  };
+}
+
+function buildRecurringTaskDraft(
+  task?: BusinessBookkeepingSnapshot["recurringTasks"][number] | null,
+): RecurringTaskDraft {
+  return {
+    title: task?.title ?? "",
+    task_type: task?.task_type ?? "bill_payment",
+    description: task?.description ?? "",
+    cadence: task?.cadence ?? "monthly",
+    interval_count: task?.interval_count ? String(task.interval_count) : "1",
+    anchor_date: task?.anchor_date ?? "",
+    responsibility_id: task?.responsibility_id ?? "",
+    system_id: task?.system_id ?? "",
+    account_id: task?.account_id ?? "",
+    is_active: task?.is_active ?? true,
+    notes: task?.notes ?? "",
   };
 }
 
@@ -402,6 +735,8 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
   );
   const [responsibilityDraft, setResponsibilityDraft] =
     useState<ResponsibilityDraft>(buildResponsibilityDraft(null));
+  const [recurringTaskDraft, setRecurringTaskDraft] =
+    useState<RecurringTaskDraft>(buildRecurringTaskDraft(null));
   const [closeTemplateDraft, setCloseTemplateDraft] =
     useState<CloseTemplateDraft>(buildCloseTemplateDraft(null));
   const [closePeriodDraft, setClosePeriodDraft] = useState<ClosePeriodDraft>(
@@ -418,29 +753,91 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
     [entityUserRole, user?.global_role],
   );
 
-  const fetchSnapshot = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/entities/${entityId}/bookkeeping`, {
-        cache: "no-store",
+  const recurringTaskViews = useMemo(() => {
+    const today = new Date();
+    const baseToday = new Date(
+      Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()),
+    );
+
+    return [...(snapshot?.recurringTasks ?? [])]
+      .map((task) => buildRecurringTaskView(task, baseToday))
+      .sort((left, right) => {
+        const statusRank: Record<RecurringTaskStatus, number> = {
+          overdue: 0,
+          due_today: 1,
+          due_soon: 2,
+          scheduled: 3,
+          completed: 4,
+          inactive: 5,
+        };
+
+        const statusDiff = statusRank[left.status] - statusRank[right.status];
+        if (statusDiff !== 0) return statusDiff;
+
+        const dateDiff = compareDateKeys(left.activeDueDate, right.activeDueDate);
+        if (dateDiff !== 0) return dateDiff;
+
+        return left.task.title.localeCompare(right.task.title);
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error ?? "Failed to load bookkeeping");
-      }
-      const json = (await res.json()) as BusinessBookkeepingSnapshot;
-      setSnapshot(json);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load");
-      setSnapshot(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [snapshot?.recurringTasks]);
+
+  const recurringTaskStats = useMemo(() => {
+    return recurringTaskViews.reduce(
+      (totals, task) => {
+        totals.total += 1;
+        if (task.status === "overdue") totals.overdue += 1;
+        if (task.status === "due_today") totals.dueToday += 1;
+        if (task.status === "due_soon") totals.dueSoon += 1;
+        if (task.status === "completed") totals.completed += 1;
+        if (task.status === "inactive") totals.inactive += 1;
+        return totals;
+      },
+      {
+        total: 0,
+        overdue: 0,
+        dueToday: 0,
+        dueSoon: 0,
+        completed: 0,
+        inactive: 0,
+      },
+    );
+  }, [recurringTaskViews]);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const fetchSnapshot = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/entities/${entityId}/bookkeeping`, {
+          cache: "no-store",
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body?.error ?? "Failed to load bookkeeping");
+        }
+        const json = (await res.json()) as BusinessBookkeepingSnapshot;
+        if (!cancelled) {
+          setSnapshot(json);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load");
+          setSnapshot(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
     void fetchSnapshot();
+
+    return () => {
+      cancelled = true;
+    };
   }, [entityId]);
 
   const submitMutation = async (
@@ -515,6 +912,18 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
       mode: "edit",
       id: responsibility.id,
     });
+  };
+
+  const openRecurringTaskCreate = () => {
+    setRecurringTaskDraft(buildRecurringTaskDraft(null));
+    setEditor({ kind: "recurring_task", mode: "create" });
+  };
+
+  const openRecurringTaskEdit = (
+    task: BusinessBookkeepingSnapshot["recurringTasks"][number],
+  ) => {
+    setRecurringTaskDraft(buildRecurringTaskDraft(task));
+    setEditor({ kind: "recurring_task", mode: "edit", id: task.id });
   };
 
   const openCloseTemplateCreate = () => {
@@ -1400,6 +1809,370 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                     {formatText(responsibility.contact_phone)}
                   </p>
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
+      <Section
+        title={`Recurring Tasks (${snapshot.recurringTasks.length})`}
+        actionLabel={
+          canEdit && editor?.kind !== "recurring_task"
+            ? "Add Recurring Task"
+            : undefined
+        }
+        onAction={canEdit ? openRecurringTaskCreate : undefined}
+      >
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="rounded-xl border border-border-subtle bg-surface-inset p-3">
+            <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+              Overdue
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-text-on-light">
+              {recurringTaskStats.overdue}
+            </p>
+          </div>
+          <div className="rounded-xl border border-border-subtle bg-surface-inset p-3">
+            <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+              Due Today
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-text-on-light">
+              {recurringTaskStats.dueToday}
+            </p>
+          </div>
+          <div className="rounded-xl border border-border-subtle bg-surface-inset p-3">
+            <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+              Due Soon
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-text-on-light">
+              {recurringTaskStats.dueSoon}
+            </p>
+          </div>
+          <div className="rounded-xl border border-border-subtle bg-surface-inset p-3">
+            <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+              Current Cycle Done
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-text-on-light">
+              {recurringTaskStats.completed}
+            </p>
+          </div>
+          <div className="rounded-xl border border-border-subtle bg-surface-inset p-3">
+            <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+              Inactive
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-text-on-light">
+              {recurringTaskStats.inactive}
+            </p>
+          </div>
+        </div>
+
+        {editor?.kind === "recurring_task" ? (
+          <FormCard
+            title={
+              editor.mode === "edit" ? "Edit recurring task" : "Add recurring task"
+            }
+            onCancel={() => setEditor(null)}
+            onSave={() =>
+              submitMutation(
+                "recurring_task",
+                editor.mode === "edit"
+                  ? { id: editor.id, ...recurringTaskDraft }
+                  : recurringTaskDraft,
+                editor.mode === "edit"
+                  ? "Recurring task updated"
+                  : "Recurring task added",
+              )
+            }
+            saving={saving === "recurring_task"}
+          >
+            <p className="text-sm text-brand-secondary-0 opacity-80">
+              Use recurring tasks for bills, vendor payments, quarterly
+              distributions, filings, and other operational obligations that keep
+              coming back. The anchor date is the first due date in the schedule.
+            </p>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Label label="Task Title">
+                <Input
+                  value={recurringTaskDraft.title}
+                  onChange={(event) =>
+                    setRecurringTaskDraft((current) => ({
+                      ...current,
+                      title: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Task Type">
+                <Select
+                  value={recurringTaskDraft.task_type}
+                  onChange={(event) =>
+                    setRecurringTaskDraft((current) => ({
+                      ...current,
+                      task_type: event.target.value,
+                    }))}
+                >
+                  {RECURRING_TASK_TYPE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {toTitle(option)}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+              <Label label="Cadence">
+                <Select
+                  value={recurringTaskDraft.cadence}
+                  onChange={(event) =>
+                    setRecurringTaskDraft((current) => ({
+                      ...current,
+                      cadence: event.target.value,
+                    }))}
+                >
+                  {RECURRING_TASK_CADENCE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {toTitle(option)}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+              <Label label="Every N Cycles">
+                <Input
+                  type="number"
+                  min="1"
+                  value={recurringTaskDraft.interval_count}
+                  onChange={(event) =>
+                    setRecurringTaskDraft((current) => ({
+                      ...current,
+                      interval_count: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="First Due Date">
+                <Input
+                  type="date"
+                  value={recurringTaskDraft.anchor_date}
+                  onChange={(event) =>
+                    setRecurringTaskDraft((current) => ({
+                      ...current,
+                      anchor_date: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Responsibility Owner">
+                <Select
+                  value={recurringTaskDraft.responsibility_id}
+                  onChange={(event) =>
+                    setRecurringTaskDraft((current) => ({
+                      ...current,
+                      responsibility_id: event.target.value,
+                    }))}
+                >
+                  <option value="">No linked owner</option>
+                  {snapshot.responsibilities.map((responsibility) => (
+                    <option key={responsibility.id} value={responsibility.id}>
+                      {formatText(
+                        responsibility.person_name ??
+                          responsibility.user_name ??
+                          responsibility.contact_name,
+                      )}{" "}
+                      · {toTitle(responsibility.responsibility_type)}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+              <Label label="Related System">
+                <Select
+                  value={recurringTaskDraft.system_id}
+                  onChange={(event) =>
+                    setRecurringTaskDraft((current) => ({
+                      ...current,
+                      system_id: event.target.value,
+                    }))}
+                >
+                  <option value="">No linked system</option>
+                  {snapshot.systems.map((system) => (
+                    <option key={system.id} value={system.id}>
+                      {system.system_name}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+              <Label label="Related Account">
+                <Select
+                  value={recurringTaskDraft.account_id}
+                  onChange={(event) =>
+                    setRecurringTaskDraft((current) => ({
+                      ...current,
+                      account_id: event.target.value,
+                    }))}
+                >
+                  <option value="">No linked account</option>
+                  {snapshot.accounts.map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.account_name}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+            </div>
+            <label className="flex items-center gap-2 text-sm text-brand-secondary-0">
+              <input
+                type="checkbox"
+                checked={recurringTaskDraft.is_active}
+                onChange={(event) =>
+                  setRecurringTaskDraft((current) => ({
+                    ...current,
+                    is_active: event.target.checked,
+                  }))}
+              />
+              Active recurring task
+            </label>
+            <Label label="Description">
+              <Textarea
+                rows={3}
+                value={recurringTaskDraft.description}
+                onChange={(event) =>
+                  setRecurringTaskDraft((current) => ({
+                    ...current,
+                    description: event.target.value,
+                  }))}
+              />
+            </Label>
+            <Label label="Notes">
+              <Textarea
+                rows={3}
+                value={recurringTaskDraft.notes}
+                onChange={(event) =>
+                  setRecurringTaskDraft((current) => ({
+                    ...current,
+                    notes: event.target.value,
+                  }))}
+              />
+            </Label>
+          </FormCard>
+        ) : null}
+
+        {recurringTaskViews.length === 0 ? (
+          <p className="text-sm text-brand-secondary-0 opacity-70">
+            No recurring tasks recorded yet.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {recurringTaskViews.map((view) => (
+              <div
+                key={view.task.id}
+                className="rounded-xl border border-border-subtle bg-surface-inset p-3"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-text-on-light">
+                      {view.task.title}
+                    </p>
+                    <p className="text-sm text-brand-secondary-0 opacity-70">
+                      {toTitle(view.task.task_type)} ·{" "}
+                      {formatRecurringCadence(
+                        view.task.cadence,
+                        view.task.interval_count,
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => openRecurringTaskEdit(view.task)}
+                        className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                      >
+                        Edit
+                      </button>
+                    ) : null}
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        disabled={
+                          saving === "recurring_task_complete" ||
+                          !view.activeDueDate ||
+                          !view.task.is_active
+                        }
+                        onClick={() =>
+                          void submitMutation(
+                            "recurring_task_complete",
+                            {
+                              id: view.task.id,
+                              completed_for_due_date: view.activeDueDate,
+                            },
+                            "Recurring task marked complete",
+                          )}
+                        className="rounded-lg bg-surface-accent px-3 py-1.5 text-xs font-semibold text-text-on-dark transition hover:bg-brand-primary-2 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {saving === "recurring_task_complete"
+                          ? "Saving..."
+                          : view.status === "completed"
+                          ? "Mark Next Cycle"
+                          : "Mark Complete"}
+                      </button>
+                    ) : null}
+                    <span
+                      className={`rounded-full px-2 py-1 text-xs font-semibold uppercase tracking-wide ${getRecurringTaskBadgeClass(
+                        view.status,
+                      )}`}
+                    >
+                      {view.statusLabel}
+                    </span>
+                  </div>
+                </div>
+
+                {view.task.description ? (
+                  <p className="mt-3 text-sm text-brand-secondary-0 opacity-80">
+                    {view.task.description}
+                  </p>
+                ) : null}
+
+                <div className="mt-3 grid gap-2 text-sm md:grid-cols-2 xl:grid-cols-3">
+                  <p>
+                    <span className="opacity-70">
+                      {view.status === "completed" ? "Next Due:" : "Due Date:"}
+                    </span>{" "}
+                    {formatDate(view.activeDueDate)}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Timing:</span>{" "}
+                    {formatRelativeDue(view.daysUntilDue)}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Last Completed:</span>{" "}
+                    {formatDate(view.task.last_completed_at)}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Completed For:</span>{" "}
+                    {formatDate(view.task.last_completed_for_due_date)}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Owner:</span>{" "}
+                    {formatText(view.task.responsibility_name)}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Completed By:</span>{" "}
+                    {formatText(view.task.completed_by_name)}
+                  </p>
+                  <p>
+                    <span className="opacity-70">System:</span>{" "}
+                    {formatText(view.task.system_name)}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Account:</span>{" "}
+                    {formatText(view.task.account_name)}
+                  </p>
+                  <p>
+                    <span className="opacity-70">First Due:</span>{" "}
+                    {formatDate(view.task.anchor_date)}
+                  </p>
+                </div>
+
+                {view.task.notes ? (
+                  <p className="mt-3 text-sm text-brand-secondary-0 opacity-80">
+                    {view.task.notes}
+                  </p>
+                ) : null}
               </div>
             ))}
           </div>

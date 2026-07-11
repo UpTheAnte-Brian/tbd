@@ -14,6 +14,9 @@ export type BusinessFinancialAccount =
 export type BusinessResponsibility =
   BusinessTables["business_responsibilities"]["Row"];
 
+export type BusinessRecurringTask =
+  BusinessTables["business_recurring_tasks"]["Row"];
+
 export type BusinessCloseTemplate =
   BusinessTables["business_close_templates"]["Row"];
 
@@ -40,6 +43,13 @@ export type BusinessResponsibilitySummary = BusinessResponsibility & {
   user_name: string | null;
   system_name: string | null;
   account_name: string | null;
+};
+
+export type BusinessRecurringTaskSummary = BusinessRecurringTask & {
+  responsibility_name: string | null;
+  system_name: string | null;
+  account_name: string | null;
+  completed_by_name: string | null;
 };
 
 export type BusinessCloseTemplateTaskSummary = BusinessCloseTemplateTask & {
@@ -70,6 +80,7 @@ export type BusinessBookkeepingSnapshot = {
   systems: BusinessSystemSummary[];
   accounts: BusinessFinancialAccountSummary[];
   responsibilities: BusinessResponsibilitySummary[];
+  recurringTasks: BusinessRecurringTaskSummary[];
   closeTemplates: BusinessCloseTemplateSummary[];
   closePeriods: BusinessClosePeriodSummary[];
 };

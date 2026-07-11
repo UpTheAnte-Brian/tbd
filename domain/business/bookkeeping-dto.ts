@@ -68,6 +68,30 @@ export type UpdateBusinessResponsibilityInput =
     id: string;
   };
 
+export type CreateBusinessRecurringTaskInput = {
+  title: string;
+  task_type: string;
+  description: string | null;
+  cadence: string;
+  interval_count: number;
+  anchor_date: string;
+  responsibility_id: string | null;
+  system_id: string | null;
+  account_id: string | null;
+  is_active: boolean;
+  notes: string | null;
+};
+
+export type UpdateBusinessRecurringTaskInput =
+  CreateBusinessRecurringTaskInput & {
+    id: string;
+  };
+
+export type CompleteBusinessRecurringTaskInput = {
+  id: string;
+  completed_for_due_date: string;
+};
+
 export type CreateBusinessCloseTemplateInput = {
   name: string;
   description: string | null;
@@ -101,6 +125,7 @@ const EMPTY_SNAPSHOT: BusinessBookkeepingSnapshot = {
   systems: [],
   accounts: [],
   responsibilities: [],
+  recurringTasks: [],
   closeTemplates: [],
   closePeriods: [],
 };
@@ -110,8 +135,7 @@ async function runBookkeepingRpc(
   params: Record<string, unknown>,
 ) {
   const supabase = await getBookkeepingClient();
-  const rpcClient = supabase as SupabaseClient<any>;
-  const { data, error } = await rpcClient.rpc(fn, params);
+  const { data, error } = await supabase.rpc(fn as never, params as never);
 
   if (error) {
     throw new Error(error.message);
@@ -265,6 +289,58 @@ export async function updateEntityBookkeepingResponsibility(
     p_account_id: input.account_id,
     p_is_primary: input.is_primary,
     p_notes: input.notes,
+  });
+}
+
+export async function createEntityBookkeepingRecurringTask(
+  entityId: string,
+  input: CreateBusinessRecurringTaskInput,
+) {
+  await runBookkeepingRpc("create_entity_bookkeeping_recurring_task", {
+    p_entity_id: entityId,
+    p_title: input.title,
+    p_task_type: input.task_type,
+    p_description: input.description,
+    p_cadence: input.cadence,
+    p_interval_count: input.interval_count,
+    p_anchor_date: input.anchor_date,
+    p_responsibility_id: input.responsibility_id,
+    p_system_id: input.system_id,
+    p_account_id: input.account_id,
+    p_is_active: input.is_active,
+    p_notes: input.notes,
+  });
+}
+
+export async function updateEntityBookkeepingRecurringTask(
+  entityId: string,
+  input: UpdateBusinessRecurringTaskInput,
+) {
+  await runBookkeepingRpc("update_entity_bookkeeping_recurring_task", {
+    p_entity_id: entityId,
+    p_task_id: input.id,
+    p_title: input.title,
+    p_task_type: input.task_type,
+    p_description: input.description,
+    p_cadence: input.cadence,
+    p_interval_count: input.interval_count,
+    p_anchor_date: input.anchor_date,
+    p_responsibility_id: input.responsibility_id,
+    p_system_id: input.system_id,
+    p_account_id: input.account_id,
+    p_is_active: input.is_active,
+    p_notes: input.notes,
+  });
+}
+
+export async function completeEntityBookkeepingRecurringTask(
+  entityId: string,
+  input: CompleteBusinessRecurringTaskInput,
+) {
+  await runBookkeepingRpc("complete_entity_bookkeeping_recurring_task", {
+    p_entity_id: entityId,
+    p_task_id: input.id,
+    p_completed_for_due_date: input.completed_for_due_date,
   });
 }
 

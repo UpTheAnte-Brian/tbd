@@ -164,18 +164,20 @@ export default function EntityPanel({ entityId, entityType }: Props) {
   }
 
   const mobileHeader = (
-    <div className="flex items-center gap-3 rounded-2xl border border-border-subtle bg-surface-card p-4 text-text-on-light shadow-sm">
+    <div className="flex items-center gap-4 rounded-[24px] border border-border-subtle bg-surface-card p-4 text-text-on-light shadow-sm">
       {resolvedType ? (
         <EntityLogo entityId={entity.id} entityType={resolvedType} size={56} />
       ) : null}
-      {/* <div>
-        <div className="text-lg font-semibold text-gray-900">
+      <div className="min-w-0">
+        <div className="truncate text-lg font-semibold text-text-on-light">
           {entity.name ?? "Entity"}
         </div>
         {resolvedType ? (
-          <div className="text-xs text-gray-500 capitalize">{resolvedType}</div>
+          <div className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand-secondary-0 opacity-70">
+            {resolvedType}
+          </div>
         ) : null}
-      </div> */}
+      </div>
     </div>
   );
 
@@ -190,7 +192,7 @@ export default function EntityPanel({ entityId, entityType }: Props) {
   );
 
   return (
-    <div className="rounded-[28px] border border-border-subtle bg-surface-page p-4 shadow-sm md:p-6">
+    <div className="rounded-[30px] border border-border-subtle bg-surface-page p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] md:p-6">
       <EntityPageLayout
         entityId={entity.id}
         entityName={entity.name ?? "Entity"}

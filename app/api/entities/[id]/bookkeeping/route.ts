@@ -1,14 +1,17 @@
 import type { NextRequest } from "next/server";
 import {
+  completeEntityBookkeepingRecurringTask,
   createEntityBookkeepingAccount,
   createEntityBookkeepingClosePeriod,
   createEntityBookkeepingCloseTemplate,
+  createEntityBookkeepingRecurringTask,
   createEntityBookkeepingResponsibility,
   createEntityBookkeepingSystem,
   getEntityBookkeepingSnapshot,
   updateEntityBookkeepingAccount,
   updateEntityBookkeepingClosePeriod,
   updateEntityBookkeepingCloseTemplate,
+  updateEntityBookkeepingRecurringTask,
   updateEntityBookkeepingResponsibility,
   updateEntityBookkeepingSystem,
   upsertEntityBookkeepingProfile,
@@ -47,6 +50,19 @@ function cleanOptionalInteger(value: unknown): number | null {
     if (Number.isInteger(parsed)) return parsed;
   }
   return null;
+}
+
+function cleanPositiveInteger(
+  value: unknown,
+  label: string,
+  fallback = 1,
+): number {
+  const parsed = cleanOptionalInteger(value);
+  if (parsed === null) return fallback;
+  if (parsed < 1) {
+    throw new Error(`${label} must be at least 1`);
+  }
+  return parsed;
 }
 
 function cleanBoolean(value: unknown, fallback = false): boolean {
@@ -230,6 +246,56 @@ export async function POST(
             notes: cleanOptionalString(payload.notes),
           });
         }
+        break;
+      case "recurring_task":
+        if (recordId) {
+          await updateEntityBookkeepingRecurringTask(entityId, {
+            id: recordId,
+            title: cleanRequiredString(payload.title, "Task title"),
+            task_type: cleanOptionalString(payload.task_type) ?? "bill_payment",
+            description: cleanOptionalString(payload.description),
+            cadence: cleanOptionalString(payload.cadence) ?? "monthly",
+            interval_count: cleanPositiveInteger(
+              payload.interval_count,
+              "Interval count",
+            ),
+            anchor_date: cleanRequiredString(payload.anchor_date, "Anchor date"),
+            responsibility_id: cleanOptionalString(payload.responsibility_id),
+            system_id: cleanOptionalString(payload.system_id),
+            account_id: cleanOptionalString(payload.account_id),
+            is_active: cleanBoolean(payload.is_active, true),
+            notes: cleanOptionalString(payload.notes),
+          });
+        } else {
+          await createEntityBookkeepingRecurringTask(entityId, {
+            title: cleanRequiredString(payload.title, "Task title"),
+            task_type: cleanOptionalString(payload.task_type) ?? "bill_payment",
+            description: cleanOptionalString(payload.description),
+            cadence: cleanOptionalString(payload.cadence) ?? "monthly",
+            interval_count: cleanPositiveInteger(
+              payload.interval_count,
+              "Interval count",
+            ),
+            anchor_date: cleanRequiredString(payload.anchor_date, "Anchor date"),
+            responsibility_id: cleanOptionalString(payload.responsibility_id),
+            system_id: cleanOptionalString(payload.system_id),
+            account_id: cleanOptionalString(payload.account_id),
+            is_active: cleanBoolean(payload.is_active, true),
+            notes: cleanOptionalString(payload.notes),
+          });
+        }
+        break;
+      case "recurring_task_complete":
+        if (!recordId) {
+          throw new Error("Recurring task id is required");
+        }
+        await completeEntityBookkeepingRecurringTask(entityId, {
+          id: recordId,
+          completed_for_due_date: cleanRequiredString(
+            payload.completed_for_due_date,
+            "Completed due date",
+          ),
+        });
         break;
       case "close_template":
         if (recordId) {

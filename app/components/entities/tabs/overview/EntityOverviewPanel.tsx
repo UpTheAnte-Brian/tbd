@@ -39,22 +39,31 @@ function normalizeWebsite(value: string | null) {
 export default function EntityOverviewPanel({ data }: Props) {
   const website = normalizeWebsite(data.website);
   return (
-    <div className="rounded-2xl border border-border-subtle bg-surface-card p-6 text-text-on-light shadow-sm">
-      <div className="text-2xl font-semibold text-text-on-light">
-        {data.name ?? "Entity"}
-      </div>
-      <div className="mt-1 text-sm opacity-70">
-        {formatEntityType(data.entity_type)}
+    <div className="rounded-[24px] border border-border-subtle bg-surface-card p-6 text-text-on-light shadow-sm">
+      <div className="flex flex-col gap-3 border-b border-border-subtle pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-secondary-0 opacity-70">
+            Overview
+          </div>
+          <div className="mt-2 text-2xl font-semibold text-text-on-light">
+            Profile
+          </div>
+        </div>
+        <div className="rounded-full border border-border-subtle bg-surface-page px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand-secondary-0">
+          {formatEntityType(data.entity_type)}
+        </div>
       </div>
 
-      <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-        <div>
-          <dt className="text-xs uppercase tracking-wide opacity-60">Website</dt>
-          <dd className="mt-1 text-sm text-text-on-light">
+      <dl className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="rounded-2xl border border-border-subtle bg-surface-page p-4">
+          <dt className="text-[11px] uppercase tracking-[0.18em] opacity-60">
+            Website
+          </dt>
+          <dd className="mt-2 text-sm text-text-on-light">
             {website ? (
               <a
                 href={website}
-                className="text-brand-primary-0 underline-offset-2 hover:underline"
+                className="break-all text-brand-primary-0 underline-offset-2 hover:underline"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -65,19 +74,19 @@ export default function EntityOverviewPanel({ data }: Props) {
             )}
           </dd>
         </div>
-        <div>
-          <dt className="text-xs uppercase tracking-wide opacity-60">
+        <div className="rounded-2xl border border-border-subtle bg-surface-page p-4">
+          <dt className="text-[11px] uppercase tracking-[0.18em] opacity-60">
             Created
           </dt>
-          <dd className="mt-1 text-sm text-text-on-light">
+          <dd className="mt-2 text-sm text-text-on-light">
             {formatDate(data.created_at)}
           </dd>
         </div>
-        <div>
-          <dt className="text-xs uppercase tracking-wide opacity-60">
+        <div className="rounded-2xl border border-border-subtle bg-surface-page p-4 sm:col-span-2 xl:col-span-1">
+          <dt className="text-[11px] uppercase tracking-[0.18em] opacity-60">
             Entity ID
           </dt>
-          <dd className="mt-1 text-xs font-mono text-text-on-light">
+          <dd className="mt-2 break-all text-xs font-mono text-text-on-light">
             {data.id}
           </dd>
         </div>

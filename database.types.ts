@@ -861,6 +861,105 @@ export type Database = {
           },
         ]
       }
+      business_recurring_tasks: {
+        Row: {
+          account_id: string | null
+          anchor_date: string
+          cadence: string
+          created_at: string
+          description: string | null
+          entity_id: string
+          id: string
+          interval_count: number
+          is_active: boolean
+          last_completed_at: string | null
+          last_completed_by: string | null
+          last_completed_for_due_date: string | null
+          notes: string | null
+          responsibility_id: string | null
+          system_id: string | null
+          task_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string | null
+          anchor_date: string
+          cadence?: string
+          created_at?: string
+          description?: string | null
+          entity_id: string
+          id?: string
+          interval_count?: number
+          is_active?: boolean
+          last_completed_at?: string | null
+          last_completed_by?: string | null
+          last_completed_for_due_date?: string | null
+          notes?: string | null
+          responsibility_id?: string | null
+          system_id?: string | null
+          task_type?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string | null
+          anchor_date?: string
+          cadence?: string
+          created_at?: string
+          description?: string | null
+          entity_id?: string
+          id?: string
+          interval_count?: number
+          is_active?: boolean
+          last_completed_at?: string | null
+          last_completed_by?: string | null
+          last_completed_for_due_date?: string | null
+          notes?: string | null
+          responsibility_id?: string | null
+          system_id?: string | null
+          task_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_recurring_tasks_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "business_financial_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_recurring_tasks_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_recurring_tasks_last_completed_by_fkey"
+            columns: ["last_completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_recurring_tasks_responsibility_id_fkey"
+            columns: ["responsibility_id"]
+            isOneToOne: false
+            referencedRelation: "business_responsibilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_recurring_tasks_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "business_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_responsibilities: {
         Row: {
           account_id: string | null

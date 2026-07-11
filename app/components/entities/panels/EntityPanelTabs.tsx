@@ -36,7 +36,7 @@ export default function EntityPanelTabs({
     return (
       <div className={tabsClassName ?? ""}>
         <select
-          className="mt-1 w-full rounded-xl border border-border-subtle bg-surface-card px-3 py-2.5 text-sm font-medium text-text-on-light shadow-sm focus:border-brand-accent-1 focus:outline-none focus:ring-4 focus:ring-focus-ring/20"
+          className="w-full rounded-2xl border border-border-subtle bg-surface-card px-4 py-3 text-sm font-medium text-text-on-light shadow-sm focus:border-brand-accent-1 focus:outline-none focus:ring-4 focus:ring-focus-ring/20"
           value={activeTab}
           onChange={(event) => onTabChange(event.target.value as EntityTabKey)}
         >
@@ -60,10 +60,10 @@ export default function EntityPanelTabs({
         <button
           key={tab.key}
           type="button"
-          className={`rounded-xl border px-3 py-1.5 text-sm font-semibold normal-case tracking-normal transition ${
+          className={`rounded-2xl border px-4 py-2 text-sm font-semibold normal-case tracking-normal transition ${
             activeTab === tab.key
               ? "border-brand-primary-2 bg-surface-accent text-text-on-dark shadow-sm"
-              : "border-transparent bg-surface-card text-text-on-light hover:border-border-subtle hover:bg-surface-inset"
+              : "border-border-subtle bg-surface-card text-text-on-light hover:border-brand-secondary-1 hover:bg-surface-inset"
           }`}
           onClick={() => onTabChange(tab.key)}
         >

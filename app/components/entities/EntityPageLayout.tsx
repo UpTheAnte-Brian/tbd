@@ -34,9 +34,9 @@ export default function EntityPageLayout({
   children,
 }: Props) {
   return (
-    <div className="md:flex md:items-start md:gap-4 md:pt-4">
+    <div className="md:grid md:grid-cols-[minmax(17rem,19rem)_minmax(0,1fr)] md:items-start md:gap-6">
       {mobileHeader || tabs ? (
-        <div className="mb-6 space-y-4 md:hidden md:mb-0">
+        <div className="mb-6 space-y-4 md:hidden">
           {mobileHeader}
           {tabs}
         </div>
@@ -50,8 +50,8 @@ export default function EntityPageLayout({
         allowedTabs={allowedTabs}
         tabContext={tabContext}
       />
-      <div className="flex-1 min-w-0 md:pl-4">
-        <div className="w-full space-y-6 md:space-y-0">{children}</div>
+      <div className="min-w-0">
+        <div className="w-full space-y-6">{children}</div>
       </div>
     </div>
   );

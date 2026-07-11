@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { startTransition, useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   type EntityTabContext,
@@ -47,11 +47,17 @@ export function useEntityTabParam(context: EntityTabContext) {
 
   const setActiveTab = useCallback(
     (tab: EntityTabKey) => {
+      const currentTab = resolveTabKey(searchParams.get("tab"), visibleTabs);
+      if (tab === currentTab) {
+        return;
+      }
       const params = new URLSearchParams(searchParams.toString());
       params.set("tab", tab);
-      router.replace(`${pathname}?${params.toString()}`);
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams, visibleTabs],
   );
 
   return { activeTab, setActiveTab, visibleTabs };
