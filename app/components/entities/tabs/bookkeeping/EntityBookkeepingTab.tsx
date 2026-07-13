@@ -747,6 +747,38 @@ function buildInvoiceDraft(
   };
 }
 
+function buildSuggestedDueOn(
+  issuedOn: string | null | undefined,
+  invoiceTermsDays: number | null | undefined,
+) {
+  const parsed = parseDateOnly(issuedOn);
+  if (!parsed) return "";
+
+  const safeTerms =
+    typeof invoiceTermsDays === "number" && Number.isFinite(invoiceTermsDays)
+      ? Math.max(invoiceTermsDays, 0)
+      : 0;
+
+  return toDateKey(addDays(parsed, safeTerms));
+}
+
+function buildSuggestedInvoiceNumber(
+  engagement: BusinessBookkeepingSnapshot["serviceEngagements"][number] | null,
+  invoices: BusinessBookkeepingSnapshot["invoices"],
+) {
+  if (!engagement) return "";
+
+  const prefix = (engagement.invoice_prefix ?? "").trim() || "INV";
+  const nextSequence =
+    invoices.filter(
+      (invoice) =>
+        invoice.current_entity_role === "provider" &&
+        invoice.engagement_id === engagement.id,
+    ).length + 1;
+
+  return `${prefix}-${String(nextSequence).padStart(3, "0")}`;
+}
+
 function Section({
   title,
   actionLabel,
@@ -923,6 +955,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
   );
 
   const canCreateProviderEngagement = canEdit;
+  const profile = snapshot?.profile ?? null;
 
   const billingStats = useMemo(() => {
     const entries = snapshot?.timeEntries ?? [];
@@ -1011,6 +1044,14 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
     );
   }, [recurringTaskViews]);
 
+  const selectedInvoiceEngagement = useMemo(
+    () =>
+      providerEngagements.find(
+        (engagement) => engagement.id === invoiceDraft.engagement_id,
+      ) ?? null,
+    [invoiceDraft.engagement_id, providerEngagements],
+  );
+
   useEffect(() => {
     let cancelled = false;
 
@@ -1079,6 +1120,46 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
     };
   }, [entityId]);
 
+  useEffect(() => {
+    if (editor?.kind !== "invoice" || editor.mode !== "create") {
+      return;
+    }
+
+    setInvoiceDraft((current) => {
+      const currentEngagement =
+        providerEngagements.find(
+          (engagement) => engagement.id === current.engagement_id,
+        ) ?? null;
+      const suggestedInvoiceNumber = buildSuggestedInvoiceNumber(
+        currentEngagement,
+        snapshot?.invoices ?? [],
+      );
+      const suggestedDueOn = buildSuggestedDueOn(
+        current.issued_on,
+        currentEngagement?.invoice_terms_days,
+      );
+      const nextInvoiceNumber =
+        current.invoice_number.trim().length > 0
+          ? current.invoice_number
+          : suggestedInvoiceNumber;
+      const nextDueOn =
+        current.due_on.trim().length > 0 ? current.due_on : suggestedDueOn;
+
+      if (
+        nextInvoiceNumber === current.invoice_number &&
+        nextDueOn === current.due_on
+      ) {
+        return current;
+      }
+
+      return {
+        ...current,
+        invoice_number: nextInvoiceNumber,
+        due_on: nextDueOn,
+      };
+    });
+  }, [editor, providerEngagements, snapshot?.invoices]);
+
   const submitMutation = async (
     kind: MutationKind,
     payload: Record<string, unknown>,
@@ -1107,8 +1188,6 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
       setSaving(null);
     }
   };
-
-  const profile = snapshot?.profile ?? null;
 
   const openProfileForm = () => {
     setProfileDraft(buildProfileDraft(profile));
@@ -1147,9 +1226,22 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
   };
 
   const openInvoiceCreate = () => {
+    const issuedOn = new Date().toISOString().slice(0, 10);
+    const defaultEngagement =
+      providerEngagements.length === 1 ? providerEngagements[0] : null;
+
     setInvoiceDraft({
       ...buildInvoiceDraft(null),
-      issued_on: new Date().toISOString().slice(0, 10),
+      engagement_id: defaultEngagement?.id ?? "",
+      invoice_number: buildSuggestedInvoiceNumber(
+        defaultEngagement,
+        snapshot?.invoices ?? [],
+      ),
+      issued_on: issuedOn,
+      due_on: buildSuggestedDueOn(
+        issuedOn,
+        defaultEngagement?.invoice_terms_days,
+      ),
       status: "draft",
     });
     setEditor({ kind: "invoice", mode: "create" });
@@ -1305,11 +1397,253 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
 
   return (
     <div className="space-y-6">
-      {canEdit ? (
-        <div className="rounded-xl border border-border-subtle bg-surface-inset px-4 py-3 text-sm text-brand-secondary-0">
-          Business admin tools are enabled for this tab.
-        </div>
-      ) : null}
+      <Section
+        title="Business Profile"
+        actionLabel={
+          canEdit && editor?.kind !== "profile"
+            ? profile
+              ? "Edit Profile"
+              : "Create Profile"
+            : undefined
+        }
+        onAction={canEdit ? openProfileForm : undefined}
+      >
+        {editor?.kind === "profile" ? (
+          <FormCard
+            title={
+              editor.mode === "edit"
+                ? "Edit bookkeeping profile"
+                : "Create bookkeeping profile"
+            }
+            onCancel={() => setEditor(null)}
+            onSave={() =>
+              submitMutation(
+                "profile",
+                profileDraft,
+                editor.mode === "edit" ? "Profile updated" : "Profile created",
+              )
+            }
+            saving={saving === "profile"}
+          >
+            <div className="grid gap-3 md:grid-cols-2">
+              <Label label="Legal Name">
+                <Input
+                  value={profileDraft.legal_name}
+                  onChange={(event) =>
+                    setProfileDraft((current) => ({
+                      ...current,
+                      legal_name: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="DBA">
+                <Input
+                  value={profileDraft.dba_name}
+                  onChange={(event) =>
+                    setProfileDraft((current) => ({
+                      ...current,
+                      dba_name: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="EIN">
+                <Input
+                  value={profileDraft.ein}
+                  onChange={(event) =>
+                    setProfileDraft((current) => ({
+                      ...current,
+                      ein: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="State of Formation">
+                <Input
+                  value={profileDraft.state_of_formation}
+                  onChange={(event) =>
+                    setProfileDraft((current) => ({
+                      ...current,
+                      state_of_formation: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Structure">
+                <Input
+                  value={profileDraft.entity_structure}
+                  onChange={(event) =>
+                    setProfileDraft((current) => ({
+                      ...current,
+                      entity_structure: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Accounting Basis">
+                <Select
+                  value={profileDraft.default_accounting_basis}
+                  onChange={(event) =>
+                    setProfileDraft((current) => ({
+                      ...current,
+                      default_accounting_basis: event.target.value,
+                    }))}
+                >
+                  <option value="">Not set</option>
+                  {ACCOUNTING_BASIS_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {toTitle(option)}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+              <Label label="Close Cadence">
+                <Select
+                  value={profileDraft.close_cadence}
+                  onChange={(event) =>
+                    setProfileDraft((current) => ({
+                      ...current,
+                      close_cadence: event.target.value,
+                    }))}
+                >
+                  {CLOSE_CADENCE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {toTitle(option)}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+              <Label label="Status">
+                <Select
+                  value={profileDraft.bookkeeping_status}
+                  onChange={(event) =>
+                    setProfileDraft((current) => ({
+                      ...current,
+                      bookkeeping_status: event.target.value,
+                    }))}
+                >
+                  {PROFILE_STATUS_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {toTitle(option)}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+              <Label label="Fiscal Year End Month">
+                <Input
+                  type="number"
+                  min="1"
+                  max="12"
+                  value={profileDraft.fiscal_year_end_month}
+                  onChange={(event) =>
+                    setProfileDraft((current) => ({
+                      ...current,
+                      fiscal_year_end_month: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Fiscal Year End Day">
+                <Input
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={profileDraft.fiscal_year_end_day}
+                  onChange={(event) =>
+                    setProfileDraft((current) => ({
+                      ...current,
+                      fiscal_year_end_day: event.target.value,
+                    }))}
+                />
+              </Label>
+            </div>
+            <Label label="Notes">
+              <Textarea
+                rows={4}
+                value={profileDraft.notes}
+                onChange={(event) =>
+                  setProfileDraft((current) => ({
+                    ...current,
+                    notes: event.target.value,
+                  }))}
+              />
+            </Label>
+          </FormCard>
+        ) : profile ? (
+          <div className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
+                <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+                  Legal Name
+                </p>
+                <p className="mt-2 font-semibold text-text-on-light">
+                  {formatText(profile.legal_name)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
+                <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+                  DBA / Structure
+                </p>
+                <p className="mt-2 font-semibold text-text-on-light">
+                  {formatText(profile.dba_name)}
+                </p>
+                <p className="mt-1 text-sm text-brand-secondary-0 opacity-80">
+                  {formatText(profile.entity_structure)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
+                <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+                  EIN / State
+                </p>
+                <p className="mt-2 font-semibold text-text-on-light">
+                  {formatText(profile.ein)}
+                </p>
+                <p className="mt-1 text-sm text-brand-secondary-0 opacity-80">
+                  {formatText(profile.state_of_formation)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
+                <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+                  Basis / Close
+                </p>
+                <p className="mt-2 font-semibold capitalize text-text-on-light">
+                  {formatText(profile.default_accounting_basis)}
+                </p>
+                <p className="mt-1 text-sm capitalize text-brand-secondary-0 opacity-80">
+                  {formatStatus(profile.close_cadence)}
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
+                <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+                  Bookkeeping Status
+                </p>
+                <p className="mt-2 font-semibold capitalize text-text-on-light">
+                  {formatStatus(profile.bookkeeping_status)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
+                <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+                  Fiscal Year End
+                </p>
+                <p className="mt-2 font-semibold text-text-on-light">
+                  {profile.fiscal_year_end_month && profile.fiscal_year_end_day
+                    ? `${profile.fiscal_year_end_month}/${profile.fiscal_year_end_day}`
+                    : "—"}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
+                <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+                  Notes
+                </p>
+                <p className="mt-2 text-sm text-text-on-light">
+                  {formatText(profile.notes)}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-brand-secondary-0 opacity-70">
+            No business bookkeeping profile has been created yet.
+          </p>
+        )}
+      </Section>
 
       <Section title="Billing Overview">
         <div className="grid gap-3 md:grid-cols-4">
@@ -1829,51 +2163,61 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                   <th className="px-3 py-2">Engagement</th>
                   <th className="px-3 py-2">Work</th>
                   <th className="px-3 py-2">Counterparty</th>
-                  <th className="px-3 py-2">Hours</th>
-                  <th className="px-3 py-2">Rate</th>
-                  <th className="px-3 py-2">Amount</th>
+                  <th className="px-3 py-2 text-right">Hours</th>
+                  <th className="px-3 py-2 text-right">Rate</th>
+                  <th className="px-3 py-2 text-right">Amount</th>
                   <th className="px-3 py-2">Invoice</th>
-                  {canEdit ? <th className="px-3 py-2">Actions</th> : null}
+                  {canEdit ? <th className="px-3 py-2 text-right">Actions</th> : null}
                 </tr>
               </thead>
               <tbody>
                 {snapshot.timeEntries.map((entry) => (
                   <tr key={entry.id} className="border-t border-border-subtle">
-                    <td className="px-3 py-2 text-text-on-light">
+                    <td className="whitespace-nowrap px-3 py-3 align-top text-text-on-light">
                       {formatDate(entry.work_date)}
                     </td>
-                    <td className="px-3 py-2 text-text-on-light">
-                      {formatText(entry.engagement_title)}
+                    <td className="px-3 py-3 align-top text-text-on-light">
+                      <div className="font-medium">
+                        {formatText(entry.engagement_title)}
+                      </div>
                     </td>
-                    <td className="px-3 py-2 text-text-on-light">
-                      {entry.description}
+                    <td className="px-3 py-3 align-top text-text-on-light">
+                      <div className="max-w-lg leading-6">
+                        {entry.description}
+                      </div>
                     </td>
-                    <td className="px-3 py-2 text-text-on-light">
+                    <td className="px-3 py-3 align-top text-text-on-light">
                       {formatText(entry.counterparty_name)}
                     </td>
-                    <td className="px-3 py-2 text-text-on-light">
+                    <td className="whitespace-nowrap px-3 py-3 text-right align-top tabular-nums text-text-on-light">
                       {formatHours(entry.hours)}
                     </td>
-                    <td className="px-3 py-2 text-text-on-light">
+                    <td className="whitespace-nowrap px-3 py-3 text-right align-top tabular-nums text-text-on-light">
                       {entry.billable
                         ? formatMoney(entry.effective_hourly_rate)
                         : "Non-billable"}
                     </td>
-                    <td className="px-3 py-2 text-text-on-light">
+                    <td className="whitespace-nowrap px-3 py-3 text-right align-top tabular-nums text-text-on-light">
                       {entry.billable ? formatMoney(entry.amount) : "—"}
                     </td>
-                    <td className="px-3 py-2 text-text-on-light">
+                    <td className="whitespace-nowrap px-3 py-3 align-top text-text-on-light">
                       {entry.invoice_number ?? "Unbilled"}
                     </td>
-                    {canEdit && entry.current_entity_role === "provider" ? (
-                      <td className="px-3 py-2">
-                        <button
-                          type="button"
-                          onClick={() => openTimeEntryEdit(entry)}
-                          className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
-                        >
-                          Edit
-                        </button>
+                    {canEdit ? (
+                      <td className="px-3 py-3 text-right align-top">
+                        {entry.current_entity_role === "provider" ? (
+                          <button
+                            type="button"
+                            onClick={() => openTimeEntryEdit(entry)}
+                            className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                          >
+                            Edit
+                          </button>
+                        ) : (
+                          <span className="text-xs text-brand-secondary-0 opacity-60">
+                            —
+                          </span>
+                        )}
                       </td>
                     ) : null}
                   </tr>
@@ -1919,17 +2263,55 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                 <Select
                   value={invoiceDraft.engagement_id}
                   onChange={(event) =>
-                    setInvoiceDraft((current) => ({
-                      ...current,
-                      engagement_id: event.target.value,
-                      selected_time_entry_ids: current.selected_time_entry_ids
-                        .filter((id) =>
-                          (snapshot.timeEntries ?? []).some((entry) =>
-                            entry.id === id &&
-                            entry.engagement_id === event.target.value
-                          )
-                        ),
-                    }))}
+                    setInvoiceDraft((current) => {
+                      const previousEngagement =
+                        providerEngagements.find(
+                          (engagement) => engagement.id === current.engagement_id,
+                        ) ?? null;
+                      const nextEngagement =
+                        providerEngagements.find(
+                          (engagement) => engagement.id === event.target.value,
+                        ) ?? null;
+                      const previousSuggestedInvoiceNumber =
+                        buildSuggestedInvoiceNumber(
+                          previousEngagement,
+                          snapshot?.invoices ?? [],
+                        );
+                      const previousSuggestedDueOn = buildSuggestedDueOn(
+                        current.issued_on,
+                        previousEngagement?.invoice_terms_days,
+                      );
+                      const nextSuggestedInvoiceNumber = buildSuggestedInvoiceNumber(
+                        nextEngagement,
+                        snapshot?.invoices ?? [],
+                      );
+                      const nextSuggestedDueOn = buildSuggestedDueOn(
+                        current.issued_on,
+                        nextEngagement?.invoice_terms_days,
+                      );
+
+                      return {
+                        ...current,
+                        engagement_id: event.target.value,
+                        invoice_number:
+                          current.invoice_number.trim().length === 0 ||
+                          current.invoice_number === previousSuggestedInvoiceNumber
+                            ? nextSuggestedInvoiceNumber
+                            : current.invoice_number,
+                        due_on:
+                          current.due_on.trim().length === 0 ||
+                          current.due_on === previousSuggestedDueOn
+                            ? nextSuggestedDueOn
+                            : current.due_on,
+                        selected_time_entry_ids: current.selected_time_entry_ids
+                          .filter((id) =>
+                            (snapshot.timeEntries ?? []).some((entry) =>
+                              entry.id === id &&
+                              entry.engagement_id === event.target.value
+                            )
+                          ),
+                      };
+                    })}
                 >
                   <option value="">Select engagement</option>
                   {providerEngagements.map((engagement) => (
@@ -1942,6 +2324,14 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
               <Label label="Invoice Number">
                 <Input
                   value={invoiceDraft.invoice_number}
+                  placeholder={
+                    selectedInvoiceEngagement
+                      ? buildSuggestedInvoiceNumber(
+                        selectedInvoiceEngagement,
+                        snapshot.invoices,
+                      )
+                      : undefined
+                  }
                   onChange={(event) =>
                     setInvoiceDraft((current) => ({
                       ...current,
@@ -1954,16 +2344,40 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                   type="date"
                   value={invoiceDraft.issued_on}
                   onChange={(event) =>
-                    setInvoiceDraft((current) => ({
-                      ...current,
-                      issued_on: event.target.value,
-                    }))}
+                    setInvoiceDraft((current) => {
+                      const previousSuggestedDueOn = buildSuggestedDueOn(
+                        current.issued_on,
+                        selectedInvoiceEngagement?.invoice_terms_days,
+                      );
+                      const nextSuggestedDueOn = buildSuggestedDueOn(
+                        event.target.value,
+                        selectedInvoiceEngagement?.invoice_terms_days,
+                      );
+
+                      return {
+                        ...current,
+                        issued_on: event.target.value,
+                        due_on:
+                          current.due_on.trim().length === 0 ||
+                          current.due_on === previousSuggestedDueOn
+                            ? nextSuggestedDueOn
+                            : current.due_on,
+                      };
+                    })}
                 />
               </Label>
               <Label label="Due On">
                 <Input
                   type="date"
                   value={invoiceDraft.due_on}
+                  placeholder={
+                    selectedInvoiceEngagement
+                      ? buildSuggestedDueOn(
+                        invoiceDraft.issued_on,
+                        selectedInvoiceEngagement.invoice_terms_days,
+                      )
+                      : undefined
+                  }
                   onChange={(event) =>
                     setInvoiceDraft((current) => ({
                       ...current,
@@ -2010,6 +2424,10 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                 </Select>
               </Label>
             </div>
+            <p className="text-sm text-brand-secondary-0 opacity-80">
+              Invoice number and due date will prefill from the engagement
+              prefix and payment terms. You can override either field.
+            </p>
             <Label label="Notes">
               <Textarea
                 rows={3}
@@ -2042,22 +2460,23 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                     return (
                       <label
                         key={entry.id}
-                        className="flex items-start justify-between gap-3 rounded-lg border border-border-subtle bg-surface-inset px-3 py-2 text-sm text-text-on-light"
+                        className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-lg border border-border-subtle bg-surface-inset px-3 py-3 text-sm text-text-on-light"
                       >
-                        <span className="flex items-start gap-2">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => toggleInvoiceTimeEntry(entry.id)}
-                          />
-                          <span>
-                            <span className="font-medium">
-                              {formatDate(entry.work_date)}
-                            </span>{" "}
-                            · {entry.description}
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleInvoiceTimeEntry(entry.id)}
+                          className="mt-1"
+                        />
+                        <span className="min-w-0">
+                          <span className="block font-medium">
+                            {formatDate(entry.work_date)}
+                          </span>
+                          <span className="block leading-6 text-brand-secondary-0">
+                            {entry.description}
                           </span>
                         </span>
-                        <span className="whitespace-nowrap text-brand-secondary-0">
+                        <span className="whitespace-nowrap text-right tabular-nums text-brand-secondary-0">
                           {formatHours(entry.hours)} · {formatMoney(entry.amount)}
                         </span>
                       </label>
@@ -2146,237 +2565,6 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
               </div>
             ))}
           </div>
-        )}
-      </Section>
-
-      <Section
-        title="Profile"
-        actionLabel={
-          canEdit && editor?.kind !== "profile"
-            ? profile
-              ? "Edit Profile"
-              : "Create Profile"
-            : undefined
-        }
-        onAction={canEdit ? openProfileForm : undefined}
-      >
-        {editor?.kind === "profile" ? (
-          <FormCard
-            title={
-              editor.mode === "edit"
-                ? "Edit bookkeeping profile"
-                : "Create bookkeeping profile"
-            }
-            onCancel={() => setEditor(null)}
-            onSave={() =>
-              submitMutation(
-                "profile",
-                profileDraft,
-                editor.mode === "edit" ? "Profile updated" : "Profile created",
-              )
-            }
-            saving={saving === "profile"}
-          >
-            <div className="grid gap-3 md:grid-cols-2">
-              <Label label="Legal Name">
-                <Input
-                  value={profileDraft.legal_name}
-                  onChange={(event) =>
-                    setProfileDraft((current) => ({
-                      ...current,
-                      legal_name: event.target.value,
-                    }))}
-                />
-              </Label>
-              <Label label="DBA">
-                <Input
-                  value={profileDraft.dba_name}
-                  onChange={(event) =>
-                    setProfileDraft((current) => ({
-                      ...current,
-                      dba_name: event.target.value,
-                    }))}
-                />
-              </Label>
-              <Label label="EIN">
-                <Input
-                  value={profileDraft.ein}
-                  onChange={(event) =>
-                    setProfileDraft((current) => ({
-                      ...current,
-                      ein: event.target.value,
-                    }))}
-                />
-              </Label>
-              <Label label="State of Formation">
-                <Input
-                  value={profileDraft.state_of_formation}
-                  onChange={(event) =>
-                    setProfileDraft((current) => ({
-                      ...current,
-                      state_of_formation: event.target.value,
-                    }))}
-                />
-              </Label>
-              <Label label="Structure">
-                <Input
-                  value={profileDraft.entity_structure}
-                  onChange={(event) =>
-                    setProfileDraft((current) => ({
-                      ...current,
-                      entity_structure: event.target.value,
-                    }))}
-                />
-              </Label>
-              <Label label="Accounting Basis">
-                <Select
-                  value={profileDraft.default_accounting_basis}
-                  onChange={(event) =>
-                    setProfileDraft((current) => ({
-                      ...current,
-                      default_accounting_basis: event.target.value,
-                    }))}
-                >
-                  <option value="">Not set</option>
-                  {ACCOUNTING_BASIS_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {toTitle(option)}
-                    </option>
-                  ))}
-                </Select>
-              </Label>
-              <Label label="Close Cadence">
-                <Select
-                  value={profileDraft.close_cadence}
-                  onChange={(event) =>
-                    setProfileDraft((current) => ({
-                      ...current,
-                      close_cadence: event.target.value,
-                    }))}
-                >
-                  {CLOSE_CADENCE_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {toTitle(option)}
-                    </option>
-                  ))}
-                </Select>
-              </Label>
-              <Label label="Status">
-                <Select
-                  value={profileDraft.bookkeeping_status}
-                  onChange={(event) =>
-                    setProfileDraft((current) => ({
-                      ...current,
-                      bookkeeping_status: event.target.value,
-                    }))}
-                >
-                  {PROFILE_STATUS_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {toTitle(option)}
-                    </option>
-                  ))}
-                </Select>
-              </Label>
-              <Label label="Fiscal Year End Month">
-                <Input
-                  type="number"
-                  min="1"
-                  max="12"
-                  value={profileDraft.fiscal_year_end_month}
-                  onChange={(event) =>
-                    setProfileDraft((current) => ({
-                      ...current,
-                      fiscal_year_end_month: event.target.value,
-                    }))}
-                />
-              </Label>
-              <Label label="Fiscal Year End Day">
-                <Input
-                  type="number"
-                  min="1"
-                  max="31"
-                  value={profileDraft.fiscal_year_end_day}
-                  onChange={(event) =>
-                    setProfileDraft((current) => ({
-                      ...current,
-                      fiscal_year_end_day: event.target.value,
-                    }))}
-                />
-              </Label>
-            </div>
-            <Label label="Notes">
-              <Textarea
-                rows={4}
-                value={profileDraft.notes}
-                onChange={(event) =>
-                  setProfileDraft((current) => ({
-                    ...current,
-                    notes: event.target.value,
-                  }))}
-              />
-            </Label>
-          </FormCard>
-        ) : null}
-
-        {profile ? (
-          <dl className="grid gap-3 text-sm md:grid-cols-2">
-            <div>
-              <dt className="text-brand-secondary-0 opacity-70">Legal Name</dt>
-              <dd className="font-medium text-brand-secondary-0">
-                {formatText(profile.legal_name)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-brand-secondary-0 opacity-70">DBA</dt>
-              <dd className="font-medium text-brand-secondary-0">
-                {formatText(profile.dba_name)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-brand-secondary-0 opacity-70">EIN</dt>
-              <dd className="font-medium text-brand-secondary-0">
-                {formatText(profile.ein)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-brand-secondary-0 opacity-70">
-                State of Formation
-              </dt>
-              <dd className="font-medium text-brand-secondary-0">
-                {formatText(profile.state_of_formation)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-brand-secondary-0 opacity-70">Structure</dt>
-              <dd className="font-medium text-brand-secondary-0">
-                {formatText(profile.entity_structure)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-brand-secondary-0 opacity-70">
-                Accounting Basis
-              </dt>
-              <dd className="font-medium capitalize text-brand-secondary-0">
-                {formatText(profile.default_accounting_basis)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-brand-secondary-0 opacity-70">Close Cadence</dt>
-              <dd className="font-medium capitalize text-brand-secondary-0">
-                {formatStatus(profile.close_cadence)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-brand-secondary-0 opacity-70">Status</dt>
-              <dd className="font-medium capitalize text-brand-secondary-0">
-                {formatStatus(profile.bookkeeping_status)}
-              </dd>
-            </div>
-          </dl>
-        ) : (
-          <p className="text-sm text-brand-secondary-0 opacity-70">
-            No business bookkeeping profile has been created yet.
-          </p>
         )}
       </Section>
 

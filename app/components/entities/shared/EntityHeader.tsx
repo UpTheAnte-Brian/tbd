@@ -13,6 +13,14 @@ type Props = {
   showSuperintendentButton?: boolean;
 };
 
+function abbreviateMiddle(value: string, start = 8, end = 6) {
+  if (value.length <= start + end + 3) {
+    return value;
+  }
+
+  return `${value.slice(0, start)}...${value.slice(-end)}`;
+}
+
 export default function EntityHeader({
   entityId,
   entityName,
@@ -21,6 +29,12 @@ export default function EntityHeader({
   active,
   showSuperintendentButton = false,
 }: Props) {
+  const statusLabel = active === false ? "Inactive" : "Active";
+  const statusClasses =
+    active === false
+      ? "bg-surface-accent text-text-on-dark"
+      : "bg-surface-page text-text-on-light";
+
   return (
     <div className="rounded-[24px] border border-border-subtle bg-surface-card p-5 text-text-on-light shadow-sm md:p-6">
       <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
@@ -34,14 +48,27 @@ export default function EntityHeader({
                 {entityType}
               </span>
             )}
-            {active === false && (
-              <span className="rounded-full bg-surface-accent px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-text-on-dark">
-                Inactive
-              </span>
-            )}
+            <span
+              className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] ${statusClasses}`}
+            >
+              {statusLabel}
+            </span>
           </div>
           <div className="max-w-2xl text-sm text-brand-secondary-0 opacity-80">
             Entity workspace, records, and related operational data.
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-brand-secondary-0 opacity-80">
+            {slug ? (
+              <span className="rounded-full border border-border-subtle bg-surface-page px-3 py-1">
+                Slug: {slug}
+              </span>
+            ) : null}
+            <span
+              className="rounded-full border border-border-subtle bg-surface-page px-3 py-1 font-mono"
+              title={entityId}
+            >
+              ID: {abbreviateMiddle(entityId)}
+            </span>
           </div>
         </div>
         {showSuperintendentButton ? (
@@ -53,30 +80,6 @@ export default function EntityHeader({
           </Link>
         ) : null}
       </div>
-      <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-3">
-        <div className="rounded-2xl border border-border-subtle bg-surface-page p-4">
-          <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-secondary-0 opacity-70">
-            Entity ID
-          </dt>
-          <dd className="mt-2 break-all font-mono text-xs text-text-on-light">
-            {entityId}
-          </dd>
-        </div>
-        <div className="rounded-2xl border border-border-subtle bg-surface-page p-4">
-          <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-secondary-0 opacity-70">
-            Slug
-          </dt>
-          <dd className="mt-2 text-sm text-text-on-light">{slug ?? "—"}</dd>
-        </div>
-        <div className="rounded-2xl border border-border-subtle bg-surface-page p-4 sm:col-span-2 xl:col-span-1">
-          <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-secondary-0 opacity-70">
-            Status
-          </dt>
-          <dd className="mt-2 text-sm text-text-on-light">
-            {active === false ? "Inactive" : "Active"}
-          </dd>
-        </div>
-      </dl>
     </div>
   );
 }
