@@ -19,10 +19,20 @@ type EntityDocumentItem = {
 };
 
 const DOCUMENT_TYPE_OPTIONS = [
+  { value: "service_contract", label: "Service Contract" },
   { value: "form_990", label: "Form 990" },
   { value: "irs_determination_letter", label: "IRS Determination Letter" },
   { value: "other", label: "Other" },
 ] as const;
+
+const DOCUMENT_TYPE_LABELS: Partial<
+  Record<Database["public"]["Enums"]["document_type"], string>
+> = {
+  service_contract: "Service Contract",
+  form_990: "Form 990",
+  irs_determination_letter: "IRS Determination Letter",
+  other: "Other",
+};
 
 type Props = {
   entityId: string;
@@ -49,6 +59,11 @@ export default function EntityDocumentsTab({ entityId }: Props) {
   const taxYearOptions = useMemo(
     () => Array.from({ length: 10 }, (_, index) => currentYear - index),
     [currentYear],
+  );
+
+  const contractDocuments = useMemo(
+    () => documents.filter((document) => document.document_type === "service_contract"),
+    [documents],
   );
 
   const loadDocuments = useCallback(async () => {
@@ -232,6 +247,41 @@ export default function EntityDocumentsTab({ entityId }: Props) {
             </div>
           ) : (
             <div className="space-y-3">
+              {contractDocuments.length > 0 ? (
+                <div className="rounded-lg border border-brand-primary-0/30 bg-brand-primary-1/40 px-4 py-4">
+                  <div className="text-sm font-semibold text-text-on-light">
+                    Service Contracts
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    {contractDocuments.map((document) => (
+                      <div
+                        key={`contract-${document.id}`}
+                        className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle bg-surface-card px-4 py-3"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-semibold text-text-on-light">
+                            {document.title}
+                          </div>
+                          <div className="text-xs text-brand-secondary-0">
+                            Uploaded {formatDate(document.created_at)}
+                          </div>
+                        </div>
+                        {document.signed_url ? (
+                          <a
+                            href={document.signed_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-md border border-border-subtle px-3 py-1 text-xs font-semibold text-text-on-light transition hover:border-brand-primary-0 hover:text-brand-primary-0"
+                          >
+                            Open Contract
+                          </a>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               {documents.map((document) => (
                 <div
                   key={document.id}
@@ -242,7 +292,7 @@ export default function EntityDocumentsTab({ entityId }: Props) {
                       {document.title}
                     </div>
                     <div className="text-xs text-brand-secondary-0">
-                      {document.document_type}
+                      {DOCUMENT_TYPE_LABELS[document.document_type] ?? document.document_type}
                       {document.tax_year ? ` · Tax year ${document.tax_year}` : ""}
                       {` · Uploaded ${formatDate(document.created_at)}`}
                     </div>

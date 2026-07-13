@@ -227,6 +227,10 @@ export async function POST(
           await updateEntityBookkeepingServiceEngagement(entityId, {
             id: recordId,
             title: cleanRequiredString(payload.title, "Engagement title"),
+            client_entity_id: cleanRequiredString(
+              payload.client_entity_id,
+              "Client entity",
+            ),
             service_type: cleanOptionalString(payload.service_type) ?? "bookkeeping",
             billing_model: cleanOptionalString(payload.billing_model) ?? "hourly",
             default_hourly_rate: cleanOptionalNumber(
@@ -249,6 +253,10 @@ export async function POST(
         } else {
           await createEntityBookkeepingServiceEngagement(entityId, {
             title: cleanRequiredString(payload.title, "Engagement title"),
+            client_entity_id: cleanRequiredString(
+              payload.client_entity_id,
+              "Client entity",
+            ),
             service_type: cleanOptionalString(payload.service_type) ?? "bookkeeping",
             billing_model: cleanOptionalString(payload.billing_model) ?? "hourly",
             default_hourly_rate: cleanOptionalNumber(

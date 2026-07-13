@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/database.types";
 import type { BusinessBookkeepingSnapshot } from "@/domain/business/bookkeeping";
 import { createApiClient } from "@/utils/supabase/route";
+import { supabaseAdmin } from "@/utils/supabase/service-worker";
 
 export type UpsertBusinessProfileInput = {
   legal_name: string;
@@ -118,6 +119,7 @@ export type UpdateBusinessClosePeriodInput = CreateBusinessClosePeriodInput & {
 
 export type CreateBusinessServiceEngagementInput = {
   title: string;
+  client_entity_id: string;
   service_type: string;
   billing_model: string;
   default_hourly_rate: number | null;
@@ -207,10 +209,41 @@ export async function getEntityBookkeepingSnapshot(
     return EMPTY_SNAPSHOT;
   }
 
-  return {
+  const snapshot = {
     ...EMPTY_SNAPSHOT,
     ...(data as Partial<BusinessBookkeepingSnapshot>),
   };
+
+  snapshot.serviceEngagements = await Promise.all(
+    snapshot.serviceEngagements.map(async (engagement) => {
+      const raw = engagement as typeof engagement & {
+        contract_document_storage_bucket?: string | null;
+        contract_document_storage_path?: string | null;
+      };
+
+      let contractDocumentSignedUrl: string | null = null;
+      if (
+        raw.contract_document_storage_bucket &&
+        raw.contract_document_storage_path
+      ) {
+        const { data: signedData, error } = await supabaseAdmin
+          .storage
+          .from(raw.contract_document_storage_bucket)
+          .createSignedUrl(raw.contract_document_storage_path, 60 * 60);
+
+        if (!error) {
+          contractDocumentSignedUrl = signedData?.signedUrl ?? null;
+        }
+      }
+
+      return {
+        ...engagement,
+        contract_document_signed_url: contractDocumentSignedUrl,
+      };
+    }),
+  );
+
+  return snapshot;
 }
 
 export async function upsertEntityBookkeepingProfile(
@@ -459,6 +492,7 @@ export async function createEntityBookkeepingServiceEngagement(
   await runBookkeepingRpc("create_entity_bookkeeping_service_engagement", {
     p_entity_id: entityId,
     p_title: input.title,
+    p_client_entity_id: input.client_entity_id,
     p_service_type: input.service_type,
     p_billing_model: input.billing_model,
     p_default_hourly_rate: input.default_hourly_rate,
@@ -480,6 +514,7 @@ export async function updateEntityBookkeepingServiceEngagement(
     p_entity_id: entityId,
     p_engagement_id: input.id,
     p_title: input.title,
+    p_client_entity_id: input.client_entity_id,
     p_service_type: input.service_type,
     p_billing_model: input.billing_model,
     p_default_hourly_rate: input.default_hourly_rate,
@@ -490,6 +525,18 @@ export async function updateEntityBookkeepingServiceEngagement(
     p_contact_email: input.contact_email,
     p_is_active: input.is_active,
     p_notes: input.notes,
+  });
+}
+
+export async function attachEntityBookkeepingContractDocument(
+  entityId: string,
+  engagementId: string,
+  documentId: string,
+) {
+  await runBookkeepingRpc("attach_entity_bookkeeping_contract_document", {
+    p_entity_id: entityId,
+    p_engagement_id: engagementId,
+    p_document_id: documentId,
   });
 }
 

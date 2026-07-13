@@ -939,8 +939,10 @@ export type Database = {
       }
       business_service_engagements: {
         Row: {
+          client_entity_id: string | null
           contact_email: string | null
           contact_name: string | null
+          contract_document_id: string | null
           created_at: string
           created_by: string | null
           currency_code: string
@@ -957,8 +959,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          client_entity_id?: string | null
           contact_email?: string | null
           contact_name?: string | null
+          contract_document_id?: string | null
           created_at?: string
           created_by?: string | null
           currency_code?: string
@@ -975,8 +979,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          client_entity_id?: string | null
           contact_email?: string | null
           contact_name?: string | null
+          contract_document_id?: string | null
           created_at?: string
           created_by?: string | null
           currency_code?: string
@@ -993,6 +999,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "business_service_engagements_client_entity_id_fkey"
+            columns: ["client_entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_engagements_contract_document_id_fkey"
+            columns: ["contract_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "business_service_engagements_created_by_fkey"
             columns: ["created_by"]
@@ -4878,6 +4898,7 @@ export type Database = {
         | "form_990"
         | "state_annual_report"
         | "meeting_minutes"
+        | "service_contract"
         | "other"
         | "board_packet"
       document_version_status:
@@ -5130,6 +5151,7 @@ export const Constants = {
         "form_990",
         "state_annual_report",
         "meeting_minutes",
+        "service_contract",
         "other",
         "board_packet",
       ],

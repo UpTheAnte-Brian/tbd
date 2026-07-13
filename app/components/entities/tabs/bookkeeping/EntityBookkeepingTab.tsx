@@ -6,6 +6,7 @@ import { toast } from "react-hot-toast";
 import LoadingSpinner from "@/app/components/loading-spinner";
 import { useUser } from "@/app/hooks/useUser";
 import type { BusinessBookkeepingSnapshot } from "@/domain/business/bookkeeping";
+import type { EntityDirectoryRow } from "@/app/lib/types/entity-directory";
 
 type Props = {
   entityId: string;
@@ -111,6 +112,7 @@ type ClosePeriodDraft = {
 
 type ServiceEngagementDraft = {
   title: string;
+  client_entity_id: string;
   service_type: string;
   billing_model: string;
   default_hourly_rate: string;
@@ -687,6 +689,7 @@ function buildServiceEngagementDraft(
 ): ServiceEngagementDraft {
   return {
     title: engagement?.title ?? "",
+    client_entity_id: engagement?.client_entity_id ?? "",
     service_type: engagement?.service_type ?? "bookkeeping",
     billing_model: engagement?.billing_model ?? "hourly",
     default_hourly_rate:
@@ -896,6 +899,10 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
   const [invoiceDraft, setInvoiceDraft] = useState<InvoiceDraft>(
     buildInvoiceDraft(null),
   );
+  const [businessOptions, setBusinessOptions] = useState<EntityDirectoryRow[]>([]);
+  const [contractFile, setContractFile] = useState<File | null>(null);
+  const [contractUploading, setContractUploading] = useState(false);
+  const [contractFileInputKey, setContractFileInputKey] = useState(0);
 
   const entityUserRole = useMemo(
     () => user?.entity_users?.find((eu) => eu.entity_id === entityId)?.role ?? null,
@@ -906,6 +913,16 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
     () => user?.global_role === "admin" || entityUserRole === "admin",
     [entityUserRole, user?.global_role],
   );
+
+  const providerEngagements = useMemo(
+    () =>
+      (snapshot?.serviceEngagements ?? []).filter(
+        (engagement) => engagement.current_entity_role === "provider",
+      ),
+    [snapshot?.serviceEngagements],
+  );
+
+  const canCreateProviderEngagement = canEdit;
 
   const billingStats = useMemo(() => {
     const entries = snapshot?.timeEntries ?? [];
@@ -932,6 +949,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
     return (snapshot?.timeEntries ?? [])
       .filter((entry) =>
         entry.engagement_id === selectedEngagementId &&
+        entry.current_entity_role === "provider" &&
         entry.billable &&
         (!entry.invoice_id || entry.invoice_id === editor?.id)
       )
@@ -1030,6 +1048,37 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
     };
   }, [entityId]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadBusinessOptions = async () => {
+      try {
+        const res = await fetch("/api/entities?type=business", {
+          cache: "no-store",
+        });
+        if (!res.ok) {
+          throw new Error("Failed to load business options");
+        }
+        const json = (await res.json()) as EntityDirectoryRow[];
+        if (!cancelled) {
+          setBusinessOptions(
+            json.filter((row) => row.entity_id !== entityId),
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setBusinessOptions([]);
+        }
+      }
+    };
+
+    void loadBusinessOptions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [entityId]);
+
   const submitMutation = async (
     kind: MutationKind,
     payload: Record<string, unknown>,
@@ -1068,6 +1117,8 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
 
   const openServiceEngagementCreate = () => {
     setServiceEngagementDraft(buildServiceEngagementDraft(null));
+    setContractFile(null);
+    setContractFileInputKey((current) => current + 1);
     setEditor({ kind: "service_engagement", mode: "create" });
   };
 
@@ -1075,6 +1126,8 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
     engagement: BusinessBookkeepingSnapshot["serviceEngagements"][number],
   ) => {
     setServiceEngagementDraft(buildServiceEngagementDraft(engagement));
+    setContractFile(null);
+    setContractFileInputKey((current) => current + 1);
     setEditor({ kind: "service_engagement", mode: "edit", id: engagement.id });
   };
 
@@ -1195,6 +1248,45 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
     });
   };
 
+  const uploadContractDocument = async () => {
+    if (!editor?.id || editor.kind !== "service_engagement" || !contractFile) {
+      return;
+    }
+
+    setContractUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("engagement_id", editor.id);
+      formData.append("file", contractFile);
+      if (serviceEngagementDraft.title.trim()) {
+        formData.append(
+          "title",
+          `${serviceEngagementDraft.title.trim()} contract`,
+        );
+      }
+
+      const res = await fetch(`/api/entities/${entityId}/bookkeeping/contracts`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error ?? "Failed to upload contract");
+      }
+
+      const json = (await res.json()) as BusinessBookkeepingSnapshot;
+      setSnapshot(json);
+      setContractFile(null);
+      setContractFileInputKey((current) => current + 1);
+      toast.success("Contract uploaded");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to upload contract");
+    } finally {
+      setContractUploading(false);
+    }
+  };
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -1257,20 +1349,22 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
       </Section>
 
       <Section
-        title={`Client Engagements (${snapshot.serviceEngagements.length})`}
+        title={`Service Engagements (${snapshot.serviceEngagements.length})`}
         actionLabel={
-          canEdit && editor?.kind !== "service_engagement"
+          canCreateProviderEngagement && editor?.kind !== "service_engagement"
             ? "Add Engagement"
             : undefined
         }
-        onAction={canEdit ? openServiceEngagementCreate : undefined}
+        onAction={
+          canCreateProviderEngagement ? openServiceEngagementCreate : undefined
+        }
       >
         {editor?.kind === "service_engagement" ? (
           <FormCard
             title={
               editor.mode === "edit"
-                ? "Edit client engagement"
-                : "Add client engagement"
+                ? "Edit service engagement"
+                : "Add service engagement"
             }
             onCancel={() => setEditor(null)}
             onSave={() =>
@@ -1286,6 +1380,10 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
             }
             saving={saving === "service_engagement"}
           >
+            <p className="text-sm text-brand-secondary-0 opacity-80">
+              This page acts as the service provider. Pick the client business
+              tied to this engagement.
+            </p>
             <div className="grid gap-3 md:grid-cols-2">
               <Label label="Title">
                 <Input
@@ -1309,6 +1407,23 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                   {SERVICE_TYPE_OPTIONS.map((option) => (
                     <option key={option} value={option}>
                       {toTitle(option)}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+              <Label label="Client Business">
+                <Select
+                  value={serviceEngagementDraft.client_entity_id}
+                  onChange={(event) =>
+                    setServiceEngagementDraft((current) => ({
+                      ...current,
+                      client_entity_id: event.target.value,
+                    }))}
+                >
+                  <option value="">Select client</option>
+                  {businessOptions.map((business) => (
+                    <option key={business.entity_id} value={business.entity_id}>
+                      {business.name}
                     </option>
                   ))}
                 </Select>
@@ -1420,6 +1535,30 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                   }))}
               />
             </Label>
+            {editor.mode === "edit" ? (
+              <div className="space-y-2 rounded-lg border border-border-subtle bg-surface-card p-3">
+                <div className="text-sm font-semibold text-text-on-light">
+                  Contract Document
+                </div>
+                <div className="grid gap-2 md:grid-cols-[1fr_auto]">
+                  <Input
+                    key={contractFileInputKey}
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(event) =>
+                      setContractFile(event.target.files?.[0] ?? null)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void uploadContractDocument()}
+                    disabled={!contractFile || contractUploading}
+                    className="rounded-lg border border-border-subtle bg-surface-inset px-4 py-2 text-sm font-semibold text-text-on-light transition hover:bg-surface-page disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {contractUploading ? "Uploading..." : "Upload Contract"}
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </FormCard>
         ) : null}
 
@@ -1441,11 +1580,14 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                     </p>
                     <p className="text-sm capitalize text-brand-secondary-0 opacity-70">
                       {formatStatus(engagement.service_type)} ·{" "}
-                      {formatStatus(engagement.billing_model)}
+                      {formatStatus(engagement.billing_model)} ·{" "}
+                      {engagement.current_entity_role === "provider"
+                        ? `Client: ${formatText(engagement.client_entity_name)}`
+                        : `Provider: ${formatText(engagement.provider_entity_name)}`}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {canEdit ? (
+                    {canEdit && engagement.current_entity_role === "provider" ? (
                       <button
                         type="button"
                         onClick={() => openServiceEngagementEdit(engagement)}
@@ -1494,6 +1636,30 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                     <span className="opacity-70">Invoice Prefix:</span>{" "}
                     {formatText(engagement.invoice_prefix)}
                   </p>
+                  <p>
+                    <span className="opacity-70">Role:</span>{" "}
+                    {toTitle(engagement.current_entity_role)}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Counterparty:</span>{" "}
+                    {formatText(engagement.counterparty_name)}
+                  </p>
+                </div>
+                <div className="mt-3 flex items-center gap-2">
+                  {engagement.contract_document_signed_url ? (
+                    <a
+                      href={engagement.contract_document_signed_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                    >
+                      Open Contract
+                    </a>
+                  ) : (
+                    <span className="text-xs text-brand-secondary-0 opacity-70">
+                      No contract uploaded yet.
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
@@ -1505,13 +1671,13 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
         title={`Time Entries (${snapshot.timeEntries.length})`}
         actionLabel={
           canEdit &&
-            snapshot.serviceEngagements.length > 0 &&
+            providerEngagements.length > 0 &&
             editor?.kind !== "time_entry"
             ? "Log Time"
             : undefined
         }
         onAction={
-          canEdit && snapshot.serviceEngagements.length > 0
+          canEdit && providerEngagements.length > 0
             ? openTimeEntryCreate
             : undefined
         }
@@ -1545,9 +1711,9 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                     }))}
                 >
                   <option value="">Select engagement</option>
-                  {snapshot.serviceEngagements.map((engagement) => (
+                  {providerEngagements.map((engagement) => (
                     <option key={engagement.id} value={engagement.id}>
-                      {engagement.title}
+                      {engagement.title} · {formatText(engagement.client_entity_name)}
                     </option>
                   ))}
                 </Select>
@@ -1603,8 +1769,11 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                   <option value="">Leave unbilled</option>
                   {snapshot.invoices
                     .filter((invoice) =>
-                      !timeEntryDraft.engagement_id ||
-                      invoice.engagement_id === timeEntryDraft.engagement_id
+                      invoice.current_entity_role === "provider" &&
+                      (
+                        !timeEntryDraft.engagement_id ||
+                        invoice.engagement_id === timeEntryDraft.engagement_id
+                      )
                     )
                     .map((invoice) => (
                       <option key={invoice.id} value={invoice.id}>
@@ -1643,9 +1812,9 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
           </FormCard>
         ) : null}
 
-        {snapshot.serviceEngagements.length === 0 ? (
+        {providerEngagements.length === 0 && snapshot.timeEntries.length === 0 ? (
           <p className="text-sm text-brand-secondary-0 opacity-70">
-            Add an engagement before logging time.
+            Add a provider-side engagement before logging time.
           </p>
         ) : snapshot.timeEntries.length === 0 ? (
           <p className="text-sm text-brand-secondary-0 opacity-70">
@@ -1659,6 +1828,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                   <th className="px-3 py-2">Date</th>
                   <th className="px-3 py-2">Engagement</th>
                   <th className="px-3 py-2">Work</th>
+                  <th className="px-3 py-2">Counterparty</th>
                   <th className="px-3 py-2">Hours</th>
                   <th className="px-3 py-2">Rate</th>
                   <th className="px-3 py-2">Amount</th>
@@ -1679,6 +1849,9 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                       {entry.description}
                     </td>
                     <td className="px-3 py-2 text-text-on-light">
+                      {formatText(entry.counterparty_name)}
+                    </td>
+                    <td className="px-3 py-2 text-text-on-light">
                       {formatHours(entry.hours)}
                     </td>
                     <td className="px-3 py-2 text-text-on-light">
@@ -1692,7 +1865,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                     <td className="px-3 py-2 text-text-on-light">
                       {entry.invoice_number ?? "Unbilled"}
                     </td>
-                    {canEdit ? (
+                    {canEdit && entry.current_entity_role === "provider" ? (
                       <td className="px-3 py-2">
                         <button
                           type="button"
@@ -1715,13 +1888,13 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
         title={`Invoices (${snapshot.invoices.length})`}
         actionLabel={
           canEdit &&
-            snapshot.serviceEngagements.length > 0 &&
+            providerEngagements.length > 0 &&
             editor?.kind !== "invoice"
             ? "Create Invoice"
             : undefined
         }
         onAction={
-          canEdit && snapshot.serviceEngagements.length > 0
+          canEdit && providerEngagements.length > 0
             ? openInvoiceCreate
             : undefined
         }
@@ -1759,9 +1932,9 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                     }))}
                 >
                   <option value="">Select engagement</option>
-                  {snapshot.serviceEngagements.map((engagement) => (
+                  {providerEngagements.map((engagement) => (
                     <option key={engagement.id} value={engagement.id}>
-                      {engagement.title}
+                      {engagement.title} · {formatText(engagement.client_entity_name)}
                     </option>
                   ))}
                 </Select>
@@ -1896,9 +2069,9 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
           </FormCard>
         ) : null}
 
-        {snapshot.serviceEngagements.length === 0 ? (
+        {providerEngagements.length === 0 && snapshot.invoices.length === 0 ? (
           <p className="text-sm text-brand-secondary-0 opacity-70">
-            Add an engagement before creating invoices.
+            Add a provider-side engagement before creating invoices.
           </p>
         ) : snapshot.invoices.length === 0 ? (
           <p className="text-sm text-brand-secondary-0 opacity-70">
@@ -1917,11 +2090,12 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                       {invoice.invoice_number}
                     </p>
                     <p className="text-sm text-brand-secondary-0 opacity-70">
-                      {formatText(invoice.engagement_title)}
+                      {formatText(invoice.engagement_title)} ·{" "}
+                      {formatText(invoice.counterparty_name)}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {canEdit ? (
+                    {canEdit && invoice.current_entity_role === "provider" ? (
                       <button
                         type="button"
                         onClick={() => openInvoiceEdit(invoice)}

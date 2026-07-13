@@ -63,6 +63,13 @@ export type BusinessRecurringTaskSummary = BusinessRecurringTask & {
 
 export type BusinessServiceEngagementSummary = BusinessServiceEngagement & {
   created_by_name: string | null;
+  provider_entity_name: string | null;
+  client_entity_name: string | null;
+  current_entity_role: "provider" | "client";
+  counterparty_name: string | null;
+  contract_document_title: string | null;
+  contract_document_mime_type: string | null;
+  contract_document_signed_url: string | null;
   total_billable_hours: number;
   unbilled_hours: number;
   unbilled_amount: number;
@@ -74,12 +81,16 @@ export type BusinessTimeEntrySummary = BusinessTimeEntry & {
   invoice_number: string | null;
   created_by_name: string | null;
   effective_hourly_rate: number | null;
+  current_entity_role: "provider" | "client";
+  counterparty_name: string | null;
   amount: number;
 };
 
 export type BusinessInvoiceSummary = BusinessInvoice & {
   engagement_title: string | null;
   created_by_name: string | null;
+  current_entity_role: "provider" | "client";
+  counterparty_name: string | null;
   entry_count: number;
   time_entry_ids: string[];
   total_hours: number;
