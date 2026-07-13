@@ -12,6 +12,9 @@ type Props = {
 };
 
 type MutationKind =
+  | "service_engagement"
+  | "time_entry"
+  | "invoice"
   | "profile"
   | "system"
   | "account"
@@ -106,7 +109,52 @@ type ClosePeriodDraft = {
   notes: string;
 };
 
+type ServiceEngagementDraft = {
+  title: string;
+  service_type: string;
+  billing_model: string;
+  default_hourly_rate: string;
+  currency_code: string;
+  invoice_terms_days: string;
+  invoice_prefix: string;
+  contact_name: string;
+  contact_email: string;
+  is_active: boolean;
+  notes: string;
+};
+
+type TimeEntryDraft = {
+  engagement_id: string;
+  work_date: string;
+  hours: string;
+  hourly_rate: string;
+  description: string;
+  billable: boolean;
+  invoice_id: string;
+};
+
+type InvoiceDraft = {
+  engagement_id: string;
+  invoice_number: string;
+  period_start: string;
+  period_end: string;
+  issued_on: string;
+  due_on: string;
+  status: string;
+  notes: string;
+  selected_time_entry_ids: string[];
+};
+
 const PROFILE_STATUS_OPTIONS = ["active", "paused", "archived"] as const;
+const SERVICE_TYPE_OPTIONS = [
+  "bookkeeping",
+  "advisory",
+  "fractional_finance",
+  "operations",
+  "other",
+] as const;
+const BILLING_MODEL_OPTIONS = ["hourly", "fixed_fee", "retainer"] as const;
+const INVOICE_STATUS_OPTIONS = ["draft", "sent", "paid", "void"] as const;
 const CLOSE_CADENCE_OPTIONS = [
   "monthly",
   "quarterly",
@@ -218,6 +266,28 @@ function formatStatus(value: string | null | undefined) {
   return value.replace(/_/g, " ");
 }
 
+function formatMoney(
+  value: number | null | undefined,
+  currency = "USD",
+) {
+  const safeValue = typeof value === "number" && Number.isFinite(value) ? value : 0;
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: currency || "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(safeValue);
+  } catch {
+    return `$${safeValue.toFixed(2)}`;
+  }
+}
+
+function formatHours(value: number | null | undefined) {
+  const safeValue = typeof value === "number" && Number.isFinite(value) ? value : 0;
+  return `${safeValue.toFixed(2)} h`;
+}
+
 function toTitle(value: string) {
   return value
     .split("_")
@@ -240,6 +310,20 @@ function getRecurringTaskBadgeClass(status: RecurringTaskStatus) {
     case "scheduled":
     default:
       return "bg-surface-nav text-text-on-dark";
+  }
+}
+
+function getInvoiceBadgeClass(status: string | null | undefined) {
+  switch (status) {
+    case "paid":
+      return "bg-emerald-100 text-emerald-900";
+    case "sent":
+      return "bg-blue-100 text-blue-900";
+    case "void":
+      return "bg-slate-200 text-slate-700";
+    case "draft":
+    default:
+      return "bg-amber-100 text-amber-900";
   }
 }
 
@@ -598,6 +682,68 @@ function buildClosePeriodDraft(
   };
 }
 
+function buildServiceEngagementDraft(
+  engagement?: BusinessBookkeepingSnapshot["serviceEngagements"][number] | null,
+): ServiceEngagementDraft {
+  return {
+    title: engagement?.title ?? "",
+    service_type: engagement?.service_type ?? "bookkeeping",
+    billing_model: engagement?.billing_model ?? "hourly",
+    default_hourly_rate:
+      engagement?.default_hourly_rate !== null &&
+        engagement?.default_hourly_rate !== undefined
+        ? String(engagement.default_hourly_rate)
+        : "",
+    currency_code: engagement?.currency_code ?? "USD",
+    invoice_terms_days:
+      engagement?.invoice_terms_days !== undefined &&
+        engagement?.invoice_terms_days !== null
+        ? String(engagement.invoice_terms_days)
+        : "30",
+    invoice_prefix: engagement?.invoice_prefix ?? "",
+    contact_name: engagement?.contact_name ?? "",
+    contact_email: engagement?.contact_email ?? "",
+    is_active: engagement?.is_active ?? true,
+    notes: engagement?.notes ?? "",
+  };
+}
+
+function buildTimeEntryDraft(
+  entry?: BusinessBookkeepingSnapshot["timeEntries"][number] | null,
+): TimeEntryDraft {
+  return {
+    engagement_id: entry?.engagement_id ?? "",
+    work_date: entry?.work_date ?? "",
+    hours:
+      entry?.hours !== undefined && entry?.hours !== null
+        ? String(entry.hours)
+        : "",
+    hourly_rate:
+      entry?.hourly_rate !== undefined && entry?.hourly_rate !== null
+        ? String(entry.hourly_rate)
+        : "",
+    description: entry?.description ?? "",
+    billable: entry?.billable ?? true,
+    invoice_id: entry?.invoice_id ?? "",
+  };
+}
+
+function buildInvoiceDraft(
+  invoice?: BusinessBookkeepingSnapshot["invoices"][number] | null,
+): InvoiceDraft {
+  return {
+    engagement_id: invoice?.engagement_id ?? "",
+    invoice_number: invoice?.invoice_number ?? "",
+    period_start: invoice?.period_start ?? "",
+    period_end: invoice?.period_end ?? "",
+    issued_on: invoice?.issued_on ?? "",
+    due_on: invoice?.due_on ?? "",
+    status: invoice?.status ?? "draft",
+    notes: invoice?.notes ?? "",
+    selected_time_entry_ids: invoice?.time_entry_ids ?? [],
+  };
+}
+
 function Section({
   title,
   actionLabel,
@@ -742,6 +888,14 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
   const [closePeriodDraft, setClosePeriodDraft] = useState<ClosePeriodDraft>(
     buildClosePeriodDraft(null),
   );
+  const [serviceEngagementDraft, setServiceEngagementDraft] =
+    useState<ServiceEngagementDraft>(buildServiceEngagementDraft(null));
+  const [timeEntryDraft, setTimeEntryDraft] = useState<TimeEntryDraft>(
+    buildTimeEntryDraft(null),
+  );
+  const [invoiceDraft, setInvoiceDraft] = useState<InvoiceDraft>(
+    buildInvoiceDraft(null),
+  );
 
   const entityUserRole = useMemo(
     () => user?.entity_users?.find((eu) => eu.entity_id === entityId)?.role ?? null,
@@ -752,6 +906,42 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
     () => user?.global_role === "admin" || entityUserRole === "admin",
     [entityUserRole, user?.global_role],
   );
+
+  const billingStats = useMemo(() => {
+    const entries = snapshot?.timeEntries ?? [];
+    const invoices = snapshot?.invoices ?? [];
+
+    return {
+      unbilledHours: entries
+        .filter((entry) => entry.billable && !entry.invoice_id)
+        .reduce((sum, entry) => sum + entry.hours, 0),
+      unbilledAmount: entries
+        .filter((entry) => entry.billable && !entry.invoice_id)
+        .reduce((sum, entry) => sum + entry.amount, 0),
+      draftInvoiceCount: invoices.filter((invoice) => invoice.status === "draft")
+        .length,
+      sentInvoiceCount: invoices.filter((invoice) => invoice.status === "sent")
+        .length,
+    };
+  }, [snapshot?.invoices, snapshot?.timeEntries]);
+
+  const invoiceAssignableEntries = useMemo(() => {
+    const selectedEngagementId = invoiceDraft.engagement_id;
+    if (!selectedEngagementId) return [];
+
+    return (snapshot?.timeEntries ?? [])
+      .filter((entry) =>
+        entry.engagement_id === selectedEngagementId &&
+        entry.billable &&
+        (!entry.invoice_id || entry.invoice_id === editor?.id)
+      )
+      .sort((left, right) => {
+        if (left.work_date !== right.work_date) {
+          return right.work_date.localeCompare(left.work_date);
+        }
+        return right.created_at.localeCompare(left.created_at);
+      });
+  }, [editor?.id, invoiceDraft.engagement_id, snapshot?.timeEntries]);
 
   const recurringTaskViews = useMemo(() => {
     const today = new Date();
@@ -876,6 +1066,49 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
     setEditor({ kind: "profile", mode: profile ? "edit" : "create" });
   };
 
+  const openServiceEngagementCreate = () => {
+    setServiceEngagementDraft(buildServiceEngagementDraft(null));
+    setEditor({ kind: "service_engagement", mode: "create" });
+  };
+
+  const openServiceEngagementEdit = (
+    engagement: BusinessBookkeepingSnapshot["serviceEngagements"][number],
+  ) => {
+    setServiceEngagementDraft(buildServiceEngagementDraft(engagement));
+    setEditor({ kind: "service_engagement", mode: "edit", id: engagement.id });
+  };
+
+  const openTimeEntryCreate = () => {
+    setTimeEntryDraft({
+      ...buildTimeEntryDraft(null),
+      work_date: new Date().toISOString().slice(0, 10),
+    });
+    setEditor({ kind: "time_entry", mode: "create" });
+  };
+
+  const openTimeEntryEdit = (
+    entry: BusinessBookkeepingSnapshot["timeEntries"][number],
+  ) => {
+    setTimeEntryDraft(buildTimeEntryDraft(entry));
+    setEditor({ kind: "time_entry", mode: "edit", id: entry.id });
+  };
+
+  const openInvoiceCreate = () => {
+    setInvoiceDraft({
+      ...buildInvoiceDraft(null),
+      issued_on: new Date().toISOString().slice(0, 10),
+      status: "draft",
+    });
+    setEditor({ kind: "invoice", mode: "create" });
+  };
+
+  const openInvoiceEdit = (
+    invoice: BusinessBookkeepingSnapshot["invoices"][number],
+  ) => {
+    setInvoiceDraft(buildInvoiceDraft(invoice));
+    setEditor({ kind: "invoice", mode: "edit", id: invoice.id });
+  };
+
   const openSystemCreate = () => {
     setSystemDraft(buildSystemDraft(null));
     setEditor({ kind: "system", mode: "create" });
@@ -950,6 +1183,18 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
     setEditor({ kind: "close_period", mode: "edit", id: period.id });
   };
 
+  const toggleInvoiceTimeEntry = (timeEntryId: string) => {
+    setInvoiceDraft((current) => {
+      const exists = current.selected_time_entry_ids.includes(timeEntryId);
+      return {
+        ...current,
+        selected_time_entry_ids: exists
+          ? current.selected_time_entry_ids.filter((id) => id !== timeEntryId)
+          : [...current.selected_time_entry_ids, timeEntryId],
+      };
+    });
+  };
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -973,6 +1218,762 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
           Business admin tools are enabled for this tab.
         </div>
       ) : null}
+
+      <Section title="Billing Overview">
+        <div className="grid gap-3 md:grid-cols-4">
+          <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
+            <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+              Unbilled Hours
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-text-on-light">
+              {formatHours(billingStats.unbilledHours)}
+            </p>
+          </div>
+          <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
+            <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+              Unbilled Amount
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-text-on-light">
+              {formatMoney(billingStats.unbilledAmount)}
+            </p>
+          </div>
+          <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
+            <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+              Draft Invoices
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-text-on-light">
+              {billingStats.draftInvoiceCount}
+            </p>
+          </div>
+          <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
+            <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+              Sent Invoices
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-text-on-light">
+              {billingStats.sentInvoiceCount}
+            </p>
+          </div>
+        </div>
+      </Section>
+
+      <Section
+        title={`Client Engagements (${snapshot.serviceEngagements.length})`}
+        actionLabel={
+          canEdit && editor?.kind !== "service_engagement"
+            ? "Add Engagement"
+            : undefined
+        }
+        onAction={canEdit ? openServiceEngagementCreate : undefined}
+      >
+        {editor?.kind === "service_engagement" ? (
+          <FormCard
+            title={
+              editor.mode === "edit"
+                ? "Edit client engagement"
+                : "Add client engagement"
+            }
+            onCancel={() => setEditor(null)}
+            onSave={() =>
+              submitMutation(
+                "service_engagement",
+                editor.mode === "edit"
+                  ? { id: editor.id, ...serviceEngagementDraft }
+                  : serviceEngagementDraft,
+                editor.mode === "edit"
+                  ? "Engagement updated"
+                  : "Engagement added",
+              )
+            }
+            saving={saving === "service_engagement"}
+          >
+            <div className="grid gap-3 md:grid-cols-2">
+              <Label label="Title">
+                <Input
+                  value={serviceEngagementDraft.title}
+                  onChange={(event) =>
+                    setServiceEngagementDraft((current) => ({
+                      ...current,
+                      title: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Service Type">
+                <Select
+                  value={serviceEngagementDraft.service_type}
+                  onChange={(event) =>
+                    setServiceEngagementDraft((current) => ({
+                      ...current,
+                      service_type: event.target.value,
+                    }))}
+                >
+                  {SERVICE_TYPE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {toTitle(option)}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+              <Label label="Billing Model">
+                <Select
+                  value={serviceEngagementDraft.billing_model}
+                  onChange={(event) =>
+                    setServiceEngagementDraft((current) => ({
+                      ...current,
+                      billing_model: event.target.value,
+                    }))}
+                >
+                  {BILLING_MODEL_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {toTitle(option)}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+              <Label label="Default Hourly Rate">
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={serviceEngagementDraft.default_hourly_rate}
+                  onChange={(event) =>
+                    setServiceEngagementDraft((current) => ({
+                      ...current,
+                      default_hourly_rate: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Currency">
+                <Input
+                  value={serviceEngagementDraft.currency_code}
+                  onChange={(event) =>
+                    setServiceEngagementDraft((current) => ({
+                      ...current,
+                      currency_code: event.target.value.toUpperCase(),
+                    }))}
+                />
+              </Label>
+              <Label label="Invoice Terms (Days)">
+                <Input
+                  type="number"
+                  min="0"
+                  max="180"
+                  value={serviceEngagementDraft.invoice_terms_days}
+                  onChange={(event) =>
+                    setServiceEngagementDraft((current) => ({
+                      ...current,
+                      invoice_terms_days: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Invoice Prefix">
+                <Input
+                  value={serviceEngagementDraft.invoice_prefix}
+                  onChange={(event) =>
+                    setServiceEngagementDraft((current) => ({
+                      ...current,
+                      invoice_prefix: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Client Contact">
+                <Input
+                  value={serviceEngagementDraft.contact_name}
+                  onChange={(event) =>
+                    setServiceEngagementDraft((current) => ({
+                      ...current,
+                      contact_name: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Client Contact Email">
+                <Input
+                  type="email"
+                  value={serviceEngagementDraft.contact_email}
+                  onChange={(event) =>
+                    setServiceEngagementDraft((current) => ({
+                      ...current,
+                      contact_email: event.target.value,
+                    }))}
+                />
+              </Label>
+            </div>
+            <label className="flex items-center gap-2 text-sm text-brand-secondary-0">
+              <input
+                type="checkbox"
+                checked={serviceEngagementDraft.is_active}
+                onChange={(event) =>
+                  setServiceEngagementDraft((current) => ({
+                    ...current,
+                    is_active: event.target.checked,
+                  }))}
+              />
+              Active engagement
+            </label>
+            <Label label="Notes">
+              <Textarea
+                rows={3}
+                value={serviceEngagementDraft.notes}
+                onChange={(event) =>
+                  setServiceEngagementDraft((current) => ({
+                    ...current,
+                    notes: event.target.value,
+                  }))}
+              />
+            </Label>
+          </FormCard>
+        ) : null}
+
+        {snapshot.serviceEngagements.length === 0 ? (
+          <p className="text-sm text-brand-secondary-0 opacity-70">
+            No billing engagements recorded yet.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {snapshot.serviceEngagements.map((engagement) => (
+              <div
+                key={engagement.id}
+                className="rounded-xl border border-border-subtle bg-surface-inset p-3"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-text-on-light">
+                      {engagement.title}
+                    </p>
+                    <p className="text-sm capitalize text-brand-secondary-0 opacity-70">
+                      {formatStatus(engagement.service_type)} ·{" "}
+                      {formatStatus(engagement.billing_model)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => openServiceEngagementEdit(engagement)}
+                        className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                      >
+                        Edit
+                      </button>
+                    ) : null}
+                    <span className="rounded-full bg-surface-nav px-2 py-1 text-xs uppercase tracking-wide text-text-on-dark">
+                      {engagement.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-3 grid gap-2 text-sm md:grid-cols-2">
+                  <p>
+                    <span className="opacity-70">Rate:</span>{" "}
+                    {formatMoney(
+                      engagement.default_hourly_rate,
+                      engagement.currency_code,
+                    )}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Terms:</span>{" "}
+                    {engagement.invoice_terms_days} days
+                  </p>
+                  <p>
+                    <span className="opacity-70">Unbilled:</span>{" "}
+                    {formatHours(engagement.unbilled_hours)} /{" "}
+                    {formatMoney(
+                      engagement.unbilled_amount,
+                      engagement.currency_code,
+                    )}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Invoiced:</span>{" "}
+                    {formatMoney(
+                      engagement.invoiced_amount,
+                      engagement.currency_code,
+                    )}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Contact:</span>{" "}
+                    {formatText(engagement.contact_name)}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Invoice Prefix:</span>{" "}
+                    {formatText(engagement.invoice_prefix)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
+      <Section
+        title={`Time Entries (${snapshot.timeEntries.length})`}
+        actionLabel={
+          canEdit &&
+            snapshot.serviceEngagements.length > 0 &&
+            editor?.kind !== "time_entry"
+            ? "Log Time"
+            : undefined
+        }
+        onAction={
+          canEdit && snapshot.serviceEngagements.length > 0
+            ? openTimeEntryCreate
+            : undefined
+        }
+      >
+        {editor?.kind === "time_entry" ? (
+          <FormCard
+            title={editor.mode === "edit" ? "Edit time entry" : "Log time"}
+            onCancel={() => setEditor(null)}
+            onSave={() =>
+              submitMutation(
+                "time_entry",
+                editor.mode === "edit"
+                  ? { id: editor.id, ...timeEntryDraft }
+                  : timeEntryDraft,
+                editor.mode === "edit"
+                  ? "Time entry updated"
+                  : "Time entry added",
+              )
+            }
+            saving={saving === "time_entry"}
+          >
+            <div className="grid gap-3 md:grid-cols-2">
+              <Label label="Engagement">
+                <Select
+                  value={timeEntryDraft.engagement_id}
+                  onChange={(event) =>
+                    setTimeEntryDraft((current) => ({
+                      ...current,
+                      engagement_id: event.target.value,
+                      invoice_id: "",
+                    }))}
+                >
+                  <option value="">Select engagement</option>
+                  {snapshot.serviceEngagements.map((engagement) => (
+                    <option key={engagement.id} value={engagement.id}>
+                      {engagement.title}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+              <Label label="Work Date">
+                <Input
+                  type="date"
+                  value={timeEntryDraft.work_date}
+                  onChange={(event) =>
+                    setTimeEntryDraft((current) => ({
+                      ...current,
+                      work_date: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Hours">
+                <Input
+                  type="number"
+                  min="0"
+                  max="24"
+                  step="0.25"
+                  value={timeEntryDraft.hours}
+                  onChange={(event) =>
+                    setTimeEntryDraft((current) => ({
+                      ...current,
+                      hours: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Hourly Rate">
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={timeEntryDraft.hourly_rate}
+                  onChange={(event) =>
+                    setTimeEntryDraft((current) => ({
+                      ...current,
+                      hourly_rate: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Invoice">
+                <Select
+                  value={timeEntryDraft.invoice_id}
+                  onChange={(event) =>
+                    setTimeEntryDraft((current) => ({
+                      ...current,
+                      invoice_id: event.target.value,
+                    }))}
+                  disabled={!timeEntryDraft.billable}
+                >
+                  <option value="">Leave unbilled</option>
+                  {snapshot.invoices
+                    .filter((invoice) =>
+                      !timeEntryDraft.engagement_id ||
+                      invoice.engagement_id === timeEntryDraft.engagement_id
+                    )
+                    .map((invoice) => (
+                      <option key={invoice.id} value={invoice.id}>
+                        {invoice.invoice_number} ({toTitle(invoice.status)})
+                      </option>
+                    ))}
+                </Select>
+              </Label>
+              <Label label="Description">
+                <Input
+                  value={timeEntryDraft.description}
+                  onChange={(event) =>
+                    setTimeEntryDraft((current) => ({
+                      ...current,
+                      description: event.target.value,
+                    }))}
+                />
+              </Label>
+            </div>
+            <label className="flex items-center gap-2 text-sm text-brand-secondary-0">
+              <input
+                type="checkbox"
+                checked={timeEntryDraft.billable}
+                onChange={(event) =>
+                  setTimeEntryDraft((current) => ({
+                    ...current,
+                    billable: event.target.checked,
+                    invoice_id: event.target.checked ? current.invoice_id : "",
+                  }))}
+              />
+              Billable work
+            </label>
+            <p className="text-sm text-brand-secondary-0 opacity-80">
+              Leave hourly rate blank to use the engagement default rate.
+            </p>
+          </FormCard>
+        ) : null}
+
+        {snapshot.serviceEngagements.length === 0 ? (
+          <p className="text-sm text-brand-secondary-0 opacity-70">
+            Add an engagement before logging time.
+          </p>
+        ) : snapshot.timeEntries.length === 0 ? (
+          <p className="text-sm text-brand-secondary-0 opacity-70">
+            No time entries recorded yet.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="text-left text-brand-secondary-0 opacity-70">
+                <tr>
+                  <th className="px-3 py-2">Date</th>
+                  <th className="px-3 py-2">Engagement</th>
+                  <th className="px-3 py-2">Work</th>
+                  <th className="px-3 py-2">Hours</th>
+                  <th className="px-3 py-2">Rate</th>
+                  <th className="px-3 py-2">Amount</th>
+                  <th className="px-3 py-2">Invoice</th>
+                  {canEdit ? <th className="px-3 py-2">Actions</th> : null}
+                </tr>
+              </thead>
+              <tbody>
+                {snapshot.timeEntries.map((entry) => (
+                  <tr key={entry.id} className="border-t border-border-subtle">
+                    <td className="px-3 py-2 text-text-on-light">
+                      {formatDate(entry.work_date)}
+                    </td>
+                    <td className="px-3 py-2 text-text-on-light">
+                      {formatText(entry.engagement_title)}
+                    </td>
+                    <td className="px-3 py-2 text-text-on-light">
+                      {entry.description}
+                    </td>
+                    <td className="px-3 py-2 text-text-on-light">
+                      {formatHours(entry.hours)}
+                    </td>
+                    <td className="px-3 py-2 text-text-on-light">
+                      {entry.billable
+                        ? formatMoney(entry.effective_hourly_rate)
+                        : "Non-billable"}
+                    </td>
+                    <td className="px-3 py-2 text-text-on-light">
+                      {entry.billable ? formatMoney(entry.amount) : "—"}
+                    </td>
+                    <td className="px-3 py-2 text-text-on-light">
+                      {entry.invoice_number ?? "Unbilled"}
+                    </td>
+                    {canEdit ? (
+                      <td className="px-3 py-2">
+                        <button
+                          type="button"
+                          onClick={() => openTimeEntryEdit(entry)}
+                          className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                        >
+                          Edit
+                        </button>
+                      </td>
+                    ) : null}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Section>
+
+      <Section
+        title={`Invoices (${snapshot.invoices.length})`}
+        actionLabel={
+          canEdit &&
+            snapshot.serviceEngagements.length > 0 &&
+            editor?.kind !== "invoice"
+            ? "Create Invoice"
+            : undefined
+        }
+        onAction={
+          canEdit && snapshot.serviceEngagements.length > 0
+            ? openInvoiceCreate
+            : undefined
+        }
+      >
+        {editor?.kind === "invoice" ? (
+          <FormCard
+            title={editor.mode === "edit" ? "Edit invoice" : "Create invoice"}
+            onCancel={() => setEditor(null)}
+            onSave={() =>
+              submitMutation(
+                "invoice",
+                editor.mode === "edit"
+                  ? { id: editor.id, ...invoiceDraft }
+                  : invoiceDraft,
+                editor.mode === "edit" ? "Invoice updated" : "Invoice created",
+              )
+            }
+            saving={saving === "invoice"}
+          >
+            <div className="grid gap-3 md:grid-cols-2">
+              <Label label="Engagement">
+                <Select
+                  value={invoiceDraft.engagement_id}
+                  onChange={(event) =>
+                    setInvoiceDraft((current) => ({
+                      ...current,
+                      engagement_id: event.target.value,
+                      selected_time_entry_ids: current.selected_time_entry_ids
+                        .filter((id) =>
+                          (snapshot.timeEntries ?? []).some((entry) =>
+                            entry.id === id &&
+                            entry.engagement_id === event.target.value
+                          )
+                        ),
+                    }))}
+                >
+                  <option value="">Select engagement</option>
+                  {snapshot.serviceEngagements.map((engagement) => (
+                    <option key={engagement.id} value={engagement.id}>
+                      {engagement.title}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+              <Label label="Invoice Number">
+                <Input
+                  value={invoiceDraft.invoice_number}
+                  onChange={(event) =>
+                    setInvoiceDraft((current) => ({
+                      ...current,
+                      invoice_number: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Issued On">
+                <Input
+                  type="date"
+                  value={invoiceDraft.issued_on}
+                  onChange={(event) =>
+                    setInvoiceDraft((current) => ({
+                      ...current,
+                      issued_on: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Due On">
+                <Input
+                  type="date"
+                  value={invoiceDraft.due_on}
+                  onChange={(event) =>
+                    setInvoiceDraft((current) => ({
+                      ...current,
+                      due_on: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Period Start">
+                <Input
+                  type="date"
+                  value={invoiceDraft.period_start}
+                  onChange={(event) =>
+                    setInvoiceDraft((current) => ({
+                      ...current,
+                      period_start: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Period End">
+                <Input
+                  type="date"
+                  value={invoiceDraft.period_end}
+                  onChange={(event) =>
+                    setInvoiceDraft((current) => ({
+                      ...current,
+                      period_end: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Status">
+                <Select
+                  value={invoiceDraft.status}
+                  onChange={(event) =>
+                    setInvoiceDraft((current) => ({
+                      ...current,
+                      status: event.target.value,
+                    }))}
+                >
+                  {INVOICE_STATUS_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {toTitle(option)}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+            </div>
+            <Label label="Notes">
+              <Textarea
+                rows={3}
+                value={invoiceDraft.notes}
+                onChange={(event) =>
+                  setInvoiceDraft((current) => ({
+                    ...current,
+                    notes: event.target.value,
+                  }))}
+              />
+            </Label>
+            <div className="space-y-2">
+              <div className="text-sm font-semibold text-text-on-light">
+                Included Time Entries
+              </div>
+              {invoiceDraft.engagement_id.length === 0 ? (
+                <p className="text-sm text-brand-secondary-0 opacity-70">
+                  Pick an engagement to attach unbilled hours.
+                </p>
+              ) : invoiceAssignableEntries.length === 0 ? (
+                <p className="text-sm text-brand-secondary-0 opacity-70">
+                  No eligible billable entries found for this engagement.
+                </p>
+              ) : (
+                <div className="space-y-2 rounded-xl border border-border-subtle bg-surface-card p-3">
+                  {invoiceAssignableEntries.map((entry) => {
+                    const checked = invoiceDraft.selected_time_entry_ids.includes(
+                      entry.id,
+                    );
+                    return (
+                      <label
+                        key={entry.id}
+                        className="flex items-start justify-between gap-3 rounded-lg border border-border-subtle bg-surface-inset px-3 py-2 text-sm text-text-on-light"
+                      >
+                        <span className="flex items-start gap-2">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleInvoiceTimeEntry(entry.id)}
+                          />
+                          <span>
+                            <span className="font-medium">
+                              {formatDate(entry.work_date)}
+                            </span>{" "}
+                            · {entry.description}
+                          </span>
+                        </span>
+                        <span className="whitespace-nowrap text-brand-secondary-0">
+                          {formatHours(entry.hours)} · {formatMoney(entry.amount)}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </FormCard>
+        ) : null}
+
+        {snapshot.serviceEngagements.length === 0 ? (
+          <p className="text-sm text-brand-secondary-0 opacity-70">
+            Add an engagement before creating invoices.
+          </p>
+        ) : snapshot.invoices.length === 0 ? (
+          <p className="text-sm text-brand-secondary-0 opacity-70">
+            No invoices recorded yet.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {snapshot.invoices.map((invoice) => (
+              <div
+                key={invoice.id}
+                className="rounded-xl border border-border-subtle bg-surface-inset p-3"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-text-on-light">
+                      {invoice.invoice_number}
+                    </p>
+                    <p className="text-sm text-brand-secondary-0 opacity-70">
+                      {formatText(invoice.engagement_title)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => openInvoiceEdit(invoice)}
+                        className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                      >
+                        Edit
+                      </button>
+                    ) : null}
+                    <span
+                      className={`rounded-full px-2 py-1 text-xs uppercase tracking-wide ${getInvoiceBadgeClass(
+                        invoice.status,
+                      )}`}
+                    >
+                      {formatStatus(invoice.status)}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-3 grid gap-2 text-sm md:grid-cols-2">
+                  <p>
+                    <span className="opacity-70">Issued:</span>{" "}
+                    {formatDate(invoice.issued_on)}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Due:</span>{" "}
+                    {formatDate(invoice.due_on)}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Hours:</span>{" "}
+                    {formatHours(invoice.total_hours)}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Amount:</span>{" "}
+                    {formatMoney(invoice.total_amount)}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Entries:</span>{" "}
+                    {invoice.entry_count}
+                  </p>
+                  <p>
+                    <span className="opacity-70">Period:</span>{" "}
+                    {invoice.period_start || invoice.period_end
+                      ? `${formatDate(invoice.period_start)} - ${formatDate(
+                        invoice.period_end,
+                      )}`
+                      : "—"}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
 
       <Section
         title="Profile"

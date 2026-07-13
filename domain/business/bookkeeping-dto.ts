@@ -116,12 +116,64 @@ export type UpdateBusinessClosePeriodInput = CreateBusinessClosePeriodInput & {
   id: string;
 };
 
+export type CreateBusinessServiceEngagementInput = {
+  title: string;
+  service_type: string;
+  billing_model: string;
+  default_hourly_rate: number | null;
+  currency_code: string;
+  invoice_terms_days: number;
+  invoice_prefix: string | null;
+  contact_name: string | null;
+  contact_email: string | null;
+  is_active: boolean;
+  notes: string | null;
+};
+
+export type UpdateBusinessServiceEngagementInput =
+  CreateBusinessServiceEngagementInput & {
+    id: string;
+  };
+
+export type CreateBusinessTimeEntryInput = {
+  engagement_id: string;
+  work_date: string;
+  hours: number;
+  hourly_rate: number | null;
+  description: string;
+  billable: boolean;
+  invoice_id: string | null;
+};
+
+export type UpdateBusinessTimeEntryInput = CreateBusinessTimeEntryInput & {
+  id: string;
+};
+
+export type CreateBusinessInvoiceInput = {
+  engagement_id: string;
+  invoice_number: string;
+  period_start: string | null;
+  period_end: string | null;
+  issued_on: string;
+  due_on: string | null;
+  status: string;
+  notes: string | null;
+  time_entry_ids: string[];
+};
+
+export type UpdateBusinessInvoiceInput = CreateBusinessInvoiceInput & {
+  id: string;
+};
+
 async function getBookkeepingClient(): Promise<SupabaseClient<Database>> {
   return createApiClient();
 }
 
 const EMPTY_SNAPSHOT: BusinessBookkeepingSnapshot = {
   profile: null,
+  serviceEngagements: [],
+  timeEntries: [],
+  invoices: [],
   systems: [],
   accounts: [],
   responsibilities: [],
@@ -397,5 +449,116 @@ export async function updateEntityBookkeepingClosePeriod(
     p_period_label: input.period_label,
     p_status: input.status,
     p_notes: input.notes,
+  });
+}
+
+export async function createEntityBookkeepingServiceEngagement(
+  entityId: string,
+  input: CreateBusinessServiceEngagementInput,
+) {
+  await runBookkeepingRpc("create_entity_bookkeeping_service_engagement", {
+    p_entity_id: entityId,
+    p_title: input.title,
+    p_service_type: input.service_type,
+    p_billing_model: input.billing_model,
+    p_default_hourly_rate: input.default_hourly_rate,
+    p_currency_code: input.currency_code,
+    p_invoice_terms_days: input.invoice_terms_days,
+    p_invoice_prefix: input.invoice_prefix,
+    p_contact_name: input.contact_name,
+    p_contact_email: input.contact_email,
+    p_is_active: input.is_active,
+    p_notes: input.notes,
+  });
+}
+
+export async function updateEntityBookkeepingServiceEngagement(
+  entityId: string,
+  input: UpdateBusinessServiceEngagementInput,
+) {
+  await runBookkeepingRpc("update_entity_bookkeeping_service_engagement", {
+    p_entity_id: entityId,
+    p_engagement_id: input.id,
+    p_title: input.title,
+    p_service_type: input.service_type,
+    p_billing_model: input.billing_model,
+    p_default_hourly_rate: input.default_hourly_rate,
+    p_currency_code: input.currency_code,
+    p_invoice_terms_days: input.invoice_terms_days,
+    p_invoice_prefix: input.invoice_prefix,
+    p_contact_name: input.contact_name,
+    p_contact_email: input.contact_email,
+    p_is_active: input.is_active,
+    p_notes: input.notes,
+  });
+}
+
+export async function createEntityBookkeepingTimeEntry(
+  entityId: string,
+  input: CreateBusinessTimeEntryInput,
+) {
+  await runBookkeepingRpc("create_entity_bookkeeping_time_entry", {
+    p_entity_id: entityId,
+    p_engagement_id: input.engagement_id,
+    p_work_date: input.work_date,
+    p_hours: input.hours,
+    p_hourly_rate: input.hourly_rate,
+    p_description: input.description,
+    p_billable: input.billable,
+    p_invoice_id: input.invoice_id,
+  });
+}
+
+export async function updateEntityBookkeepingTimeEntry(
+  entityId: string,
+  input: UpdateBusinessTimeEntryInput,
+) {
+  await runBookkeepingRpc("update_entity_bookkeeping_time_entry", {
+    p_entity_id: entityId,
+    p_time_entry_id: input.id,
+    p_engagement_id: input.engagement_id,
+    p_work_date: input.work_date,
+    p_hours: input.hours,
+    p_hourly_rate: input.hourly_rate,
+    p_description: input.description,
+    p_billable: input.billable,
+    p_invoice_id: input.invoice_id,
+  });
+}
+
+export async function createEntityBookkeepingInvoice(
+  entityId: string,
+  input: CreateBusinessInvoiceInput,
+) {
+  await runBookkeepingRpc("create_entity_bookkeeping_invoice", {
+    p_entity_id: entityId,
+    p_engagement_id: input.engagement_id,
+    p_invoice_number: input.invoice_number,
+    p_period_start: input.period_start,
+    p_period_end: input.period_end,
+    p_issued_on: input.issued_on,
+    p_due_on: input.due_on,
+    p_status: input.status,
+    p_notes: input.notes,
+    p_time_entry_ids: input.time_entry_ids,
+  });
+}
+
+export async function updateEntityBookkeepingInvoice(
+  entityId: string,
+  input: UpdateBusinessInvoiceInput,
+) {
+  await runBookkeepingRpc("update_entity_bookkeeping_invoice", {
+    p_entity_id: entityId,
+    p_invoice_id: input.id,
+    p_engagement_id: input.engagement_id,
+    p_invoice_number: input.invoice_number,
+    p_period_start: input.period_start,
+    p_period_end: input.period_end,
+    p_issued_on: input.issued_on,
+    p_due_on: input.due_on,
+    p_status: input.status,
+    p_notes: input.notes,
+    p_time_entry_ids: input.time_entry_ids,
   });
 }

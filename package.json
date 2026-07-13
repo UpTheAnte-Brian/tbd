@@ -2,7 +2,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "next build --webpack",
+    "build": "npm run tailwind && next build --webpack",
     "dev:next": "sh -c 'npm run tailwind:watch & next dev --turbopack'",
     "dev:web": "tsx scripts/env/run-with-env.ts --file .env.local --file .env.supabase.local.generated -- npm run dev:next",
     "dev": "tsx scripts/supabase/ensure-local.ts && npm run dev:web",

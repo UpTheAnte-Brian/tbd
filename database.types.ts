@@ -802,6 +802,82 @@ export type Database = {
           },
         ]
       }
+      business_invoices: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          due_on: string | null
+          engagement_id: string
+          entity_id: string
+          id: string
+          invoice_number: string
+          issued_on: string
+          notes: string | null
+          paid_at: string | null
+          period_end: string | null
+          period_start: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          due_on?: string | null
+          engagement_id: string
+          entity_id: string
+          id?: string
+          invoice_number: string
+          issued_on: string
+          notes?: string | null
+          paid_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          due_on?: string | null
+          engagement_id?: string
+          entity_id?: string
+          id?: string
+          invoice_number?: string
+          issued_on?: string
+          notes?: string | null
+          paid_at?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_invoices_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "business_service_engagements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_invoices_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_profiles: {
         Row: {
           bookkeeping_status: string
@@ -854,6 +930,78 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "business_profiles_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_service_engagements: {
+        Row: {
+          contact_email: string | null
+          contact_name: string | null
+          created_at: string
+          created_by: string | null
+          currency_code: string
+          default_hourly_rate: number | null
+          entity_id: string
+          id: string
+          invoice_prefix: string | null
+          invoice_terms_days: number
+          is_active: boolean
+          notes: string | null
+          service_type: string
+          title: string
+          billing_model: string
+          updated_at: string
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency_code?: string
+          default_hourly_rate?: number | null
+          entity_id: string
+          id?: string
+          invoice_prefix?: string | null
+          invoice_terms_days?: number
+          is_active?: boolean
+          notes?: string | null
+          service_type?: string
+          title: string
+          billing_model?: string
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency_code?: string
+          default_hourly_rate?: number | null
+          entity_id?: string
+          id?: string
+          invoice_prefix?: string | null
+          invoice_terms_days?: number
+          is_active?: boolean
+          notes?: string | null
+          service_type?: string
+          title?: string
+          billing_model?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_service_engagements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_service_engagements_entity_id_fkey"
             columns: ["entity_id"]
             isOneToOne: false
             referencedRelation: "entities"
@@ -956,6 +1104,80 @@ export type Database = {
             columns: ["system_id"]
             isOneToOne: false
             referencedRelation: "business_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_time_entries: {
+        Row: {
+          billable: boolean
+          created_at: string
+          created_by: string | null
+          description: string
+          engagement_id: string
+          entity_id: string
+          hourly_rate: number | null
+          hours: number
+          id: string
+          invoice_id: string | null
+          updated_at: string
+          work_date: string
+        }
+        Insert: {
+          billable?: boolean
+          created_at?: string
+          created_by?: string | null
+          description: string
+          engagement_id: string
+          entity_id: string
+          hourly_rate?: number | null
+          hours: number
+          id?: string
+          invoice_id?: string | null
+          updated_at?: string
+          work_date: string
+        }
+        Update: {
+          billable?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          engagement_id?: string
+          entity_id?: string
+          hourly_rate?: number | null
+          hours?: number
+          id?: string
+          invoice_id?: string | null
+          updated_at?: string
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_time_entries_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_time_entries_engagement_id_fkey"
+            columns: ["engagement_id"]
+            isOneToOne: false
+            referencedRelation: "business_service_engagements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_time_entries_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_time_entries_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "business_invoices"
             referencedColumns: ["id"]
           },
         ]

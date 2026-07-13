@@ -1,19 +1,25 @@
 import type { NextRequest } from "next/server";
 import {
+  createEntityBookkeepingInvoice,
   completeEntityBookkeepingRecurringTask,
   createEntityBookkeepingAccount,
   createEntityBookkeepingClosePeriod,
   createEntityBookkeepingCloseTemplate,
   createEntityBookkeepingRecurringTask,
   createEntityBookkeepingResponsibility,
+  createEntityBookkeepingServiceEngagement,
   createEntityBookkeepingSystem,
+  createEntityBookkeepingTimeEntry,
   getEntityBookkeepingSnapshot,
+  updateEntityBookkeepingInvoice,
   updateEntityBookkeepingAccount,
   updateEntityBookkeepingClosePeriod,
   updateEntityBookkeepingCloseTemplate,
   updateEntityBookkeepingRecurringTask,
   updateEntityBookkeepingResponsibility,
+  updateEntityBookkeepingServiceEngagement,
   updateEntityBookkeepingSystem,
+  updateEntityBookkeepingTimeEntry,
   upsertEntityBookkeepingProfile,
 } from "@/domain/business/bookkeeping-dto";
 import {
@@ -65,9 +71,48 @@ function cleanPositiveInteger(
   return parsed;
 }
 
+function cleanIntegerInRange(
+  value: unknown,
+  label: string,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  const parsed = cleanOptionalInteger(value);
+  if (parsed === null) return fallback;
+  if (parsed < min || parsed > max) {
+    throw new Error(`${label} must be between ${min} and ${max}`);
+  }
+  return parsed;
+}
+
+function cleanOptionalNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+function cleanRequiredNumber(value: unknown, label: string): number {
+  const parsed = cleanOptionalNumber(value);
+  if (parsed === null) {
+    throw new Error(`${label} is required`);
+  }
+  return parsed;
+}
+
 function cleanBoolean(value: unknown, fallback = false): boolean {
   if (typeof value === "boolean") return value;
   return fallback;
+}
+
+function cleanStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => cleanOptionalString(item))
+    .filter((item): item is string => Boolean(item));
 }
 
 export async function GET(
@@ -174,6 +219,124 @@ export async function POST(
             is_primary: cleanBoolean(payload.is_primary),
             status: cleanOptionalString(payload.status) ?? "active",
             access_notes: cleanOptionalString(payload.access_notes),
+          });
+        }
+        break;
+      case "service_engagement":
+        if (recordId) {
+          await updateEntityBookkeepingServiceEngagement(entityId, {
+            id: recordId,
+            title: cleanRequiredString(payload.title, "Engagement title"),
+            service_type: cleanOptionalString(payload.service_type) ?? "bookkeeping",
+            billing_model: cleanOptionalString(payload.billing_model) ?? "hourly",
+            default_hourly_rate: cleanOptionalNumber(
+              payload.default_hourly_rate,
+            ),
+            currency_code: cleanOptionalString(payload.currency_code) ?? "USD",
+            invoice_terms_days: cleanIntegerInRange(
+              payload.invoice_terms_days,
+              "Invoice terms",
+              30,
+              0,
+              180,
+            ),
+            invoice_prefix: cleanOptionalString(payload.invoice_prefix),
+            contact_name: cleanOptionalString(payload.contact_name),
+            contact_email: cleanOptionalString(payload.contact_email),
+            is_active: cleanBoolean(payload.is_active, true),
+            notes: cleanOptionalString(payload.notes),
+          });
+        } else {
+          await createEntityBookkeepingServiceEngagement(entityId, {
+            title: cleanRequiredString(payload.title, "Engagement title"),
+            service_type: cleanOptionalString(payload.service_type) ?? "bookkeeping",
+            billing_model: cleanOptionalString(payload.billing_model) ?? "hourly",
+            default_hourly_rate: cleanOptionalNumber(
+              payload.default_hourly_rate,
+            ),
+            currency_code: cleanOptionalString(payload.currency_code) ?? "USD",
+            invoice_terms_days: cleanIntegerInRange(
+              payload.invoice_terms_days,
+              "Invoice terms",
+              30,
+              0,
+              180,
+            ),
+            invoice_prefix: cleanOptionalString(payload.invoice_prefix),
+            contact_name: cleanOptionalString(payload.contact_name),
+            contact_email: cleanOptionalString(payload.contact_email),
+            is_active: cleanBoolean(payload.is_active, true),
+            notes: cleanOptionalString(payload.notes),
+          });
+        }
+        break;
+      case "time_entry":
+        if (recordId) {
+          await updateEntityBookkeepingTimeEntry(entityId, {
+            id: recordId,
+            engagement_id: cleanRequiredString(
+              payload.engagement_id,
+              "Service engagement",
+            ),
+            work_date: cleanRequiredString(payload.work_date, "Work date"),
+            hours: cleanRequiredNumber(payload.hours, "Hours"),
+            hourly_rate: cleanOptionalNumber(payload.hourly_rate),
+            description: cleanRequiredString(payload.description, "Description"),
+            billable: cleanBoolean(payload.billable, true),
+            invoice_id: cleanOptionalString(payload.invoice_id),
+          });
+        } else {
+          await createEntityBookkeepingTimeEntry(entityId, {
+            engagement_id: cleanRequiredString(
+              payload.engagement_id,
+              "Service engagement",
+            ),
+            work_date: cleanRequiredString(payload.work_date, "Work date"),
+            hours: cleanRequiredNumber(payload.hours, "Hours"),
+            hourly_rate: cleanOptionalNumber(payload.hourly_rate),
+            description: cleanRequiredString(payload.description, "Description"),
+            billable: cleanBoolean(payload.billable, true),
+            invoice_id: cleanOptionalString(payload.invoice_id),
+          });
+        }
+        break;
+      case "invoice":
+        if (recordId) {
+          await updateEntityBookkeepingInvoice(entityId, {
+            id: recordId,
+            engagement_id: cleanRequiredString(
+              payload.engagement_id,
+              "Service engagement",
+            ),
+            invoice_number: cleanRequiredString(
+              payload.invoice_number,
+              "Invoice number",
+            ),
+            period_start: cleanOptionalString(payload.period_start),
+            period_end: cleanOptionalString(payload.period_end),
+            issued_on: cleanRequiredString(payload.issued_on, "Issued on"),
+            due_on: cleanOptionalString(payload.due_on),
+            status: cleanOptionalString(payload.status) ?? "draft",
+            notes: cleanOptionalString(payload.notes),
+            time_entry_ids: cleanStringArray(payload.time_entry_ids),
+          });
+        } else {
+          await createEntityBookkeepingInvoice(entityId, {
+            engagement_id: cleanRequiredString(
+              payload.engagement_id,
+              "Service engagement",
+            ),
+            invoice_number: cleanRequiredString(
+              payload.invoice_number,
+              "Invoice number",
+            ),
+            period_start: cleanOptionalString(payload.period_start),
+            period_end: cleanOptionalString(payload.period_end),
+            issued_on: cleanRequiredString(payload.issued_on, "Issued on"),
+            due_on: cleanOptionalString(payload.due_on),
+            status: cleanOptionalString(payload.status) ?? "draft",
+            notes: cleanOptionalString(payload.notes),
+            time_entry_ids: cleanStringArray(payload.time_entry_ids),
           });
         }
         break;
