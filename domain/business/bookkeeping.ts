@@ -59,6 +59,17 @@ export type BusinessRecurringTaskSummary = BusinessRecurringTask & {
   system_name: string | null;
   account_name: string | null;
   completed_by_name: string | null;
+  documents: BusinessRecurringTaskDocumentSummary[];
+};
+
+export type BusinessRecurringTaskDocumentSummary = {
+  id: string;
+  document_id: string;
+  title: string;
+  document_type: Database["public"]["Enums"]["document_type"];
+  mime_type: string | null;
+  created_at: string;
+  signed_url: string | null;
 };
 
 export type BusinessServiceEngagementSummary = BusinessServiceEngagement & {

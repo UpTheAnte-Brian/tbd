@@ -243,6 +243,41 @@ export async function getEntityBookkeepingSnapshot(
     }),
   );
 
+  snapshot.recurringTasks = await Promise.all(
+    snapshot.recurringTasks.map(async (task) => {
+      const documents = await Promise.all(
+        (task.documents ?? []).map(async (document) => {
+          const raw = document as typeof document & {
+            storage_bucket?: string | null;
+            storage_path?: string | null;
+          };
+
+          let signedUrl: string | null = null;
+          if (raw.storage_bucket && raw.storage_path) {
+            const { data: signedData, error } = await supabaseAdmin
+              .storage
+              .from(raw.storage_bucket)
+              .createSignedUrl(raw.storage_path, 60 * 60);
+
+            if (!error) {
+              signedUrl = signedData?.signedUrl ?? null;
+            }
+          }
+
+          return {
+            ...document,
+            signed_url: signedUrl,
+          };
+        }),
+      );
+
+      return {
+        ...task,
+        documents,
+      };
+    }),
+  );
+
   return snapshot;
 }
 
@@ -426,6 +461,18 @@ export async function completeEntityBookkeepingRecurringTask(
     p_entity_id: entityId,
     p_task_id: input.id,
     p_completed_for_due_date: input.completed_for_due_date,
+  });
+}
+
+export async function attachEntityBookkeepingRecurringTaskDocument(
+  entityId: string,
+  taskId: string,
+  documentId: string,
+) {
+  await runBookkeepingRpc("attach_entity_bookkeeping_recurring_task_document", {
+    p_entity_id: entityId,
+    p_task_id: taskId,
+    p_document_id: documentId,
   });
 }
 

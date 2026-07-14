@@ -935,6 +935,12 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
   const [contractFile, setContractFile] = useState<File | null>(null);
   const [contractUploading, setContractUploading] = useState(false);
   const [contractFileInputKey, setContractFileInputKey] = useState(0);
+  const [recurringTaskDocumentFile, setRecurringTaskDocumentFile] =
+    useState<File | null>(null);
+  const [recurringTaskDocumentUploading, setRecurringTaskDocumentUploading] =
+    useState(false);
+  const [recurringTaskDocumentInputKey, setRecurringTaskDocumentInputKey] =
+    useState(0);
 
   const entityUserRole = useMemo(
     () => user?.entity_users?.find((eu) => eu.entity_id === entityId)?.role ?? null,
@@ -1043,6 +1049,14 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
       },
     );
   }, [recurringTaskViews]);
+
+  const editingRecurringTask = useMemo(
+    () =>
+      editor?.kind === "recurring_task" && editor.mode === "edit"
+        ? (snapshot?.recurringTasks.find((task) => task.id === editor.id) ?? null)
+        : null,
+    [editor, snapshot?.recurringTasks],
+  );
 
   const selectedInvoiceEngagement = useMemo(
     () =>
@@ -1294,6 +1308,8 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
 
   const openRecurringTaskCreate = () => {
     setRecurringTaskDraft(buildRecurringTaskDraft(null));
+    setRecurringTaskDocumentFile(null);
+    setRecurringTaskDocumentInputKey((current) => current + 1);
     setEditor({ kind: "recurring_task", mode: "create" });
   };
 
@@ -1301,6 +1317,8 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
     task: BusinessBookkeepingSnapshot["recurringTasks"][number],
   ) => {
     setRecurringTaskDraft(buildRecurringTaskDraft(task));
+    setRecurringTaskDocumentFile(null);
+    setRecurringTaskDocumentInputKey((current) => current + 1);
     setEditor({ kind: "recurring_task", mode: "edit", id: task.id });
   };
 
@@ -1376,6 +1394,49 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
       toast.error(err instanceof Error ? err.message : "Failed to upload contract");
     } finally {
       setContractUploading(false);
+    }
+  };
+
+  const uploadRecurringTaskDocument = async () => {
+    if (!editingRecurringTask || !recurringTaskDocumentFile) {
+      return;
+    }
+
+    setRecurringTaskDocumentUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("task_id", editingRecurringTask.id);
+      formData.append("file", recurringTaskDocumentFile);
+      if (recurringTaskDraft.title.trim()) {
+        formData.append("title", recurringTaskDraft.title.trim());
+      }
+
+      const res = await fetch(
+        `/api/entities/${entityId}/bookkeeping/recurring-task-documents`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error ?? "Failed to upload recurring task document");
+      }
+
+      const json = (await res.json()) as BusinessBookkeepingSnapshot;
+      setSnapshot(json);
+      setRecurringTaskDocumentFile(null);
+      setRecurringTaskDocumentInputKey((current) => current + 1);
+      toast.success("Recurring task document uploaded");
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to upload recurring task document",
+      );
+    } finally {
+      setRecurringTaskDocumentUploading(false);
     }
   };
 
@@ -3411,6 +3472,89 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                   }))}
               />
             </Label>
+            <div className="rounded-lg border border-border-subtle bg-surface-card px-4 py-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-text-on-light">
+                    Task Documents
+                  </p>
+                  <p className="text-sm text-brand-secondary-0 opacity-80">
+                    Attach supporting documentation for this recurring task.
+                  </p>
+                </div>
+                {editingRecurringTask ? (
+                  <span className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+                    {editingRecurringTask.documents.length} attached
+                  </span>
+                ) : null}
+              </div>
+
+              {editingRecurringTask ? (
+                <div className="mt-4 space-y-3">
+                  <div className="grid gap-2 md:grid-cols-[1fr_auto]">
+                    <Input
+                      key={recurringTaskDocumentInputKey}
+                      type="file"
+                      onChange={(event) =>
+                        setRecurringTaskDocumentFile(
+                          event.target.files?.[0] ?? null,
+                        )}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void uploadRecurringTaskDocument()}
+                      disabled={
+                        !recurringTaskDocumentFile || recurringTaskDocumentUploading
+                      }
+                      className="rounded-lg bg-brand-primary-0 px-4 py-2 text-sm font-semibold text-brand-primary-1 shadow-sm transition hover:bg-brand-primary-2 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {recurringTaskDocumentUploading
+                        ? "Uploading..."
+                        : "Upload Document"}
+                    </button>
+                  </div>
+
+                  {editingRecurringTask.documents.length === 0 ? (
+                    <p className="text-sm text-brand-secondary-0 opacity-70">
+                      No documents attached yet.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {editingRecurringTask.documents.map((document) => (
+                        <div
+                          key={document.id}
+                          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle bg-surface-inset px-3 py-3"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-text-on-light">
+                              {document.title}
+                            </p>
+                            <p className="text-xs text-brand-secondary-0 opacity-70">
+                              Added {formatDate(document.created_at)}
+                            </p>
+                          </div>
+                          {document.signed_url ? (
+                            <a
+                              href={document.signed_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                            >
+                              View
+                            </a>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="mt-4 text-sm text-brand-secondary-0 opacity-70">
+                  Save the recurring task first, then reopen it to attach
+                  documentation.
+                </p>
+              )}
+            </div>
           </FormCard>
         ) : null}
 
@@ -3535,6 +3679,41 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                   <p className="mt-3 text-sm text-brand-secondary-0 opacity-80">
                     {view.task.notes}
                   </p>
+                ) : null}
+
+                {view.task.documents.length > 0 ? (
+                  <div className="mt-3 rounded-lg border border-border-subtle bg-surface-card px-4 py-4">
+                    <p className="text-sm font-semibold text-text-on-light">
+                      Documents
+                    </p>
+                    <div className="mt-3 space-y-2">
+                      {view.task.documents.map((document) => (
+                        <div
+                          key={document.id}
+                          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle bg-surface-inset px-3 py-3"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-text-on-light">
+                              {document.title}
+                            </p>
+                            <p className="text-xs text-brand-secondary-0 opacity-70">
+                              Added {formatDate(document.created_at)}
+                            </p>
+                          </div>
+                          {document.signed_url ? (
+                            <a
+                              href={document.signed_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                            >
+                              View
+                            </a>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 ) : null}
               </div>
             ))}
