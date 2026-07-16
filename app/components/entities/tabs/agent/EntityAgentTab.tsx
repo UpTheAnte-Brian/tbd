@@ -36,15 +36,19 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
+function humanizeUnderscoreLabel(value: string) {
+  return value.replace(/_/g, " ");
+}
+
 function ledgerLabel(entry: EntityAiLedgerEntry) {
   if (entry.description) return entry.description;
   if (entry.source_type === "donation") return "AI credit donation";
   if (entry.source_type === "usage") return "Agent usage";
-  return entry.source_type.replaceAll("_", " ");
+  return humanizeUnderscoreLabel(entry.source_type);
 }
 
 function usageLabel(entry: EntityAiUsageEvent) {
-  return entry.capability.replaceAll("_", " ");
+  return humanizeUnderscoreLabel(entry.capability);
 }
 
 export default function EntityAgentTab({ entityId, entityName }: Props) {

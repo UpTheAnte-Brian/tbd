@@ -1,21 +1,55 @@
-interface StripeInvoiceWithSubscription extends StripeType.Invoice {
-    subscription?: string;
-    payment_intent?: string | StripeType.PaymentIntent | null;
+import { NextResponse } from "next/server";
+import Stripe from "stripe";
+import { createClient } from "@supabase/supabase-js";
+
+type StripeCustomerReference = string | null;
+
+type StripeCustomerDetails = {
+    email?: string | null;
+} | null;
+
+interface StripeCheckoutSessionLike {
+    id: string;
+    metadata?: Record<string, string | undefined> | null;
+    invoice?: string | null;
+    amount_total?: number | null;
+    subscription?: string | null;
+    mode?: string | null;
+    customer_email?: string | null;
+    customer_details?: StripeCustomerDetails;
+    customer?: StripeCustomerReference;
+    payment_intent?: string | null;
+}
+
+interface StripeInvoiceWithSubscription {
+    id: string;
+    amount_paid: number;
+    billing_reason?: string | null;
+    hosted_invoice_url?: string | null;
+    subscription?: string | null;
+    payment_intent?: string | null;
+    customer_email?: string | null;
+    customer?: StripeCustomerReference;
 }
 
 interface StripeInvoiceWithCharge extends StripeInvoiceWithSubscription {
-    charge?: string;
+    charge?: string | null;
     // Remove any synthetic stripe_session_id or mixed ID logic
     // Only include real charge ID and optional subscription/payment_intent
 }
 
-import { NextResponse } from "next/server";
-import Stripe from "stripe";
-import type StripeType from "stripe";
-import { createClient } from "@supabase/supabase-js";
+type StripeChargeLike = {
+    receipt_url?: string | null;
+};
 
-type ExpandedPaymentIntent = StripeType.PaymentIntent & {
-    charges: StripeType.ApiList<StripeType.Charge>;
+type ExpandedPaymentIntent = {
+    charges?: {
+        data: StripeChargeLike[];
+    };
+};
+
+type StripeSubscriptionLike = {
+    id: string;
 };
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -80,7 +114,7 @@ export async function POST(req: Request) {
         // Checkout session completed (one-time or initial subscription)
         // --------------------------
         if (event.type === "checkout.session.completed") {
-            const session = event.data.object as Stripe.Checkout.Session;
+            const session = event.data.object as StripeCheckoutSessionLike;
             const districtId = session.metadata?.district_id ?? null;
             const entityId = session.metadata?.entity_id ?? null;
             const fundingPurpose = session.metadata?.funding_purpose ?? null;
@@ -229,7 +263,7 @@ export async function POST(req: Request) {
         // Subscription cancellation
         // --------------------------
         if (event.type === "customer.subscription.deleted") {
-            const subscription = event.data.object as Stripe.Subscription;
+            const subscription = event.data.object as StripeSubscriptionLike;
             await supabase.from("subscriptions").update({
                 status: "canceled",
                 canceled_at: new Date().toISOString(),
@@ -246,7 +280,7 @@ export async function POST(req: Request) {
 }
 
 async function getEmail(
-    session: Stripe.Checkout.Session | Stripe.Invoice,
+    session: StripeCheckoutSessionLike | StripeInvoiceWithSubscription,
 ): Promise<string | null> {
     if ("customer_email" in session && session.customer_email) {
         return session.customer_email;
@@ -268,7 +302,7 @@ async function getEmail(
 }
 
 async function getReceiptUrl(
-    sessionOrInvoice: Stripe.Checkout.Session | StripeType.Invoice,
+    sessionOrInvoice: StripeCheckoutSessionLike | StripeInvoiceWithCharge,
 ): Promise<string | undefined> {
     try {
         // For Checkout Session (one-time payments or initial subscription)
@@ -307,7 +341,7 @@ async function getReceiptUrl(
             const chargeId = sessionOrInvoice.charge;
             const charge = await stripe.charges.retrieve(
                 chargeId,
-            ) as StripeType.Charge;
+            ) as StripeChargeLike;
             return charge.receipt_url ?? undefined;
         }
     } catch (err) {

@@ -1,7 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import type { InputHTMLAttributes, ReactNode } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "@/app/components/loading-spinner";
 import { useUser } from "@/app/hooks/useUser";
@@ -857,18 +857,19 @@ function Label({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function Input(
-  props: React.InputHTMLAttributes<HTMLInputElement>,
-) {
-  return (
-    <input
-      {...props}
-      className={`w-full rounded-lg border border-border-subtle bg-surface-card px-3 py-2 text-sm text-text-on-light placeholder:text-brand-secondary-0 focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1 ${
-        props.className ?? ""
-      }`}
-    />
-  );
-}
+const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
+  function Input(props, ref) {
+    return (
+      <input
+        {...props}
+        ref={ref}
+        className={`w-full rounded-lg border border-border-subtle bg-surface-card px-3 py-2 text-sm text-text-on-light placeholder:text-brand-secondary-0 focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1 ${
+          props.className ?? ""
+        }`}
+      />
+    );
+  },
+);
 
 function Select(
   props: React.SelectHTMLAttributes<HTMLSelectElement>,
@@ -953,13 +954,20 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
     () => user?.global_role === "admin" || entityUserRole === "admin",
     [entityUserRole, user?.global_role],
   );
-  // Provider-side billing tools need their own private surface.
-  const showInternalBillingTools = false;
+  // Provider-side billing tools are private admin-facing tools.
+  const showInternalBillingTools = canEdit;
 
   const providerEngagements = useMemo(
     () =>
       (snapshot?.serviceEngagements ?? []).filter(
         (engagement) => engagement.current_entity_role === "provider",
+      ),
+    [snapshot?.serviceEngagements],
+  );
+  const clientSideEngagements = useMemo(
+    () =>
+      (snapshot?.serviceEngagements ?? []).filter(
+        (engagement) => engagement.current_entity_role === "client",
       ),
     [snapshot?.serviceEngagements],
   );
@@ -1183,7 +1191,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
       return;
     }
 
-    let focusTimeout: ReturnType<typeof window.setTimeout> | null = null;
+    let focusTimeout: number | null = null;
     const animationFrame = window.requestAnimationFrame(() => {
       recurringTaskEditorRef.current?.scrollIntoView({
         behavior: "smooth",
@@ -1786,6 +1794,14 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
           canCreateProviderEngagement ? openServiceEngagementCreate : undefined
         }
       >
+        {clientSideEngagements.length > 0 ? (
+          <div className="rounded-xl border border-border-subtle bg-surface-inset px-4 py-3 text-sm text-brand-secondary-0">
+            Client-side service relationships can be reviewed here, but provider
+            billing work such as logging time and issuing invoices happens from the
+            provider business page.
+          </div>
+        ) : null}
+
         {editor?.kind === "service_engagement" ? (
           <FormCard
             title={
@@ -2109,6 +2125,13 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
             : undefined
         }
       >
+        {canEdit && providerEngagements.length === 0 && clientSideEngagements.length > 0 ? (
+          <div className="rounded-xl border border-border-subtle bg-surface-inset px-4 py-3 text-sm text-brand-secondary-0">
+            This page is the client side of the engagement, so new time entries are
+            logged from the provider business page.
+          </div>
+        ) : null}
+
         {editor?.kind === "time_entry" ? (
           <FormCard
             title={editor.mode === "edit" ? "Edit time entry" : "Log time"}
@@ -2241,7 +2264,9 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
 
         {providerEngagements.length === 0 && snapshot.timeEntries.length === 0 ? (
           <p className="text-sm text-brand-secondary-0 opacity-70">
-            Add a provider-side engagement before logging time.
+            {clientSideEngagements.length > 0
+              ? "No provider-side engagements are available on this page for new time entries."
+              : "Add a provider-side engagement before logging time."}
           </p>
         ) : snapshot.timeEntries.length === 0 ? (
           <p className="text-sm text-brand-secondary-0 opacity-70">
