@@ -49,7 +49,7 @@ export async function requireEntityAdmin({
 }: EntityScope) {
   const { data, error } = await supabase
     .from("entity_users")
-    .select("role")
+    .select("role, status")
     .eq("entity_id", entityId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -58,7 +58,7 @@ export async function requireEntityAdmin({
     throw new Error(`Failed to check entity_users: ${error.message}`);
   }
 
-  if (!data || data.role !== "admin") {
+  if (!data || data.role !== "admin" || data.status !== "active") {
     throw new Error("Unauthorized");
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "@/app/components/loading-spinner";
 import { useUser } from "@/app/hooks/useUser";
@@ -941,6 +941,8 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
     useState(false);
   const [recurringTaskDocumentInputKey, setRecurringTaskDocumentInputKey] =
     useState(0);
+  const recurringTaskEditorRef = useRef<HTMLDivElement | null>(null);
+  const recurringTaskTitleInputRef = useRef<HTMLInputElement | null>(null);
 
   const entityUserRole = useMemo(
     () => user?.entity_users?.find((eu) => eu.entity_id === entityId)?.role ?? null,
@@ -951,6 +953,8 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
     () => user?.global_role === "admin" || entityUserRole === "admin",
     [entityUserRole, user?.global_role],
   );
+  // Provider-side billing tools need their own private surface.
+  const showInternalBillingTools = false;
 
   const providerEngagements = useMemo(
     () =>
@@ -1173,6 +1177,32 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
       };
     });
   }, [editor, providerEngagements, snapshot?.invoices]);
+
+  useEffect(() => {
+    if (editor?.kind !== "recurring_task") {
+      return;
+    }
+
+    let focusTimeout: ReturnType<typeof window.setTimeout> | null = null;
+    const animationFrame = window.requestAnimationFrame(() => {
+      recurringTaskEditorRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+
+      focusTimeout = window.setTimeout(() => {
+        recurringTaskTitleInputRef.current?.focus({ preventScroll: true });
+        recurringTaskTitleInputRef.current?.select();
+      }, 250);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      if (focusTimeout) {
+        window.clearTimeout(focusTimeout);
+      }
+    };
+  }, [editor?.id, editor?.kind, editor?.mode]);
 
   const submitMutation = async (
     kind: MutationKind,
@@ -1706,6 +1736,8 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
         )}
       </Section>
 
+      {showInternalBillingTools ? (
+        <>
       <Section title="Billing Overview">
         <div className="grid gap-3 md:grid-cols-4">
           <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
@@ -2628,6 +2660,8 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
           </div>
         )}
       </Section>
+        </>
+      ) : null}
 
       <Section
         title={`Systems (${snapshot.systems.length})`}
@@ -3292,40 +3326,50 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
         </div>
 
         {editor?.kind === "recurring_task" ? (
-          <FormCard
-            title={
-              editor.mode === "edit" ? "Edit recurring task" : "Add recurring task"
-            }
-            onCancel={() => setEditor(null)}
-            onSave={() =>
-              submitMutation(
-                "recurring_task",
-                editor.mode === "edit"
-                  ? { id: editor.id, ...recurringTaskDraft }
-                  : recurringTaskDraft,
-                editor.mode === "edit"
-                  ? "Recurring task updated"
-                  : "Recurring task added",
-              )
-            }
-            saving={saving === "recurring_task"}
+          <div
+            ref={recurringTaskEditorRef}
+            className="scroll-mt-28 rounded-2xl border border-brand-accent-1/40 bg-surface-card shadow-sm shadow-brand-accent-1/10"
           >
-            <p className="text-sm text-brand-secondary-0 opacity-80">
-              Use recurring tasks for bills, vendor payments, quarterly
-              distributions, filings, and other operational obligations that keep
-              coming back. The anchor date is the first due date in the schedule.
-            </p>
-            <div className="grid gap-3 md:grid-cols-2">
-              <Label label="Task Title">
-                <Input
-                  value={recurringTaskDraft.title}
-                  onChange={(event) =>
-                    setRecurringTaskDraft((current) => ({
-                      ...current,
-                      title: event.target.value,
-                    }))}
-                />
-              </Label>
+            <FormCard
+              title={
+                editor.mode === "edit" ? "Edit recurring task" : "Add recurring task"
+              }
+              onCancel={() => setEditor(null)}
+              onSave={() =>
+                submitMutation(
+                  "recurring_task",
+                  editor.mode === "edit"
+                    ? { id: editor.id, ...recurringTaskDraft }
+                    : recurringTaskDraft,
+                  editor.mode === "edit"
+                    ? "Recurring task updated"
+                    : "Recurring task added",
+                )
+              }
+              saving={saving === "recurring_task"}
+            >
+              <p className="rounded-lg border border-brand-accent-1/30 bg-brand-accent-1/10 px-3 py-2 text-sm text-text-on-light">
+                {editor.mode === "edit"
+                  ? "Editing mode is open here. Changes save back to the selected task below."
+                  : "Create mode is open here. Add the cadence and first due date to start the schedule."}
+              </p>
+              <p className="text-sm text-brand-secondary-0 opacity-80">
+                Use recurring tasks for bills, vendor payments, quarterly
+                distributions, filings, and other operational obligations that keep
+                coming back. The anchor date is the first due date in the schedule.
+              </p>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Label label="Task Title">
+                  <Input
+                    ref={recurringTaskTitleInputRef}
+                    value={recurringTaskDraft.title}
+                    onChange={(event) =>
+                      setRecurringTaskDraft((current) => ({
+                        ...current,
+                        title: event.target.value,
+                      }))}
+                  />
+                </Label>
               <Label label="Task Type">
                 <Select
                   value={recurringTaskDraft.task_type}
@@ -3437,125 +3481,126 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                   ))}
                 </Select>
               </Label>
-            </div>
-            <label className="flex items-center gap-2 text-sm text-brand-secondary-0">
-              <input
-                type="checkbox"
-                checked={recurringTaskDraft.is_active}
-                onChange={(event) =>
-                  setRecurringTaskDraft((current) => ({
-                    ...current,
-                    is_active: event.target.checked,
-                  }))}
-              />
-              Active recurring task
-            </label>
-            <Label label="Description">
-              <Textarea
-                rows={3}
-                value={recurringTaskDraft.description}
-                onChange={(event) =>
-                  setRecurringTaskDraft((current) => ({
-                    ...current,
-                    description: event.target.value,
-                  }))}
-              />
-            </Label>
-            <Label label="Notes">
-              <Textarea
-                rows={3}
-                value={recurringTaskDraft.notes}
-                onChange={(event) =>
-                  setRecurringTaskDraft((current) => ({
-                    ...current,
-                    notes: event.target.value,
-                  }))}
-              />
-            </Label>
-            <div className="rounded-lg border border-border-subtle bg-surface-card px-4 py-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-text-on-light">
-                    Task Documents
-                  </p>
-                  <p className="text-sm text-brand-secondary-0 opacity-80">
-                    Attach supporting documentation for this recurring task.
-                  </p>
-                </div>
-                {editingRecurringTask ? (
-                  <span className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
-                    {editingRecurringTask.documents.length} attached
-                  </span>
-                ) : null}
               </div>
-
-              {editingRecurringTask ? (
-                <div className="mt-4 space-y-3">
-                  <div className="grid gap-2 md:grid-cols-[1fr_auto]">
-                    <Input
-                      key={recurringTaskDocumentInputKey}
-                      type="file"
-                      onChange={(event) =>
-                        setRecurringTaskDocumentFile(
-                          event.target.files?.[0] ?? null,
-                        )}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => void uploadRecurringTaskDocument()}
-                      disabled={
-                        !recurringTaskDocumentFile || recurringTaskDocumentUploading
-                      }
-                      className="rounded-lg bg-brand-primary-0 px-4 py-2 text-sm font-semibold text-brand-primary-1 shadow-sm transition hover:bg-brand-primary-2 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {recurringTaskDocumentUploading
-                        ? "Uploading..."
-                        : "Upload Document"}
-                    </button>
-                  </div>
-
-                  {editingRecurringTask.documents.length === 0 ? (
-                    <p className="text-sm text-brand-secondary-0 opacity-70">
-                      No documents attached yet.
+              <label className="flex items-center gap-2 text-sm text-brand-secondary-0">
+                <input
+                  type="checkbox"
+                  checked={recurringTaskDraft.is_active}
+                  onChange={(event) =>
+                    setRecurringTaskDraft((current) => ({
+                      ...current,
+                      is_active: event.target.checked,
+                    }))}
+                />
+                Active recurring task
+              </label>
+              <Label label="Description">
+                <Textarea
+                  rows={3}
+                  value={recurringTaskDraft.description}
+                  onChange={(event) =>
+                    setRecurringTaskDraft((current) => ({
+                      ...current,
+                      description: event.target.value,
+                    }))}
+                />
+              </Label>
+              <Label label="Notes">
+                <Textarea
+                  rows={3}
+                  value={recurringTaskDraft.notes}
+                  onChange={(event) =>
+                    setRecurringTaskDraft((current) => ({
+                      ...current,
+                      notes: event.target.value,
+                    }))}
+                />
+              </Label>
+              <div className="rounded-lg border border-border-subtle bg-surface-card px-4 py-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-text-on-light">
+                      Task Documents
                     </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {editingRecurringTask.documents.map((document) => (
-                        <div
-                          key={document.id}
-                          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle bg-surface-inset px-3 py-3"
-                        >
-                          <div>
-                            <p className="text-sm font-semibold text-text-on-light">
-                              {document.title}
-                            </p>
-                            <p className="text-xs text-brand-secondary-0 opacity-70">
-                              Added {formatDate(document.created_at)}
-                            </p>
-                          </div>
-                          {document.signed_url ? (
-                            <a
-                              href={document.signed_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
-                            >
-                              View
-                            </a>
-                          ) : null}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                    <p className="text-sm text-brand-secondary-0 opacity-80">
+                      Attach supporting documentation for this recurring task.
+                    </p>
+                  </div>
+                  {editingRecurringTask ? (
+                    <span className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+                      {editingRecurringTask.documents.length} attached
+                    </span>
+                  ) : null}
                 </div>
-              ) : (
-                <p className="mt-4 text-sm text-brand-secondary-0 opacity-70">
-                  Save the recurring task first, then reopen it to attach
-                  documentation.
-                </p>
-              )}
-            </div>
-          </FormCard>
+
+                {editingRecurringTask ? (
+                  <div className="mt-4 space-y-3">
+                    <div className="grid gap-2 md:grid-cols-[1fr_auto]">
+                      <Input
+                        key={recurringTaskDocumentInputKey}
+                        type="file"
+                        onChange={(event) =>
+                          setRecurringTaskDocumentFile(
+                            event.target.files?.[0] ?? null,
+                          )}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void uploadRecurringTaskDocument()}
+                        disabled={
+                          !recurringTaskDocumentFile || recurringTaskDocumentUploading
+                        }
+                        className="rounded-lg bg-brand-primary-0 px-4 py-2 text-sm font-semibold text-brand-primary-1 shadow-sm transition hover:bg-brand-primary-2 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {recurringTaskDocumentUploading
+                          ? "Uploading..."
+                          : "Upload Document"}
+                      </button>
+                    </div>
+
+                    {editingRecurringTask.documents.length === 0 ? (
+                      <p className="text-sm text-brand-secondary-0 opacity-70">
+                        No documents attached yet.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {editingRecurringTask.documents.map((document) => (
+                          <div
+                            key={document.id}
+                            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle bg-surface-inset px-3 py-3"
+                          >
+                            <div>
+                              <p className="text-sm font-semibold text-text-on-light">
+                                {document.title}
+                              </p>
+                              <p className="text-xs text-brand-secondary-0 opacity-70">
+                                Added {formatDate(document.created_at)}
+                              </p>
+                            </div>
+                            {document.signed_url ? (
+                              <a
+                                href={document.signed_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                              >
+                                View
+                              </a>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-4 text-sm text-brand-secondary-0 opacity-70">
+                    Save the recurring task first, then reopen it to attach
+                    documentation.
+                  </p>
+                )}
+              </div>
+            </FormCard>
+          </div>
         ) : null}
 
         {recurringTaskViews.length === 0 ? (
@@ -3567,7 +3612,11 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
             {recurringTaskViews.map((view) => (
               <div
                 key={view.task.id}
-                className="rounded-xl border border-border-subtle bg-surface-inset p-3"
+                className={`rounded-xl border bg-surface-inset p-3 transition ${
+                  editor?.kind === "recurring_task" && editor.id === view.task.id
+                    ? "border-brand-accent-1 ring-2 ring-brand-accent-1/30"
+                    : "border-border-subtle"
+                }`}
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -3587,9 +3636,15 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                       <button
                         type="button"
                         onClick={() => openRecurringTaskEdit(view.task)}
-                        className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                        className={`rounded-lg border bg-surface-card px-3 py-1.5 text-xs font-semibold transition hover:bg-surface-page ${
+                          editor?.kind === "recurring_task" && editor.id === view.task.id
+                            ? "border-brand-accent-1 text-brand-accent-1"
+                            : "border-border-subtle text-text-on-light"
+                        }`}
                       >
-                        Edit
+                        {editor?.kind === "recurring_task" && editor.id === view.task.id
+                          ? "Editing"
+                          : "Edit"}
                       </button>
                     ) : null}
                     {canEdit ? (
