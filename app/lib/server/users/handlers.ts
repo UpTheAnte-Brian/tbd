@@ -3,16 +3,19 @@ import "server-only";
 import type { NextRequest } from "next/server";
 import {
   getServerClient,
+  getUserOrThrow,
   jsonError,
   jsonOk,
   parseEntityId,
 } from "@/app/lib/server/route-context";
+import { isGlobalAdmin, requireEntityAdmin } from "@/app/lib/server/rbac";
 import {
   deleteEntityUser,
   getEntityUsers,
   upsertEntityUser,
 } from "@/app/lib/server/entities";
 import type { EntityUserRole, EntityUserStatus } from "@/domain/entities/types";
+import { supabaseAdmin } from "@/utils/supabase/service-worker";
 
 interface EntityUsersRouteParams {
   params: Promise<{ id: string }>;
@@ -26,13 +29,22 @@ export async function handleEntityUsersGet(
 
   try {
     const entityId = await parseEntityId(supabase, context.params);
-    const users = await getEntityUsers(supabase, entityId);
+    const user = await getUserOrThrow(supabase);
+    const globalAdmin = await isGlobalAdmin(supabase, user);
+    if (!globalAdmin) {
+      await requireEntityAdmin({ supabase, userId: user.id, entityId });
+    }
+
+    const users = await getEntityUsers(supabaseAdmin, entityId);
     return jsonOk(users);
   } catch (err) {
     const message = err instanceof Error
       ? err.message
       : "Failed to load entity users";
-    const status = message.toLowerCase().includes("entity not found")
+    const lower = message.toLowerCase();
+    const status = lower.includes("unauthorized")
+      ? 403
+      : lower.includes("entity not found")
       ? 404
       : 500;
     return jsonError(message, status);
@@ -80,19 +92,28 @@ export async function handleEntityUsersPost(
 
   try {
     const entityId = await parseEntityId(supabase, context.params);
-    const user = await upsertEntityUser(
-      supabase,
+    const user = await getUserOrThrow(supabase);
+    const globalAdmin = await isGlobalAdmin(supabase, user);
+    if (!globalAdmin) {
+      await requireEntityAdmin({ supabase, userId: user.id, entityId });
+    }
+
+    const entityUser = await upsertEntityUser(
+      supabaseAdmin,
       entityId,
       body.userId,
       body.role,
       status,
     );
-    return jsonOk(user, { status: 201 });
+    return jsonOk(entityUser, { status: 201 });
   } catch (err) {
     const message = err instanceof Error
       ? err.message
       : "Failed to update entity user";
-    const statusCode = message.toLowerCase().includes("entity not found")
+    const lower = message.toLowerCase();
+    const statusCode = lower.includes("unauthorized")
+      ? 403
+      : lower.includes("entity not found")
       ? 404
       : 500;
     return jsonError(message, statusCode);
@@ -113,13 +134,22 @@ export async function handleEntityUsersDelete(
 
   try {
     const entityId = await parseEntityId(supabase, context.params);
-    await deleteEntityUser(supabase, entityId, userId);
+    const user = await getUserOrThrow(supabase);
+    const globalAdmin = await isGlobalAdmin(supabase, user);
+    if (!globalAdmin) {
+      await requireEntityAdmin({ supabase, userId: user.id, entityId });
+    }
+
+    await deleteEntityUser(supabaseAdmin, entityId, userId);
     return jsonOk({ success: true });
   } catch (err) {
     const message = err instanceof Error
       ? err.message
       : "Failed to delete entity user";
-    const status = message.toLowerCase().includes("entity not found")
+    const lower = message.toLowerCase();
+    const status = lower.includes("unauthorized")
+      ? 403
+      : lower.includes("entity not found")
       ? 404
       : 500;
     return jsonError(message, status);

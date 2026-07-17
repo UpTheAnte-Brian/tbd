@@ -9,13 +9,19 @@ import { getCurrentProfile } from "@/app/data/users";
 import UserProviderClient from "@/app/providers/UserProviderClient";
 import BrandingDebug from "@/app/components/branding/BrandingDebug";
 import AppEnvBanner from "@/app/components/AppEnvBanner";
+import type { Metadata } from "next";
+import config from "@/config";
 
-// This sets the title on your browser tab.
-// export const metadata = {
-//   title: "Home",
-//   // description: "Ante Up Nation",
-//   description: "React Skills developkment",
-// };
+export const metadata: Metadata = {
+  title: {
+    default: config.appName,
+    template: `%s | ${config.appName}`,
+  },
+  description: config.appDescription,
+  icons: {
+    icon: "/community-pockets-mark.svg",
+  },
+};
 
 export default async function RootLayout({
   children,

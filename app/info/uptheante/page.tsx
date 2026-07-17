@@ -81,8 +81,8 @@ export default function UpTheAntePage() {
                 Service agreement transparency
               </h2>
               <p className="mt-3 text-base text-brand-primary-1">
-                Technology and operational support are provided by Ante Up
-                Nation under a service agreement.
+                Technology and operational support are provided by Community
+                Pockets under a service agreement.
               </p>
             </div>
           </section>

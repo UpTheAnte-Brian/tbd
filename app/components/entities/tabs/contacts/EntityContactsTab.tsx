@@ -4,6 +4,7 @@ import type { FormEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "@/app/components/loading-spinner";
+import AccordionCard from "@/app/components/user/AccordionCard";
 import type {
   EntityContactSummary,
   EntityContactsResponse,
@@ -229,6 +230,7 @@ export default function EntityContactsTab({
     "all",
   );
   const [createDraft, setCreateDraft] = useState<ContactDraft>(EMPTY_DRAFT);
+  const [createPanelVersion, setCreatePanelVersion] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDrafts, setEditDrafts] = useState<Record<string, ContactDraft>>({});
@@ -338,6 +340,7 @@ export default function EntityContactsTab({
       }
       toast.success("Contact added");
       setCreateDraft(EMPTY_DRAFT);
+      setCreatePanelVersion((current) => current + 1);
       await fetchContacts();
     } catch (err) {
       const message =
@@ -470,24 +473,21 @@ export default function EntityContactsTab({
       </section>
 
       {canManageContacts ? (
-        <section className="rounded-[24px] border border-border-subtle bg-surface-card p-5 shadow-sm">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-text-on-light">
-              Add Contact
-            </h3>
-            <p className="mt-1 text-sm text-brand-secondary-0 opacity-80">
+        <AccordionCard key={createPanelVersion} title="Add Contact">
+          <div className="space-y-4">
+            <p className="text-sm text-brand-secondary-0 opacity-80">
               Create manual relationship records for the offices and people you
               work with regularly.
             </p>
+            <ContactEditor
+              draft={createDraft}
+              onChange={updateCreateDraft}
+              onSubmit={handleCreate}
+              submitLabel="Add contact"
+              busy={submitting}
+            />
           </div>
-          <ContactEditor
-            draft={createDraft}
-            onChange={updateCreateDraft}
-            onSubmit={handleCreate}
-            submitLabel="Add contact"
-            busy={submitting}
-          />
-        </section>
+        </AccordionCard>
       ) : null}
 
       {filteredContacts.length ? (
@@ -501,176 +501,185 @@ export default function EntityContactsTab({
                 key={contact.id}
                 className="rounded-[24px] border border-border-subtle bg-surface-card p-5 shadow-sm"
               >
-                {isEditing ? (
-                  <div className="space-y-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <div className="text-lg font-semibold text-text-on-light">
-                          Edit contact
-                        </div>
-                        <div className="text-sm text-brand-secondary-0 opacity-80">
-                          Manual records can be updated in place.
-                        </div>
-                      </div>
-                      <SourceBadge contact={contact} />
-                    </div>
-                    <ContactEditor
-                      draft={draft}
-                      onChange={(field, value) =>
-                        updateEditDraft(contact.id, field, value)}
-                      onSubmit={(event) => {
-                        event.preventDefault();
-                        void handleSave(contact.id);
-                      }}
-                      onCancel={() => {
-                        setEditDrafts((current) => ({
-                          ...current,
-                          [contact.id]: toDraft(contact),
-                        }));
-                        setEditingId(null);
-                      }}
-                      submitLabel="Save changes"
-                      busy={savingId === contact.id}
-                    />
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-lg font-semibold text-text-on-light">
-                            {contact.name ?? contact.email ?? "Unnamed contact"}
-                          </h3>
-                          <span className="rounded-full bg-surface-nav px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-text-on-dark">
-                            {contact.contact_role}
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-lg font-semibold text-text-on-light">
+                          {contact.name ?? contact.email ?? "Unnamed contact"}
+                        </h3>
+                        <span className="rounded-full bg-surface-nav px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-text-on-dark">
+                          {contact.contact_role}
+                        </span>
+                        {contact.office_label ? (
+                          <span className="rounded-full border border-border-subtle bg-surface-page px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-text-on-light">
+                            {contact.office_label}
                           </span>
-                          {contact.office_label ? (
-                            <span className="rounded-full border border-border-subtle bg-surface-page px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-text-on-light">
-                              {contact.office_label}
-                            </span>
-                          ) : null}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-brand-secondary-0 opacity-80">
-                          <SourceBadge contact={contact} />
-                          <span>Last touched {formatDate(contact.last_seen_at)}</span>
-                        </div>
+                        ) : null}
                       </div>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-brand-secondary-0 opacity-80">
+                        <SourceBadge contact={contact} />
+                        <span>Last touched {formatDate(contact.last_seen_at)}</span>
+                      </div>
+                    </div>
 
-                      {canManageContacts && contact.is_manual ? (
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
+                    {canManageContacts && contact.is_manual ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isEditing) {
                               setEditDrafts((current) => ({
                                 ...current,
                                 [contact.id]: toDraft(contact),
                               }));
-                              setEditingId(contact.id);
-                            }}
-                            className="inline-flex items-center rounded-full border border-border-subtle bg-surface-page px-3 py-1.5 text-sm font-semibold text-text-on-light transition hover:bg-surface-inset"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void handleDelete(contact)}
-                            disabled={deletingId === contact.id}
-                            className="inline-flex items-center rounded-full border border-brand-primary-2 px-3 py-1.5 text-sm font-semibold text-brand-primary-2 transition hover:bg-brand-primary-2 hover:text-text-on-dark disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {deletingId === contact.id ? "Deleting..." : "Delete"}
-                          </button>
-                        </div>
-                      ) : null}
-                    </div>
+                              setEditingId(null);
+                              return;
+                            }
 
-                    <div className="grid gap-3 text-sm text-text-on-light md:grid-cols-2">
-                      <div className="rounded-2xl bg-surface-page p-3">
-                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-secondary-0 opacity-70">
-                          Email
-                        </div>
-                        <div className="mt-1 break-all">
-                          {contact.email ? (
-                            <a
-                              href={`mailto:${contact.email}`}
-                              className="text-brand-primary-0 underline-offset-2 hover:underline"
-                            >
-                              {contact.email}
-                            </a>
-                          ) : (
-                            "—"
-                          )}
-                        </div>
-                      </div>
-                      <div className="rounded-2xl bg-surface-page p-3">
-                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-secondary-0 opacity-70">
-                          Phone
-                        </div>
-                        <div className="mt-1">
-                          {contact.phone ? (
-                            <a
-                              href={`tel:${contact.phone}`}
-                              className="text-brand-primary-0 underline-offset-2 hover:underline"
-                            >
-                              {contact.phone}
-                            </a>
-                          ) : (
-                            "—"
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {contact.relationship_summary ? (
-                      <div>
-                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-secondary-0 opacity-70">
-                          Relationship
-                        </div>
-                        <p className="mt-1 text-sm leading-6 text-text-on-light">
-                          {contact.relationship_summary}
-                        </p>
-                      </div>
-                    ) : null}
-
-                    {contact.notes ? (
-                      <div>
-                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-secondary-0 opacity-70">
-                          Notes
-                        </div>
-                        <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-text-on-light">
-                          {contact.notes}
-                        </p>
-                      </div>
-                    ) : null}
-
-                    {contact.tags.length ? (
-                      <div className="flex flex-wrap gap-2">
-                        {contact.tags.map((tag) => (
-                          <span
-                            key={`${contact.id}-${tag}`}
-                            className="rounded-full bg-surface-nav px-2.5 py-1 text-xs font-semibold text-text-on-dark"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    ) : null}
-
-                    {!contact.is_manual && contact.source_url ? (
-                      <div className="text-sm text-brand-secondary-0 opacity-80">
-                        Imported from{" "}
-                        <a
-                          href={contact.source_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-brand-primary-0 underline-offset-2 hover:underline"
+                            setEditDrafts((current) => ({
+                              ...current,
+                              [contact.id]: toDraft(contact),
+                            }));
+                            setEditingId(contact.id);
+                          }}
+                          className="inline-flex items-center rounded-full border border-border-subtle bg-surface-page px-3 py-1.5 text-sm font-semibold text-text-on-light transition hover:bg-surface-inset"
                         >
-                          source record
-                        </a>
-                        .
+                          {isEditing ? "Close edit" : "Edit"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleDelete(contact)}
+                          disabled={deletingId === contact.id}
+                          className="inline-flex items-center rounded-full border border-brand-primary-2 px-3 py-1.5 text-sm font-semibold text-brand-primary-2 transition hover:bg-brand-primary-2 hover:text-text-on-dark disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {deletingId === contact.id ? "Deleting..." : "Delete"}
+                        </button>
                       </div>
                     ) : null}
                   </div>
-                )}
+
+                  <div className="grid gap-3 text-sm text-text-on-light md:grid-cols-2">
+                    <div className="rounded-2xl bg-surface-page p-3">
+                      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-secondary-0 opacity-70">
+                        Email
+                      </div>
+                      <div className="mt-1 break-all">
+                        {contact.email ? (
+                          <a
+                            href={`mailto:${contact.email}`}
+                            className="text-brand-primary-0 underline-offset-2 hover:underline"
+                          >
+                            {contact.email}
+                          </a>
+                        ) : (
+                          "—"
+                        )}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl bg-surface-page p-3">
+                      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-secondary-0 opacity-70">
+                        Phone
+                      </div>
+                      <div className="mt-1">
+                        {contact.phone ? (
+                          <a
+                            href={`tel:${contact.phone}`}
+                            className="text-brand-primary-0 underline-offset-2 hover:underline"
+                          >
+                            {contact.phone}
+                          </a>
+                        ) : (
+                          "—"
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {contact.relationship_summary ? (
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-secondary-0 opacity-70">
+                        Relationship
+                      </div>
+                      <p className="mt-1 text-sm leading-6 text-text-on-light">
+                        {contact.relationship_summary}
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {contact.notes ? (
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-secondary-0 opacity-70">
+                        Notes
+                      </div>
+                      <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-text-on-light">
+                        {contact.notes}
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {contact.tags.length ? (
+                    <div className="flex flex-wrap gap-2">
+                      {contact.tags.map((tag) => (
+                        <span
+                          key={`${contact.id}-${tag}`}
+                          className="rounded-full bg-surface-nav px-2.5 py-1 text-xs font-semibold text-text-on-dark"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {!contact.is_manual && contact.source_url ? (
+                    <div className="text-sm text-brand-secondary-0 opacity-80">
+                      Imported from{" "}
+                      <a
+                        href={contact.source_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-brand-primary-0 underline-offset-2 hover:underline"
+                      >
+                        source record
+                      </a>
+                      .
+                    </div>
+                  ) : null}
+
+                  {isEditing ? (
+                    <div className="rounded-[20px] border border-border-subtle bg-surface-page p-4">
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <div className="text-sm font-semibold uppercase tracking-[0.16em] text-text-on-light">
+                            Edit Contact
+                          </div>
+                          <div className="mt-1 text-sm text-brand-secondary-0 opacity-80">
+                            Manual records stay collapsed until you open them.
+                          </div>
+                        </div>
+                        <SourceBadge contact={contact} />
+                      </div>
+                      <ContactEditor
+                        draft={draft}
+                        onChange={(field, value) =>
+                          updateEditDraft(contact.id, field, value)}
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          void handleSave(contact.id);
+                        }}
+                        onCancel={() => {
+                          setEditDrafts((current) => ({
+                            ...current,
+                            [contact.id]: toDraft(contact),
+                          }));
+                          setEditingId(null);
+                        }}
+                        submitLabel="Save changes"
+                        busy={savingId === contact.id}
+                      />
+                    </div>
+                  ) : null}
+                </div>
               </article>
             );
           })}

@@ -12,7 +12,7 @@ type Slide = {
 const SLIDES: Slide[] = [
   {
     title: "Governance Modernization for District-Affiliated Nonprofits",
-    subtitle: "Ante Up Nation, LLC\nBrian Johnson, Founder",
+    subtitle: "Community Pockets, LLC\nBrian Johnson, Founder",
   },
   {
     title: "The Current Landscape",
@@ -82,7 +82,7 @@ const SLIDES: Slide[] = [
   {
     title: "How We Deliver",
     body: [
-      "Ante Up Nation utilizes a structured governance infrastructure platform to:",
+      "Community Pockets utilizes a structured governance infrastructure platform to:",
     ],
     bullets: [
       "Ingest IRS return data",

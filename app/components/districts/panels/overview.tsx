@@ -24,7 +24,7 @@ export default function DistrictOverview({
           <ul className="list-disc list-inside space-y-1">
             <li>Foundation and other local charities</li>
             <li>
-              Calendar of Events – Ante Up Nation could layer in
+              Calendar of Events – Community Pockets could layer in
               campaign-related events and dates.
             </li>
             <li>

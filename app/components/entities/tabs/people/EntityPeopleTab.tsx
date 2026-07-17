@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "@/app/components/loading-spinner";
 import { SmallAvatar } from "@/app/components/ui/avatar";
@@ -99,6 +99,8 @@ interface Props {
 export default function EntityPeopleTab({ entityId, entityType }: Props) {
   const { user } = useUser();
   const isPlatformAdmin = user?.global_role === "admin";
+  const peopleSupported =
+    entityType === "nonprofit" || entityType === "district";
   const [people, setPeople] = useState<PersonRole[]>([]);
   const [invites, setInvites] = useState<InviteRow[]>([]);
   const [entityUserCount, setEntityUserCount] = useState<number>(0);
@@ -163,7 +165,32 @@ export default function EntityPeopleTab({ entityId, entityType }: Props) {
     [people],
   );
 
-  async function fetchPeople() {
+  const filteredPeople = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return (people ?? []).filter((person) => {
+      if (statusFilter !== "all" && person.invite_status !== statusFilter) {
+        return false;
+      }
+      if (officerFilter === "officer" && !person.is_officer) {
+        return false;
+      }
+      if (officerFilter === "non_officer" && person.is_officer) {
+        return false;
+      }
+      if (!term) return true;
+      const haystack = [
+        person.display_name,
+        person.role_title ?? "",
+        person.email ?? "",
+        person.phone ?? "",
+      ]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(term);
+    });
+  }, [people, officerFilter, search, statusFilter]);
+
+  const fetchPeople = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch(`/api/entities/${entityId}/people`, {
@@ -195,36 +222,23 @@ export default function EntityPeopleTab({ entityId, entityType }: Props) {
     } finally {
       setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    fetchPeople();
   }, [entityId]);
 
-  const filteredPeople = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return (people ?? []).filter((person) => {
-      if (statusFilter !== "all" && person.invite_status !== statusFilter) {
-        return false;
-      }
-      if (officerFilter === "officer" && !person.is_officer) {
-        return false;
-      }
-      if (officerFilter === "non_officer" && person.is_officer) {
-        return false;
-      }
-      if (!term) return true;
-      const haystack = [
-        person.display_name,
-        person.role_title ?? "",
-        person.email ?? "",
-        person.phone ?? "",
-      ]
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(term);
-    });
-  }, [people, officerFilter, search, statusFilter]);
+  useEffect(() => {
+    if (!peopleSupported) {
+      setLoading(false);
+      return;
+    }
+    fetchPeople();
+  }, [fetchPeople, peopleSupported]);
+
+  if (!peopleSupported) {
+    return (
+      <div className="rounded-xl border border-dashed border-border-subtle bg-surface-card p-4 text-sm text-brand-secondary-0">
+        People is only available for nonprofits and districts.
+      </div>
+    );
+  }
 
   async function savePerson(personId: string) {
     const values = editValues[personId];

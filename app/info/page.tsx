@@ -14,7 +14,7 @@ export default function InformationPage() {
                 Structure and transparency
               </p>
               <h1 className="mt-4 font-brand-heading text-4xl font-semibold leading-tight md:text-5xl">
-                How Ante Up Nation and Up the Ante work together
+                How Community Pockets and Up the Ante work together
               </h1>
               <p className="mt-4 text-lg text-brand-secondary-0">
                 Local fundraising works best when infrastructure is shared.
@@ -75,7 +75,7 @@ export default function InformationPage() {
                   For-profit operator
                 </p>
                 <h3 className="mt-2 font-brand-heading text-xl font-semibold text-brand-primary-0">
-                  Ante Up Nation (LLC)
+                  Community Pockets (LLC)
                 </h3>
                 <ul className="mt-4 space-y-3 text-sm text-brand-primary-1">
                   <li>Builds and maintains the software platform.</li>

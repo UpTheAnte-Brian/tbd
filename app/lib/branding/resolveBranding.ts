@@ -112,7 +112,7 @@ export const DEFAULT_BRAND_TYPOGRAPHY: BrandTypographyTokens = {
   logo: "Inter",
 };
 
-export const DEFAULT_ENTITY_LOGO_URL = "/logo.webp";
+export const DEFAULT_ENTITY_LOGO_URL = "/community-pockets-mark.svg";
 
 const fillPalette = (
   role: PaletteRole,

@@ -87,9 +87,7 @@ const ENTITY_TABS: EntityTabDefinition[] = [
     key: "users",
     label: "Users",
     order: 50,
-    isVisible: (context) =>
-      Boolean(context.canManageUsersForEntity) &&
-      context.entityType !== "nonprofit",
+    isVisible: (context) => Boolean(context.canManageUsersForEntity),
   },
   {
     key: "governance",

@@ -61,10 +61,11 @@ export default function VhenDiagram({
           viewBox="0 0 900 520"
           className="h-auto w-full"
         >
-          <title id={`${svgId}-title`}>Ante Up Nation relationships</title>
+          <title id={`${svgId}-title`}>Community Pockets relationships</title>
           <desc id={`${svgId}-desc`}>
             A Venn-style illustration showing Nonprofits, Businesses, and
-            District Leadership inside the Ante Up Nation sphere of influence,
+            District Leadership inside the Community Pockets sphere of
+            influence,
             with Up the Ante (future Charity) pointing into the shared overlap.
           </desc>
 
@@ -199,7 +200,7 @@ export default function VhenDiagram({
               className="fill-main"
             />
             <text x="105" y="420" className="label-text">
-              Ante Up Nation
+              Community Pockets
             </text>
             <text x="105" y="452" className="label-text">
               Sphere&apos;s of Influence

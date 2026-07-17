@@ -1,22 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import LoadingSpinner from "@/app/components/loading-spinner";
 import { SmallAvatar } from "@/app/components/ui/avatar";
 import { toast } from "react-hot-toast";
 import type { EntityUser } from "@/domain/entities/types";
+import type { EntityType, EntityUserRole } from "@/domain/entities/types";
 
 interface Props {
   entityId: string;
+  entityType: EntityType | null;
 }
 
-export default function EntityUsersTab({ entityId }: Props) {
+export default function EntityUsersTab({ entityId, entityType }: Props) {
   const [users, setUsers] = useState<EntityUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [inviting, setInviting] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<EntityUserRole>("viewer");
+  const [inviteToken, setInviteToken] = useState<{
+    email: string;
+    token: string;
+  } | null>(null);
 
   const [newUserId, setNewUserId] = useState("");
-  const [newRole, setNewRole] = useState("viewer");
+  const [newRole, setNewRole] = useState<EntityUserRole>("viewer");
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState<
     { id: string; full_name: string | null; avatar_url: string | null }[]
@@ -30,7 +39,7 @@ export default function EntityUsersTab({ entityId }: Props) {
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  async function fetchUsers() {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch(`/api/entities/${entityId}/users`);
@@ -44,11 +53,11 @@ export default function EntityUsersTab({ entityId }: Props) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [entityId]);
 
   useEffect(() => {
     fetchUsers();
-  }, [entityId]);
+  }, [fetchUsers]);
 
   async function addUser() {
     try {
@@ -78,6 +87,45 @@ export default function EntityUsersTab({ entityId }: Props) {
       toast.error(message);
     } finally {
       setAdding(false);
+    }
+  }
+
+  async function inviteUser() {
+    const email = inviteEmail.trim().toLowerCase();
+    if (!email) {
+      toast.error("Email is required");
+      return;
+    }
+
+    try {
+      setInviting(true);
+      const res = await fetch(`/api/entities/${entityId}/people/invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          desiredRole: inviteRole,
+        }),
+      });
+
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body?.error ?? "Failed to invite user");
+      }
+
+      setInviteToken({
+        email,
+        token: body.rawToken as string,
+      });
+      setInviteEmail("");
+      setInviteRole("viewer");
+      toast.success("Invite created");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Failed to invite user";
+      toast.error(message);
+    } finally {
+      setInviting(false);
     }
   }
 
@@ -143,11 +191,65 @@ export default function EntityUsersTab({ entityId }: Props) {
       </h2>
       <p className="text-sm text-brand-secondary-0 opacity-70">
         Governance roles are managed separately. Use this list for operational
-        access (admin, editor, viewer, employee).
+        access (admin, editor, viewer, employee). Invited users appear here
+        after they accept.
       </p>
 
       <div className="space-y-4 rounded-2xl border border-border-subtle bg-surface-card p-5 shadow-sm">
-        <h3 className="text-lg font-semibold text-text-on-light">Add User</h3>
+        <h3 className="text-lg font-semibold text-text-on-light">
+          Invite User
+        </h3>
+
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-end">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-text-on-light">
+              Email
+            </label>
+            <input
+              type="email"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              className="w-full rounded-lg border border-border-subtle bg-surface-inset p-2.5 text-text-on-light placeholder:text-brand-secondary-0 focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1"
+              placeholder="name@domain.com"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-text-on-light">
+              Role
+            </label>
+            <select
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value as EntityUserRole)}
+              className="w-full rounded-lg border border-border-subtle bg-surface-inset p-2.5 text-text-on-light focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1"
+            >
+              <option value="viewer">Viewer</option>
+              <option value="editor">Editor</option>
+              <option value="admin">Admin</option>
+              <option value="employee">Employee</option>
+            </select>
+          </div>
+
+          <button
+            onClick={inviteUser}
+            disabled={inviting || !inviteEmail.trim()}
+            className="rounded-lg bg-surface-accent px-4 py-2 font-semibold text-text-on-dark transition hover:bg-brand-primary-2 disabled:cursor-not-allowed disabled:bg-surface-inset disabled:text-brand-secondary-0"
+          >
+            {inviting ? <LoadingSpinner /> : "Invite User"}
+          </button>
+        </div>
+
+        <p className="text-xs text-brand-secondary-0 opacity-70">
+          {entityType === "nonprofit" || entityType === "district"
+            ? "Use People for IRS-derived invite candidates. Use this form for direct operational access invites."
+            : "Use this form when the person is not already a platform user."}
+        </p>
+      </div>
+
+      <div className="space-y-4 rounded-2xl border border-border-subtle bg-surface-card p-5 shadow-sm">
+        <h3 className="text-lg font-semibold text-text-on-light">
+          Add Existing User
+        </h3>
 
         <div className="relative">
           <input
@@ -252,7 +354,7 @@ export default function EntityUsersTab({ entityId }: Props) {
           </label>
           <select
             value={newRole}
-            onChange={(e) => setNewRole(e.target.value)}
+            onChange={(e) => setNewRole(e.target.value as EntityUserRole)}
             className="w-full rounded-lg border border-border-subtle bg-surface-inset p-2.5 text-text-on-light focus:border-brand-accent-1 focus:outline-none focus:ring-2 focus:ring-brand-accent-1"
           >
             <option value="viewer">Viewer</option>
@@ -267,7 +369,7 @@ export default function EntityUsersTab({ entityId }: Props) {
           disabled={adding || !newUserId}
           className="rounded-lg bg-surface-accent px-4 py-2 font-semibold text-text-on-dark transition hover:bg-brand-primary-2 disabled:cursor-not-allowed disabled:bg-surface-inset disabled:text-brand-secondary-0"
         >
-          {adding ? <LoadingSpinner /> : "Add User"}
+          {adding ? <LoadingSpinner /> : "Add Existing User"}
         </button>
       </div>
 
@@ -325,6 +427,42 @@ export default function EntityUsersTab({ entityId }: Props) {
           ))
         )}
       </div>
+
+      {inviteToken ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-5 text-gray-900 shadow-lg">
+            <h3 className="text-lg font-semibold">Invite Token</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              Share this token with {inviteToken.email}. This is a dev-only
+              display.
+            </p>
+            <div className="mt-3 rounded border border-gray-200 bg-gray-50 p-3 font-mono text-sm">
+              {inviteToken.token}
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(inviteToken.token);
+                    toast.success("Copied token");
+                  } catch {
+                    toast.error("Failed to copy token");
+                  }
+                }}
+                className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700"
+              >
+                Copy
+              </button>
+              <button
+                onClick={() => setInviteToken(null)}
+                className="rounded bg-gray-900 px-3 py-2 text-sm text-white"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

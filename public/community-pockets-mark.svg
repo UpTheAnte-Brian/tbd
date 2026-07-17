@@ -1,0 +1,26 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="loopBlue" x1="28" y1="54" x2="228" y2="206" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2E648A"/>
+      <stop offset="1" stop-color="#123B5A"/>
+    </linearGradient>
+    <linearGradient id="loopGold" x1="92" y1="34" x2="164" y2="216" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E9CD82"/>
+      <stop offset="1" stop-color="#C3973F"/>
+    </linearGradient>
+    <linearGradient id="pocketFill" x1="112" y1="112" x2="144" y2="172" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B86F45"/>
+      <stop offset="1" stop-color="#7E4529"/>
+    </linearGradient>
+  </defs>
+  <path d="M90 46C55.8 46 28 73.8 28 108C28 142.2 55.8 170 90 170H111.5C98.1 160.8 88.4 146.5 84.7 129.9H90C102.6 129.9 113 119.7 113 107.1C113 94.5 102.6 84.3 90 84.3H83.7C91.1 70.7 105 61.5 121 61.5H150.3C161.3 54.9 173.6 50.8 186.7 49.6C175.7 47.2 163.4 46 150 46H90Z" fill="url(#loopBlue)"/>
+  <path d="M166 46C200.2 46 228 73.8 228 108C228 142.2 200.2 170 166 170H144.5C157.9 160.8 167.6 146.5 171.3 129.9H166C153.4 129.9 143 119.7 143 107.1C143 94.5 153.4 84.3 166 84.3H172.3C164.9 70.7 151 61.5 135 61.5H105.7C94.7 54.9 82.4 50.8 69.3 49.6C80.3 47.2 92.6 46 106 46H166Z" fill="url(#loopBlue)"/>
+  <path d="M128.2 29C153.4 41.7 170.7 67.8 170.7 98C170.7 135.8 143.3 168.1 107.2 174.3C116 168.2 122.5 159 125.4 148.3C129.4 133.7 127 117.6 118.9 104.9C111.8 93.8 110 80 113.9 67.2C116.8 53.6 122 40.9 128.2 29Z" fill="url(#loopGold)"/>
+  <path d="M127.8 227C102.6 214.3 85.3 188.2 85.3 158C85.3 120.2 112.7 87.9 148.8 81.7C140 87.8 133.5 97 130.6 107.7C126.6 122.3 129 138.4 137.1 151.1C144.2 162.2 146 176 142.1 188.8C139.2 202.4 134 215.1 127.8 227Z" fill="url(#loopGold)"/>
+  <path d="M128 72L151 94H138V121H118V94H105L128 72Z" fill="url(#loopGold)"/>
+  <path d="M104 116.5C104 111.8 107.8 108 112.5 108H143.5C148.2 108 152 111.8 152 116.5V146.4C152 150.4 149.4 154 145.6 155.2L130.5 160.1C128.9 160.6 127.1 160.6 125.5 160.1L110.4 155.2C106.6 154 104 150.4 104 146.4V116.5Z" fill="url(#pocketFill)"/>
+  <path d="M111 119H145C146.7 119 148 120.3 148 122V145.1C148 147.5 146.4 149.7 144.1 150.4L129.6 155.1C128.6 155.4 127.4 155.4 126.4 155.1L111.9 150.4C109.6 149.7 108 147.5 108 145.1V122C108 120.3 109.3 119 111 119Z" stroke="#F2D7A1" stroke-width="2.4"/>
+  <path d="M118 142L128 148L138 142" stroke="#F2D7A1" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M114 126H117" stroke="#F2D7A1" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M139 126H142" stroke="#F2D7A1" stroke-width="2.4" stroke-linecap="round"/>
+</svg>

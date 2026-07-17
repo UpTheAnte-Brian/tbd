@@ -91,7 +91,12 @@ export default function EntityPanelContent({
           />
         );
       case "users":
-        return <EntityUsersTab entityId={entityId} />;
+        return (
+          <EntityUsersTab
+            entityId={entityId}
+            entityType={entityType}
+          />
+        );
       case "irs":
         return <EntityIrsTab entityId={entityId} />;
       case "superintendent":
