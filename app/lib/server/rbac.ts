@@ -11,6 +11,26 @@ type EntityScope = {
   entityId: string;
 };
 
+async function requireEntityRoleInSet(
+  { supabase, userId, entityId }: EntityScope,
+  allowedRoles: ReadonlySet<Database["public"]["Tables"]["entity_users"]["Row"]["role"]>,
+) {
+  const { data, error } = await supabase
+    .from("entity_users")
+    .select("role, status")
+    .eq("entity_id", entityId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to check entity_users: ${error.message}`);
+  }
+
+  if (!data || !allowedRoles.has(data.role) || data.status !== "active") {
+    throw new Error("Unauthorized");
+  }
+}
+
 export async function isGlobalAdmin(
   supabase: SupabaseClient<Database>,
   user?: AuthUser
@@ -47,20 +67,21 @@ export async function requireEntityAdmin({
   userId,
   entityId,
 }: EntityScope) {
-  const { data, error } = await supabase
-    .from("entity_users")
-    .select("role, status")
-    .eq("entity_id", entityId)
-    .eq("user_id", userId)
-    .maybeSingle();
+  await requireEntityRoleInSet(
+    { supabase, userId, entityId },
+    new Set(["admin"]),
+  );
+}
 
-  if (error) {
-    throw new Error(`Failed to check entity_users: ${error.message}`);
-  }
-
-  if (!data || data.role !== "admin" || data.status !== "active") {
-    throw new Error("Unauthorized");
-  }
+export async function requireEntityManager({
+  supabase,
+  userId,
+  entityId,
+}: EntityScope) {
+  await requireEntityRoleInSet(
+    { supabase, userId, entityId },
+    new Set(["admin", "editor"]),
+  );
 }
 
 export async function requireEntityUser({

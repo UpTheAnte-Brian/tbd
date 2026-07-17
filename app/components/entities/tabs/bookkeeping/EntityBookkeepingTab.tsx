@@ -253,6 +253,13 @@ type RecurringTaskView = {
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "—";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const parsedDateOnly = parseDateOnly(value);
+    if (!parsedDateOnly) return "—";
+    return parsedDateOnly.toLocaleDateString(undefined, {
+      timeZone: "UTC",
+    });
+  }
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return "—";
   return parsed.toLocaleDateString();
@@ -375,6 +382,13 @@ function toDateKey(date: Date) {
   const year = date.getUTCFullYear();
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function toLocalDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
@@ -1265,7 +1279,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
   const openTimeEntryCreate = () => {
     setTimeEntryDraft({
       ...buildTimeEntryDraft(null),
-      work_date: new Date().toISOString().slice(0, 10),
+      work_date: toLocalDateKey(new Date()),
     });
     setEditor({ kind: "time_entry", mode: "create" });
   };
@@ -1278,7 +1292,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
   };
 
   const openInvoiceCreate = () => {
-    const issuedOn = new Date().toISOString().slice(0, 10);
+    const issuedOn = toLocalDateKey(new Date());
     const defaultEngagement =
       providerEngagements.length === 1 ? providerEngagements[0] : null;
 

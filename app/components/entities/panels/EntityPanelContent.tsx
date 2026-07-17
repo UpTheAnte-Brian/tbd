@@ -21,6 +21,7 @@ type Props = {
   entityType: EntityType | null;
   entityName?: string;
   activeTab: EntityTabKey;
+  canManageContacts?: boolean;
 };
 
 export default function EntityPanelContent({
@@ -28,6 +29,7 @@ export default function EntityPanelContent({
   entityType,
   entityName,
   activeTab,
+  canManageContacts = false,
 }: Props) {
   const tabContent = useMemo(() => {
     if (!entityType) {
@@ -44,7 +46,12 @@ export default function EntityPanelContent({
       case "documents":
         return <EntityDocumentsTab entityId={entityId} />;
       case "contacts":
-        return <EntityContactsTab entityId={entityId} />;
+        return (
+          <EntityContactsTab
+            entityId={entityId}
+            canManageContacts={canManageContacts}
+          />
+        );
       case "people":
         return (
           <EntityPeopleTab
@@ -97,7 +104,7 @@ export default function EntityPanelContent({
       default:
         return null;
     }
-  }, [activeTab, entityId, entityName, entityType]);
+  }, [activeTab, canManageContacts, entityId, entityName, entityType]);
 
   return <div>{tabContent}</div>;
 }

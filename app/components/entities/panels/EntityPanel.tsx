@@ -218,6 +218,7 @@ export default function EntityPanel({ entityId, entityType }: Props) {
             entityType={resolvedType}
             entityName={entity.name ?? "Entity"}
             activeTab={activeTab}
+            canManageContacts={canManageUsersForEntity}
           />
         </div>
       </EntityPageLayout>
