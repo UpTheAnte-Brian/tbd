@@ -3673,6 +3673,14 @@ input {
   color: var(--custom-color);
 }
 
+input[type='checkbox'],
+input[type='radio'] {
+  width: auto;
+  padding: 0;
+  border-radius: 0;
+  background-color: transparent;
+}
+
 input[disabled] {
   color: var(--custom-color-secondary);
 }

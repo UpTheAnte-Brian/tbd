@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "@/app/components/loading-spinner";
 import { useUser } from "@/app/hooks/useUser";
+import { entityPath } from "@/app/lib/routes";
 import type { BusinessBookkeepingSnapshot } from "@/domain/business/bookkeeping";
 import type { EntityDirectoryRow } from "@/app/lib/types/entity-directory";
 
@@ -295,6 +297,24 @@ function formatMoney(
 function formatHours(value: number | null | undefined) {
   const safeValue = typeof value === "number" && Number.isFinite(value) ? value : 0;
   return `${safeValue.toFixed(2)} h`;
+}
+
+function getEngagementCounterparty(
+  engagement: BusinessBookkeepingSnapshot["serviceEngagements"][number],
+) {
+  if (engagement.current_entity_role === "provider") {
+    return {
+      entityId: engagement.client_entity_id,
+      entityLabel: formatText(engagement.client_entity_name),
+      roleLabel: "Client",
+    };
+  }
+
+  return {
+    entityId: engagement.entity_id,
+    entityLabel: formatText(engagement.provider_entity_name),
+    roleLabel: "Provider",
+  };
 }
 
 function toTitle(value: string) {
@@ -2025,101 +2045,135 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
           </p>
         ) : (
           <div className="space-y-3">
-            {snapshot.serviceEngagements.map((engagement) => (
-              <div
-                key={engagement.id}
-                className="rounded-xl border border-border-subtle bg-surface-inset p-3"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-text-on-light">
-                      {engagement.title}
+            {snapshot.serviceEngagements.map((engagement) => {
+              const counterparty = getEngagementCounterparty(engagement);
+              const counterpartyHref = counterparty.entityId
+                ? entityPath(counterparty.entityId, "bookkeeping")
+                : null;
+
+              return (
+                <div
+                  key={engagement.id}
+                  className="rounded-xl border border-border-subtle bg-surface-inset p-3"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-text-on-light">
+                        {engagement.title}
+                      </p>
+                      <p className="text-sm capitalize text-brand-secondary-0 opacity-70">
+                        {formatStatus(engagement.service_type)} ·{" "}
+                        {formatStatus(engagement.billing_model)} ·{" "}
+                        {counterpartyHref ? (
+                          <>
+                            {counterparty.roleLabel}:{" "}
+                            <Link
+                              href={counterpartyHref}
+                              className="font-medium text-text-on-light underline decoration-border-subtle underline-offset-2 transition hover:text-brand-primary-0"
+                            >
+                              {counterparty.entityLabel}
+                            </Link>
+                          </>
+                        ) : (
+                          `${counterparty.roleLabel}: ${counterparty.entityLabel}`
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {canEdit && engagement.current_entity_role === "provider" ? (
+                        <button
+                          type="button"
+                          onClick={() => openServiceEngagementEdit(engagement)}
+                          className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                        >
+                          Edit
+                        </button>
+                      ) : null}
+                      {counterpartyHref ? (
+                        <Link
+                          href={counterpartyHref}
+                          className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                        >
+                          Open {counterparty.roleLabel}
+                        </Link>
+                      ) : null}
+                      <span className="rounded-full bg-surface-nav px-2 py-1 text-xs uppercase tracking-wide text-text-on-dark">
+                        {engagement.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid gap-2 text-sm md:grid-cols-2">
+                    <p>
+                      <span className="opacity-70">Rate:</span>{" "}
+                      {formatMoney(
+                        engagement.default_hourly_rate,
+                        engagement.currency_code,
+                      )}
                     </p>
-                    <p className="text-sm capitalize text-brand-secondary-0 opacity-70">
-                      {formatStatus(engagement.service_type)} ·{" "}
-                      {formatStatus(engagement.billing_model)} ·{" "}
-                      {engagement.current_entity_role === "provider"
-                        ? `Client: ${formatText(engagement.client_entity_name)}`
-                        : `Provider: ${formatText(engagement.provider_entity_name)}`}
+                    <p>
+                      <span className="opacity-70">Terms:</span>{" "}
+                      {engagement.invoice_terms_days} days
+                    </p>
+                    <p>
+                      <span className="opacity-70">Unbilled:</span>{" "}
+                      {formatHours(engagement.unbilled_hours)} /{" "}
+                      {formatMoney(
+                        engagement.unbilled_amount,
+                        engagement.currency_code,
+                      )}
+                    </p>
+                    <p>
+                      <span className="opacity-70">Invoiced:</span>{" "}
+                      {formatMoney(
+                        engagement.invoiced_amount,
+                        engagement.currency_code,
+                      )}
+                    </p>
+                    <p>
+                      <span className="opacity-70">Contact:</span>{" "}
+                      {formatText(engagement.contact_name)}
+                    </p>
+                    <p>
+                      <span className="opacity-70">Invoice Prefix:</span>{" "}
+                      {formatText(engagement.invoice_prefix)}
+                    </p>
+                    <p>
+                      <span className="opacity-70">Role:</span>{" "}
+                      {toTitle(engagement.current_entity_role)}
+                    </p>
+                    <p>
+                      <span className="opacity-70">Counterparty:</span>{" "}
+                      {counterpartyHref ? (
+                        <Link
+                          href={counterpartyHref}
+                          className="font-medium text-text-on-light underline decoration-border-subtle underline-offset-2 transition hover:text-brand-primary-0"
+                        >
+                          {counterparty.entityLabel}
+                        </Link>
+                      ) : (
+                        counterparty.entityLabel
+                      )}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {canEdit && engagement.current_entity_role === "provider" ? (
-                      <button
-                        type="button"
-                        onClick={() => openServiceEngagementEdit(engagement)}
+                  <div className="mt-3 flex items-center gap-2">
+                    {engagement.contract_document_signed_url ? (
+                      <a
+                        href={engagement.contract_document_signed_url}
+                        target="_blank"
+                        rel="noreferrer"
                         className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
                       >
-                        Edit
-                      </button>
-                    ) : null}
-                    <span className="rounded-full bg-surface-nav px-2 py-1 text-xs uppercase tracking-wide text-text-on-dark">
-                      {engagement.is_active ? "Active" : "Inactive"}
-                    </span>
+                        Open Contract
+                      </a>
+                    ) : (
+                      <span className="text-xs text-brand-secondary-0 opacity-70">
+                        No contract uploaded yet.
+                      </span>
+                    )}
                   </div>
                 </div>
-                <div className="mt-3 grid gap-2 text-sm md:grid-cols-2">
-                  <p>
-                    <span className="opacity-70">Rate:</span>{" "}
-                    {formatMoney(
-                      engagement.default_hourly_rate,
-                      engagement.currency_code,
-                    )}
-                  </p>
-                  <p>
-                    <span className="opacity-70">Terms:</span>{" "}
-                    {engagement.invoice_terms_days} days
-                  </p>
-                  <p>
-                    <span className="opacity-70">Unbilled:</span>{" "}
-                    {formatHours(engagement.unbilled_hours)} /{" "}
-                    {formatMoney(
-                      engagement.unbilled_amount,
-                      engagement.currency_code,
-                    )}
-                  </p>
-                  <p>
-                    <span className="opacity-70">Invoiced:</span>{" "}
-                    {formatMoney(
-                      engagement.invoiced_amount,
-                      engagement.currency_code,
-                    )}
-                  </p>
-                  <p>
-                    <span className="opacity-70">Contact:</span>{" "}
-                    {formatText(engagement.contact_name)}
-                  </p>
-                  <p>
-                    <span className="opacity-70">Invoice Prefix:</span>{" "}
-                    {formatText(engagement.invoice_prefix)}
-                  </p>
-                  <p>
-                    <span className="opacity-70">Role:</span>{" "}
-                    {toTitle(engagement.current_entity_role)}
-                  </p>
-                  <p>
-                    <span className="opacity-70">Counterparty:</span>{" "}
-                    {formatText(engagement.counterparty_name)}
-                  </p>
-                </div>
-                <div className="mt-3 flex items-center gap-2">
-                  {engagement.contract_document_signed_url ? (
-                    <a
-                      href={engagement.contract_document_signed_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
-                    >
-                      Open Contract
-                    </a>
-                  ) : (
-                    <span className="text-xs text-brand-secondary-0 opacity-70">
-                      No contract uploaded yet.
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </Section>
