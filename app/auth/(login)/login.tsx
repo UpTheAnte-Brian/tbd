@@ -22,13 +22,17 @@ export function Login({ mode = "signin" }: { mode?: "signin" | "signup" }) {
     process.env.NEXT_PUBLIC_SITE_URL ??
     process.env.NEXT_PUBLIC_HOST; // TODO: remove NEXT_PUBLIC_HOST fallback after migration
   const handleGoogleSignIn = () => {
-    const redirectTo = `${host}/auth/callback`;
+    const baseUrl = host ?? window.location.origin;
+    const callbackUrl = new URL("/auth/callback", baseUrl);
+    if (redirect) {
+      callbackUrl.searchParams.set("next", redirect);
+    }
     setLoading(true);
     const supabase = getSupabaseClient();
     supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: redirectTo,
+        redirectTo: callbackUrl.toString(),
       },
     });
     setLoading(false);

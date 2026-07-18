@@ -6,6 +6,7 @@ import {
   jsonOk,
   parseEntityId,
 } from "@/app/lib/server/route-context";
+import { canSendEntityInviteEmails, sendEntityInviteEmail } from "@/app/lib/server/entity-invite-email";
 import { isGlobalAdmin, requireEntityAdmin } from "@/app/lib/server/rbac";
 import { createEntityUserInvite } from "@/domain/entities/entity-people-dto";
 import type { EntityUserRole } from "@/domain/entities/types";
@@ -72,8 +73,39 @@ export async function POST(
       invitedBy: user.id,
     });
 
+    const inviteUrl = new URL("/invite", req.nextUrl.origin);
+    inviteUrl.searchParams.set("token", invite.token);
+
+    let delivery: "sent" | "manual" = "manual";
+    const inviterLabel = (
+      typeof user.user_metadata?.full_name === "string" &&
+        user.user_metadata.full_name.trim()
+        ? user.user_metadata.full_name.trim()
+        : user.email?.trim()
+    ) || "A workspace admin";
+
+    if (canSendEntityInviteEmails()) {
+      try {
+        await sendEntityInviteEmail({
+          to: invite.email,
+          entityName: invite.entityName,
+          inviterName: inviterLabel,
+          desiredRole: invite.desiredRole,
+          inviteUrl: inviteUrl.toString(),
+          expiresAt: invite.expiresAt,
+        });
+        delivery = "sent";
+      } catch (error) {
+        console.error("Failed to send entity invite email:", error);
+      }
+    }
+
     return jsonOk(
-      { rawToken: invite.token, inviteId: invite.inviteId },
+      {
+        inviteId: invite.inviteId,
+        inviteUrl: inviteUrl.toString(),
+        delivery,
+      },
       { status: 201 },
     );
   } catch (err) {

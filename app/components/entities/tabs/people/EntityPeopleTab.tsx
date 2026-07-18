@@ -42,6 +42,12 @@ type InviteRow = {
   invited_by: string;
 };
 
+type InviteResponse = {
+  inviteId: string;
+  inviteUrl: string;
+  delivery: "sent" | "manual";
+};
+
 type PeopleResponse = {
   people: PersonRole[];
   invites: InviteRow[];
@@ -116,9 +122,10 @@ export default function EntityPeopleTab({ entityId, entityType }: Props) {
   );
   const [savingId, setSavingId] = useState<string | null>(null);
   const [inviteId, setInviteId] = useState<string | null>(null);
-  const [tokenModal, setTokenModal] = useState<{
-    token: string;
+  const [inviteResult, setInviteResult] = useState<{
     email: string;
+    inviteUrl: string;
+    delivery: "sent" | "manual";
   } | null>(null);
 
   const [linkModal, setLinkModal] = useState<LinkModalState>({
@@ -292,9 +299,17 @@ export default function EntityPeopleTab({ entityId, entityType }: Props) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body?.error ?? "Invite failed");
       }
-      const payload = (await res.json()) as { rawToken: string };
-      setTokenModal({ token: payload.rawToken, email: person.email });
-      toast.success("Invite created");
+      const payload = (await res.json()) as InviteResponse;
+      setInviteResult({
+        email: person.email,
+        inviteUrl: payload.inviteUrl,
+        delivery: payload.delivery,
+      });
+      toast.success(
+        payload.delivery === "sent"
+          ? "Invite email sent"
+          : "Invite link ready to share",
+      );
       await fetchPeople();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Invite failed";
@@ -797,33 +812,36 @@ export default function EntityPeopleTab({ entityId, entityType }: Props) {
         )}
       </div>
 
-      {tokenModal ? (
+      {inviteResult ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-lg bg-white p-5 text-gray-900 shadow-lg">
-            <h3 className="text-lg font-semibold">Invite Token</h3>
+            <h3 className="text-lg font-semibold">
+              {inviteResult.delivery === "sent" ? "Invite Sent" : "Invite Link"}
+            </h3>
             <p className="mt-2 text-sm text-gray-600">
-              Share this token with {tokenModal.email}. This is a dev-only
-              display.
+              {inviteResult.delivery === "sent"
+                ? `An invite email was sent to ${inviteResult.email}. Copy the link below if you want to resend it manually.`
+                : `Email delivery is not configured. Send this link manually to ${inviteResult.email}.`}
             </p>
             <div className="mt-3 rounded border border-gray-200 bg-gray-50 p-3 font-mono text-sm">
-              {tokenModal.token}
+              {inviteResult.inviteUrl}
             </div>
             <div className="mt-4 flex justify-end gap-2">
               <button
                 onClick={async () => {
                   try {
-                    await navigator.clipboard.writeText(tokenModal.token);
-                    toast.success("Copied token");
+                    await navigator.clipboard.writeText(inviteResult.inviteUrl);
+                    toast.success("Copied invite link");
                   } catch {
-                    toast.error("Failed to copy token");
+                    toast.error("Failed to copy invite link");
                   }
                 }}
                 className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700"
               >
-                Copy
+                Copy Link
               </button>
               <button
-                onClick={() => setTokenModal(null)}
+                onClick={() => setInviteResult(null)}
                 className="rounded bg-gray-900 px-3 py-2 text-sm text-white"
               >
                 Close

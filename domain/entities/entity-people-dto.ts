@@ -14,12 +14,41 @@ type PostgrestMaybeSingleError = {
 const isNotFoundError = (error: PostgrestMaybeSingleError) =>
   error?.code === "PGRST116" || error?.status === 406;
 
+export type EntityUserInvitePreview = {
+  inviteId: string;
+  entityId: string;
+  entityName: string | null;
+  email: string;
+  desiredRole: EntityUserRole;
+  expiresAt: string | null;
+  status: string;
+  acceptedAt: string | null;
+};
+
 function normalizeEin(value: string | null | undefined): string | null {
   if (!value) return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
   const digits = trimmed.replace(/\D/g, "");
   return digits.length === 9 ? digits : null;
+}
+
+function hashInviteToken(token: string) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+async function getEntityName(entityId: string) {
+  const { data: entity, error } = await supabaseAdmin
+    .from("entities")
+    .select("name")
+    .eq("id", entityId)
+    .maybeSingle();
+
+  if (error && !isNotFoundError(error)) {
+    throw new Error(error.message);
+  }
+
+  return entity?.name ?? null;
 }
 
 export async function materializeEntityPeople(params: {
@@ -95,7 +124,7 @@ export async function createEntityUserInvite(params: {
   }
 
   const rawToken = crypto.randomBytes(32).toString("hex");
-  const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+  const tokenHash = hashInviteToken(rawToken);
 
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
@@ -118,6 +147,8 @@ export async function createEntityUserInvite(params: {
     throw new Error(inviteError.message);
   }
 
+  const entityName = await getEntityName(invite.entity_id);
+
   const invitedAt = new Date().toISOString();
   if (params.entityPersonRoleId) {
     const { error: roleError } = await supabaseAdmin
@@ -137,10 +168,53 @@ export async function createEntityUserInvite(params: {
   return {
     inviteId: invite.id,
     entityId: invite.entity_id,
+    entityName,
     email: invite.email,
     desiredRole: invite.desired_role,
     expiresAt: invite.expires_at,
     token: rawToken,
+  };
+}
+
+export async function getEntityUserInvitePreview(params: {
+  token: string;
+}): Promise<EntityUserInvitePreview> {
+  const token = params.token.trim();
+  if (!token) {
+    throw new Error("token is required");
+  }
+
+  const tokenHash = hashInviteToken(token);
+
+  const { data: invite, error: inviteError } = await supabaseAdmin
+    .from("entity_user_invites")
+    .select("id, entity_id, email, desired_role, expires_at, status, accepted_at")
+    .eq("token_hash", tokenHash)
+    .maybeSingle();
+
+  if (inviteError && !isNotFoundError(inviteError)) {
+    throw new Error(inviteError.message);
+  }
+
+  if (!invite) {
+    throw new Error("Invalid or expired invite");
+  }
+
+  const entityName = await getEntityName(invite.entity_id);
+  const expiresAt = invite.expires_at ? new Date(invite.expires_at) : null;
+  const isExpired = expiresAt &&
+    Number.isFinite(expiresAt.getTime()) &&
+    expiresAt < new Date();
+
+  return {
+    inviteId: invite.id,
+    entityId: invite.entity_id,
+    entityName,
+    email: invite.email,
+    desiredRole: invite.desired_role,
+    expiresAt: invite.expires_at,
+    status: invite.status === "pending" && isExpired ? "expired" : invite.status,
+    acceptedAt: invite.accepted_at ?? null,
   };
 }
 
@@ -154,7 +228,7 @@ export async function acceptEntityUserInvite(params: {
     throw new Error("token is required");
   }
 
-  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  const tokenHash = hashInviteToken(token);
 
   const { data: invite, error: inviteError } = await supabaseAdmin
     .from("entity_user_invites")
