@@ -1,5 +1,3 @@
-"use server";
-
 import "@/app/lib/styles/style.css";
 import NavBarComponent from "@/app/components/nav/NavBar";
 import GoogleMapsProvider from "@/app/lib/providers/GoogleMapsProvider";

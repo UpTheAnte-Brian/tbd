@@ -1,8 +1,6 @@
-"use server";
-
 import { Menu } from "./types/types";
 
-async function Menus() {
+function Menus() {
   const res: Menu[] = [
     {
       name: "Learn",
