@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { createApiClient } from "@/utils/supabase/route";
 import { resolveEntityId } from "@/app/lib/entities";
 
+import type { Database } from "@/database.types";
+
+type BrandingPaletteUpdate = Database["branding"]["Tables"]["palettes"]["Update"];
+type BrandingPaletteRole = Database["branding"]["Enums"]["color_role"];
+
+function isBrandingPaletteRole(value: string): value is BrandingPaletteRole {
+  return value === "primary" || value === "secondary" || value === "accent";
+}
+
 // PATCH /api/entities/[id]/branding/palettes/[paletteId]
 export async function PATCH(
   req: NextRequest,
@@ -53,7 +62,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const paletteUpdate: Record<string, unknown> = {};
+  const paletteUpdate: BrandingPaletteUpdate = {};
   let colorsUpdate:
     | Array<{
       slot: number;
@@ -131,8 +140,7 @@ export async function PATCH(
         status: 400,
       });
     }
-    const roleOptions = ["primary", "secondary", "accent"];
-    if (!roleOptions.includes(body.role)) {
+    if (!isBrandingPaletteRole(body.role)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
     paletteUpdate.role = body.role;

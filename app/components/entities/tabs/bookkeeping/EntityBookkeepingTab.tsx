@@ -149,6 +149,13 @@ type InvoiceDraft = {
   selected_time_entry_ids: string[];
 };
 
+type InvoiceEmailDraft = {
+  invoice_id: string;
+  to: string;
+  subject: string;
+  message: string;
+};
+
 const PROFILE_STATUS_OPTIONS = ["active", "paused", "archived"] as const;
 const SERVICE_TYPE_OPTIONS = [
   "bookkeeping",
@@ -781,6 +788,49 @@ function buildInvoiceDraft(
   };
 }
 
+function buildInvoiceEmailSubject(
+  invoice: BusinessBookkeepingSnapshot["invoices"][number] | null,
+  engagement: BusinessBookkeepingSnapshot["serviceEngagements"][number] | null,
+  profile: BusinessBookkeepingSnapshot["profile"] | null,
+) {
+  if (!invoice) return "";
+
+  const providerLabel =
+    profile?.dba_name?.trim() ||
+    profile?.legal_name?.trim() ||
+    engagement?.provider_entity_name?.trim() ||
+    "Community Pockets";
+
+  return `Invoice ${invoice.invoice_number} from ${providerLabel}`;
+}
+
+function buildInvoiceEmailDraft(
+  invoice: BusinessBookkeepingSnapshot["invoices"][number] | null,
+  engagement: BusinessBookkeepingSnapshot["serviceEngagements"][number] | null,
+  profile: BusinessBookkeepingSnapshot["profile"] | null,
+): InvoiceEmailDraft {
+  return {
+    invoice_id: invoice?.id ?? "",
+    to: engagement?.contact_email?.trim() ?? "",
+    subject: buildInvoiceEmailSubject(invoice, engagement, profile),
+    message: "",
+  };
+}
+
+function getDownloadFileName(
+  contentDisposition: string | null,
+  fallback: string,
+) {
+  if (!contentDisposition) return fallback;
+
+  const match =
+    contentDisposition.match(/filename="([^"]+)"/i) ??
+    contentDisposition.match(/filename=([^;]+)/i);
+  const fileName = match?.[1]?.trim();
+
+  return fileName && fileName.length > 0 ? fileName : fallback;
+}
+
 function buildSuggestedDueOn(
   issuedOn: string | null | undefined,
   invoiceTermsDays: number | null | undefined,
@@ -966,6 +1016,16 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
   const [invoiceDraft, setInvoiceDraft] = useState<InvoiceDraft>(
     buildInvoiceDraft(null),
   );
+  const [invoiceEmailDraft, setInvoiceEmailDraft] = useState<InvoiceEmailDraft>(
+    buildInvoiceEmailDraft(null, null, null),
+  );
+  const [invoiceEmailEditorId, setInvoiceEmailEditorId] = useState<string | null>(
+    null,
+  );
+  const [invoiceDownloadingId, setInvoiceDownloadingId] = useState<string | null>(
+    null,
+  );
+  const [invoiceSendingId, setInvoiceSendingId] = useState<string | null>(null);
   const [businessOptions, setBusinessOptions] = useState<EntityDirectoryRow[]>([]);
   const [contractFile, setContractFile] = useState<File | null>(null);
   const [contractUploading, setContractUploading] = useState(false);
@@ -1338,6 +1398,102 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
   ) => {
     setInvoiceDraft(buildInvoiceDraft(invoice));
     setEditor({ kind: "invoice", mode: "edit", id: invoice.id });
+  };
+
+  const openInvoiceEmail = (
+    invoice: BusinessBookkeepingSnapshot["invoices"][number],
+  ) => {
+    const engagement =
+      providerEngagements.find((entry) => entry.id === invoice.engagement_id) ?? null;
+    setInvoiceEmailDraft(buildInvoiceEmailDraft(invoice, engagement, profile));
+    setInvoiceEmailEditorId(invoice.id);
+  };
+
+  const downloadInvoicePdf = async (
+    invoice: BusinessBookkeepingSnapshot["invoices"][number],
+  ) => {
+    setInvoiceDownloadingId(invoice.id);
+    try {
+      const res = await fetch(
+        `/api/entities/${entityId}/bookkeeping/invoices/${invoice.id}/pdf`,
+        {
+          cache: "no-store",
+        },
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error ?? "Failed to generate invoice PDF");
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = getDownloadFileName(
+        res.headers.get("Content-Disposition"),
+        `${invoice.invoice_number || "invoice"}.pdf`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success("Invoice PDF downloaded");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to generate invoice PDF",
+      );
+    } finally {
+      setInvoiceDownloadingId(null);
+    }
+  };
+
+  const sendInvoiceEmail = async () => {
+    const invoiceId = invoiceEmailDraft.invoice_id;
+    if (!invoiceId) {
+      toast.error("Select an invoice first");
+      return;
+    }
+    if (!invoiceEmailDraft.to.includes("@")) {
+      toast.error("Enter a valid recipient email");
+      return;
+    }
+
+    setInvoiceSendingId(invoiceId);
+    try {
+      const res = await fetch(
+        `/api/entities/${entityId}/bookkeeping/invoices/${invoiceId}/send`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: invoiceEmailDraft.to,
+            subject: invoiceEmailDraft.subject,
+            message: invoiceEmailDraft.message,
+          }),
+        },
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error ?? "Failed to send invoice email");
+      }
+
+      const json = (await res.json()) as {
+        snapshot?: BusinessBookkeepingSnapshot;
+        message?: string;
+      };
+      if (json.snapshot) {
+        setSnapshot(json.snapshot);
+      }
+      setInvoiceEmailEditorId(null);
+      setInvoiceEmailDraft(buildInvoiceEmailDraft(null, null, null));
+      toast.success(json.message ?? "Invoice emailed");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to send invoice email",
+      );
+    } finally {
+      setInvoiceSendingId(null);
+    }
   };
 
   const openSystemCreate = () => {
@@ -2684,72 +2840,183 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
           </p>
         ) : (
           <div className="space-y-3">
-            {snapshot.invoices.map((invoice) => (
-              <div
-                key={invoice.id}
-                className="rounded-xl border border-border-subtle bg-surface-inset p-3"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-text-on-light">
-                      {invoice.invoice_number}
-                    </p>
-                    <p className="text-sm text-brand-secondary-0 opacity-70">
-                      {formatText(invoice.engagement_title)} ·{" "}
-                      {formatText(invoice.counterparty_name)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {canEdit && invoice.current_entity_role === "provider" ? (
-                      <button
-                        type="button"
-                        onClick={() => openInvoiceEdit(invoice)}
-                        className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+            {snapshot.invoices.map((invoice) => {
+              const invoiceEngagement =
+                providerEngagements.find(
+                  (engagement) => engagement.id === invoice.engagement_id,
+                ) ?? null;
+              const canDeliverInvoice =
+                canEdit && invoice.current_entity_role === "provider";
+              const isDownloadBusy = invoiceDownloadingId === invoice.id;
+              const isSendBusy = invoiceSendingId === invoice.id;
+              const isEmailOpen = invoiceEmailEditorId === invoice.id;
+
+              return (
+                <div
+                  key={invoice.id}
+                  className="rounded-xl border border-border-subtle bg-surface-inset p-3"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-text-on-light">
+                        {invoice.invoice_number}
+                      </p>
+                      <p className="text-sm text-brand-secondary-0 opacity-70">
+                        {formatText(invoice.engagement_title)} ·{" "}
+                        {formatText(invoice.counterparty_name)}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      {canEdit && invoice.current_entity_role === "provider" ? (
+                        <button
+                          type="button"
+                          onClick={() => openInvoiceEdit(invoice)}
+                          className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page"
+                        >
+                          Edit
+                        </button>
+                      ) : null}
+                      {canDeliverInvoice ? (
+                        <button
+                          type="button"
+                          onClick={() => void downloadInvoicePdf(invoice)}
+                          disabled={isDownloadBusy}
+                          className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {isDownloadBusy ? "Preparing PDF..." : "Download PDF"}
+                        </button>
+                      ) : null}
+                      {canDeliverInvoice && invoice.status !== "void" ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isEmailOpen) {
+                              setInvoiceEmailEditorId(null);
+                              return;
+                            }
+                            openInvoiceEmail(invoice);
+                          }}
+                          disabled={isSendBusy}
+                          className="rounded-lg border border-border-subtle bg-surface-card px-3 py-1.5 text-xs font-semibold text-text-on-light transition hover:bg-surface-page disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {isEmailOpen ? "Close Email" : "Send Email"}
+                        </button>
+                      ) : null}
+                      <span
+                        className={`rounded-full px-2 py-1 text-xs uppercase tracking-wide ${getInvoiceBadgeClass(
+                          invoice.status,
+                        )}`}
                       >
-                        Edit
-                      </button>
-                    ) : null}
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs uppercase tracking-wide ${getInvoiceBadgeClass(
-                        invoice.status,
-                      )}`}
-                    >
-                      {formatStatus(invoice.status)}
-                    </span>
+                        {formatStatus(invoice.status)}
+                      </span>
+                    </div>
                   </div>
+                  <div className="mt-3 grid gap-2 text-sm md:grid-cols-2">
+                    <p>
+                      <span className="opacity-70">Issued:</span>{" "}
+                      {formatDate(invoice.issued_on)}
+                    </p>
+                    <p>
+                      <span className="opacity-70">Due:</span>{" "}
+                      {formatDate(invoice.due_on)}
+                    </p>
+                    <p>
+                      <span className="opacity-70">Hours:</span>{" "}
+                      {formatHours(invoice.total_hours)}
+                    </p>
+                    <p>
+                      <span className="opacity-70">Amount:</span>{" "}
+                      {formatMoney(invoice.total_amount)}
+                    </p>
+                    <p>
+                      <span className="opacity-70">Entries:</span>{" "}
+                      {invoice.entry_count}
+                    </p>
+                    <p>
+                      <span className="opacity-70">Period:</span>{" "}
+                      {invoice.period_start || invoice.period_end
+                        ? `${formatDate(invoice.period_start)} - ${formatDate(
+                          invoice.period_end,
+                        )}`
+                        : "—"}
+                    </p>
+                  </div>
+                  {isEmailOpen ? (
+                    <div className="mt-4 rounded-xl border border-border-subtle bg-surface-card p-4">
+                      <div className="mb-3 flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-text-on-light">
+                            Email invoice
+                          </p>
+                          <p className="text-sm text-brand-secondary-0 opacity-70">
+                            The PDF invoice will be attached automatically.
+                          </p>
+                        </div>
+                        {invoiceEngagement?.contact_email?.trim() ? (
+                          <p className="text-xs text-brand-secondary-0 opacity-70">
+                            Client email on file: {invoiceEngagement.contact_email}
+                          </p>
+                        ) : null}
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <Label label="Recipient Email">
+                          <Input
+                            type="email"
+                            value={invoiceEmailDraft.to}
+                            placeholder="client@example.com"
+                            onChange={(event) =>
+                              setInvoiceEmailDraft((current) => ({
+                                ...current,
+                                to: event.target.value,
+                              }))}
+                          />
+                        </Label>
+                        <Label label="Subject">
+                          <Input
+                            value={invoiceEmailDraft.subject}
+                            onChange={(event) =>
+                              setInvoiceEmailDraft((current) => ({
+                                ...current,
+                                subject: event.target.value,
+                              }))}
+                          />
+                        </Label>
+                      </div>
+                      <Label label="Message">
+                        <Textarea
+                          rows={4}
+                          value={invoiceEmailDraft.message}
+                          placeholder="Optional note to include above the invoice."
+                          onChange={(event) =>
+                            setInvoiceEmailDraft((current) => ({
+                              ...current,
+                              message: event.target.value,
+                            }))}
+                        />
+                      </Label>
+                      <div className="mt-4 flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() => void sendInvoiceEmail()}
+                          disabled={isSendBusy}
+                          className="rounded-lg bg-surface-accent px-4 py-2 text-sm font-semibold text-text-on-dark transition hover:bg-brand-primary-2 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {isSendBusy ? "Sending..." : "Send Invoice"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setInvoiceEmailEditorId(null)}
+                          disabled={isSendBusy}
+                          className="rounded-lg border border-border-subtle bg-surface-inset px-4 py-2 text-sm font-semibold text-text-on-light transition hover:bg-surface-page disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
-                <div className="mt-3 grid gap-2 text-sm md:grid-cols-2">
-                  <p>
-                    <span className="opacity-70">Issued:</span>{" "}
-                    {formatDate(invoice.issued_on)}
-                  </p>
-                  <p>
-                    <span className="opacity-70">Due:</span>{" "}
-                    {formatDate(invoice.due_on)}
-                  </p>
-                  <p>
-                    <span className="opacity-70">Hours:</span>{" "}
-                    {formatHours(invoice.total_hours)}
-                  </p>
-                  <p>
-                    <span className="opacity-70">Amount:</span>{" "}
-                    {formatMoney(invoice.total_amount)}
-                  </p>
-                  <p>
-                    <span className="opacity-70">Entries:</span>{" "}
-                    {invoice.entry_count}
-                  </p>
-                  <p>
-                    <span className="opacity-70">Period:</span>{" "}
-                    {invoice.period_start || invoice.period_end
-                      ? `${formatDate(invoice.period_start)} - ${formatDate(
-                        invoice.period_end,
-                      )}`
-                      : "—"}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </Section>

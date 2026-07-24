@@ -1,7 +1,6 @@
 // utils/supabase/service-worker.ts
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
-import type { PostgrestClient } from "@supabase/postgrest-js";
 import type { Database } from "@/database.types";
 
 /**
@@ -12,13 +11,8 @@ export const supabaseAdmin = createClient<Database>(
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-export type IrsPostgrestClient = PostgrestClient<
-    Database,
-    { PostgrestVersion: "12" },
-    "irs",
-    Database["irs"]
->;
-
-export function createIrsAdminClient(): IrsPostgrestClient {
+export function createIrsAdminClient() {
     return supabaseAdmin.schema("irs");
 }
+
+export type IrsPostgrestClient = ReturnType<typeof createIrsAdminClient>;

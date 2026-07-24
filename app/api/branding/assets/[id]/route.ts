@@ -3,6 +3,8 @@ import { createApiClient } from "@/utils/supabase/route";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/database.types";
 
+type BrandingAssetUpdate = Database["branding"]["Tables"]["assets"]["Update"];
+
 export async function PATCH(
   req: NextRequest,
   context: { params: Promise<{ id: string }> },
@@ -49,14 +51,14 @@ export async function PATCH(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const body = (await req.json().catch(() => ({}))) as {
-    name?: string | null;
-    path?: string | null;
+    name?: string;
+    path?: string;
     mimeType?: string | null;
     sizeBytes?: number | null;
-    isRetired?: boolean | null;
+    isRetired?: boolean;
   };
 
-  const update: Record<string, unknown> = {};
+  const update: BrandingAssetUpdate = {};
   if (body.name !== undefined) update.name = body.name;
   if (body.path !== undefined) update.path = body.path;
   if (body.mimeType !== undefined) update.mime_type = body.mimeType;
