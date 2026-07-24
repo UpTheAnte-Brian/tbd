@@ -53,6 +53,9 @@ importers:
       '@xmldom/xmldom':
         specifier: ^0.8.10
         version: 0.8.13
+      ag-grid-community:
+        specifier: ^34.2.0
+        version: 34.3.1
       ag-grid-react:
         specifier: ^34.2.0
         version: 34.3.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
