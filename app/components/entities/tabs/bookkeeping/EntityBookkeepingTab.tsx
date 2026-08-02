@@ -363,6 +363,53 @@ function getInvoiceBadgeClass(status: string | null | undefined) {
   }
 }
 
+type InvoiceRollup = {
+  draftCount: number;
+  outstandingCount: number;
+  paidCount: number;
+  draftAmount: number;
+  outstandingAmount: number;
+  paidAmount: number;
+};
+
+function createEmptyInvoiceRollup(): InvoiceRollup {
+  return {
+    draftCount: 0,
+    outstandingCount: 0,
+    paidCount: 0,
+    draftAmount: 0,
+    outstandingAmount: 0,
+    paidAmount: 0,
+  };
+}
+
+function addInvoiceToRollup(
+  rollup: InvoiceRollup,
+  invoice: BusinessBookkeepingSnapshot["invoices"][number],
+) {
+  const amount =
+    typeof invoice.total_amount === "number" && Number.isFinite(invoice.total_amount)
+      ? invoice.total_amount
+      : 0;
+
+  switch (invoice.status) {
+    case "draft":
+      rollup.draftCount += 1;
+      rollup.draftAmount += amount;
+      break;
+    case "sent":
+      rollup.outstandingCount += 1;
+      rollup.outstandingAmount += amount;
+      break;
+    case "paid":
+      rollup.paidCount += 1;
+      rollup.paidAmount += amount;
+      break;
+    default:
+      break;
+  }
+}
+
 function formatRelativeDue(daysUntilDue: number | null) {
   if (daysUntilDue === null) return "No due date";
   if (daysUntilDue < 0) {
@@ -1072,6 +1119,9 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
   const billingStats = useMemo(() => {
     const entries = snapshot?.timeEntries ?? [];
     const invoices = snapshot?.invoices ?? [];
+    const invoiceRollup = createEmptyInvoiceRollup();
+
+    invoices.forEach((invoice) => addInvoiceToRollup(invoiceRollup, invoice));
 
     return {
       unbilledHours: entries
@@ -1080,12 +1130,25 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
       unbilledAmount: entries
         .filter((entry) => entry.billable && !entry.invoice_id)
         .reduce((sum, entry) => sum + entry.amount, 0),
-      draftInvoiceCount: invoices.filter((invoice) => invoice.status === "draft")
-        .length,
-      sentInvoiceCount: invoices.filter((invoice) => invoice.status === "sent")
-        .length,
+      draftInvoiceCount: invoiceRollup.draftCount,
+      outstandingInvoiceCount: invoiceRollup.outstandingCount,
+      outstandingAmount: invoiceRollup.outstandingAmount,
+      paidInvoiceCount: invoiceRollup.paidCount,
+      paidAmount: invoiceRollup.paidAmount,
     };
   }, [snapshot?.invoices, snapshot?.timeEntries]);
+
+  const invoiceRollupsByEngagement = useMemo(() => {
+    const rollups = new Map<string, InvoiceRollup>();
+
+    (snapshot?.invoices ?? []).forEach((invoice) => {
+      const existing = rollups.get(invoice.engagement_id) ?? createEmptyInvoiceRollup();
+      addInvoiceToRollup(existing, invoice);
+      rollups.set(invoice.engagement_id, existing);
+    });
+
+    return rollups;
+  }, [snapshot?.invoices]);
 
   const invoiceAssignableEntries = useMemo(() => {
     const selectedEngagementId = invoiceDraft.engagement_id;
@@ -1964,10 +2027,34 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
           </div>
           <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
             <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
-              Sent Invoices
+              Outstanding Invoices
             </p>
             <p className="mt-2 text-2xl font-semibold text-text-on-light">
-              {billingStats.sentInvoiceCount}
+              {billingStats.outstandingInvoiceCount}
+            </p>
+          </div>
+          <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
+            <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+              Outstanding Amount
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-text-on-light">
+              {formatMoney(billingStats.outstandingAmount)}
+            </p>
+          </div>
+          <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
+            <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+              Paid Invoices
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-text-on-light">
+              {billingStats.paidInvoiceCount}
+            </p>
+          </div>
+          <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
+            <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+              Paid Amount
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-text-on-light">
+              {formatMoney(billingStats.paidAmount)}
             </p>
           </div>
         </div>
@@ -2206,6 +2293,17 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
               const counterpartyHref = counterparty.entityId
                 ? entityPath(counterparty.entityId, "bookkeeping")
                 : null;
+              const invoiceRollup =
+                invoiceRollupsByEngagement.get(engagement.id) ??
+                createEmptyInvoiceRollup();
+              const outstandingLabel =
+                engagement.current_entity_role === "provider"
+                  ? "Outstanding A/R"
+                  : "Outstanding A/P";
+              const paidLabel =
+                engagement.current_entity_role === "provider"
+                  ? "Collected"
+                  : "Paid";
 
               return (
                 <div
@@ -2279,9 +2377,23 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                       )}
                     </p>
                     <p>
-                      <span className="opacity-70">Invoiced:</span>{" "}
+                      <span className="opacity-70">{outstandingLabel}:</span>{" "}
                       {formatMoney(
-                        engagement.invoiced_amount,
+                        invoiceRollup.outstandingAmount,
+                        engagement.currency_code,
+                      )}
+                    </p>
+                    <p>
+                      <span className="opacity-70">{paidLabel}:</span>{" "}
+                      {formatMoney(
+                        invoiceRollup.paidAmount,
+                        engagement.currency_code,
+                      )}
+                    </p>
+                    <p>
+                      <span className="opacity-70">Draft:</span>{" "}
+                      {formatMoney(
+                        invoiceRollup.draftAmount,
                         engagement.currency_code,
                       )}
                     </p>
@@ -2919,6 +3031,14 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                     <p>
                       <span className="opacity-70">Due:</span>{" "}
                       {formatDate(invoice.due_on)}
+                    </p>
+                    <p>
+                      <span className="opacity-70">Sent:</span>{" "}
+                      {formatDate(invoice.sent_at)}
+                    </p>
+                    <p>
+                      <span className="opacity-70">Paid On:</span>{" "}
+                      {formatDate(invoice.paid_at)}
                     </p>
                     <p>
                       <span className="opacity-70">Hours:</span>{" "}
