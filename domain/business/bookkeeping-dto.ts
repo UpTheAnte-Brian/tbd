@@ -9,6 +9,7 @@ import { supabaseAdmin } from "@/utils/supabase/service-worker";
 export type UpsertBusinessProfileInput = {
   legal_name: string;
   dba_name: string | null;
+  business_address: string | null;
   ein: string | null;
   state_of_formation: string | null;
   entity_structure: string | null;
@@ -173,6 +174,7 @@ async function getBookkeepingClient(): Promise<SupabaseClient<Database>> {
 
 const EMPTY_SNAPSHOT: BusinessBookkeepingSnapshot = {
   profile: null,
+  businessAddress: null,
   serviceEngagements: [],
   timeEntries: [],
   invoices: [],
@@ -198,6 +200,118 @@ async function runBookkeepingRpc(
   return data;
 }
 
+function normalizeOptionalText(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : null;
+}
+
+function formatStructuredAddress(address: {
+  address1: string | null;
+  address2: string | null;
+  city: string | null;
+  state: string | null;
+  postal: string | null;
+  country: string | null;
+}) {
+  const cityStatePostal = [
+    normalizeOptionalText(address.city),
+    normalizeOptionalText(address.state),
+    normalizeOptionalText(address.postal),
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const lines = [
+    normalizeOptionalText(address.address1),
+    normalizeOptionalText(address.address2),
+    normalizeOptionalText(cityStatePostal),
+    normalizeOptionalText(address.country),
+  ].filter((line): line is string => Boolean(line));
+
+  return lines.length > 0 ? lines.join("\n") : null;
+}
+
+async function getBusinessAddressForEntity(entityId: string) {
+  let businessRow: { address: string | null } | null = null;
+
+  const { data: entityBusinessRow, error: entityBusinessError } =
+    await supabaseAdmin
+      .from("businesses")
+      .select("address")
+      .eq("entity_id", entityId)
+      .maybeSingle();
+
+  if (entityBusinessError) {
+    throw new Error(entityBusinessError.message);
+  }
+
+  businessRow = entityBusinessRow;
+
+  if (!businessRow) {
+    const { data: directBusinessRow, error: directBusinessError } =
+      await supabaseAdmin
+        .from("businesses")
+        .select("address")
+        .eq("id", entityId)
+        .maybeSingle();
+
+    if (directBusinessError) {
+      throw new Error(directBusinessError.message);
+    }
+
+    businessRow = directBusinessRow;
+  }
+
+  const businessAddress = normalizeOptionalText(businessRow?.address ?? null);
+  if (businessAddress) {
+    return businessAddress;
+  }
+
+  const { data: entityAddressRow, error: entityAddressError } =
+    await supabaseAdmin
+      .from("entity_addresses")
+      .select("address1, address2, city, state, postal, country")
+      .eq("entity_id", entityId)
+      .eq("is_primary", true)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+  if (entityAddressError) {
+    throw new Error(entityAddressError.message);
+  }
+
+  return entityAddressRow ? formatStructuredAddress(entityAddressRow) : null;
+}
+
+async function updateBusinessAddressForEntity(
+  entityId: string,
+  address: string | null,
+) {
+  const normalizedAddress = normalizeOptionalText(address);
+
+  const { data: businessRow, error: businessLookupError } = await supabaseAdmin
+    .from("businesses")
+    .select("id")
+    .eq("entity_id", entityId)
+    .maybeSingle();
+
+  if (businessLookupError) {
+    throw new Error(businessLookupError.message);
+  }
+
+  const businessId = businessRow?.id ?? entityId;
+
+  const { error } = await supabaseAdmin
+    .from("businesses")
+    .update({ address: normalizedAddress })
+    .eq("id", businessId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 export async function getEntityBookkeepingSnapshot(
   entityId: string,
 ): Promise<BusinessBookkeepingSnapshot> {
@@ -213,6 +327,14 @@ export async function getEntityBookkeepingSnapshot(
     ...EMPTY_SNAPSHOT,
     ...(data as Partial<BusinessBookkeepingSnapshot>),
   };
+
+  snapshot.businessAddress = await getBusinessAddressForEntity(entityId);
+  snapshot.profile = snapshot.profile
+    ? {
+        ...snapshot.profile,
+        business_address: snapshot.businessAddress,
+      }
+    : null;
 
   snapshot.serviceEngagements = await Promise.all(
     snapshot.serviceEngagements.map(async (engagement) => {
@@ -299,6 +421,8 @@ export async function upsertEntityBookkeepingProfile(
     p_default_accounting_basis: input.default_accounting_basis,
     p_notes: input.notes,
   });
+
+  await updateBusinessAddressForEntity(entityId, input.business_address);
 }
 
 export async function createEntityBookkeepingSystem(

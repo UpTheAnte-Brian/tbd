@@ -180,6 +180,7 @@ export async function POST(
         await upsertEntityBookkeepingProfile(entityId, {
           legal_name: cleanRequiredString(payload.legal_name, "Legal name"),
           dba_name: cleanOptionalString(payload.dba_name),
+          business_address: cleanOptionalString(payload.business_address),
           ein: cleanOptionalString(payload.ein),
           state_of_formation: cleanOptionalString(payload.state_of_formation),
           entity_structure: cleanOptionalString(payload.entity_structure),

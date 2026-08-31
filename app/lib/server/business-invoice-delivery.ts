@@ -10,6 +10,7 @@ import type { BusinessBookkeepingSnapshot } from "@/domain/business/bookkeeping"
 
 type InvoiceContext = {
   profile: BusinessBookkeepingSnapshot["profile"];
+  businessAddress: string | null;
   engagement: BusinessBookkeepingSnapshot["serviceEngagements"][number];
   invoice: BusinessBookkeepingSnapshot["invoices"][number];
   timeEntries: BusinessBookkeepingSnapshot["timeEntries"];
@@ -57,6 +58,16 @@ function formatMoney(value: number, currencyCode: string) {
 
 function formatHours(value: number) {
   return `${value.toFixed(2)} h`;
+}
+
+function buildMultilineLines(value: string | null | undefined) {
+  if (!value) return [];
+
+  return value
+    .replaceAll("\r\n", "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
 }
 
 function textOrFallback(value: string | null | undefined, fallback = "-") {
@@ -235,6 +246,7 @@ export async function getBusinessInvoiceContext(
 
   return {
     profile: snapshot.profile,
+    businessAddress: snapshot.businessAddress,
     engagement,
     invoice,
     timeEntries,
@@ -288,8 +300,14 @@ export async function generateBusinessInvoicePdf(context: InvoiceContext) {
   drawTextBlock(ctx, context.providerDisplayName, ctx.margin, 13, 250, 16, {
     bold: true,
   });
-  if (context.profile?.legal_name?.trim() && context.profile.legal_name.trim() !== context.providerDisplayName) {
+  if (
+    context.profile?.legal_name?.trim() &&
+    context.profile.legal_name.trim() !== context.providerDisplayName
+  ) {
     drawTextBlock(ctx, context.profile.legal_name.trim(), ctx.margin, 10, 250, 13);
+  }
+  for (const line of buildMultilineLines(context.businessAddress)) {
+    drawTextBlock(ctx, line, ctx.margin, 10, 250, 13);
   }
   if (context.profile?.ein?.trim()) {
     drawTextBlock(ctx, `EIN: ${context.profile.ein.trim()}`, ctx.margin, 10, 250, 13);
