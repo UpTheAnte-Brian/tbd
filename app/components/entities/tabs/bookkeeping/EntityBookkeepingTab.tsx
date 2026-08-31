@@ -900,14 +900,19 @@ function buildSuggestedInvoiceNumber(
   if (!engagement) return "";
 
   const prefix = (engagement.invoice_prefix ?? "").trim() || "INV";
-  const nextSequence =
-    invoices.filter(
-      (invoice) =>
-        invoice.current_entity_role === "provider" &&
-        invoice.engagement_id === engagement.id,
-    ).length + 1;
+  const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const invoiceNumberPattern = new RegExp(`^${escapedPrefix}-(\\d+)$`, "i");
+  const highestSequence = invoices.reduce((highest, invoice) => {
+    const match = (invoice.invoice_number ?? "")
+      .trim()
+      .match(invoiceNumberPattern);
+    if (!match) return highest;
 
-  return `${prefix}-${String(nextSequence).padStart(3, "0")}`;
+    const sequence = Number(match[1]);
+    return Number.isSafeInteger(sequence) ? Math.max(highest, sequence) : highest;
+  }, 0);
+
+  return `${prefix}-${String(highestSequence + 1).padStart(3, "0")}`;
 }
 
 function Section({
@@ -2701,15 +2706,20 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
           <FormCard
             title={editor.mode === "edit" ? "Edit invoice" : "Create invoice"}
             onCancel={() => setEditor(null)}
-            onSave={() =>
-              submitMutation(
+            onSave={() => {
+              const invoicePayload = {
+                ...invoiceDraft,
+                time_entry_ids: invoiceDraft.selected_time_entry_ids,
+              };
+
+              return submitMutation(
                 "invoice",
                 editor.mode === "edit"
-                  ? { id: editor.id, ...invoiceDraft }
-                  : invoiceDraft,
+                  ? { id: editor.id, ...invoicePayload }
+                  : invoicePayload,
                 editor.mode === "edit" ? "Invoice updated" : "Invoice created",
-              )
-            }
+              );
+            }}
             saving={saving === "invoice"}
           >
             <div className="grid gap-3 md:grid-cols-2">

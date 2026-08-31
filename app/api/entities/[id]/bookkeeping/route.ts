@@ -308,7 +308,12 @@ export async function POST(
           });
         }
         break;
-      case "invoice":
+      case "invoice": {
+        // Older clients submit this UI-only field name. Accept it as a
+        // fallback so checked entries are never silently discarded.
+        const timeEntryIds = cleanStringArray(
+          payload.time_entry_ids ?? payload.selected_time_entry_ids,
+        );
         if (recordId) {
           await updateEntityBookkeepingInvoice(entityId, {
             id: recordId,
@@ -326,7 +331,7 @@ export async function POST(
             due_on: cleanOptionalString(payload.due_on),
             status: cleanOptionalString(payload.status) ?? "draft",
             notes: cleanOptionalString(payload.notes),
-            time_entry_ids: cleanStringArray(payload.time_entry_ids),
+            time_entry_ids: timeEntryIds,
           });
         } else {
           await createEntityBookkeepingInvoice(entityId, {
@@ -344,10 +349,11 @@ export async function POST(
             due_on: cleanOptionalString(payload.due_on),
             status: cleanOptionalString(payload.status) ?? "draft",
             notes: cleanOptionalString(payload.notes),
-            time_entry_ids: cleanStringArray(payload.time_entry_ids),
+            time_entry_ids: timeEntryIds,
           });
         }
         break;
+      }
       case "account":
         if (recordId) {
           await updateEntityBookkeepingAccount(entityId, {
