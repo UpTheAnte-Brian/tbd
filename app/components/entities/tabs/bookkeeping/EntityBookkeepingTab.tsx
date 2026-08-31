@@ -36,6 +36,7 @@ type EditorState = {
 type ProfileDraft = {
   legal_name: string;
   dba_name: string;
+  business_address: string;
   ein: string;
   state_of_formation: string;
   entity_structure: string;
@@ -663,10 +664,12 @@ function buildRecurringTaskView(
 
 function buildProfileDraft(
   profile: BusinessBookkeepingSnapshot["profile"] | null,
+  businessAddress: string | null = null,
 ): ProfileDraft {
   return {
     legal_name: profile?.legal_name ?? "",
     dba_name: profile?.dba_name ?? "",
+    business_address: profile?.business_address ?? businessAddress ?? "",
     ein: profile?.ein ?? "",
     state_of_formation: profile?.state_of_formation ?? "",
     entity_structure: profile?.entity_structure ?? "",
@@ -984,9 +987,19 @@ function FormCard({
   );
 }
 
-function Label({ label, children }: { label: string; children: ReactNode }) {
+function Label({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <label className="grid gap-1 text-sm text-brand-secondary-0">
+    <label
+      className={`grid gap-1 text-sm text-brand-secondary-0 ${className ?? ""}`}
+    >
       <span>{label}</span>
       {children}
     </label>
@@ -1120,6 +1133,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
 
   const canCreateProviderEngagement = canEdit;
   const profile = snapshot?.profile ?? null;
+  const businessAddress = snapshot?.businessAddress ?? null;
 
   const billingStats = useMemo(() => {
     const entries = snapshot?.timeEntries ?? [];
@@ -1404,7 +1418,7 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
   };
 
   const openProfileForm = () => {
-    setProfileDraft(buildProfileDraft(profile));
+    setProfileDraft(buildProfileDraft(profile, businessAddress));
     setEditor({ kind: "profile", mode: profile ? "edit" : "create" });
   };
 
@@ -1803,6 +1817,18 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                     }))}
                 />
               </Label>
+              <Label label="Remit Address" className="md:col-span-2">
+                <Textarea
+                  rows={3}
+                  value={profileDraft.business_address}
+                  onChange={(event) =>
+                    setProfileDraft((current) => ({
+                      ...current,
+                      business_address: event.target.value,
+                    }))}
+                  placeholder={"123 Main St\nMinneapolis, MN 55401"}
+                />
+              </Label>
               <Label label="EIN">
                 <Input
                   value={profileDraft.ein}
@@ -1952,6 +1978,14 @@ export default function EntityBookkeepingTab({ entityId }: Props) {
                 </p>
                 <p className="mt-1 text-sm text-brand-secondary-0 opacity-80">
                   {formatText(profile.state_of_formation)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">
+                <p className="text-xs uppercase tracking-wide text-brand-secondary-0 opacity-70">
+                  Remit Address
+                </p>
+                <p className="mt-2 whitespace-pre-line text-sm text-text-on-light">
+                  {formatText(profile.business_address)}
                 </p>
               </div>
               <div className="rounded-xl border border-border-subtle bg-surface-inset p-4">

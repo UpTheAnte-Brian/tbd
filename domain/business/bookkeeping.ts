@@ -5,6 +5,10 @@ type BusinessTables = Database["business"]["Tables"];
 export type BusinessProfile =
   BusinessTables["business_profiles"]["Row"];
 
+export type BusinessProfileSummary = BusinessProfile & {
+  business_address: string | null;
+};
+
 export type BusinessSystem =
   BusinessTables["business_systems"]["Row"];
 
@@ -132,7 +136,8 @@ export type BusinessClosePeriodSummary = BusinessClosePeriod & {
 };
 
 export type BusinessBookkeepingSnapshot = {
-  profile: BusinessProfile | null;
+  profile: BusinessProfileSummary | null;
+  businessAddress: string | null;
   serviceEngagements: BusinessServiceEngagementSummary[];
   timeEntries: BusinessTimeEntrySummary[];
   invoices: BusinessInvoiceSummary[];
